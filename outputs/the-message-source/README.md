@@ -4,9 +4,10 @@ A 29.23-second original friendship story, rendered at 1080 × 1920, 30 fps, with
 
 ## Rebuild
 
-Requires Python 3.10+, FFmpeg and ffprobe on PATH. Install dependencies in a virtual environment:
+Requires Python 3.10+, FFmpeg and ffprobe on PATH. From the repository root, run:
 
 ```sh
+cd outputs/the-message-source
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
