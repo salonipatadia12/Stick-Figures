@@ -1,0 +1,6 @@
+.DS_Store
+work/
+outputs/*
+!outputs/the-message.mp4
+!outputs/the-message-script.txt
+!outputs/the-message-source/

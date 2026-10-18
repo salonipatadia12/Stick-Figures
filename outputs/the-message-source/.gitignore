@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+audio/*.wav
+exports/
+previews/
+render.log
