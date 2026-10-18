@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "title": "The First Page",
+  "voice": "en-US-AndrewNeural",
+  "rate": "-3%",
+  "scenes": [
+    {
+      "narration": "Ava bought a notebook. But the first page had to be perfect.",
+      "caption": "The first page had to be perfect.",
+      "background": "desk",
+      "action": "think",
+      "expression": "neutral",
+      "overlay": "MONDAY",
+      "message": "A perfect beginning.",
+      "event_delay": 0.7,
+      "duration": 3,
+      "audio": ""
+    },
+    {
+      "narration": "So she waited for a better idea. Then a better pen. The page stayed empty.",
+      "caption": "A better idea. A better pen.",
+      "background": "desk",
+      "action": "read",
+      "expression": "tired",
+      "overlay": "FRIDAY",
+      "message": "Still blank.",
+      "event_delay": 0.7,
+      "duration": 3,
+      "audio": ""
+    },
+    {
+      "narration": "One evening, she wrote a terrible sentence. And left it there.",
+      "caption": "One terrible sentence.",
+      "background": "desk",
+      "action": "type",
+      "expression": "neutral",
+      "overlay": "ONE EVENING",
+      "message": "Today, I started.",
+      "event_delay": 0.7,
+      "duration": 3,
+      "audio": ""
+    },
+    {
+      "narration": "The next day, she wrote another. Then another.",
+      "caption": "Then another.",
+      "background": "desk",
+      "action": "type",
+      "expression": "happy",
+      "overlay": "THE NEXT DAY",
+      "message": "One more line.",
+      "event_delay": 0.7,
+      "duration": 3,
+      "audio": ""
+    },
+    {
+      "narration": "A month later, the notebook was full of crossed-out words. And actual stories.",
+      "caption": "Crossed-out words. Actual stories.",
+      "background": "standing",
+      "action": "celebrate",
+      "expression": "happy",
+      "overlay": "A MONTH LATER",
+      "message": "A notebook full of stories.",
+      "event_delay": 0.7,
+      "duration": 3,
+      "audio": ""
+    },
+    {
+      "narration": "That first page was never perfect. It just needed to exist.",
+      "caption": "It just needed to exist.",
+      "background": "standing",
+      "action": "nod",
+      "expression": "happy",
+      "overlay": "",
+      "message": "",
+      "event_delay": 0.7,
+      "duration": 3,
+      "audio": ""
+    }
+  ]
+}

@@ -4,3 +4,17 @@ outputs/*
 !outputs/the-message.mp4
 !outputs/the-message-script.txt
 !outputs/the-message-source/
+
+# Local reel builder environments and generated projects
+.venv/
+.reel-cache/
+**/.reel-cache/
+renders/
+*.render.log
+*.partial.mp4
+.env
+.env.*
+
+__pycache__/
+!outputs/the-first-page.mp4
+!outputs/the-first-page.storyboard.jpg

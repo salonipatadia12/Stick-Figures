@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "voice": {
+      "type": "string"
+    },
+    "rate": {
+      "type": "string"
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "narration": {
+            "type": "string"
+          },
+          "background": {
+            "type": "string",
+            "enum": [
+              "home",
+              "desk",
+              "cafe",
+              "standing"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "read",
+              "type",
+              "send",
+              "think",
+              "nod",
+              "celebrate"
+            ]
+          },
+          "expression": {
+            "type": "string",
+            "enum": [
+              "neutral",
+              "happy",
+              "tired",
+              "shock"
+            ]
+          },
+          "caption": {
+            "type": "string"
+          },
+          "overlay": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "event_delay": {
+            "type": "number"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "audio": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "narration",
+          "background",
+          "action",
+          "expression",
+          "caption",
+          "overlay",
+          "message",
+          "event_delay",
+          "duration",
+          "audio"
+        ]
+      }
+    }
+  },
+  "required": [
+    "version",
+    "title",
+    "voice",
+    "rate",
+    "scenes"
+  ]
+}

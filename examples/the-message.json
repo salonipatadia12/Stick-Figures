@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "title": "The Message",
+  "voice": "en-US-AndrewNeural",
+  "rate": "-3%",
+  "scenes": [
+    {
+      "narration": "Sam hadn't seen his friend in months.",
+      "caption": "Months without catching up.",
+      "background": "home",
+      "action": "read",
+      "expression": "neutral",
+      "overlay": "THE MESSAGE",
+      "message": "“We should catch up.”\nThree months ago.",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/0.mp3"
+    },
+    {
+      "narration": "He typed, ‘Want to grab a coffee?’ Then deleted it. They were probably busy.",
+      "caption": "What if they're busy?",
+      "background": "home",
+      "action": "think",
+      "expression": "neutral",
+      "overlay": "",
+      "message": "They’re probably busy.",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/1.mp3"
+    },
+    {
+      "narration": "A week later, his friend messaged. ‘It's been a rough week.’",
+      "caption": "A week later…",
+      "background": "home",
+      "action": "read",
+      "expression": "neutral",
+      "overlay": "A WEEK LATER",
+      "message": "It’s been a rough week.",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/2.mp3"
+    },
+    {
+      "narration": "This time, Sam didn't overthink it. ‘Coffee tomorrow? My treat.’",
+      "caption": "Coffee tomorrow? My treat.",
+      "background": "home",
+      "action": "send",
+      "expression": "happy",
+      "overlay": "",
+      "message": "Coffee tomorrow?\nMy treat.",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/3.mp3"
+    },
+    {
+      "narration": "The reply came straight back. ‘I'd really like that.’",
+      "caption": "I'd really like that.",
+      "background": "home",
+      "action": "nod",
+      "expression": "happy",
+      "overlay": "",
+      "message": "I’d really like that.",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/4.mp3"
+    },
+    {
+      "narration": "Two coffees. One long conversation.",
+      "caption": "Two coffees. One conversation.",
+      "background": "cafe",
+      "action": "nod",
+      "expression": "happy",
+      "overlay": "THE NEXT MORNING",
+      "message": "",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/5.mp3"
+    },
+    {
+      "narration": "Turns out, his friend had been waiting to reach out, too.",
+      "caption": "They'd both been waiting.",
+      "background": "cafe",
+      "action": "nod",
+      "expression": "happy",
+      "overlay": "",
+      "message": "",
+      "event_delay": 0.6,
+      "duration": 3,
+      "audio": "../outputs/the-message-source/audio/6.mp3"
+    }
+  ]
+}

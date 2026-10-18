@@ -1,3 +1,5 @@
+> For new stories, use the [reusable builder guide](../../README.md) and repository-root `reel.py`. The files described below preserve the original reel exactly.
+
 # The Message — stick figure reel
 
 A 29.23-second original friendship story, rendered at 1080 × 1920, 30 fps, with conversational English narration.
