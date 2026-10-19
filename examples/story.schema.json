@@ -17,6 +17,13 @@
     "rate": {
       "type": "string"
     },
+    "character_style": {
+      "type": "string",
+      "enum": [
+        "expressive",
+        "classic"
+      ]
+    },
     "scenes": {
       "type": "array",
       "items": {
@@ -95,6 +102,7 @@
     "title",
     "voice",
     "rate",
+    "character_style",
     "scenes"
   ]
 }

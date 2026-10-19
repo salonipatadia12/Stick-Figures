@@ -18,3 +18,9 @@ renders/
 __pycache__/
 !outputs/the-first-page.mp4
 !outputs/the-first-page.storyboard.jpg
+
+!outputs/the-first-page-redesigned.mp4
+!outputs/the-first-page-redesigned.storyboard.jpg
+!outputs/character-redesign.png
+!outputs/character-pose-sheet.png
+!outputs/character-reference-study.md

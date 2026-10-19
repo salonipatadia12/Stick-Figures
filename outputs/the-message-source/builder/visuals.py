@@ -1,163 +1,138 @@
-"""Constrained layouts keep props, hands, seats and text aligned across stories."""
-from PIL import Image, ImageDraw
-from .art import font, txt, curve, line, head, phone, cup, ease, pulse
+"""Supersampled scenes with an original expressive, articulated stick character."""
 import math
+from PIL import Image, ImageDraw
+from .art import font, ease, pulse
+from .character import Pen, INK, ACCENT, PAPER, face, torso, limb, hand, shoe, seated, seated_pose, standing
+from .legacy_visuals import fit, wrapped, preflight, draw as classic_draw
 
-W, H = 1080, 1920
-
-
-def wrapped(text, size, width):
-    d = ImageDraw.Draw(Image.new('RGB', (1, 1)))
-    rows = []
-    for paragraph in text.split('\n'):
-        row = ''
-        for word in paragraph.split():
-            if d.textlength(word, font=font(size)) > width:
-                raise ValueError('Text contains a word too wide for the frame; shorten it')
-            candidate = f'{row} {word}'.strip()
-            if d.textlength(candidate, font=font(size)) > width:
-                rows.append(row)
-                row = word
-            else:
-                row = candidate
-        if row:
-            rows.append(row)
-    return rows
+W,H=1080,1920
+SCALE=2
 
 
-def fit(text, width, max_rows, max_size, min_size):
-    if not text:
-        return [], max_size
-    for size in range(max_size, min_size - 1, -2):
-        try:
-            rows = wrapped(text, size, width)
-        except ValueError:
-            continue
-        if len(rows) <= max_rows:
-            return rows, size
-    raise ValueError(f'Text will not fit safely: {text!r}. Shorten it.')
+def text(im,xy,value,size=48,color=INK,bold=True):
+    ImageDraw.Draw(im).text((xy[0]*SCALE,xy[1]*SCALE),value,font=font(size*SCALE,bold),anchor='mm',fill=color)
 
 
-def preflight(story):
-    for i, s in enumerate(story['scenes']):
-        try:
-            fit(s['caption'], 875, 2, 58, 42)
-            fit(s['message'], 720, 3, 53, 35)
-            fit(s['overlay'], 880, 1, 42, 28)
-        except ValueError as exc:
-            raise ValueError(f'Scene {i + 1}: {exc}') from exc
+def ground(p):
+    p.ellipse((235,1401,835,1460),'#E9EFEC')
+    p.line([(110,1440),(970,1440)],2,'#D4DDDA')
 
 
-def message(d, text, t, delay):
-    if not text or t < delay:
-        return
-    d.rounded_rectangle((140, 280, 940, 550), 35, fill='white', outline='#171717', width=5)
-    rows, size = fit(text, 720, 3, 53, 35)
-    for i, row in enumerate(rows):
-        txt(d, (540, 415 + (i-(len(rows)-1)/2)*(size+17)), row, size)
+def sofa(p):
+    p.rect((205,1060,845,1345),35,'#EDF3EF','#A8BBB4',4)
+    p.line([(240,1198),(810,1198)],3,'#A8BBB4')
+    p.line([(265,1345),(255,1434)],7,'#A8BBB4')
+    p.line([(795,1345),(805,1434)],7,'#A8BBB4')
+    p.rect((170,1175,235,1348),23,'#E3ECE6','#A8BBB4',4)
+    p.rect((815,1175,880,1348),23,'#E3ECE6','#A8BBB4',4)
 
 
-def floor(d):
-    line(d, [(120, 1450), (960, 1450)], 3, '#BBBBBB')
+def chair(p):
+    p.rect((325,1060,455,1230),18,'#EDF3EF','#A8BBB4',4)
+    p.line([(345,1230),(320,1430)],5,'#A8BBB4')
+    p.line([(435,1230),(460,1430)],5,'#A8BBB4')
 
 
-def single(im, t, s):
-    d = ImageDraw.Draw(im)
-    floor(d)
-    desk = s['background'] == 'desk'
-    if desk:
-        d.rounded_rectangle((365, 1050, 605, 1250), 18, fill='white', outline='#171717', width=5)
-        line(d, [(390, 1250), (390, 1450)], 5)
-        line(d, [(580, 1250), (580, 1450)], 5)
+def notebook(p,t,s):
+    p.polygon([(602,1127),(782,1127),(819,1084),(639,1084)],PAPER,INK,3)
+    p.line([(690,1123),(725,1089)],2,'#BAC8C3')
+    if s['action']=='type':
+        progress=ease((t-.8)/1.5)
+        for i in range(3):
+            if progress>i/3:
+                x=653+i*2;y=1094+i*8
+                p.line([(x,y),(x+49*min(1,(progress-i/3)*3),y)],2,ACCENT)
+
+
+def phone(p,x,y):
+    p.rect((x-33,y-64,x+33,y+64),10,INK,INK,3)
+    p.rect((x-26,y-52,x+26,y+46),5,'#E8F1ED',None)
+    p.line([(x-9,y-54),(x+9,y-54)],3,INK)
+    p.rect((x-18,y-24,x+17,y-3),4,ACCENT,None)
+    p.rect((x-11,y+6,x+19,y+24),4,'#B4CDC6',None)
+
+
+def cup(p,x,y):
+    p.ellipse((x+19,y-44,x+49,y-8),PAPER,INK,3)
+    p.rect((x-25,y-53,x+25,y),6,PAPER,INK,4)
+    p.line([(x-21,y-47),(x+21,y-47)],3,ACCENT)
+    for dx in [-8,9]:p.curve([(x+dx,y-64),(x+dx-7,y-76),(x+dx+6,y-84),(x+dx,y-96)],2,'#99AEA7')
+
+
+def desk_scene(p,t,s):
+    chair(p)
+    hands=seated(p,t,s,True,False)
+    # Desktop occludes the lower arm; hands are then drawn above their contacts.
+    p.polygon([(535,1130),(880,1130),(920,1165),(555,1165)],'#F0DDBE','#826F59',4)
+    p.rect((555,1165,920,1194),0,'#E4CCA8','#826F59',3)
+    for x in [578,889]:p.line([(x,1194),(x-8,1430)],7,'#826F59')
+    notebook(p,t,s)
+    if s['action']!='think':
+        hx,hy=hands[1]
+        p.line([(hx-10,hy+10),(hx+20,hy-37)],5,ACCENT)
+        p.line([(hx-10,hy+10),(hx-14,hy+17)],3,INK)
+    for h in hands:hand(p,h,'grip' if h==hands[1] else 'rest')
+    # Quiet scene anchor, far from the character and captions.
+    p.line([(840,1126),(840,1055)],3,'#829C89')
+    p.ellipse((818,1061,841,1098),'#A9BBA4')
+    p.ellipse((840,1045,866,1083),'#8EA88E')
+    p.polygon([(820,1096),(864,1096),(857,1126),(827,1126)],'#DBC6A8',None)
+
+
+def home_scene(p,t,s):
+    sofa(p)
+    hands=seated(p,t,s,False,False)
+    if s['action'] in ('read','type','send'):
+        lift=24*ease((t-.2)/.85)
+        phone(p,646,1070-lift)
+        # Thumb motion stays on the phone, with the wrist anchored.
+        for h in hands:hand(p,h,'grip')
+        tap=5*pulse(t,.8,.45)+5*pulse(t,1.55,.45) if s['action'] in ('type','send') else 0
+        p.line([(642,1045-lift),(632-tap,1057-lift)],4)
     else:
-        d.rounded_rectangle((190, 1110, 890, 1365), 35, fill='#FAFAFA', outline='#171717', width=6)
-        line(d, [(210, 1365), (210, 1450)], 6)
-        line(d, [(870, 1365), (870, 1450)], 6)
-        line(d, [(190, 1200), (890, 1200)], 5)
-    action = s['action']
-    nod = 10*pulse(t, .65, 1.0) if action == 'nod' else 0
-    breath = 2*math.sin(t*1.9)
-    curve(d, [(490,930+breath),(460,1005),(452,1120),(470,1200)], 9)
-    curve(d, [(470,1200),(521,1226),(560,1260),(585,1275)], 9)
-    curve(d, [(585,1275),(589,1335),(583,1400),(583,1440)], 9)
-    curve(d, [(470,1200),(475,1247),(481,1290),(489,1320)], 9)
-    curve(d, [(489,1320),(488,1375),(483,1420),(481,1440)], 9)
-    for x in [583,481]:
-        curve(d, [(x,1440),(x+15,1447),(x+30,1447),(x+45,1446)], 8)
-    if desk:
-        # Notebook and wrist rest share the desktop surface at y=1100.
-        d.rectangle((540,1100,940,1160), fill='white', outline='#171717', width=5)
-        for x in [560,920]: line(d, [(x,1160),(x,1450)], 5)
-        d.polygon([(630,1098),(795,1098),(826,1060),(661,1060)], fill='white', outline='#171717', width=3)
-        if action == 'think':
-            curve(d, [(485,975),(580,1050),(601,970),(558,905)], 9)
-        else:
-            curve(d, [(485,975),(530,1020),(575,1070),(665,1080)], 9)
-        motion = 8*pulse(t,.75,.7)+8*pulse(t,1.8,.7) if action in ('type','send') else 0
-        if action != 'think':line(d, [(665,1080),(700+motion,1067)], 5)
-        curve(d, [(488,975),(440,1035),(440,1120),(468,1170)], 8)
-    elif action in ('read','type','send'):
-        lift = 20*(1-ease((t-.15)/.8))
-        curve(d, [(485,975),(531,1112+lift*.5),(587,1138+lift),(628,1082+lift)], 9)
-        curve(d, [(488,975),(561,1003+lift*.5),(600,1015+lift),(632,1035+lift)], 9)
-        phone(d, 667, 1025+lift)
-        swipe = 18*pulse(t,.8,.5)+14*pulse(t,1.8,.5) if action in ('type','send') else 0
-        line(d, [(629,1080+lift),(648,1067+lift-swipe)], 6)
-    elif action == 'celebrate':
-        up = 70*ease(t/.6)
-        curve(d, [(485,975),(380,970-up*.5),(350,920-up),(350,860-up)], 9)
-        curve(d, [(488,975),(600,970-up*.5),(660,920-up),(690,860-up)], 9)
-    elif action == 'think':
-        curve(d, [(485,975),(580,1050),(601,970),(558,905)], 9)
-        curve(d, [(488,975),(440,1035),(440,1120),(468,1170)], 8)
-    else:
-        for sign in (-1,1):
-            curve(d, [(488,975),(488+80*sign,1050),(488+80*sign,1130),(488+55*sign,1190)], 8)
-    head(im,500,820+breath+nod,s['expression'],t,tilt=-5+3*pulse(t,1.0,.8),scale=.83)
+        for h in hands:hand(p,h,'open' if s['action']=='celebrate' else 'rest')
 
 
-def cafe(im,t,s):
-    d=ImageDraw.Draw(im);floor(d)
-    for x in [250,770]:
-        d.rounded_rectangle((x-65,990,x+80,1250),22,fill='white',outline='#171717',width=5)
-        for xx in [x-45,x+60]:line(d,[(xx,1250),(xx,1440)],5)
-    for right in [False,True]:
-        x=790 if right else 290;sign=-1 if right else 1
-        nod=9*pulse(t,.7 if right else 1.7,1.1) if s['action']=='nod' else 0
-        curve(d,[(x,930),(x-15*sign,1030),(x-12*sign,1120),(x,1230)],8)
-        curve(d,[(x,1230),(x+42*sign,1255),(x+75*sign,1270),(x+80*sign,1290)],8)
-        line(d,[(x+80*sign,1290),(x+80*sign,1440),(x+115*sign,1445)],8)
-        line(d,[(x,1230),(x-17*sign,1320),(x-15*sign,1440),(x+16*sign,1445)],8)
-        curve(d,[(x,980),(x+25*sign,1040),(x+78*sign,1095),(x+150*sign,1100)],8)
-        curve(d,[(x-8*sign,980),(x-45*sign,1080),(x-38*sign,1180),(x-12*sign,1210)],8)
-        head(im,x,817+nod,s['expression'],t+(1 if right else 0),tilt=5 if right else -5,scale=.81)
-    d.ellipse((404,1094,688,1158),fill='white',outline='#171717',width=5)
-    line(d,[(546,1158),(546,1423)],6);line(d,[(460,1440),(546,1423),(632,1440)],6)
-    cup(d,465,1119);cup(d,620,1120)
-    for x in [435,650]:d.ellipse((x-11,1104,x+11,1121),fill='white',outline='#171717',width=3)
+def cafe_scene(p,t,s):
+    for x,sign in [(270,1),(810,-1)]:
+        p.rect((x-60,1055,x+60,1240),16,'#EDF3EF','#A8BBB4',4)
+        for delta in [-40,40]:p.line([(x+delta,1240),(x+delta,1430)],5,'#A8BBB4')
+        hip=(x,1210);shoulder=(x+10*sign,961)
+        for knee,ankle in [((x+75*sign,1280),(x+80*sign,1424)),((x+8*sign,1295),(x+12*sign,1424))]:
+            p.line([hip,knee,ankle],13);shoe(p,ankle,sign)
+        p.line([shoulder,(x+16*sign,837)],13)
+        torso(p,shoulder,hip)
+        for h,bend in [((x-25*sign,1200),sign),((x+153*sign,1116),sign)]:
+            limb(p,shoulder,h,132,136,bend)
+        nod=8*pulse(t,.5 if sign==1 else 1.6,.9) if s['action']=='nod' else 0
+        face(p,(x+16*sign,837+nod),s['expression'],t+(0 if sign==1 else 1),look=9*sign,tilt=sign*-3)
+    p.ellipse((396,1120,684,1170),'#F0DDBE','#826F59',4)
+    p.line([(540,1170),(540,1416)],7,'#826F59')
+    p.line([(465,1432),(540,1416),(615,1432)],6,'#826F59')
+    cup(p,458,1128);cup(p,620,1128)
+    for h in [(423,1116),(657,1116),(245,1200),(835,1200)]:hand(p,h)
 
 
-def standing(im,t,s):
-    d=ImageDraw.Draw(im);floor(d)
-    curve(d,[(540,930),(523,1030),(524,1120),(540,1200)],9)
-    for sign in (-1,1):
-        line(d,[(540,1200),(540+65*sign,1320),(540+95*sign,1440),(540+125*sign,1446)],9)
-        rise=75*ease(t/.65) if s['action']=='celebrate' else 0
-        end=(540+160*sign,1140-rise*3)
-        if s['action']=='think' and sign==1:end=(600,910)
-        curve(d,[(540,970),(540+110*sign,1030-rise),(540+130*sign,1100-rise*2),end],9)
-    nod=12*pulse(t,.65,1.0) if s['action']=='nod' else 0
-    head(im,540,820+nod,s['expression'],t,tilt=3*pulse(t,.6,1.1),scale=.83)
-
-
-def draw(scene,t):
-    im=Image.new('RGB',(W,H),'white');d=ImageDraw.Draw(im)
-    if scene['background']=='cafe':cafe(im,t,scene)
-    elif scene['background']=='standing':standing(im,t,scene)
-    else:single(im,t,scene)
-    rows,size=fit(scene['overlay'],880,1,42,28)
-    for row in rows:txt(d,(540,195),row,size)
-    message(d,scene['message'],t,scene['event_delay'])
+def draw(scene,t,style='expressive'):
+    if style=='classic':return classic_draw(scene,t)
+    if style!='expressive':raise ValueError(f'Unknown character style: {style}')
+    im=Image.new('RGB',(W*SCALE,H*SCALE),PAPER);p=Pen(im,SCALE)
+    ground(p)
+    if scene['background']=='desk':desk_scene(p,t,scene)
+    elif scene['background']=='home':home_scene(p,t,scene)
+    elif scene['background']=='cafe':cafe_scene(p,t,scene)
+    else:standing(p,t,scene)
+    if scene['overlay']:
+        rows,size=fit(scene['overlay'],880,1,42,28)
+        for row in rows:text(im,(540,200),row,size,ACCENT)
+        p.line([(500,247),(580,247)],4,ACCENT)
+    if scene['message'] and t>=scene['event_delay']:
+        # Instant readable text, with a short settle of the container only.
+        dy=8*(1-ease((t-scene['event_delay'])/.2))
+        p.rect((140,310+dy,940,550+dy),30,'#EFF5F0',None)
+        p.polygon([(402,548+dy),(458,582+dy),(468,548+dy)],'#EFF5F0',None)
+        rows,size=fit(scene['message'],720,3,53,35)
+        for i,row in enumerate(rows):text(im,(540,430+dy+(i-(len(rows)-1)/2)*(size+17)),row,size)
     rows,size=fit(scene['caption'],875,2,58,42)
-    for i,row in enumerate(rows):txt(d,(540,1625+i*(size+16)),row,size)
-    return im
+    for i,row in enumerate(rows):text(im,(540,1625+i*(size+16)),row,size)
+    return im.resize((W,H),Image.Resampling.LANCZOS)

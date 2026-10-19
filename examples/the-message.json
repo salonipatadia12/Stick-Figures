@@ -88,5 +88,6 @@
       "duration": 3,
       "audio": "../outputs/the-message-source/audio/6.mp3"
     }
-  ]
+  ],
+  "character_style": "expressive"
 }

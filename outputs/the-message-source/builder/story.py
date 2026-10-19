@@ -29,11 +29,12 @@ SCHEMA = {
     'properties': {
         'version': {'type': 'integer', 'enum': [1]}, 'title': {'type': 'string'},
         'voice': {'type': 'string'}, 'rate': {'type': 'string'},
+        'character_style': {'type': 'string', 'enum': ['expressive', 'classic']},
         'scenes': {'type': 'array', 'items': {
             'type': 'object', 'additionalProperties': False,
             'properties': SCENE_PROPERTIES, 'required': list(SCENE_PROPERTIES),
         }},
-    }, 'required': ['version', 'title', 'voice', 'rate', 'scenes'],
+    }, 'required': ['version', 'title', 'voice', 'rate', 'character_style', 'scenes'],
 }
 
 
@@ -61,6 +62,9 @@ def validate(raw):
         raise ValueError('voice must be a neural voice name, such as en-US-AndrewNeural')
     if not isinstance(story['rate'], str) or not re.fullmatch(r'[+-](?:[0-9]|[1-3][0-9]|40)%', story['rate']):
         raise ValueError('rate must be a signed percentage from -40% to +40%')
+    story['character_style'] = raw.get('character_style', 'expressive')
+    if story['character_style'] not in ('expressive', 'classic'):
+        raise ValueError('character_style must be expressive or classic')
     items = raw.get('scenes')
     if not isinstance(items, list) or not 1 <= len(items) <= 20:
         raise ValueError('A story needs 1–20 scenes')
@@ -112,6 +116,7 @@ Caption: at most 70 characters. Message: at most 100 characters, or empty.
 Overlay: a short time/location label, or empty. event_delay: when an on-screen
 message appears, usually 0.5–1.5 seconds. duration: 3 for narrated scenes (audio
 will determine their actual duration), 0.5–30 for scenes with no narration.
+Use character_style="expressive" for the new articulated character.
 Use audio="" for all generated scenes. Voice en-US-AndrewNeural, rate -3%.
 Schema:
 {json.dumps(SCHEMA, indent=2)}

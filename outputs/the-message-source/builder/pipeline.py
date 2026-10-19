@@ -78,7 +78,7 @@ def storyboard(story,output):
     sheet=Image.new('RGB',(cols*270,rows*520),'#EEEEEE')
     for i,scene in enumerate(story['scenes']):
         t=max(1.8,scene['event_delay']+.3)
-        img=draw(scene,t).resize((270,480))
+        img=draw(scene,t,story['character_style']).resize((270,480))
         x=(i%cols)*270;y=(i//cols)*520
         sheet.paste(img,(x,y));ImageDraw.Draw(sheet).text((x+10,y+490),f"Scene {i+1}: {scene['background']}",fill='black')
     sheet.save(output)
@@ -139,7 +139,7 @@ def render(story_path,output,offline=False,silent=False,force=False):
                 for entry in timeline:
                     print(f'Rendering {entry["scene"]["background"]}: {entry["start"]/FPS:.1f}s',flush=True)
                     for frame in range(entry['end']-entry['start']):
-                        p.stdin.write(draw(entry['scene'],frame/FPS).tobytes())
+                        p.stdin.write(draw(entry['scene'],frame/FPS,story['character_style']).tobytes())
                 p.stdin.close()
                 if p.wait()!=0:raise ValueError(f'FFmpeg failed. See {log}')
             except BaseException as exc:
@@ -155,6 +155,7 @@ def render(story_path,output,offline=False,silent=False,force=False):
         temp.unlink(missing_ok=True)
     report={'title':story['title'],'duration':cursor/FPS,'video':str(output),
             'width':1080,'height':1920,'fps':FPS,'silent':silent,
+            'character_style':story['character_style'],
             'scenes':[{'background':e['scene']['background'],'action':e['scene']['action'],
                        'start':e['start']/FPS,'end':e['end']/FPS} for e in timeline]}
     output.with_suffix('.timing.json').write_text(json.dumps(report,indent=2))

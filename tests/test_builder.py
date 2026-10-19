@@ -14,9 +14,33 @@ from builder.story import validate, load, authoring_prompt
 from builder.visuals import preflight, draw
 from builder.pipeline import cache_key, render
 from builder.cli import draft, main
+from builder.character import joint
+from builder.story import ACTIONS_BY_BACKGROUND
 
 class StoryTests(unittest.TestCase):
     def setUp(self):self.story=load(ROOT/'examples/the-message.json')
+    def test_character_style_and_classic_compatibility(self):
+        self.assertEqual(validate({'scenes':[{}]})['character_style'],'expressive')
+        scene=self.story['scenes'][0]
+        self.assertEqual(draw(scene,1,'classic').size,(1080,1920))
+        self.story['character_style']='unknown'
+        with self.assertRaisesRegex(ValueError,'character_style'):validate(self.story)
+    def test_reaching_keeps_both_arm_lengths(self):
+        import math
+        start=(450,965)
+        for end in [(675,1110),(550,1113),(530,900),(640,1030)]:
+            for bend in [-1,1]:
+                elbow=joint(start,end,146,151,bend)
+                self.assertAlmostEqual(math.dist(start,elbow),146,places=7)
+                self.assertAlmostEqual(math.dist(end,elbow),151,places=7)
+        with self.assertRaisesRegex(ValueError,'Unreachable'):joint((0,0),(1000,0),146,151)
+    def test_all_actions_have_reachable_contacts_during_motion(self):
+        for bg,actions in ACTIONS_BY_BACKGROUND.items():
+            for action in actions:
+                scene=validate({'scenes':[{'background':bg,'action':action}]})['scenes'][0]
+                for t in [0,.4,1.0,2.4]:
+                    with self.subTest(background=bg,action=action,t=t):
+                        self.assertEqual(draw(scene,t).size,(1080,1920))
     def test_examples_and_all_layouts(self):
         for path in (ROOT/'examples').glob('*.json'):
             if path.name.endswith('.schema.json'):continue

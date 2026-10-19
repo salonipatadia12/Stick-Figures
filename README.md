@@ -1,6 +1,19 @@
 # Stick Figures — reusable reel builder
 
-Create new narrated stick figure reels by changing a story JSON file, not animation code. The renderer uses fixed character and prop layouts to keep movement and text aligned.
+Create new narrated stick figure reels by changing a story JSON file, not animation code. The renderer uses an original expressive character with articulated arms, restrained gestures and anchored prop contacts. Four fixed scene layouts keep movement and text aligned.
+
+## New character design
+
+New renders use `"character_style": "expressive"` by default: simple oval eyes, bold rounded limbs, small hands and feet, and a teal scarf. The previous character is available with `"character_style": "classic"`. Existing exported videos are preserved.
+
+[Before / after](outputs/character-redesign.png) · [Pose sheet](outputs/character-pose-sheet.png) · [Narrated redesigned reel](outputs/the-first-page-redesigned.mp4) · [Reference study and engagement counts](outputs/character-reference-study.md)
+
+```sh
+python reel.py render examples/the-first-page.json --output renders/redesigned.mp4
+python scripts/character_review.py outputs
+```
+
+The design combines simpler facial detail with readable bent joints, grounded feet and deliberate motion. It is an original local drawing system; reference video footage/assets are not bundled. See the reference study for what was actually sampled and the limitations of engagement comparisons.
 
 ## Setup
 
@@ -113,6 +126,8 @@ python reel.py render examples/the-first-page.json \
 
 Expressions: `neutral`, `happy`, `tired`, `shock`.
 
+Top-level `character_style`: `expressive` (default) or `classic`. This applies consistently to every scene in the reel.
+
 - `narration` controls the spoken words. Audio duration determines scene length, with a short pause afterward.
 - `caption` is the short bottom caption; `overlay` is a top label; `message` is an optional message panel. Keep these concise. Validation fits text into fixed safe regions and rejects text that cannot fit.
 - `event_delay` is when a message panel appears, in seconds from scene start.
@@ -144,4 +159,4 @@ The original renderer and its exact shipped video remain available under [output
 python -m unittest discover -s tests -v
 ```
 
-Tests cover validation, text overflow, audio-cache changes, missing API credentials, mocked structured responses, output overwrite protection, side-effect-free imports, and a real FFmpeg export/decode.
+Tests cover fixed arm lengths, reachable contacts throughout supported gestures, classic-style compatibility, validation, text overflow, audio-cache changes, missing API credentials, mocked structured responses, output overwrite protection, side-effect-free imports, and a real FFmpeg export/decode.
