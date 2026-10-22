@@ -76,7 +76,8 @@ $('#storyboard').addEventListener('change',e=>{const input=e.target.closest('[da
  const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split(',')[1]);reader.onerror=()=>reject(Error('Could not read this file.'));reader.readAsDataURL(file);});
  showProject(await api(`/api/projects/${project.id}/scenes/${input.dataset.upload}/upload`,{method:'POST',body:JSON.stringify({data,kind:input.dataset.kind})}),'board');
 });});
-$('#setup-toggle').addEventListener('click',()=>{$('#setup').hidden=!$('#setup').hidden;if(!$('#setup').hidden)$('#setup').scrollIntoView({behavior:'smooth'});});$('#close-setup').addEventListener('click',()=>$('#setup').hidden=true);
+function toggleSetup(){$('#setup').hidden=!$('#setup').hidden;if(!$('#setup').hidden)$('#setup').scrollIntoView({behavior:'smooth'});}
+$('#setup-toggle').addEventListener('click',toggleSetup);$('#setup-mobile').addEventListener('click',toggleSetup);$('#close-setup').addEventListener('click',()=>$('#setup').hidden=true);
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 (async()=>{try{
  config=await api('/api/config');$('#connection').textContent=config.ai_available?'AI generation connected':'Manual & example mode';$('#connection').classList.toggle('ready',config.ai_available);
