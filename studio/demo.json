@@ -1,0 +1,18 @@
+{
+  "story": {
+    "title": "The Empty Chair",
+    "logline": "A reserved café regular makes room for a stranger, begins saving his seat, and discovers their brief connection mattered to him too.",
+    "character_notes": "The protagonist has a shaded white round head, white torso and navy limbs. The visitor wears a muted teal scarf. Keep the rust-orange bag, sage cups, round wooden table, left window and rear-right green door consistent.",
+    "scenes": [
+      {"narration":"Every morning, she sat at the same café table. Her sketchbook on the table. Her bag on the other chair.","visual":"Morning café. She draws alone on the left, with her orange bag occupying the right chair.","movement":"breathe"},
+      {"narration":"One day, a man asked, ‘Is this seat taken?’","visual":"The teal-scarf visitor stands beside the chair and gestures toward it. She looks up tentatively.","movement":"nod"},
+      {"narration":"She hesitated... then moved her bag.","visual":"She leans across and lifts the orange bag off the right chair, making room for him.","movement":"breathe"},
+      {"narration":"They sat quietly, until he noticed her drawing. ‘You drew this place?’ She nodded. And they started talking.","visual":"Both seated, she shows him her detailed café sketch. He gestures appreciatively; she smiles.","movement":"nod"},
+      {"narration":"The next morning, she left his chair empty. But he didn't come. For three days, she watched the door.","visual":"The right chair is empty. She pauses drawing and looks hopefully toward the empty entrance.","movement":"breathe"},
+      {"narration":"On the fourth, she put her bag back.","visual":"Bag on the right chair again. Her shoulders slump and her expression is disappointed.","movement":"breathe"},
+      {"narration":"Then she heard, ‘I tried drawing our table.’ He was holding a sketchbook. The table was crooked. The cups looked like potatoes.","visual":"He returns holding his clumsy drawing. Her face lights up and she reaches toward his chair.","movement":"nod"},
+      {"narration":"She laughed, moved her bag... and pulled out his chair.","visual":"Closing overhead shot of two sketchbooks, her accomplished drawing beside his wobbly attempt. Two cups and two hands share the table.","movement":"still"}
+    ]
+  },
+  "images": ["01-alone.png","02-question.png","02b-bag.png","03-together.png","04-waiting.png","05-disappointed.png","06-return-final.png","07-books-final.png"]
+}

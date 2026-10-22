@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-22",
+  "tests_passed": 30,
+  "offline_video_render_and_decode": "passed",
+  "browser_story_editor_and_approval": "passed",
+  "browser_example_and_storyboard": "passed",
+  "responsive_layout": "checked at 572px and 1280px",
+  "browser_console_errors": 0,
+  "compose_configuration": "valid",
+  "docker_image_build": "not tested: daemon unavailable",
+  "live_ai_generation": "not tested: server API key not configured",
+  "api_provider_contract": "mock tested",
+  "local_url": "http://127.0.0.1:8000",
+  "public_deployment": false
+}

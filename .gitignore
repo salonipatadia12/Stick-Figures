@@ -14,6 +14,8 @@ renders/
 *.partial.mp4
 .env
 .env.*
+!.env.example
+studio-data/
 
 __pycache__/
 !outputs/the-first-page.mp4
@@ -50,3 +52,5 @@ __pycache__/
 !outputs/the-empty-chair-fixed.srt
 !outputs/the-empty-chair-fixed.timeline.json
 !outputs/the-empty-chair-fixed.validation.json
+!outputs/studio-preview.jpg
+!outputs/studio-validation.json

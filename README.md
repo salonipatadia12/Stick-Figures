@@ -1,5 +1,27 @@
 # Stick Figures — reusable reel builder
 
+## Browser studio
+
+The new [Story Studio](studio/README.md) adds a browser workflow: prompt → editable
+story → story approval → illustrations → storyboard approval → narrated MP4.
+It includes the corrected **The Empty Chair** as a finished example and supports
+manual stories, uploaded artwork, and your own voice recordings without an AI key.
+AI drafting and illustration require a server-side `OPENAI_API_KEY`; no key is
+configured in the checked-in project.
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-studio.txt
+cp .env.example .env
+.venv/bin/uvicorn studio.app:app --env-file .env --host 127.0.0.1 --port 8000
+```
+
+Open http://127.0.0.1:8000. [Server/Docker setup, limits and tests](studio/README.md).
+This is a local application with deployment files, not an already provisioned
+public service. The original JSON/CLI renderer remains available below.
+
+## Original JSON builder
+
 Create new narrated stick figure reels by changing a story JSON file, not animation code. The renderer uses an original expressive character with articulated arms, restrained gestures and anchored prop contacts. Four fixed scene layouts keep movement and text aligned.
 
 ## Stickman Video Director integration
