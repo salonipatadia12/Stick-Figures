@@ -1,0 +1,63 @@
+{
+  "full_decode": "passed",
+  "media": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 720,
+        "height": 1280,
+        "r_frame_rate": "24/1"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "r_frame_rate": "0/0"
+      }
+    ],
+    "format": {
+      "duration": "48.958333"
+    }
+  },
+  "eye_stability": {
+    "question": {
+      "frames": 30,
+      "left_eye_area_range": [
+        469,
+        474
+      ],
+      "right_eye_area_range": [
+        504,
+        514
+      ],
+      "max_area_ratio": 1.0198412698412698
+    },
+    "together": {
+      "frames": 30,
+      "left_eye_area_range": [
+        494,
+        502
+      ],
+      "right_eye_area_range": [
+        508,
+        518
+      ],
+      "max_area_ratio": 1.0196850393700787
+    },
+    "return": {
+      "frames": 30,
+      "left_eye_area_range": [
+        457,
+        463
+      ],
+      "right_eye_area_range": [
+        497,
+        505
+      ],
+      "max_area_ratio": 1.0160965794768613
+    }
+  },
+  "sha256": "b7d2ca714059735fd16fddd734e6345c7abda473a5c91cb8e39b40ed67cbb0ff"
+}

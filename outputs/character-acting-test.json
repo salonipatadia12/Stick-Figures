@@ -1,0 +1,13 @@
+{
+  "duration": 10.5,
+  "fps": 24,
+  "width": 720,
+  "height": 1280,
+  "method": "illustrated layers, rigid two-bone arm rig, subtle head mesh",
+  "voice": "en-US-AndrewNeural",
+  "rate": "-15%",
+  "narration": "Ava kept waiting for the perfect first sentence. Tonight, she took a breath, and wrote a bad one. It was a start.",
+  "pen_contact_start": 4.0,
+  "pen_contact_end": 7.8,
+  "reference": "user-approved character-focus-reference.png"
+}

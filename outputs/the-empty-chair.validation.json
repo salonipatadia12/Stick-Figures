@@ -1,0 +1,17 @@
+{
+  "title": "The Empty Chair",
+  "duration": 48.958333,
+  "width": 720,
+  "height": 1280,
+  "fps": "24/1",
+  "video_codec": "h264",
+  "audio_codec": "aac",
+  "full_decode": "passed",
+  "captions": "18 cues within runtime",
+  "integrated_loudness_lufs": -16.94,
+  "true_peak_dbtp": -1.47,
+  "shot_count": 19,
+  "selected_illustrations": 8,
+  "bytes": 7884762,
+  "sha256": "2f1282c147894568bfccc0c8cbbcbd849589465e70efe5d1ffdfe281b71277b9"
+}

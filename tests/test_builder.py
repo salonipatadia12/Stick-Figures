@@ -46,7 +46,34 @@ class StoryTests(unittest.TestCase):
             if path.name.endswith('.schema.json'):continue
             story=load(path);preflight(story)
             for scene in story['scenes']:
-                self.assertEqual(draw(scene,2).size,(1080,1920))
+                self.assertEqual(draw(scene,2,story['character_style']).size,(1080,1920))
+    def test_cozy_contacts_and_cuts(self):
+        from builder.cozy import actor_pose, camera_for
+        import math
+        story=load(ROOT/'examples/the-first-page-cozy.json')
+        for scene in story['scenes']:
+            for t in [0,.3,.7,1.34,1.36,2.34,2.36,3.15,4.1]:
+                shoulder,hip,head,left,right,tip=actor_pose(scene,t)
+                elbow=joint((shoulder[0]+20,shoulder[1]+8),right,160,180)
+                self.assertAlmostEqual(math.dist(elbow,right),180)
+                if scene['action']=='type':
+                    self.assertEqual(right,(tip[0]+13,tip[1]-35))
+            for camera in ['wide','close','detail']:
+                self.assertEqual(draw({**scene,'camera':camera},2.6,'cozy').size,(1080,1920))
+        writing=story['scenes'][2]
+        self.assertEqual(camera_for(writing,1.0),'wide')
+        self.assertEqual(camera_for(writing,1.5),'detail')
+        self.assertEqual(camera_for(writing,4.1),'close')
+    def test_cozy_rejects_unsupported_props_and_controls(self):
+        story=load(ROOT/'examples/the-first-page-cozy.json')
+        story['scenes'][0]['background']='home'
+        with self.assertRaisesRegex(ValueError,'desk'):validate(story)
+        story['scenes'][0]['background']='desk'
+        story['scenes'][0]['page_lines']=8
+        with self.assertRaisesRegex(ValueError,'page_lines'):validate(story)
+        story['scenes'][0]['page_lines']=0
+        story['scenes'][0]['camera']='orbit'
+        with self.assertRaisesRegex(ValueError,'camera'):validate(story)
     def test_unsupported_action_background_pair_is_rejected(self):
         self.story['scenes'][0].update(background='cafe',action='type')
         with self.assertRaisesRegex(ValueError,'supports'):validate(self.story)

@@ -1,0 +1,36 @@
+{
+  "title": "Two Minutes",
+  "duration": 10.5,
+  "width": 720,
+  "height": 1280,
+  "fps": 24,
+  "source_images": 3,
+  "shots": [
+    [
+      0,
+      2.14,
+      0,
+      "A two-minute break."
+    ],
+    [
+      2.14,
+      4.75,
+      1,
+      "Just one more\u2026"
+    ],
+    [
+      4.75,
+      7.5,
+      2,
+      "Her morning alarm."
+    ],
+    [
+      7.5,
+      10.5,
+      2,
+      "Two minutes. Sure."
+    ]
+  ],
+  "narration_delay": 0.25,
+  "animation": "subtle local 2D head/hand deformation, blinks and alarm vibration"
+}

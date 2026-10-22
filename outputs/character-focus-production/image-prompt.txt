@@ -1,0 +1,14 @@
+Built-in image-generation tool; reference input: a frame at 0.5 seconds from the
+MIT-licensed repository's assets/readme/style-4-cozy-cafe.mp4.
+
+Create a polished 9:16 animation keyframe for The First Page. Match the reference's
+minimalist white circular head, navy oval eyes, simple curved brows and mouth, rounded
+white-filled torso that slightly flares toward the base, navy line limbs, and small
+readable hands. Exactly two arms and two legs, no hair, clothes, scarf or accessories.
+The character is the focal point in a medium-close three-quarter view: large face,
+slightly hunched shoulders, hesitant concentration, gaze directed at the notebook.
+One pen held just above one open notebook; the other hand anchors the page. Make the
+grip, hand, pen and page physically coherent. Warm evening study/café with muted sage,
+cream and natural wood; softly illustrated window and greenery, low background
+contrast. Clean premium 2D cel drawing with subtle shading, reference-style proportions
+and a curved silhouette. No text, captions, logos, labels, collage, border or watermark.

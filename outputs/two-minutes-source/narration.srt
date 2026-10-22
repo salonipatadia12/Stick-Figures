@@ -1,0 +1,12 @@
+1
+00:00:00,050 --> 00:00:01,890
+She took a two-minute break.
+
+2
+00:00:01,890 --> 00:00:03,359
+Just one more video.
+
+3
+00:00:03,359 --> 00:00:06,937
+When she looked up, her morning alarm was ringing.
+

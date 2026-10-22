@@ -21,7 +21,8 @@
       "type": "string",
       "enum": [
         "expressive",
-        "classic"
+        "classic",
+        "cozy"
       ]
     },
     "scenes": {
@@ -80,6 +81,34 @@
           },
           "audio": {
             "type": "string"
+          },
+          "setting": {
+            "type": "string",
+            "enum": [
+              "study",
+              "cafe",
+              "garden"
+            ]
+          },
+          "camera": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "wide",
+              "close",
+              "detail"
+            ]
+          },
+          "page_lines": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 7
+          },
+          "notebook_title": {
+            "type": "string"
+          },
+          "page_text": {
+            "type": "string"
           }
         },
         "required": [
@@ -92,7 +121,12 @@
           "message",
           "event_delay",
           "duration",
-          "audio"
+          "audio",
+          "setting",
+          "camera",
+          "page_lines",
+          "notebook_title",
+          "page_text"
         ]
       }
     }

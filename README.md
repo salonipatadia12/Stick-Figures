@@ -2,6 +2,37 @@
 
 Create new narrated stick figure reels by changing a story JSON file, not animation code. The renderer uses an original expressive character with articulated arms, restrained gestures and anchored prop contacts. Four fixed scene layouts keep movement and text aligned.
 
+## Stickman Video Director integration
+
+The new `cozy` renderer adapts the **Style 4** character and directing principles
+from [kaomei/stickman-video-director](https://github.com/kaomei/stickman-video-director).
+It adds a white filled torso, illustrated study/café/garden settings, purposeful
+wide/close/overhead cuts, and notebook content that persists across scenes.
+Writing hands and pencils share an anchor; feet stay planted.
+
+[Watch the updated 28-second reel](outputs/the-first-page-cozy.mp4) ·
+[Storyboard](outputs/the-first-page-cozy.storyboard.jpg) ·
+[Integration and MIT attribution](references/stickman-video-director/UPSTREAM.md)
+
+```sh
+python reel.py preview examples/the-first-page-cozy.json --output renders/cozy.jpg
+python reel.py render examples/the-first-page-cozy.json --output renders/cozy.mp4
+```
+
+This is a local adaptation of the repository's visual/directing guidance.
+The upstream project supplies a skill and prompts, not a renderer; this project
+does not run its Flow/Gemini generation workflow or reuse its video clips.
+The updated example retains the previous Andrew narration.
+
+For reusable notebook stories, set `character_style` to `cozy`, `background` to
+`desk`, and `message` to an empty string. Set `setting` to `study`, `cafe`, or
+`garden`; `camera` to `auto`, `wide`, `close`, or `detail`; and `page_lines` to
+0–7 existing lines. `notebook_title` sets the cover/page heading (24 characters);
+`page_text` supplies up to eight newline-separated lines of 26 characters each.
+Keep those fields consistent across scenes. `type` writes one additional line. `auto` schedules cuts
+around the action. These controls are deliberately limited to notebook scenes;
+other objects and actions need additional drawing components.
+
 ## New character design
 
 New renders use `"character_style": "expressive"` by default: simple oval eyes, bold rounded limbs, small hands and feet, and a teal scarf. The previous character is available with `"character_style": "classic"`. Existing exported videos are preserved.
@@ -126,7 +157,7 @@ python reel.py render examples/the-first-page.json \
 
 Expressions: `neutral`, `happy`, `tired`, `shock`.
 
-Top-level `character_style`: `expressive` (default) or `classic`. This applies consistently to every scene in the reel.
+Top-level `character_style`: `expressive` (default), `classic`, or `cozy` (the notebook scene system described above). This applies consistently to every scene in the reel.
 
 - `narration` controls the spoken words. Audio duration determines scene length, with a short pause afterward.
 - `caption` is the short bottom caption; `overlay` is a top label; `message` is an optional message panel. Keep these concise. Validation fits text into fixed safe regions and rejects text that cannot fit.
@@ -160,3 +191,61 @@ python -m unittest discover -s tests -v
 ```
 
 Tests cover fixed arm lengths, reachable contacts throughout supported gestures, classic-style compatibility, validation, text overflow, audio-cache changes, missing API credentials, mocked structured responses, output overwrite protection, side-effect-free imports, and a real FFmpeg export/decode.
+
+## Character-first production direction
+
+The latest visual target is [this generated reference](outputs/character-focus-reference.png).
+It puts the face, upper body and hands in the foreground, closely following the
+README café character from Stickman Video Director. The earlier Pillow render is
+not equivalent to the generative animation used by that repository's demos.
+
+[Production analysis and pilot plan](outputs/character-focus-production/README.md)
+records the exact distinction and the proposed acting beats. The
+[pilot prompt](outputs/character-focus-production/pilot-prompt.txt) is a prepared
+external-generation input, not evidence that a video has already been generated.
+The Flow attempt did not produce a video. Production now uses the local illustrated
+character renderer described below; the original local outputs remain available for comparison.
+
+## Local illustrated character acting study
+
+The approved shaded character is now animated locally in a
+[10.5-second narrated study](outputs/character-acting-test.mp4), with blinking,
+a small head movement and breathing, a rigidly held pen, and a two-bone writing arm.
+The background stays still while the character carries the action.
+[Source, artwork, narration and rebuild instructions](outputs/character-motion-source/README.md)
+are included. Rebuilding uses Pillow/FFmpeg and the bundled narration; it does not
+require Flow, credits or an API key. This is a motion study before a full reel.
+
+## Complete illustrated reel
+
+[The First Page — complete 30.5-second illustrated cut](outputs/the-first-page-illustrated.mp4)
+puts the approved character into a complete story, with continuous narration,
+worried/relieved expressions, a notebook that fills over time, captions, original
+quiet music and timed pencil sounds. The background remains secondary to the face
+and hands. Rebuild it locally with:
+
+```sh
+outputs/the-message-source/.venv/bin/python outputs/character-motion-source/assemble.py
+```
+
+[Storyboard](outputs/the-first-page-illustrated.storyboard.jpg) ·
+[Source and instructions](outputs/character-motion-source/README.md)
+
+## New short story: Two Minutes
+
+[Watch the 10.5-second reel](outputs/two-minutes.mp4): an everyday scrolling joke with
+three distinct illustrations (daylight study → nighttime sofa → sunrise bedroom),
+new narration, captions, subtle 2D motion and an alarm punchline.
+[Source, offline rebuild and research notes](outputs/two-minutes-source/README.md).
+The topic follows recurring recent scrolling stories; it is not presented as a
+verified highest-engagement trend.
+
+## The Empty Chair — approved story
+
+[Watch the complete reel](outputs/the-empty-chair-fixed.mp4): a café regular makes room
+for a stranger, waits for his return, and discovers he has tried drawing their table.
+The story was approved before production. It uses the selected illustrated character,
+distinct acting scenes, narration, captions and quiet original music.
+
+[Source and offline rebuild instructions](outputs/the-empty-chair-source/README.md) ·
+[Storyboard](outputs/the-empty-chair.storyboard.jpg)

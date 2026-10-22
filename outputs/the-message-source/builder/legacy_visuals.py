@@ -41,9 +41,11 @@ def fit(text, width, max_rows, max_size, min_size):
 def preflight(story):
     for i, s in enumerate(story['scenes']):
         try:
-            fit(s['caption'], 875, 2, 58, 42)
+            fit(s['caption'], 820 if story.get('character_style')=='cozy' else 875, 2, 58, 42)
             fit(s['message'], 720, 3, 53, 35)
             fit(s['overlay'], 880, 1, 42, 28)
+            if story.get('character_style')=='cozy':
+                fit(s.get('notebook_title','NOTES'),315,1,23,13)
         except ValueError as exc:
             raise ValueError(f'Scene {i + 1}: {exc}') from exc
 

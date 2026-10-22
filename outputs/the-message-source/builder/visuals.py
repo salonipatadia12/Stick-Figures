@@ -115,6 +115,9 @@ def cafe_scene(p,t,s):
 
 def draw(scene,t,style='expressive'):
     if style=='classic':return classic_draw(scene,t)
+    if style=='cozy':
+        from .cozy import draw as cozy_draw
+        return cozy_draw(scene,t)
     if style!='expressive':raise ValueError(f'Unknown character style: {style}')
     im=Image.new('RGB',(W*SCALE,H*SCALE),PAPER);p=Pen(im,SCALE)
     ground(p)

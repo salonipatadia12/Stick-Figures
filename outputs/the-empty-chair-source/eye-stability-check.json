@@ -1,0 +1,38 @@
+{
+  "question": {
+    "frames": 30,
+    "left_eye_area_range": [
+      469,
+      474
+    ],
+    "right_eye_area_range": [
+      504,
+      514
+    ],
+    "max_area_ratio": 1.0198412698412698
+  },
+  "together": {
+    "frames": 30,
+    "left_eye_area_range": [
+      494,
+      502
+    ],
+    "right_eye_area_range": [
+      508,
+      518
+    ],
+    "max_area_ratio": 1.0196850393700787
+  },
+  "return": {
+    "frames": 30,
+    "left_eye_area_range": [
+      457,
+      463
+    ],
+    "right_eye_area_range": [
+      497,
+      505
+    ],
+    "max_area_ratio": 1.0160965794768613
+  }
+}

@@ -1,0 +1,351 @@
+{
+  "title": "The Empty Chair",
+  "duration": 48.958333333333336,
+  "width": 720,
+  "height": 1280,
+  "fps": 24,
+  "source_images": 8,
+  "voice": "en-US-AndrewNeural",
+  "rate": "-8%",
+  "playback_tempo": 0.95,
+  "pauses": [
+    [
+      20.298,
+      0.5
+    ],
+    [
+      24.347,
+      1.0
+    ],
+    [
+      29.293,
+      0.55
+    ],
+    [
+      37.35,
+      0.3
+    ]
+  ],
+  "shots": [
+    {
+      "start": 0,
+      "end": 3.7894736842105265,
+      "image": "alone",
+      "camera": [
+        470,
+        830,
+        1.04
+      ],
+      "acting": "draw",
+      "label": "THE EMPTY CHAIR"
+    },
+    {
+      "start": 3.7894736842105265,
+      "end": 5.805263157894737,
+      "image": "alone",
+      "camera": [
+        355,
+        825,
+        1.48
+      ],
+      "acting": "draw",
+      "label": ""
+    },
+    {
+      "start": 5.805263157894737,
+      "end": 7.736842105263158,
+      "image": "alone",
+      "camera": [
+        706,
+        1040,
+        2.0
+      ],
+      "acting": "still",
+      "label": ""
+    },
+    {
+      "start": 7.736842105263158,
+      "end": 11.369473684210526,
+      "image": "question",
+      "camera": [
+        470,
+        730,
+        1.13
+      ],
+      "acting": "ask",
+      "label": ""
+    },
+    {
+      "start": 11.369473684210526,
+      "end": 12.715789473684211,
+      "image": "question",
+      "camera": [
+        290,
+        690,
+        1.7
+      ],
+      "acting": "hesitate",
+      "label": ""
+    },
+    {
+      "start": 12.715789473684211,
+      "end": 14.101052631578948,
+      "image": "bag",
+      "camera": [
+        470,
+        850,
+        1.08
+      ],
+      "acting": "lift",
+      "label": ""
+    },
+    {
+      "start": 14.101052631578948,
+      "end": 17.475789473684213,
+      "image": "together",
+      "camera": [
+        470,
+        800,
+        1.12
+      ],
+      "acting": "talk",
+      "label": ""
+    },
+    {
+      "start": 17.475789473684213,
+      "end": 19.19263157894737,
+      "image": "together",
+      "camera": [
+        630,
+        650,
+        1.55
+      ],
+      "acting": "ask",
+      "label": ""
+    },
+    {
+      "start": 19.19263157894737,
+      "end": 20.250526315789475,
+      "image": "together",
+      "camera": [
+        300,
+        650,
+        1.65
+      ],
+      "acting": "nod",
+      "label": ""
+    },
+    {
+      "start": 20.250526315789475,
+      "end": 22.266315789473683,
+      "image": "together",
+      "camera": [
+        470,
+        790,
+        1.16
+      ],
+      "acting": "talk",
+      "label": ""
+    },
+    {
+      "start": 22.266315789473683,
+      "end": 25.242105263157896,
+      "image": "waiting",
+      "camera": [
+        470,
+        830,
+        1.06
+      ],
+      "acting": "wait",
+      "label": "THE NEXT MORNING"
+    },
+    {
+      "start": 25.242105263157896,
+      "end": 27.52842105263158,
+      "image": "waiting",
+      "camera": [
+        670,
+        850,
+        1.25
+      ],
+      "acting": "still",
+      "label": ""
+    },
+    {
+      "start": 27.52842105263158,
+      "end": 30.103157894736842,
+      "image": "waiting",
+      "camera": [
+        320,
+        685,
+        1.57
+      ],
+      "acting": "wait",
+      "label": "THREE MORNINGS"
+    },
+    {
+      "start": 30.103157894736842,
+      "end": 33.28473684210526,
+      "image": "disappointed",
+      "camera": [
+        470,
+        830,
+        1.06
+      ],
+      "acting": "sad",
+      "label": "THE FOURTH MORNING"
+    },
+    {
+      "start": 33.28473684210526,
+      "end": 36.502631578947366,
+      "image": "return",
+      "camera": [
+        470,
+        770,
+        1.08
+      ],
+      "acting": "return",
+      "label": ""
+    },
+    {
+      "start": 36.502631578947366,
+      "end": 38.26157894736842,
+      "image": "return",
+      "camera": [
+        650,
+        880,
+        1.48
+      ],
+      "acting": "show",
+      "label": ""
+    },
+    {
+      "start": 38.26157894736842,
+      "end": 42.06578947368421,
+      "image": "books",
+      "camera": [
+        655,
+        790,
+        1.42
+      ],
+      "acting": "still",
+      "label": ""
+    },
+    {
+      "start": 42.06578947368421,
+      "end": 45.87,
+      "image": "return",
+      "camera": [
+        370,
+        730,
+        1.25
+      ],
+      "acting": "laugh",
+      "label": ""
+    },
+    {
+      "start": 45.87,
+      "end": 48.958333333333336,
+      "image": "books",
+      "camera": [
+        470,
+        835,
+        1.02
+      ],
+      "acting": "still",
+      "label": ""
+    }
+  ],
+  "speech_cues": [
+    [
+      0.45263157894736844,
+      3.7894736842105265,
+      "Every morning, she sat at the same caf\u00e9 table."
+    ],
+    [
+      3.7894736842105265,
+      5.805263157894737,
+      "Her sketchbook on the table."
+    ],
+    [
+      5.805263157894737,
+      7.736842105263158,
+      "Her bag on the other chair."
+    ],
+    [
+      7.736842105263158,
+      11.369473684210526,
+      "One day, a man asked, \u201cIs this seat taken?\u201d"
+    ],
+    [
+      11.369473684210526,
+      14.101052631578948,
+      "She hesitated... then moved her bag."
+    ],
+    [
+      14.101052631578948,
+      17.475789473684213,
+      "They sat quietly, until he noticed her drawing."
+    ],
+    [
+      17.475789473684213,
+      19.19263157894737,
+      "\u201cYou drew this place?\u201d"
+    ],
+    [
+      19.19263157894737,
+      20.250526315789475,
+      "She nodded."
+    ],
+    [
+      20.250526315789475,
+      21.766315789473683,
+      "And they started talking."
+    ],
+    [
+      22.266315789473683,
+      25.242105263157896,
+      "The next morning, she left his chair empty."
+    ],
+    [
+      25.242105263157896,
+      26.52842105263158,
+      "But he didn't come."
+    ],
+    [
+      27.52842105263158,
+      30.103157894736842,
+      "For three days, she watched the door."
+    ],
+    [
+      30.103157894736842,
+      32.734736842105264,
+      "On the fourth, she put her bag back."
+    ],
+    [
+      33.28473684210526,
+      36.502631578947366,
+      "Then she heard, \u201cI tried drawing our table.\u201d"
+    ],
+    [
+      36.502631578947366,
+      38.26157894736842,
+      "He was holding a sketchbook."
+    ],
+    [
+      38.26157894736842,
+      39.79210526315789,
+      "The table was crooked."
+    ],
+    [
+      39.79210526315789,
+      41.76578947368421,
+      "The cups looked like potatoes."
+    ],
+    [
+      42.06578947368421,
+      45.87,
+      "She laughed, moved her bag... and pulled out his chair."
+    ]
+  ]
+}

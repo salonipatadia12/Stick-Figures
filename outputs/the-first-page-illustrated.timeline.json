@@ -1,0 +1,137 @@
+{
+  "title": "The First Page",
+  "duration": 30.5,
+  "width": 720,
+  "height": 1280,
+  "fps": 24,
+  "narration_delay": 0.25,
+  "shots": [
+    {
+      "start": 0,
+      "end": 3.9,
+      "expression": "base",
+      "zoom": 1.18,
+      "caption": "A notebook full of possibilities."
+    },
+    {
+      "start": 3.9,
+      "end": 6.35,
+      "expression": "doubt",
+      "zoom": 1.55,
+      "caption": "The first page had to be perfect."
+    },
+    {
+      "start": 6.35,
+      "end": 10.13,
+      "expression": "doubt",
+      "zoom": 1.25,
+      "caption": "So she waited."
+    },
+    {
+      "start": 10.13,
+      "end": 11.95,
+      "expression": "doubt",
+      "zoom": 1.43,
+      "caption": "Still blank."
+    },
+    {
+      "start": 11.95,
+      "end": 16.51,
+      "expression": "base",
+      "zoom": 1.34,
+      "caption": "One imperfect sentence."
+    },
+    {
+      "start": 16.51,
+      "end": 19.03,
+      "expression": "base",
+      "zoom": 1.23,
+      "caption": "Then another."
+    },
+    {
+      "start": 19.03,
+      "end": 22.1,
+      "expression": "relief",
+      "zoom": 1.18,
+      "caption": "Crossed-out words."
+    },
+    {
+      "start": 22.1,
+      "end": 24.97,
+      "expression": "relief",
+      "zoom": 1.34,
+      "caption": "Actual stories."
+    },
+    {
+      "start": 24.97,
+      "end": 27.38,
+      "expression": "relief",
+      "zoom": 1.55,
+      "caption": "It was never perfect."
+    },
+    {
+      "start": 27.38,
+      "end": 30.5,
+      "expression": "relief",
+      "zoom": 1.34,
+      "caption": "It just needed to exist."
+    }
+  ],
+  "speech_cues": [
+    [
+      0.3,
+      3.8970000000000002,
+      "Ava bought a notebook for the stories she wanted to write."
+    ],
+    [
+      3.8970000000000002,
+      6.352,
+      "But the first page had to be perfect."
+    ],
+    [
+      6.352,
+      7.617,
+      "So she waited."
+    ],
+    [
+      7.617,
+      8.867,
+      "A better idea."
+    ],
+    [
+      8.867,
+      10.132,
+      "A better pen."
+    ],
+    [
+      10.132,
+      11.955,
+      "The page stayed blank."
+    ],
+    [
+      11.955,
+      16.514,
+      "One evening, she wrote a terrible sentence... and left it there."
+    ],
+    [
+      16.514,
+      19.029,
+      "The next day, she wrote another."
+    ],
+    [
+      19.029,
+      24.97,
+      "A month later, the notebook was full of crossed-out words... and actual stories."
+    ],
+    [
+      24.97,
+      27.382,
+      "That first page was never perfect."
+    ],
+    [
+      27.382,
+      29.338,
+      "It just needed to exist."
+    ]
+  ]
+}

@@ -14,7 +14,8 @@ ACTIONS_BY_BACKGROUND = {
 }
 SCENE_DEFAULTS = dict(background='home', action='idle', expression='neutral',
                       caption='', overlay='', message='', event_delay=0.6,
-                      duration=3.0, audio='')
+                      duration=3.0, audio='', setting='study', camera='auto', page_lines=0,
+                      notebook_title='NOTES', page_text='')
 SCENE_PROPERTIES = {
     'narration': {'type': 'string'},
     'background': {'type': 'string', 'enum': list(BACKGROUNDS)},
@@ -23,13 +24,17 @@ SCENE_PROPERTIES = {
     'caption': {'type': 'string'}, 'overlay': {'type': 'string'},
     'message': {'type': 'string'}, 'event_delay': {'type': 'number'},
     'duration': {'type': 'number'}, 'audio': {'type': 'string'},
+    'setting': {'type': 'string', 'enum': ['study', 'cafe', 'garden']},
+    'camera': {'type': 'string', 'enum': ['auto', 'wide', 'close', 'detail']},
+    'page_lines': {'type': 'integer', 'minimum': 0, 'maximum': 7},
+    'notebook_title': {'type': 'string'}, 'page_text': {'type': 'string'},
 }
 SCHEMA = {
     'type': 'object', 'additionalProperties': False,
     'properties': {
         'version': {'type': 'integer', 'enum': [1]}, 'title': {'type': 'string'},
         'voice': {'type': 'string'}, 'rate': {'type': 'string'},
-        'character_style': {'type': 'string', 'enum': ['expressive', 'classic']},
+        'character_style': {'type': 'string', 'enum': ['expressive', 'classic', 'cozy']},
         'scenes': {'type': 'array', 'items': {
             'type': 'object', 'additionalProperties': False,
             'properties': SCENE_PROPERTIES, 'required': list(SCENE_PROPERTIES),
@@ -63,8 +68,8 @@ def validate(raw):
     if not isinstance(story['rate'], str) or not re.fullmatch(r'[+-](?:[0-9]|[1-3][0-9]|40)%', story['rate']):
         raise ValueError('rate must be a signed percentage from -40% to +40%')
     story['character_style'] = raw.get('character_style', 'expressive')
-    if story['character_style'] not in ('expressive', 'classic'):
-        raise ValueError('character_style must be expressive or classic')
+    if story['character_style'] not in ('expressive', 'classic', 'cozy'):
+        raise ValueError('character_style must be expressive, classic or cozy')
     items = raw.get('scenes')
     if not isinstance(items, list) or not 1 <= len(items) <= 20:
         raise ValueError('A story needs 1–20 scenes')
@@ -76,11 +81,24 @@ def validate(raw):
         if set(item) - set(SCENE_PROPERTIES):
             raise ValueError(f'{prefix} contains unsupported fields: {sorted(set(item)-set(SCENE_PROPERTIES))}')
         scene = {**SCENE_DEFAULTS, **item}
-        for key, limit in [('narration', 500), ('caption', 100), ('message', 130), ('overlay', 55), ('audio', 500)]:
+        for key, limit in [('narration', 500), ('caption', 100), ('message', 130), ('overlay', 55), ('audio', 500),
+                           ('notebook_title',24), ('page_text',240)]:
             scene[key] = clean_text(scene.get(key, ''), f'{prefix}.{key}', limit)
-        for key, values in [('background', BACKGROUNDS), ('action', ACTIONS), ('expression', EXPRESSIONS)]:
+        for key, values in [('background', BACKGROUNDS), ('action', ACTIONS), ('expression', EXPRESSIONS),
+                            ('setting', ('study','cafe','garden')), ('camera', ('auto','wide','close','detail'))]:
             if scene[key] not in values:
                 raise ValueError(f'{prefix}.{key} must be one of {values}')
+        if type(scene['page_lines']) is not int or not 0 <= scene['page_lines'] <= 7:
+            raise ValueError(f'{prefix}.page_lines must be an integer from 0 to 7')
+        if len(scene['page_text'].splitlines())>8 or any(len(line)>26 for line in scene['page_text'].splitlines()):
+            raise ValueError(f'{prefix}.page_text supports up to 8 lines of at most 26 characters')
+        if story['character_style']=='cozy':
+            if scene['background']!='desk':
+                raise ValueError(f'{prefix}: cozy currently supports background=desk only')
+            if scene['message']:
+                raise ValueError(f'{prefix}: cozy uses caption rather than message panels')
+        elif any(scene[key]!=SCENE_DEFAULTS[key] for key in ('setting','camera','page_lines','notebook_title','page_text')):
+            raise ValueError(f'{prefix}: notebook and camera controls require character_style=cozy')
         if scene['action'] not in ACTIONS_BY_BACKGROUND[scene['background']]:
             raise ValueError(f"{prefix}: {scene['background']} supports {ACTIONS_BY_BACKGROUND[scene['background']]}")
         for key, lo, hi in [('duration', .5, 30), ('event_delay', 0, 10)]:
@@ -116,7 +134,17 @@ Caption: at most 70 characters. Message: at most 100 characters, or empty.
 Overlay: a short time/location label, or empty. event_delay: when an on-screen
 message appears, usually 0.5–1.5 seconds. duration: 3 for narrated scenes (audio
 will determine their actual duration), 0.5–30 for scenes with no narration.
-Use character_style="expressive" for the new articulated character.
+Use character_style="expressive" for everyday phone, café and standing stories.
+For notebook/writing stories, prefer character_style="cozy": a filled white torso,
+full-color settings, anchored writing hands, and wide/close/detail camera cuts.
+Cozy requires background="desk" and message="". Set setting to study, cafe or garden.
+Use camera="auto" for cuts driven by action, or wide/close/detail to fix a shot.
+page_lines is the number of existing notebook lines, 0–7; type adds one animated line.
+Preserve page_lines between scenes and increase it as the story progresses.
+Set notebook_title (at most 24 characters) and page_text (up to 8 newline-separated
+lines, at most 26 characters each). Keep these consistent across shots of one book.
+For expressive/classic stories, use setting="study", camera="auto", page_lines=0,
+notebook_title="NOTES", page_text="".
 Use audio="" for all generated scenes. Voice en-US-AndrewNeural, rate -3%.
 Schema:
 {json.dumps(SCHEMA, indent=2)}
