@@ -1,5 +1,27 @@
 # The Empty Chair
 
+## Revised pacing cut
+
+`../the-empty-chair-recut.mp4` is the 40.04-second rhythm revision. It reuses all
+eight selected illustrations without changing their pixels or repainting the eyes.
+The story arc is retained with a tighter 33.46-second narration take, short
+intentional pauses, 21 unevenly timed shots, object inserts and reaction close-ups.
+The score withdraws during the wait and resolves on the return. Cloth/page sounds
+and door chimes are synthesized locally. Caption phrases remain short and stable.
+`recut.py` owns this edit independently of the retained 49-second original.
+
+```sh
+.venv/bin/python outputs/the-empty-chair-source/recut.py --preview
+.venv/bin/python outputs/the-empty-chair-source/recut.py
+```
+
+The new continuous take is `narration-recut.mp3`; its text and original timing are
+saved alongside it. The voice is the same Andrew neural narrator, rate -3%.
+All included media can be rebuilt offline; no new artwork or paid image calls
+were used for this revision.
+
+## Original 49-second edition
+
 An original story approved by the user before production. A reserved café regular
 makes room for a stranger, starts saving his seat, and discovers that their brief
 connection mattered to him too. The ending pairs her accomplished sketch with his

@@ -4,7 +4,13 @@ A browser app for the illustrated storytelling style developed in this repositor
 Enter a prompt, review/edit the story, approve it, review the storyboard, approve it,
 and render/download the narrated portrait reel. Projects and partial generation
 results are saved on disk. The finished, eye-corrected **The Empty Chair** is included
-as a no-generation demo. Its existing 49-second video is played as-is.
+as a no-generation demo. The revised 40-second cut is played as-is; the earlier
+49-second version remains in the repository for comparison.
+
+The story opens as a readable script, with scene editing available when needed.
+The storyboard uses a filmstrip and a single scene in focus, with previous/next
+navigation. These views preserve both explicit approval gates. The final step is
+a screening and download view. New briefs can start from a few editable idea prompts.
 
 ## Start on your computer
 
@@ -46,7 +52,7 @@ length is guidance, not a forced cutoff.
 
 After every scene has an image, approve the storyboard and render. Download MP4,
 SRT, and the editable story JSON. The renderer outputs 720×1280, 24 fps, H.264/AAC,
-with readable captions, intact illustrated eyes and small head motions where
+with phrase-based captions, pauses sized to the story beats, intact illustrated eyes and small head motions where
 landmarks are available. It checks the final video with FFmpeg before marking it
 ready. Uploaded art stays still by default. Narration captions are phrase-based
 timing estimates; uploaded speech should match the scene text.

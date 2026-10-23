@@ -90,6 +90,16 @@ class StudioTests(unittest.TestCase):
         self.assertEqual(r.status_code,503)
         p=self.create();self.assertEqual(p['status'],'draft');self.assertIsNone(p['story_approval'])
 
+    @unittest.skipUnless(shutil.which('ffprobe'),'FFmpeg required')
+    def test_revised_example_matches_its_video(self):
+        p=self.client.post('/api/demo').json()
+        self.assertEqual(p['status'],'ready');self.assertEqual(len(p['assets']),8)
+        self.assertIn('recut',p['story']['title'])
+        from studio.rendering import duration
+        actual=duration(Path(self.temp.name)/p['id']/p['video'])
+        self.assertAlmostEqual(actual,p['duration'],places=2)
+        self.assertIn('Mind if I sit',self.client.get(f'/api/projects/{p["id"]}/files/captions.srt').text)
+
     def test_approval_gates_and_edits_invalidate_output(self):
         p=self.create();url='/api/projects/'+p['id']
         self.assertEqual(self.client.post(url+'/render').status_code,409)

@@ -23,6 +23,7 @@ from .rendering import render_project, duration
 from .store import BUSY, Store
 
 ROOT=Path(__file__).resolve().parent.parent
+DEMO_STEM='the-empty-chair-recut'
 DEFAULT_CHARACTER='White filled round head, navy outline and slender navy limbs, rounded shaded white torso, expressive oval eyes, no hair. Give a second character one consistent distinguishing accessory.'
 security=HTTPBasic(auto_error=False)
 
@@ -104,7 +105,7 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
     @app.get('/api/config')
     def config():
         return dict(ai_available=bool(os.getenv('OPENAI_API_KEY')),ffmpeg=bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
-            demo_available=(ROOT/'outputs/the-empty-chair-fixed.mp4').is_file(),
+            demo_available=(ROOT/'outputs'/f'{DEMO_STEM}.mp4').is_file(),
             story_model=os.getenv('STORY_MODEL','gpt-4.1-mini'),image_model=os.getenv('IMAGE_MODEL','gpt-image-2'))
 
     @app.get('/api/projects')
@@ -241,16 +242,16 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
     @app.post('/api/demo')
     def demo():
         with store.lock:
-            if not (ROOT/'outputs/the-empty-chair-fixed.mp4').is_file():raise HTTPException(404,'The example is not installed.')
+            if not (ROOT/'outputs'/f'{DEMO_STEM}.mp4').is_file():raise HTTPException(404,'The example is not installed.')
             data=json.loads((ROOT/'studio/demo.json').read_text());story=Story.model_validate(data['story'])
             p=store.create({'prompt':'The Empty Chair — completed example','mode':'demo'},story.model_dump());folder=store.folder(p['id'])
             for i,name in enumerate(data['images']):
                 target=f'image-{i}.png';shutil.copyfile(ROOT/'outputs/the-empty-chair-source/assets'/name,folder/target)
                 p['assets'][str(i)]={'file':target,'heads':[]}
-            shutil.copyfile(ROOT/'outputs/the-empty-chair-fixed.mp4',folder/'reel.mp4')
-            shutil.copyfile(ROOT/'outputs/the-empty-chair-fixed.srt',folder/'captions.srt')
-            p.update(status='ready',video='reel.mp4',captions='captions.srt',duration=48.958,
-                story_approval=digest(p['story']),storyboard_approval=board_hash(p),progress='The completed example. Edit it to start a new version.')
+            shutil.copyfile(ROOT/'outputs'/f'{DEMO_STEM}.mp4',folder/'reel.mp4')
+            shutil.copyfile(ROOT/'outputs'/f'{DEMO_STEM}.srt',folder/'captions.srt')
+            p.update(status='ready',video='reel.mp4',captions='captions.srt',duration=data['duration'],
+                story_approval=digest(p['story']),storyboard_approval=board_hash(p),progress='Revised cut: tighter narration, a quieter wait, and a warmer return.')
             return store.save(p)
 
     # Serve static files explicitly so API/media access always passes owner auth.

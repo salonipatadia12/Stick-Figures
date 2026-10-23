@@ -264,10 +264,14 @@ verified highest-engagement trend.
 
 ## The Empty Chair — approved story
 
-[Watch the complete reel](outputs/the-empty-chair-fixed.mp4): a café regular makes room
+[Watch the revised 40-second reel](outputs/the-empty-chair-recut.mp4): a café regular makes room
 for a stranger, waits for his return, and discovers he has tried drawing their table.
 The story was approved before production. It uses the selected illustrated character,
 distinct acting scenes, narration, captions and quiet original music.
 
 [Source and offline rebuild instructions](outputs/the-empty-chair-source/README.md) ·
-[Storyboard](outputs/the-empty-chair.storyboard.jpg)
+[Storyboard](outputs/the-empty-chair-recut.storyboard.jpg)
+
+The rhythm revision keeps the illustrations and approved story arc, with tighter
+narration, varied shot lengths, a quieter waiting sequence and a musical return.
+The studio now offers a script-reading view and a focused scene-by-scene storyboard.

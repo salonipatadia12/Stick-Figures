@@ -56,6 +56,31 @@ async def speak(text, path):
     finally:temp.unlink(missing_ok=True)
 
 
+def caption_chunks(text):
+    """Keep short spoken clauses together instead of a repeating word grid."""
+    phrases=re.split(r'(?<=[,;.!?])\s+',text)
+    chunks=[];pending=''
+    for phrase in phrases:
+        words=phrase.split()
+        while len(words)>9:
+            if pending:chunks.append(pending);pending=''
+            count=7 if len(words)>11 else len(words)//2
+            chunks.append(' '.join(words[:count]));words=words[count:]
+        phrase=' '.join(words)
+        if pending and len((pending+' '+phrase).split())>9:
+            chunks.append(pending);pending=''
+        pending=(pending+' '+phrase).strip()
+    if pending:chunks.append(pending)
+    return chunks
+
+
+def beat_hold(text, final=False):
+    if final:return 1.5
+    if '...' in text or '…' in text:return .65
+    if len(text.split())<=7:return .22
+    return .4
+
+
 class IllustratedActor:
     def __init__(self, path, heads):
         with Image.open(path) as original:
@@ -114,10 +139,11 @@ def render_project(project, folder, progress):
             '-format_whitelist','wav,mp3,ogg,flac,mov,matroska,aac',
             '-i',str(audio),'-ar',str(SR),'-ac','1','-c:a','pcm_s16le',str(wav)])
         with wave.open(str(wav)) as f:pcm=array('h',f.readframes(f.getnframes()))
-        length=math.ceil((seconds+.25+(.9 if index==len(project['story']['scenes'])-1 else .35))*FPS)/FPS
+        hold=beat_hold(scene['narration'],index==len(project['story']['scenes'])-1)
+        length=math.ceil((seconds+.25+hold)*FPS)/FPS
         asset=project['assets'][str(index)]
         actor=IllustratedActor(folder/asset['file'],asset.get('heads',[]))
-        words=scene['narration'].split();chunks=[' '.join(words[i:i+7]) for i in range(0,len(words),7)]
+        words=scene['narration'].split();chunks=caption_chunks(scene['narration'])
         at=cursor+.25
         for text in chunks:
             span=seconds*len(text.split())/len(words)

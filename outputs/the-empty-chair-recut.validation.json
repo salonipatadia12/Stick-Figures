@@ -1,0 +1,44 @@
+{
+  "full_decode": "passed",
+  "duration": 40.041666666666664,
+  "shot_count": 21,
+  "original_artwork": true,
+  "eyes": "no overlays or repainting",
+  "integrated_loudness": -17.1,
+  "true_peak": -1.46,
+  "sha256": "8cf9157abf55fe3570f683296904c47f294f1868ec069252102e0ba8953486ce",
+  "media": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 720,
+        "height": 1280,
+        "r_frame_rate": "24/1"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "r_frame_rate": "0/0"
+      }
+    ],
+    "format": {
+      "duration": "40.042000"
+    }
+  },
+  "existing_artwork_unchanged": true,
+  "artwork_sha256": {
+    "04-waiting.png": "bcea2ebd4eed02b4ec9a759cffab8cf9d82d057a33a8203a5351a489ddf181de",
+    "07-books-final.png": "b76490568ccdfa3b843a0dde342de5de427b6bd1fbc33226b59f7c0fa78a1472",
+    "07-books.png": "62876fa8884e1564bcabd46a9e5158feb89f98c6ce4bfb113fb29008aa0f215b",
+    "01-alone.png": "5bc5c51402cd034455f28bc5ceca88841f647eca9fd7f51996a95fe4fc0280ba",
+    "06-return-final.png": "f2da98bb88864ea2fc9bd67c589cb24cc5f8042481422caca4d9768f2709ea43",
+    "03-together.png": "56e0eb1a7cbaa7b967595d4ca9182d0f0d114b1c532ee05c10b95efd3c7d2ece",
+    "06-return.png": "81ac0d40ce1342caa3ab899188845cb6f115390b20da728428d6b0e2b1fdc6cd",
+    "02b-bag.png": "0d45402b39103b65c34066ac6d7c78bc6e04682df8d261533dcfa92a13ce48ca",
+    "02-question.png": "c36d547d8867d983efb122b3ba1ea3fd7c832a6a741a4b95090a92b85416d3b0",
+    "05-disappointed.png": "37a430d5b0567f7ab868136206dab44eba36ccc63a0d7ad93c6ab002747fb9ad"
+  }
+}

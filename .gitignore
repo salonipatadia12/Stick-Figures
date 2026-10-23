@@ -54,3 +54,10 @@ __pycache__/
 !outputs/the-empty-chair-fixed.validation.json
 !outputs/studio-preview.jpg
 !outputs/studio-validation.json
+!outputs/the-empty-chair-recut.mp4
+!outputs/the-empty-chair-recut.srt
+!outputs/the-empty-chair-recut.storyboard.jpg
+!outputs/the-empty-chair-recut.timeline.json
+!outputs/the-empty-chair-recut.validation.json
+!outputs/studio-flow-preview.jpg
+outputs/the-empty-chair-source/recut*.wav
