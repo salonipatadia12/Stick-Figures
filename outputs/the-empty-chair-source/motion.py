@@ -96,7 +96,7 @@ class PropRig:
         else:
             # Chair pull occurs at the final invitation, not throughout his return.
             q=ease((t-.2)/1.2) if acting=='pull' else 0
-            dx=12*q;dy=72*q
+            dx=4*q;dy=22*q
         im=self.base.convert('RGBA')
         prop=translated(self.prop,dx,dy);im.alpha_composite(prop)
         wrist=(self.wrist[0]+dx,self.wrist[1]+dy)
@@ -130,20 +130,20 @@ class MovementScene(Scene):
             elif self.timeline_t>=at(threshold)-gap:source_t=threshold-.001;break
         width,height=self.lips.shape(self.timeline_t,source_t)
         im=paint_mouth(im,self.name,width,height)
-        chuckle=math.sin(math.pi*min(1,t/.48))**2 if t<.48 else .7*math.sin(math.pi*min(1,(t-.48)/.56))**2
-        if acting=='laugh':im=paint_laugh(im,.28+.48*chuckle)
+        chuckle=pulse(t,.12,.65)
+        if acting=='laugh':im=paint_laugh(im,chuckle)
         fields=[]
         for i,(cx,cy,rx,ry,_) in enumerate(self.heads):
             angle=0;lift=0;side=0
             if acting in ('nod','ask','talk'):
-                beat=pulse(t,.15+i*.35,1.05);angle+=(3.6 if i==0 else -2.8)*beat;lift-=4*beat
+                beat=pulse(t,.15+i*.35,1.05);angle+=(1.6 if i==0 else -1.3)*beat;lift-=2*beat
             elif acting=='wait':angle-=3.6*ease(t/1.1);side+=5*ease(t/1.1)
             elif acting=='sad':angle+=3.2*ease(t/1.3);lift+=5*ease(t/1.3)
             elif acting=='lift':angle-=2.2*ease(t/.8);side-=3*ease(t/.8)
             elif acting=='laugh' and i==0:
-                lift-=9*chuckle;angle-=3*chuckle;side-=2*chuckle
+                lift-=2*chuckle;angle-=.6*chuckle;side-=.4*chuckle
             elif acting=='pull' and i==0:
-                angle+=2.5*ease((t-.2)/1.2);side+=4*ease((t-.2)/1.2)
+                angle+=.6*ease((t-.2)/1.2);side+=1*ease((t-.2)/1.2)
             elif acting=='hesitate' and i==0:
                 angle+=4*pulse(t,.08,.9);lift+=3*pulse(t,.08,.9)
             fields.append((cx,cy,rx,ry,math.radians(angle),lift,side))
@@ -157,7 +157,7 @@ class MovementScene(Scene):
                 sy+=weight*(cy+(x-cx)*s+(y-cy)*c-y-lift)
             if acting=='laugh':
                 weight=ease((1-math.hypot((x-210)/105,(y-620)/100))/.55)
-                sy+=weight*5*chuckle
+                sy+=weight*1.5*chuckle
             if acting=='draw':
                 for cx,cy,rx,ry in self.hands:
                     weight=ease((1-math.hypot((x-cx)/rx,(y-cy)/ry))/.32)

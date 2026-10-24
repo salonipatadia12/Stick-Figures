@@ -71,23 +71,8 @@ def paint_mouth(im,name,width,height):
     return out
 
 
-def paint_laugh(im,openness):
-    """A sustained smiling expression: cheeks/closed eyes, then two chuckles."""
-    out=paint_mouth(im,'laugh',1.04,openness)
-    scale=720/941
-    for ex,ey in [(263,598),(348,545)]:
-        x,y=ex*scale,ey*scale;rx,ry=25*scale,38*scale
-        original=out.copy();pixels=out.load();source=original.load()
-        for yy in range(round(y-ry),round(y+ry)+1):
-            half=rx*math.sqrt(max(0,1-((yy-y)/ry)**2))
-            l,r=round(x-half),round(x+half)
-            if r<=l:continue
-            # Skin boundary comes from the same row, beyond the original eye.
-            left,right=source[round(x-rx-2),yy],source[round(x+rx+2),yy]
-            for xx in range(l,r+1):
-                q=(xx-(x-rx))/(2*rx)
-                pixels[xx,yy]=tuple(round(a*(1-q)+b*q) for a,b in zip(left,right))
-        d=ImageDraw.Draw(out)
-        points=[(x-rx*.67+rx*1.34*i/24,y-5*scale-7*scale*math.sin(math.pi*i/24)) for i in range(25)]
-        d.line(points,fill='#171A32',width=3)
-    return out
+def paint_laugh(im,intensity):
+    """One brief, small chuckle; preserve original eyes and resting smile."""
+    if intensity<.01:
+        return im
+    return paint_mouth(im,'laugh',.92,.18+.18*intensity)

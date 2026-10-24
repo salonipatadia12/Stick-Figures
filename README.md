@@ -295,6 +295,6 @@ speech waveform to close the mouth in gaps. It does not animate the character
 during narrator-only passages. New dialogue requires new timings.
 
 The acting revision holds one camera composition per scene. The ending includes
-a smiling-eye laugh with two mouth/shoulder pulses, then an outward chair pull
+a brief chuckle with original eyes and a small shoulder lift, then an outward chair pull
 with a coherent chair layer and attached gripping hand. Rebuild with the same
-`recut.py --motion` command; output is `outputs/the-empty-chair-acting.mp4`.
+`recut.py --motion` command; output is `outputs/the-empty-chair-subtle.mp4`.
