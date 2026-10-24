@@ -23,7 +23,7 @@ from .rendering import render_project, duration
 from .store import BUSY, Store
 
 ROOT=Path(__file__).resolve().parent.parent
-DEMO_STEM='the-empty-chair-dialogue'
+DEMO_STEM='the-empty-chair-acting'
 DEFAULT_CHARACTER='White filled round head, navy outline and slender navy limbs, rounded shaded white torso, expressive oval eyes, no hair. Give a second character one consistent distinguishing accessory.'
 security=HTTPBasic(auto_error=False)
 

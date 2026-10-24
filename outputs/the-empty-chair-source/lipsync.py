@@ -16,12 +16,16 @@ WORDS=[
  (25.23,25.83,'table','EE MBP AI'),
 ]
 MOUTHS={'question':(607,558,24),'bag':(607,558,24),
-        'together':(627,652,23),'return':(602,526,25)}
+        'together':(627,652,23),'return':(602,526,25), 'laugh':(321,627,23)}
 SHAPES={'MBP':(1,.02),'AI':(.9,.65),'EE':(1.12,.25),'OO':(.48,.62),'W':(.55,.30),'FV':(.9,.12)}
 
 class LipSync:
     def __init__(self):
-        with wave.open(str(HERE/'recut-voice.wav'),'rb') as f:
+        path=HERE/'recut-voice.wav'
+        if not path.exists():
+            from recut import voice
+            path=voice()
+        with wave.open(str(path),'rb') as f:
             self.rate=f.getframerate();self.audio=array('h',f.readframes(f.getnframes()))
     def shape(self,t,source_t):
         word=next((w for w in WORDS if w[0]<=source_t<w[1]),None)
@@ -40,7 +44,8 @@ def paint_mouth(im,name,width,height):
     x,y,r=MOUTHS[name];scale=720/941;x*=scale;y*=scale;r*=scale
     out=im.copy()
     # Restore the small mouth area using a row-wise skin gradient, safely below eyes.
-    l,t,rr,b=map(round,(x-r-2,y-11*scale,x+r+2,y+13*scale))
+    top,bottom=(-24,26) if name=='laugh' else (-11,13)
+    l,t,rr,b=map(round,(x-r-3,y+top*scale,x+r+3,y+bottom*scale))
     pix=out.load()
     for yy in range(t,b+1):
         left,right=pix[l,yy],pix[rr,yy]
@@ -60,5 +65,29 @@ def paint_mouth(im,name,width,height):
         if width>1.05:
             d.rounded_rectangle((cx-rw*.70,cy+1,cx+rw*.70,cy+rh*.23+2),radius=2,fill='#FFF9EC')
     mouth=mouth.resize((mouth.width//2,mouth.height//2),Image.Resampling.LANCZOS)
-    out.paste(mouth,(round(x-mouth.width/2),round(y-6)),mouth)
+    if name=='laugh':
+        mouth=mouth.rotate(24,resample=Image.Resampling.BICUBIC,expand=True)
+    out.paste(mouth,(round(x-mouth.width/2),round(y-mouth.height/2+3) if name=='laugh' else round(y-6)),mouth)
+    return out
+
+
+def paint_laugh(im,openness):
+    """A sustained smiling expression: cheeks/closed eyes, then two chuckles."""
+    out=paint_mouth(im,'laugh',1.04,openness)
+    scale=720/941
+    for ex,ey in [(263,598),(348,545)]:
+        x,y=ex*scale,ey*scale;rx,ry=25*scale,38*scale
+        original=out.copy();pixels=out.load();source=original.load()
+        for yy in range(round(y-ry),round(y+ry)+1):
+            half=rx*math.sqrt(max(0,1-((yy-y)/ry)**2))
+            l,r=round(x-half),round(x+half)
+            if r<=l:continue
+            # Skin boundary comes from the same row, beyond the original eye.
+            left,right=source[round(x-rx-2),yy],source[round(x+rx+2),yy]
+            for xx in range(l,r+1):
+                q=(xx-(x-rx))/(2*rx)
+                pixels[xx,yy]=tuple(round(a*(1-q)+b*q) for a,b in zip(left,right))
+        d=ImageDraw.Draw(out)
+        points=[(x-rx*.67+rx*1.34*i/24,y-5*scale-7*scale*math.sin(math.pi*i/24)) for i in range(25)]
+        d.line(points,fill='#171A32',width=3)
     return out

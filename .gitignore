@@ -72,3 +72,9 @@ outputs/the-empty-chair-source/qa-*
 !outputs/the-empty-chair-dialogue.srt
 !outputs/the-empty-chair-dialogue.storyboard.jpg
 !outputs/the-empty-chair-dialogue.timeline.json
+
+!outputs/the-empty-chair-acting.mp4
+!outputs/the-empty-chair-acting.srt
+!outputs/the-empty-chair-acting.storyboard.jpg
+!outputs/the-empty-chair-acting.timeline.json
+!outputs/the-empty-chair-acting-preview.mp4

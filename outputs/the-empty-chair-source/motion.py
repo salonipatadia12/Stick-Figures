@@ -6,7 +6,7 @@ are revealed only inside the old silhouettes; faces are never repainted.
 import math
 from PIL import Image, ImageDraw, ImageChops, ImageFilter
 from render import Scene, HERE, SIZE, ease, pulse
-from lipsync import LipSync, paint_mouth
+from lipsync import LipSync, paint_mouth, paint_laugh
 
 SOURCE=(941,1672)
 NAVY='#171A32'
@@ -71,13 +71,18 @@ class PropRig:
             self.shoulder=(325,745);self.wrist=(779,792)
             self.hand=sprite(self.original,dark_hand(self.original,(759,725,861,816)))
             e.line(bezier([(325,744),(554,920),(803,773)]),fill=255,width=52,joint='curve')
-            self.upper,self.lower=235,235
+            self.upper,self.lower=255,255
         self.prop=sprite(self.original,mask)
         if name=='bag':
             isolated=Image.open(HERE/'assets/motion/bag-sprite.png').convert('RGBA')
             isolated=isolated.crop(isolated.getchannel('A').getbbox()).resize((264,325),Image.Resampling.LANCZOS)
             self.prop=Image.new('RGBA',SOURCE);self.prop.alpha_composite(isolated,(635,735))
         else:
+            propfile=HERE/'assets/motion/chair-sprite.png'
+            if propfile.exists():
+                isolated=Image.open(propfile).convert('RGBA')
+                isolated=isolated.crop(isolated.getchannel('A').getbbox()).resize((540,710),Image.Resampling.LANCZOS)
+                self.prop=Image.new('RGBA',SOURCE);self.prop.alpha_composite(isolated,(570,733))
             e.polygon([(780,720),(941,720),(941,1500),(540,1450),(560,1130),(580,1060),(740,1020)],fill=255)
         erase=ImageChops.lighter(erase,mask.filter(ImageFilter.MaxFilter(9)))
         erase=ImageChops.lighter(erase,self.hand.getchannel('A').filter(ImageFilter.MaxFilter(9)))
@@ -91,15 +96,20 @@ class PropRig:
         else:
             # Chair pull occurs at the final invitation, not throughout his return.
             q=ease((t-.2)/1.2) if acting=='pull' else 0
-            dx=-48*q;dy=10*q
+            dx=12*q;dy=72*q
         im=self.base.convert('RGBA')
         prop=translated(self.prop,dx,dy);im.alpha_composite(prop)
         wrist=(self.wrist[0]+dx,self.wrist[1]+dy)
         mid=elbow(self.shoulder,wrist,self.upper,self.lower)
         arm=Image.new('RGBA',SOURCE);d=ImageDraw.Draw(arm)
         # Fixed-length upper arm and forearm, rounded joint, intact original hand.
-        d.line([self.shoulder,mid,wrist],fill=NAVY,width=29,joint='curve')
-        for x,y in [self.shoulder,mid,wrist]:d.ellipse((x-14,y-14,x+14,y+14),fill=NAVY)
+        if self.name=='chair':
+            # Smooth connected arm, with effort building before the chair moves.
+            control=(mid[0],mid[1]+42)
+            d.line(bezier([self.shoulder,control,wrist]),fill=NAVY,width=32,joint='curve')
+        else:
+            d.line([self.shoulder,mid,wrist],fill=NAVY,width=29,joint='curve')
+        for x,y in ([self.shoulder,wrist] if self.name=='chair' else [self.shoulder,mid,wrist]):d.ellipse((x-14,y-14,x+14,y+14),fill=NAVY)
         im.alpha_composite(arm);im.alpha_composite(translated(self.hand,dx,dy))
         return im.convert('RGB').resize(SIZE,Image.Resampling.LANCZOS)
 
@@ -111,7 +121,7 @@ class MovementScene(Scene):
         self.rig=PropRig('bag',spec['file']) if name=='bag' else PropRig('chair',spec['file']) if name=='return' else None
 
     def frame(self,t,acting):
-        im=self.rig.frame(t,acting) if self.rig and (self.rig.name=='bag' or acting=='pull') else self.im.copy()
+        im=self.rig.frame(t,acting) if self.rig else self.im.copy()
         from recut import at, PAUSES, LEAD
         # Invert the edit's inserted pauses, without making a paused word repeat.
         source_t=self.timeline_t-LEAD
@@ -120,15 +130,22 @@ class MovementScene(Scene):
             elif self.timeline_t>=at(threshold)-gap:source_t=threshold-.001;break
         width,height=self.lips.shape(self.timeline_t,source_t)
         im=paint_mouth(im,self.name,width,height)
+        chuckle=math.sin(math.pi*min(1,t/.48))**2 if t<.48 else .7*math.sin(math.pi*min(1,(t-.48)/.56))**2
+        if acting=='laugh':im=paint_laugh(im,.28+.48*chuckle)
         fields=[]
         for i,(cx,cy,rx,ry,_) in enumerate(self.heads):
-            angle=.45*math.sin(t*1.5+i);lift=1.2*math.sin(t*1.8+i);side=0
+            angle=0;lift=0;side=0
             if acting in ('nod','ask','talk'):
                 beat=pulse(t,.15+i*.35,1.05);angle+=(3.6 if i==0 else -2.8)*beat;lift-=4*beat
             elif acting=='wait':angle-=3.6*ease(t/1.1);side+=5*ease(t/1.1)
             elif acting=='sad':angle+=3.2*ease(t/1.3);lift+=5*ease(t/1.3)
             elif acting=='lift':angle-=2.2*ease(t/.8);side-=3*ease(t/.8)
-            elif acting=='laugh':lift-=5*math.sin(t*8)**2*math.exp(-t/2);angle+=1.5*math.sin(t*6)*math.exp(-t/2)
+            elif acting=='laugh' and i==0:
+                lift-=9*chuckle;angle-=3*chuckle;side-=2*chuckle
+            elif acting=='pull' and i==0:
+                angle+=2.5*ease((t-.2)/1.2);side+=4*ease((t-.2)/1.2)
+            elif acting=='hesitate' and i==0:
+                angle+=4*pulse(t,.08,.9);lift+=3*pulse(t,.08,.9)
             fields.append((cx,cy,rx,ry,math.radians(angle),lift,side))
         if not fields:return im
         def point(x,y):
@@ -138,6 +155,9 @@ class MovementScene(Scene):
                 c,s=math.cos(-a),math.sin(-a)
                 sx+=weight*(cx+(x-cx)*c-(y-cy)*s-x-side)
                 sy+=weight*(cy+(x-cx)*s+(y-cy)*c-y-lift)
+            if acting=='laugh':
+                weight=ease((1-math.hypot((x-210)/105,(y-620)/100))/.55)
+                sy+=weight*5*chuckle
             if acting=='draw':
                 for cx,cy,rx,ry in self.hands:
                     weight=ease((1-math.hypot((x-cx)/rx,(y-cy)/ry))/.32)

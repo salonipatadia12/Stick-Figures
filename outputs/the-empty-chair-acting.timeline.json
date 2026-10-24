@@ -1,0 +1,243 @@
+{
+  "title": "The Empty Chair \u2014 rhythm revision",
+  "duration": 40.041666666666664,
+  "dialogue_mouth_animation": true,
+  "original_artwork": true,
+  "eyes": "original artwork preserved; no blink overlays",
+  "fps": 24,
+  "width": 720,
+  "height": 1280,
+  "shots": [
+    {
+      "start": 0,
+      "end": 3.1599999999999997,
+      "image": "alone",
+      "acting": "draw",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 3.1599999999999997,
+      "end": 4.85,
+      "image": "alone",
+      "acting": "draw",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 4.85,
+      "end": 6.53,
+      "image": "alone",
+      "acting": "still",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 6.53,
+      "end": 9.601,
+      "image": "question",
+      "acting": "ask",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 9.601,
+      "end": 10.5,
+      "image": "question",
+      "acting": "hesitate",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 10.5,
+      "end": 11.779,
+      "image": "bag",
+      "acting": "lift",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 11.779,
+      "end": 13.351,
+      "image": "together",
+      "acting": "talk",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 13.351,
+      "end": 15.155000000000001,
+      "image": "together",
+      "acting": "ask",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 15.155000000000001,
+      "end": 16.25,
+      "image": "together",
+      "acting": "nod",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 16.25,
+      "end": 17.986,
+      "image": "together",
+      "acting": "talk",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 17.986,
+      "end": 19.8,
+      "image": "waiting",
+      "acting": "wait",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 19.8,
+      "end": 21.351000000000003,
+      "image": "waiting",
+      "acting": "still",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 21.351000000000003,
+      "end": 22.935000000000002,
+      "image": "waiting",
+      "acting": "wait",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 22.935000000000002,
+      "end": 26.399,
+      "image": "disappointed",
+      "acting": "sad",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 26.399,
+      "end": 29.479,
+      "image": "return",
+      "acting": "return",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 29.479,
+      "end": 30.922,
+      "image": "return",
+      "acting": "show",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 30.922,
+      "end": 32.056000000000004,
+      "image": "books",
+      "acting": "still",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 32.056000000000004,
+      "end": 33.672000000000004,
+      "image": "books",
+      "acting": "still",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 33.672000000000004,
+      "end": 34.85,
+      "image": "return",
+      "acting": "laugh",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 34.85,
+      "end": 37.1,
+      "image": "return",
+      "acting": "pull",
+      "camera_motion": "locked"
+    },
+    {
+      "start": 37.1,
+      "end": 40.041666666666664,
+      "image": "books",
+      "acting": "still",
+      "camera_motion": "locked"
+    }
+  ],
+  "speech_cues": [
+    [
+      0.35,
+      3.1599999999999997,
+      "Every morning, she drew at the same caf\u00e9."
+    ],
+    [
+      3.1599999999999997,
+      6.33,
+      "And every morning, her bag took the other chair."
+    ],
+    [
+      6.53,
+      9.301,
+      "Until someone asked, \u201cMind if I sit?\u201d"
+    ],
+    [
+      9.601,
+      11.779,
+      "She hesitated... then moved it."
+    ],
+    [
+      11.779,
+      13.351,
+      "He noticed her sketchbook."
+    ],
+    [
+      13.351,
+      15.155000000000001,
+      "\u201cWait... you drew this?\u201d"
+    ],
+    [
+      15.155000000000001,
+      17.436,
+      "They talked until their coffee went cold."
+    ],
+    [
+      17.986,
+      20.551000000000002,
+      "The next morning, she saved his seat."
+    ],
+    [
+      21.351000000000003,
+      22.485000000000003,
+      "Then the next."
+    ],
+    [
+      22.935000000000002,
+      25.499000000000002,
+      "By the fourth morning, the bag was back."
+    ],
+    [
+      26.399,
+      29.479,
+      "That's when she heard, \u201cI tried drawing our table.\u201d"
+    ],
+    [
+      29.479,
+      30.922,
+      "He held up a sketchbook."
+    ],
+    [
+      30.922,
+      32.056000000000004,
+      "Crooked legs."
+    ],
+    [
+      32.056000000000004,
+      33.422000000000004,
+      "Cups like potatoes."
+    ],
+    [
+      33.672000000000004,
+      35.386,
+      "She laughed, moved her bag..."
+    ],
+    [
+      35.386,
+      37.1,
+      "and pulled out his chair."
+    ]
+  ],
+  "camera": "One locked composition per scene; no animated zooms",
+  "acting": "Two smiling-eye chuckles, shoulder response, outward chair pull"
+}
