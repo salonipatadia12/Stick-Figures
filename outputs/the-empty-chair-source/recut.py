@@ -90,6 +90,7 @@ class Recut:
     def frame(self,t):
         index=max(i for i,start in enumerate(self.starts) if start<=t)
         source,image,crop,acting,move,label=SHOTS[index];local=t-self.starts[index]
+        self.scenes[image].timeline_t=t
         im=self.scenes[image].frame(local,'pull' if source==31.1 and self.motion else acting)
         if image=='disappointed':im=ImageEnhance.Color(im).enhance(.72)
         cx,cy,zoom=crop
@@ -150,7 +151,7 @@ def stamp(t):
 
 def render(preview=False,with_motion=False):
     from motion import MovementScene
-    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-motion.mp4' if with_motion else 'the-empty-chair-recut.mp4')
+    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-dialogue.mp4' if with_motion else 'the-empty-chair-recut.mp4')
     if preview:
         sheet=Image.new('RGB',(1080,1920))
         for n,i in enumerate([0,2,3,6,10,13,14,18,20]):sheet.paste(reel.frame(reel.starts[i]+.4).resize((360,640)),(n%3*360,n//3*640))
@@ -174,7 +175,7 @@ def render(preview=False,with_motion=False):
             temp.unlink(missing_ok=True)
     target.with_suffix('.srt').write_text('\n\n'.join(f'{i+1}\n{stamp(a)} --> {stamp(b)}\n{text}' for i,(a,b,text) in enumerate(reel.captions))+'\n')
     target.with_suffix('.timeline.json').write_text(json.dumps(dict(title='The Empty Chair — rhythm revision',duration=DURATION,
-        original_artwork=True,eyes='original artwork preserved; no blink overlays',fps=FPS,width=720,height=1280,
+        dialogue_mouth_animation=with_motion,original_artwork=True,eyes='original artwork preserved; no blink overlays',fps=FPS,width=720,height=1280,
         shots=[dict(start=reel.starts[i],end=reel.starts[i+1] if i+1<len(SHOTS) else DURATION,image=s[1],acting=s[3],camera_motion=s[4]) for i,s in enumerate(SHOTS)],speech_cues=reel.captions),indent=2))
     print(target)
 

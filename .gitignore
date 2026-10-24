@@ -67,3 +67,8 @@ outputs/the-empty-chair-source/recut*.wav
 !outputs/the-empty-chair-motion.storyboard.jpg
 !outputs/the-empty-chair-motion.timeline.json
 outputs/the-empty-chair-source/qa-*
+
+!outputs/the-empty-chair-dialogue.mp4
+!outputs/the-empty-chair-dialogue.srt
+!outputs/the-empty-chair-dialogue.storyboard.jpg
+!outputs/the-empty-chair-dialogue.timeline.json

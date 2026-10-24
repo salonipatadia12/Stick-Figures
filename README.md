@@ -288,3 +288,8 @@ This edition uses layered 2D animation with reconstructed clean plates. Original
 face artwork is preserved without blink overlays. The scene-specific prop rigs
 are in `outputs/the-empty-chair-source/motion.py`; arbitrary new illustrations
 need their own prop masks and attachment points.
+
+Dialogue mouth animation is defined in `outputs/the-empty-chair-source/lipsync.py`.
+It uses manually timed dialogue words, cartoon mouth shapes and the included
+speech waveform to close the mouth in gaps. It does not animate the character
+during narrator-only passages. New dialogue requires new timings.

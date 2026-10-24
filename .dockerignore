@@ -11,8 +11,8 @@ outputs/*
 !outputs/character-focus-reference.png
 !outputs/the-empty-chair-fixed.mp4
 !outputs/the-empty-chair-fixed.srt
-!outputs/the-empty-chair-motion.mp4
-!outputs/the-empty-chair-motion.srt
+!outputs/the-empty-chair-dialogue.mp4
+!outputs/the-empty-chair-dialogue.srt
 !outputs/the-empty-chair-source
 outputs/the-empty-chair-source/*
 !outputs/the-empty-chair-source/assets

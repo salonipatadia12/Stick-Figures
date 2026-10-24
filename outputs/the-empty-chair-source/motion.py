@@ -6,6 +6,7 @@ are revealed only inside the old silhouettes; faces are never repainted.
 import math
 from PIL import Image, ImageDraw, ImageChops, ImageFilter
 from render import Scene, HERE, SIZE, ease, pulse
+from lipsync import LipSync, paint_mouth
 
 SOURCE=(941,1672)
 NAVY='#171A32'
@@ -106,10 +107,19 @@ class PropRig:
 class MovementScene(Scene):
     def __init__(self,name,spec):
         super().__init__(name,spec)
+        self.lips=LipSync();self.timeline_t=0
         self.rig=PropRig('bag',spec['file']) if name=='bag' else PropRig('chair',spec['file']) if name=='return' else None
 
     def frame(self,t,acting):
         im=self.rig.frame(t,acting) if self.rig and (self.rig.name=='bag' or acting=='pull') else self.im.copy()
+        from recut import at, PAUSES, LEAD
+        # Invert the edit's inserted pauses, without making a paused word repeat.
+        source_t=self.timeline_t-LEAD
+        for threshold,gap in PAUSES:
+            if self.timeline_t>=at(threshold):source_t-=gap
+            elif self.timeline_t>=at(threshold)-gap:source_t=threshold-.001;break
+        width,height=self.lips.shape(self.timeline_t,source_t)
+        im=paint_mouth(im,self.name,width,height)
         fields=[]
         for i,(cx,cy,rx,ry,_) in enumerate(self.heads):
             angle=.45*math.sin(t*1.5+i);lift=1.2*math.sin(t*1.8+i);side=0
