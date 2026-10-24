@@ -94,7 +94,7 @@ class StudioTests(unittest.TestCase):
     def test_revised_example_matches_its_video(self):
         p=self.client.post('/api/demo').json()
         self.assertEqual(p['status'],'ready');self.assertEqual(len(p['assets']),8)
-        self.assertIn('recut',p['story']['title'])
+        self.assertIn('The Empty Chair',p['story']['title'])
         from studio.rendering import duration
         actual=duration(Path(self.temp.name)/p['id']/p['video'])
         self.assertAlmostEqual(actual,p['duration'],places=2)

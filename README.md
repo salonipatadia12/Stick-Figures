@@ -275,3 +275,16 @@ distinct acting scenes, narration, captions and quiet original music.
 The rhythm revision keeps the illustrations and approved story arc, with tighter
 narration, varied shot lengths, a quieter waiting sequence and a musical return.
 The studio now offers a script-reading view and a focused scene-by-scene storyboard.
+
+
+To rebuild the illustrated example with articulated bag lifting, a chair pull,
+head turns and writing gestures, run:
+
+```sh
+.venv/bin/python outputs/the-empty-chair-source/recut.py --motion
+```
+
+This edition uses layered 2D animation with reconstructed clean plates. Original
+face artwork is preserved without blink overlays. The scene-specific prop rigs
+are in `outputs/the-empty-chair-source/motion.py`; arbitrary new illustrations
+need their own prop masks and attachment points.

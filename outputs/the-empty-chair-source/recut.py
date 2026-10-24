@@ -82,14 +82,15 @@ def voice():
 
 
 class Recut:
-    def __init__(self):
-        self.scenes={n:Scene(n,s) for n,s in SPECS.items()};self.starts=[0]+[at(s[0]) for s in SHOTS[1:]]
+    def __init__(self,scene_class=Scene):
+        self.scenes={n:scene_class(n,s) for n,s in SPECS.items()};self.starts=[0]+[at(s[0]) for s in SHOTS[1:]]
+        self.motion=scene_class is not Scene
         self.captions=cues();self.face=ImageFont.truetype(FONT,34);self.label=ImageFont.truetype(FONT,21)
 
     def frame(self,t):
         index=max(i for i,start in enumerate(self.starts) if start<=t)
         source,image,crop,acting,move,label=SHOTS[index];local=t-self.starts[index]
-        im=self.scenes[image].frame(local,acting)
+        im=self.scenes[image].frame(local,'pull' if source==31.1 and self.motion else acting)
         if image=='disappointed':im=ImageEnhance.Color(im).enhance(.72)
         cx,cy,zoom=crop
         if move=='settle':zoom+=.028*ease(local/2)
@@ -147,8 +148,9 @@ def stamp(t):
     ms=round(t*1000);return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}'
 
 
-def render(preview=False):
-    reel=Recut();target=OUT/'the-empty-chair-recut.mp4'
+def render(preview=False,with_motion=False):
+    from motion import MovementScene
+    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-motion.mp4' if with_motion else 'the-empty-chair-recut.mp4')
     if preview:
         sheet=Image.new('RGB',(1080,1920))
         for n,i in enumerate([0,2,3,6,10,13,14,18,20]):sheet.paste(reel.frame(reel.starts[i]+.4).resize((360,640)),(n%3*360,n//3*640))
@@ -178,4 +180,4 @@ def render(preview=False):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--preview',action='store_true');render(parser.parse_args().preview)
+    parser=argparse.ArgumentParser();parser.add_argument('--preview',action='store_true');parser.add_argument('--motion',action='store_true');args=parser.parse_args();render(args.preview,args.motion)
