@@ -29,7 +29,7 @@ class LipSync:
         a,b,_,phones=word;phones=phones.split()
         p=(source_t-a)/(b-a)*len(phones);i=min(int(p),len(phones)-1)
         # A brief closed contact between words avoids a continuous flapping loop.
-        envelope=math.sin(math.pi*min(1,(source_t-a)/.035))*min(1,(b-source_t)/.04)
+        envelope=min(1,(source_t-a)/.035)*min(1,(b-source_t)/.04)
         center=round(t*self.rate);lo=max(0,center-240);hi=min(len(self.audio),center+240)
         level=math.sqrt(sum(v*v for v in self.audio[lo:hi])/max(1,hi-lo))/32768
         width,height=SHAPES[phones[i]]

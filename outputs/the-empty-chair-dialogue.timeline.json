@@ -1,6 +1,7 @@
 {
   "title": "The Empty Chair \u2014 rhythm revision",
   "duration": 40.041666666666664,
+  "dialogue_mouth_animation": true,
   "original_artwork": true,
   "eyes": "original artwork preserved; no blink overlays",
   "fps": 24,
@@ -236,7 +237,5 @@
       37.1,
       "and pulled out his chair."
     ]
-  ],
-  "dialogue_mouth_animation": true,
-  "mouth_timing": "Manually timed dialogue words and speech envelope"
+  ]
 }
