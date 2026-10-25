@@ -39,6 +39,8 @@
             "action": "idle",
             "emotion": "worried",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           },
           {
@@ -49,6 +51,8 @@
             "action": "idle",
             "emotion": "sad",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           }
         ],
@@ -80,6 +84,8 @@
             "action": "pick_up",
             "emotion": "neutral",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": "gift"
           },
           {
@@ -90,6 +96,8 @@
             "action": "idle",
             "emotion": "sad",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           }
         ],
@@ -121,6 +129,8 @@
             "action": "give",
             "emotion": "happy",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": "gift"
           },
           {
@@ -131,6 +141,8 @@
             "action": "idle",
             "emotion": "sad",
             "end_emotion": "happy",
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           }
         ],
@@ -162,6 +174,8 @@
             "action": "wave",
             "emotion": "happy",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           },
           {
@@ -172,6 +186,8 @@
             "action": "idle",
             "emotion": "happy",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           }
         ],

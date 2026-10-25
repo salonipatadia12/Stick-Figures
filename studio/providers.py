@@ -40,7 +40,7 @@ Define characters with IDs hero and friend, colors as hex, accessories none/scar
 Every scene MUST have animation directions. Settings: cafe, park, street, home, office, stage.
 Light: day/sunset/night. Speaker narrator unless the entire scene is spoken by hero or friend.
 Supported actions ONLY: idle, walk, sit, stand, wave, talk, point, write, pick_up, put_down, give, laugh.
-One action per character per scene. Pose standing/seated. Actor x and end_x are .18 to .82.
+One action per character per scene. action_start/action_end are scene fractions 0 to 1, at least .15 apart; use these to place the action near the words describing it. Pose standing/seated. Actor x and end_x are .18 to .82.
 Props: book, bag, cup, flower, note, ball. Name each with a stable lowercase id.
 Props start on a small table (holder none) or in hero/friend's hand. No invisible props.
 write needs a book on the table. pick_up needs a free prop. give/put_down need a held prop.

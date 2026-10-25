@@ -1,6 +1,6 @@
 ## Reusable animation studio update
 
-The browser studio now supports reusable articulated characters and independently
+The browser studio uses shaded café-style characters, restrained gestures, and independently
 changeable backgrounds. Choose a preset setting or upload a background per scene,
 direct actions and emotions, review movement, and render narration plus captions.
 Start with **Try the editable animation example**. See [studio setup and workflow](studio/README.md).

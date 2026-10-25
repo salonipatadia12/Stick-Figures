@@ -53,15 +53,22 @@ The library supports idle, walk, sit, stand, wave, talk, point, write, pick up,
 put down, give and laugh. Objects: book, bag, cup, flower, note and ball. Use one
 primary action per actor per scene; add another scene for a subsequent action.
 Each actor has a starting emotion and optional ending emotion (changes at 65% of
-that scene). A book-writing action moves the hand and pen along the visible ink
-path. Heads stay rigid. The renderer validates reachable hands and checks prop
+its action window). Action start/end controls place the movement within the scene.
+Before and after that window, the character holds its appropriate pose. The preview
+uses the same timing fractions as the final video. A book-writing action moves the hand and pen along the visible ink
+path. Heads stay rigid, with at most a small whole-head rotation for a greeting. There is
+no head scaling or image warp. Neutral hands rest beside the body. Elbow bends use
+a consistent joint solution, and waves follow authored shoulder/forearm angles so
+the elbow cannot flip sides as the hand crosses shoulder height. The renderer validates reachable hands and checks prop
 ownership across consecutive scenes. These checks do not understand all narration;
 review the storyboard to confirm that the words describe the visible action.
 
 **Backgrounds are independent.** Presets and uploaded images never bake characters
 into the backdrop. Upload a background without people for best results. It is a
-static image behind the animated figures. This free 2D style is simpler than the
-painted café reference; it is not generated cinematic footage. Arbitrary fights,
+static image behind the animated figures. The default reusable renderer now uses painted character cels and background plates
+based on the approved café reference. Heads, hands and torso are separate rigid
+parts; limb joints and facial expressions are animated locally. It remains a 2D
+rig, rather than generated cinematic footage. Arbitrary fights,
 complex choreography, moving cameras, arbitrary objects and multi-action sequences
 inside one scene require extending the action library. The scene's visual prose is
 review guidance; structured animation controls determine what is actually drawn.
@@ -155,3 +162,22 @@ contracts, and a real offline render with uploaded illustrations/audio.
 Implementation follows the official [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 and [image generation](https://developers.openai.com/api/docs/guides/image-generation)
 APIs. Defaults are configurable via `STORY_MODEL` and `IMAGE_MODEL`.
+
+## Café-style artwork and motion revision
+
+`studio/assets/illustrated/` contains the generated source atlases and extracted
+head, torso, relaxed hand, open hand and six painted backgrounds. These were made
+with the built-in image-generation tool, using `outputs/character-focus-reference.png`
+as the style reference. Exact prompts are saved in `prompts.json`. Regenerate the
+registered crops with `python scripts/prepare_illustrated_assets.py`; the crop bounds
+are tied to the checked-in source atlases. All assets are bundled with the app and
+need no image service at runtime. Character body color and scarf accent remain editable.
+
+A fixed, character-focused composition replaces the old distant full-frame view.
+It does not animate a zoom. Custom background uploads still work, and lighting
+choices grade the static plate. Images may be cropped to fit that composition.
+The new example renders are `outputs/reusable-first-hello-cafe.mp4` and
+`outputs/reusable-kindness-cafe.mp4`; the earlier flat renders are retained for comparison.
+Motion checks cover continuous elbows, constant arm segment lengths, a settled
+beginning/end and modest speaking gestures. Visual inspection is still necessary;
+these checks cannot certify that every arbitrary story looks natural.

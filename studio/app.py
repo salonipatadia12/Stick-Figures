@@ -22,6 +22,7 @@ from .providers import GenerationError, OpenAIProvider
 from .rendering import render_project, duration
 from .store import BUSY, Store
 from .animation import AnimatedScene
+from .illustrated_assets import ART_VERSION
 from .animation_models import ACTIONS, EMOTIONS, SETTINGS, PROPS
 
 ROOT=Path(__file__).resolve().parent.parent
@@ -141,8 +142,10 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
 
     def thumbnail(p,index,folder):
         scene=p['story']['scenes'][index];bg=p.get('backgrounds',{}).get(str(index))
-        name=f'animation-{index}-{digest(dict(scene=scene,characters=p["story"]["characters"],bg=bg))[:12]}.png'
-        AnimatedScene(scene,p['story']['characters'],folder/bg if bg else None).frame(3,6).save(folder/name)
+        name=f'animation-{index}-{digest(dict(scene=scene,characters=p["story"]["characters"],bg=bg,art=ART_VERSION))[:12]}.png'
+        engine=AnimatedScene(scene,p['story']['characters'],folder/bg if bg else None)
+        actor=next((a for a in engine.plan.actors if a.action!='idle'),engine.plan.actors[0])
+        engine.frame(3*(actor.action_start+actor.action_end),6).save(folder/name)
         return dict(file=name,heads=[])
 
     @app.get('/api/projects/{identifier}/scenes/{index}/frame')

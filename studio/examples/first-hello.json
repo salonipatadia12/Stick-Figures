@@ -39,6 +39,8 @@
             "action": "wave",
             "emotion": "worried",
             "end_emotion": "happy",
+            "action_start": 0.5,
+            "action_end": 1.0,
             "prop": ""
           },
           {
@@ -49,6 +51,8 @@
             "action": "idle",
             "emotion": "happy",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           }
         ],
@@ -73,6 +77,8 @@
             "action": "talk",
             "emotion": "worried",
             "end_emotion": "happy",
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           },
           {
@@ -83,6 +89,8 @@
             "action": "idle",
             "emotion": "happy",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 1.0,
             "prop": ""
           }
         ],
@@ -107,6 +115,8 @@
             "action": "laugh",
             "emotion": "happy",
             "end_emotion": "happy",
+            "action_start": 0.08,
+            "action_end": 0.7,
             "prop": ""
           },
           {
@@ -117,6 +127,8 @@
             "action": "laugh",
             "emotion": "happy",
             "end_emotion": null,
+            "action_start": 0.0,
+            "action_end": 0.55,
             "prop": ""
           }
         ],

@@ -35,8 +35,31 @@ class AnimationTests(unittest.TestCase):
                 self.assertEqual(pose['cy'],530)
         # Faces remain pixel-identical during a handover, while the arms move.
         a,b=engine.frame(0),engine.frame(4)
-        self.assertIsNone(ImageChops.difference(a.crop((140,440,320,620)),b.crop((140,440,320,620))).getbbox())
+        self.assertIsNone(ImageChops.difference(a.crop((80,230,320,470)),b.crop((80,230,320,470))).getbbox())
         self.assertIsNotNone(ImageChops.difference(a,b).getbbox())
+
+    def test_wave_does_not_flip_elbow_and_returns_to_rest(self):
+        import math
+        s=json.loads((ROOT/'studio/examples/first-hello.json').read_text())
+        e=AnimatedScene(s['scenes'][0],s['characters']);previous=None
+        start=e.poses(0)[0]['hero']['hand']
+        self.assertEqual(start,e.poses(1)[0]['hero']['hand'])
+        self.assertEqual(start,e.poses(.5)[0]['hero']['hand'])
+        for frame in range(145):
+            z=e.poses(frame/144)[0]['hero']
+            shoulder=(z['x']+z['direction']*43,z['shoulder']+5)
+            elbow,wrist=joint(shoulder,z['hand'],side=z['direction'])
+            # Even the compressed wave window moves less than 9 scene pixels per
+            # 1/144 step; the previous branch flip jumped over 100 pixels.
+            if previous:self.assertLess(math.dist(previous,elbow),9)
+            self.assertGreater(elbow[0],shoulder[0])
+            self.assertAlmostEqual(math.dist(shoulder,elbow),90,places=5)
+            self.assertAlmostEqual(math.dist(elbow,wrist),90,places=5)
+            previous=elbow
+        e=AnimatedScene(s['scenes'][1],s['characters'])
+        poses=[e.poses(i/144)[0]['hero'] for i in range(145)]
+        self.assertLess(max(p['hand'][1] for p in poses)-min(p['hand'][1] for p in poses),20)
+        self.assertLess(max(p['hand'][0] for p in poses)-min(p['hand'][0] for p in poses),40)
 
     def test_write_pen_and_mouth(self):
         s=example();scene=copy.deepcopy(s['scenes'][0]);scene['animation'].update(setting='office',speaker='hero',actors=[dict(character='hero',x=.32,action='write',prop='page')],props=[dict(id='page',kind='book',x=.45)])
@@ -58,6 +81,10 @@ class AnimationTests(unittest.TestCase):
                 for energy in [0,.01,.08]:self.assertEqual(engine.frame(t,energy=energy).size,(720,1280))
         second=Story.model_validate_json((ROOT/'studio/examples/first-hello.json').read_text()).reviewable()
         self.assertEqual(second.scenes[1].animation.speaker,'hero')
+
+    def test_action_window_rejects_instant_motion(self):
+        s=example();s['scenes'][0]['animation']['actors'][0].update(action_start=.7,action_end=.71)
+        with self.assertRaisesRegex(ValueError,'15%'):Story.model_validate(s)
 
     def test_character_cannot_hold_two_objects(self):
         s=example();a=s['scenes'][2]['animation'];a['props'].append(dict(id='other',kind='cup',x=.6,holder='friend'))

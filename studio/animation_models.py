@@ -25,6 +25,8 @@ class Actor(Strict):
     action: Literal['idle','walk','sit','stand','wave','talk','point','write','pick_up','put_down','give','laugh']='idle'
     emotion: Literal['neutral','happy','sad','worried','surprised','angry']='neutral'
     end_emotion: Literal['neutral','happy','sad','worried','surprised','angry'] | None=None
+    action_start: float=Field(default=0,ge=0,le=.85)
+    action_end: float=Field(default=1,ge=.15,le=1)
     prop: str=Field(default='',max_length=30,pattern=r'^[a-z0-9_-]*$')
 
 class Prop(Strict):
@@ -54,6 +56,7 @@ class Animation(Strict):
         if len(held)!=len(set(held)):raise ValueError('Each character can hold one object at a time.')
         interactions=set()
         for a in self.actors:
+            if a.action_end-a.action_start<.15-1e-9:raise ValueError('Leave at least 15% of the scene for an action.')
             if a.action in {'pick_up','put_down','give','write'}:
                 if a.prop not in objects:raise ValueError(f'{a.action} needs a prop in this scene.')
                 if a.prop in interactions:raise ValueError('Only one character may control a prop in one scene.')
