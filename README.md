@@ -278,7 +278,7 @@ The studio now offers a script-reading view and a focused scene-by-scene storybo
 
 
 To rebuild the illustrated example with articulated bag lifting, a chair pull,
-head turns and writing gestures, run:
+dialogue mouths and writing gestures, run:
 
 ```sh
 .venv/bin/python outputs/the-empty-chair-source/recut.py --motion
@@ -295,9 +295,9 @@ speech waveform to close the mouth in gaps. It does not animate the character
 during narrator-only passages. New dialogue requires new timings.
 
 The acting revision holds one camera composition per scene. The ending includes
-a brief chuckle with original eyes and a small shoulder lift, then an outward chair pull
+a brief chuckle with the original eyes, then an outward chair pull
 with a coherent chair layer and attached gripping hand. Rebuild with the same
-`recut.py --motion` command; output is `outputs/the-empty-chair-drawing.mp4`.
+`recut.py --motion` command; output is `outputs/the-empty-chair-continuity.mp4`.
 
 
 The opening writing action now uses `outputs/the-empty-chair-source/writing.py`:
@@ -305,3 +305,10 @@ the original hand and pen move together, two fixed-length arm segments bend at
 the elbow, and each ink stroke ends at the pen tip. Transfers lift the pen and
 leave no ink. This drawing animation is calibrated to the café artwork; new
 artwork needs its own attachment points and clean background plates.
+
+
+The continuity revision removes raster head warping. The bag grip excludes the
+visitor's hand, and his occluded arm is restored as a complete region.
+`narration-continuity.mp3` retains the original narration up to 29.922 seconds
+and replaces the ending with “She laughed... and pulled out his chair.”
+The corrected ending is also present in captions and the studio story.

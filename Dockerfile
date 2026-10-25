@@ -5,7 +5,7 @@ COPY requirements-studio.txt ./
 RUN pip install --no-cache-dir -r requirements-studio.txt
 COPY studio ./studio
 COPY outputs/character-focus-reference.png ./outputs/character-focus-reference.png
-COPY outputs/the-empty-chair-drawing.mp4 outputs/the-empty-chair-drawing.srt ./outputs/
+COPY outputs/the-empty-chair-continuity.mp4 outputs/the-empty-chair-continuity.srt ./outputs/
 COPY outputs/the-empty-chair-source/assets ./outputs/the-empty-chair-source/assets
 RUN useradd --create-home studio && mkdir /data && chown studio:studio /data
 USER studio

@@ -58,7 +58,13 @@ class PropRig:
             d.line([(691,777),(684,811),(673,843),(665,867)],fill=255,width=13,joint='curve')
             d.line([(854,963),(883,1004),(896,1030),(885,1045),(859,1037)],fill=255,width=13,joint='curve')
             self.shoulder=(365,749);self.wrist=(675,765)
-            self.hand=sprite(self.original,dark_hand(self.original,(647,732,724,795)))
+            grip=dark_hand(self.original,(647,732,724,793))
+            silhouette=canvas();ImageDraw.Draw(silhouette).polygon(
+                [(649,754),(660,743),(676,736),(700,736),(713,742),(721,750),
+                 (721,776),(709,790),(692,791),(679,778),(650,777)],fill=255)
+            self.hand=sprite(self.original,ImageChops.multiply(grip,silhouette))
+            # Replace his entire occluded arm together: a narrow strip left a detached hand.
+            e.rectangle((540,635,682,862),fill=255)
             e.line([(357,748),(489,775),(675,765)],fill=255,width=54,joint='curve')
             self.upper,self.lower=180,180
         else:
@@ -134,42 +140,5 @@ class MovementScene(Scene):
         im=paint_mouth(im,self.name,width,height)
         chuckle=pulse(t,.12,.65)
         if acting=='laugh':im=paint_laugh(im,chuckle)
-        fields=[]
-        for i,(cx,cy,rx,ry,_) in enumerate(self.heads):
-            angle=0;lift=0;side=0
-            if acting in ('nod','ask','talk'):
-                beat=pulse(t,.15+i*.35,1.05);angle+=(1.6 if i==0 else -1.3)*beat;lift-=2*beat
-            elif acting=='wait':angle-=3.6*ease(t/1.1);side+=5*ease(t/1.1)
-            elif acting=='sad':angle+=3.2*ease(t/1.3);lift+=5*ease(t/1.3)
-            elif acting=='lift':angle-=2.2*ease(t/.8);side-=3*ease(t/.8)
-            elif acting=='laugh' and i==0:
-                lift-=2*chuckle;angle-=.6*chuckle;side-=.4*chuckle
-            elif acting=='pull' and i==0:
-                angle+=.6*ease((t-.2)/1.2);side+=1*ease((t-.2)/1.2)
-            elif acting=='hesitate' and i==0:
-                angle+=4*pulse(t,.08,.9);lift+=3*pulse(t,.08,.9)
-            fields.append((cx,cy,rx,ry,math.radians(angle),lift,side))
-        if not fields:return im
-        def point(x,y):
-            sx,sy=x,y
-            for cx,cy,rx,ry,a,lift,side in fields:
-                weight=ease((1.23-math.hypot((x-cx)/rx,(y-cy)/ry))/.2)
-                c,s=math.cos(-a),math.sin(-a)
-                sx+=weight*(cx+(x-cx)*c-(y-cy)*s-x-side)
-                sy+=weight*(cy+(x-cx)*s+(y-cy)*c-y-lift)
-            if acting=='laugh':
-                weight=ease((1-math.hypot((x-210)/105,(y-620)/100))/.55)
-                sy+=weight*1.5*chuckle
-            if acting=='draw' and self.writing is None:
-                for cx,cy,rx,ry in self.hands:
-                    weight=ease((1-math.hypot((x-cx)/rx,(y-cy)/ry))/.32)
-                    sx-=weight*2*math.sin(t*6);sy-=weight*1.2*math.sin(t*9)
-            return sx,sy
-        mesh=[]
-        for top in range(0,1280,24):
-            bottom=min(top+24,1280)
-            for left in range(0,720,24):
-                right=min(left+24,720)
-                pts=[point(x,y) for x,y in [(left,top),(left,bottom),(right,bottom),(right,top)]]
-                mesh.append(((left,top,right,bottom),tuple(v for p in pts for v in p)))
-        return im.transform(SIZE,Image.Transform.MESH,mesh,Image.Resampling.BICUBIC)
+        # Raster heads remain rigid. Animate only explicitly separated parts.
+        return im

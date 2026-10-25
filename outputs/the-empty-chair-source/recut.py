@@ -55,7 +55,7 @@ def cues():
     def sec(s):
         h,m,rest=s.split(':');v,ms=rest.split(',');return int(h)*3600+int(m)*60+int(v)+int(ms)/1000
     out=[]
-    for block in (HERE/'narration-recut.srt').read_text().strip().split('\n\n'):
+    for block in (HERE/'narration-continuity.srt').read_text().strip().split('\n\n'):
         rows=block.splitlines();a,b=[sec(v) for v in rows[1].split(' --> ')];text=' '.join(rows[2:]);words=text.split()
         chunks=[text] if len(words)<=9 else [' '.join(words[:len(words)//2]),' '.join(words[len(words)//2:])]
         cursor=a
@@ -67,7 +67,7 @@ def cues():
 
 def voice():
     decoded=HERE/'recut-source.wav'
-    subprocess.run(['ffmpeg','-v','error','-y','-i',str(HERE/'narration-recut.mp3'),'-ar','24000','-ac','1',str(decoded)],check=True)
+    subprocess.run(['ffmpeg','-v','error','-y','-i',str(HERE/'narration-continuity.mp3'),'-ar','24000','-ac','1',str(decoded)],check=True)
     with wave.open(str(decoded),'rb') as f:sr=f.getframerate();pcm=array('h',f.readframes(f.getnframes()))
     out=array('h',[0])*round(LEAD*sr);start=0
     for end,gap in PAUSES+[(VOICE_LENGTH,0)]:
@@ -153,7 +153,7 @@ def stamp(t):
 
 def render(preview=False,with_motion=False):
     from motion import MovementScene
-    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-drawing.mp4' if with_motion else 'the-empty-chair-recut.mp4')
+    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-continuity.mp4' if with_motion else 'the-empty-chair-recut.mp4')
     if preview:
         sheet=Image.new('RGB',(1080,1920))
         for n,i in enumerate([0,2,3,6,10,13,14,18,20]):sheet.paste(reel.frame(reel.starts[i]+.4).resize((360,640)),(n%3*360,n//3*640))

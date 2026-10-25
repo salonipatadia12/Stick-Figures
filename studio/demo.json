@@ -1,6 +1,6 @@
 {
   "story": {
-    "title": "The Empty Chair — drawing action",
+    "title": "The Empty Chair — continuity fix",
     "logline": "A reserved café regular makes room for a stranger, begins saving his seat, and discovers their brief connection mattered to him too.",
     "character_notes": "The protagonist has a shaded white round head, white torso and navy limbs. The visitor wears a muted teal scarf. Keep the rust-orange bag, sage cups, round wooden table, left window and rear-right green door consistent.",
     "scenes": [
@@ -40,7 +40,7 @@
         "movement": "nod"
       },
       {
-        "narration": "She laughed, moved her bag... and pulled out his chair.",
+        "narration": "She laughed... and pulled out his chair.",
         "visual": "Closing overhead shot of two sketchbooks, her accomplished drawing beside his wobbly attempt. Two cups and two hands share the table.",
         "movement": "still"
       }
