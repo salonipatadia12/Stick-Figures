@@ -297,7 +297,7 @@ during narrator-only passages. New dialogue requires new timings.
 The acting revision holds one camera composition per scene. The ending includes
 a brief chuckle with the original eyes, then an outward chair pull
 with a coherent chair layer and attached gripping hand. Rebuild with the same
-`recut.py --motion` command; output is `outputs/the-empty-chair-continuity.mp4`.
+`recut.py --motion` command; output is `outputs/the-empty-chair-story-order.mp4`.
 
 
 The opening writing action now uses `outputs/the-empty-chair-source/writing.py`:
@@ -312,3 +312,8 @@ visitor's hand, and his occluded arm is restored as a complete region.
 `narration-continuity.mp3` retains the original narration up to 29.922 seconds
 and replaces the ending with “She laughed... and pulled out his chair.”
 The corrected ending is also present in captions and the studio story.
+
+
+At the return, he keeps holding the clumsy sketch while the narration describes
+its crooked legs and cups. The two books appear together on the table only after
+the chair invitation. The held drawing uses the same doodle design as the ending.

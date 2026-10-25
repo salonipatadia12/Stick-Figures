@@ -94,6 +94,15 @@ class PropRig:
         erase=ImageChops.lighter(erase,mask.filter(ImageFilter.MaxFilter(9)))
         erase=ImageChops.lighter(erase,self.hand.getchannel('A').filter(ImageFilter.MaxFilter(9)))
         self.base.paste(plate,(0,0),erase)
+        self.bookpatch=None
+        if name=='chair':
+            page=Image.open(HERE/'assets/06-held-doodle.png').convert('RGB').resize(SOURCE)
+            mask=canvas();ImageDraw.Draw(mask).polygon(
+                [(494,582),(684,623),(645,753),(449,716)],fill=255)
+            # Preserve his original fingers over the page, not generated replacements.
+            fingers=dark_hand(self.original,(435,590,700,755))
+            mask=ImageChops.subtract(mask,fingers.filter(ImageFilter.MaxFilter(3)))
+            self.bookpatch=sprite(page,mask)
 
     def frame(self,t,acting):
         if self.name=='bag':
@@ -118,6 +127,7 @@ class PropRig:
             d.line([self.shoulder,mid,wrist],fill=NAVY,width=29,joint='curve')
         for x,y in ([self.shoulder,wrist] if self.name=='chair' else [self.shoulder,mid,wrist]):d.ellipse((x-14,y-14,x+14,y+14),fill=NAVY)
         im.alpha_composite(arm);im.alpha_composite(translated(self.hand,dx,dy))
+        if self.bookpatch:im.alpha_composite(self.bookpatch)
         return im.convert('RGB').resize(SIZE,Image.Resampling.LANCZOS)
 
 

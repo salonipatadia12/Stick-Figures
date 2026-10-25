@@ -1,6 +1,6 @@
 {
   "story": {
-    "title": "The Empty Chair — continuity fix",
+    "title": "The Empty Chair — corrected scene order",
     "logline": "A reserved café regular makes room for a stranger, begins saving his seat, and discovers their brief connection mattered to him too.",
     "character_notes": "The protagonist has a shaded white round head, white torso and navy limbs. The visitor wears a muted teal scarf. Keep the rust-orange bag, sage cups, round wooden table, left window and rear-right green door consistent.",
     "scenes": [
@@ -53,7 +53,7 @@
     "03-together.png",
     "04-waiting.png",
     "05-disappointed.png",
-    "06-return-final.png",
+    "06-held-doodle.png",
     "07-books-final.png"
   ],
   "duration": 40.0416666667

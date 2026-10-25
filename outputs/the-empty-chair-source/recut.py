@@ -43,8 +43,8 @@ SHOTS=[
  (20.335,'disappointed',(470,830,1.08),'sad','hold','DAY FOUR'),
  (22.899,'return',(470,745,1.12),'return','hold',''),
  (25.979,'return',(625,750,1.46),'show','hold',''),
- (27.422,'books',(705,890,1.7),'still','hold',''),
- (28.556,'books',(738,800,1.88),'still','hold',''),
+ (27.422,'return',(470,830,1.0),'show','hold',''),
+ (28.556,'return',(470,830,1.0),'show','hold',''),
  (29.922,'return',(285,600,1.65),'laugh','release',''),
  (31.1,'return',(470,800,1.08),'return','hold',''),
  (33.350,'books',(470,835,1.22),'still','reveal',''),
@@ -153,7 +153,7 @@ def stamp(t):
 
 def render(preview=False,with_motion=False):
     from motion import MovementScene
-    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-continuity.mp4' if with_motion else 'the-empty-chair-recut.mp4')
+    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-story-order.mp4' if with_motion else 'the-empty-chair-recut.mp4')
     if preview:
         sheet=Image.new('RGB',(1080,1920))
         for n,i in enumerate([0,2,3,6,10,13,14,18,20]):sheet.paste(reel.frame(reel.starts[i]+.4).resize((360,640)),(n%3*360,n//3*640))
