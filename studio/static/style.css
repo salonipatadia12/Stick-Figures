@@ -11,3 +11,6 @@
 @media(prefers-reduced-motion:reduce){.board-card,.panel{animation:none!important}*{scroll-behavior:auto!important}}
 
 .story-view-switch{position:sticky;top:12px;z-index:3;box-shadow:0 4px 16px #253b3510}.board-focus-label{scroll-margin-top:20px}
+
+/* Reusable scene direction keeps choices close to the scene they affect. */
+.control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.control-grid label{min-width:0}.animation-controls{border-top:1px solid #ddd2bf;margin-top:20px;padding-top:16px}.animation-controls fieldset{border:1px solid #dcd3c4;border-radius:12px;margin:12px 0;padding:14px}.animation-controls legend{padding:0 8px;font-weight:600}.character-controls{margin:20px 0}.control-grid input[type=color]{height:42px;padding:4px}.check-label{display:flex;align-items:center;gap:8px}.check-label input{width:auto}.scene-edit:not(.expanded) .animation-controls{display:none}.motion-preview{display:grid;gap:12px;margin-bottom:20px}.motion-preview small{color:#736d61}.motion-preview input{width:100%}.animation-controls h3{margin-top:0}@media(max-width:600px){.control-grid{grid-template-columns:1fr}}

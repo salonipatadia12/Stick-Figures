@@ -29,39 +29,79 @@ manual workflow. A key configured on the server enables prompt-to-story and new
 illustrations. If a password is configured, the browser asks for the username
 (`owner` by default) and password. Keys are never returned to the browser.
 
-## Two workflows
+## Reusable animation workflow
 
-**AI assisted:** enter a prompt and choose mood/approximate length. Drafting makes
-one structured story request. Edit its narration, scene directions and continuity
-notes, then approve. “Generate illustrations” makes one image edit request per
-missing scene plus a bounded vision request to locate heads for subtle motion.
-Every shot references the selected character; later shots also reference the first
-scene. Generating images may incur API charges; the button states how many new
-images it will request. There are 3–8 scenes, no automatic paid retries, and partial
-work is reused on an explicit retry. Account/model access and sufficient quota are
-required. No key was configured in the development session, so paid live generation
-was not exercised; provider contracts were tested with mocks.
+Choose **Reusable characters · animated actions** (the browser default). Try the
+editable example, import a story JSON from `studio/examples/`, write your own story,
+or draft from a prompt using a configured AI account. The default API Brief remains
+`illustrated` for older clients; new clients should send `render_style: "rigged"`.
 
-**Manual:** choose “Write it myself”, write 3–8 scenes and approve the story. Upload
-PNG/JPEG/WebP illustrations per scene. Upload optional audio recordings per scene
-to use your own voice. If all audio is supplied, rendering works offline without
-AI or speech-service requests. Otherwise missing voice recordings use the free
-online Edge TTS service, with one consistent Andrew voice at rate -8%. Its availability
-is external and not guaranteed. Audio follows actual recording duration, so chosen
-length is guidance, not a forced cutoff.
+1. Read the story, then **Edit the scenes**. Set narration and visual intent.
+2. For each scene choose its background (café, park, street, home, office or stage),
+   lighting (day, sunset or night), speaker, characters, expressions and action.
+   Character colors, names, accessories and narrator are under **Characters & narrator**.
+3. Add any objects by ID. An action uses that same ID. For example, `pick_up` with
+   `gift` starts with that object on the table; the next scene starts with `gift`
+   held by the hero. `give` transfers it to the other character, who must be idle.
+4. Approve the story. **Build animated scenes** uses local code with no AI request.
+5. Play or scrub each action preview. Upload an independent background image for
+   any scene, or restore its preset. Important content should fit a portrait crop.
+   Optional voice recordings replace online narration, one recording per scene.
+6. Approve the storyboard and render. Download MP4, SRT and editable story JSON.
 
-After every scene has an image, approve the storyboard and render. Download MP4,
-SRT, and the editable story JSON. The renderer outputs 720×1280, 24 fps, H.264/AAC,
-with phrase-based captions, pauses sized to the story beats, intact illustrated eyes and small head motions where
-landmarks are available. It checks the final video with FFmpeg before marking it
-ready. Uploaded art stays still by default. Narration captions are phrase-based
-timing estimates; uploaded speech should match the scene text.
+The library supports idle, walk, sit, stand, wave, talk, point, write, pick up,
+put down, give and laugh. Objects: book, bag, cup, flower, note and ball. Use one
+primary action per actor per scene; add another scene for a subsequent action.
+Each actor has a starting emotion and optional ending emotion (changes at 65% of
+that scene). A book-writing action moves the hand and pen along the visible ink
+path. Heads stay rigid. The renderer validates reachable hands and checks prop
+ownership across consecutive scenes. These checks do not understand all narration;
+review the storyboard to confirm that the words describe the visible action.
+
+**Backgrounds are independent.** Presets and uploaded images never bake characters
+into the backdrop. Upload a background without people for best results. It is a
+static image behind the animated figures. This free 2D style is simpler than the
+painted café reference; it is not generated cinematic footage. Arbitrary fights,
+complex choreography, moving cameras, arbitrary objects and multi-action sequences
+inside one scene require extending the action library. The scene's visual prose is
+review guidance; structured animation controls determine what is actually drawn.
+
+**Voice:** select Andrew, Ava or Sonia, or upload recordings. Online narration uses
+Edge TTS at -8%, an external service whose availability is not guaranteed. If all
+recordings are uploaded, rendering is fully offline. Audio-responsive mouths move
+only for the selected character speaker; narrator scenes do not make everyone talk.
+This uses audio amplitude, not phoneme-level lip sync. A dialogue scene should contain
+only that character's spoken words. Captions use estimated phrase timing.
+
+**Prompt-to-story:** configure `OPENAI_API_KEY` on the server. Drafting makes a single
+structured request that is constrained to supported actions and prop continuity.
+It may incur provider charges. There is no API key configured in this development
+environment: live paid story drafting was not tested; provider contracts are mocked.
+Manual editing, imported stories, backgrounds and character animation need no credits.
+
+Story JSON includes characters, voice, settings and directions, but not uploaded
+media. Back up `studio-data/` to move complete projects, or import JSON and re-upload
+backgrounds/audio on another server. Changes to the story invalidate old media selections
+and approvals, so finish directions before uploading media.
+
+## Existing illustrated workflow
+
+Choose **Illustrated scenes · still artwork** to use the existing illustration
+pipeline. AI image generation uses the selected character reference and the first
+scene as continuity references. Missing images can be generated with a configured
+API key or uploaded manually. Paid generation reuses existing successful images.
+The original artwork is held still; head warping is disabled. The completed café
+example remains available as its original bespoke animation.
+
+Both modes render 720×1280 at 24 fps, H.264/AAC, with narration, captions and a final
+FFmpeg decode check. Actual voice length sets scene duration; the brief's requested
+length is guidance. Stories contain 3–8 scenes and at most 360 spoken words.
 
 ## Approval and persistence
 
 - Editing story content invalidates both approvals, existing scene selections,
   voice selections and output. Approve the new story and review its new storyboard.
-- Replacing an illustration invalidates storyboard approval and output.
+- Replacing an illustration or background invalidates storyboard approval and output.
 - Adding audio invalidates output; it leaves the visual approval intact.
 - Active jobs reject edits and duplicate render/generation requests.
 - Jobs interrupted by a restart are marked interrupted; the server does not
@@ -97,10 +137,11 @@ running on that machine, so the image build/container startup was not exercised.
 
 ## Limits and tests
 
-This makes illustrated 2D reels, not continuous generated action footage or
-lip-synced dialogue. Image references improve continuity but generated art still
-needs human review, especially hands, props and recurring settings. No blink
-repainting is performed, avoiding the earlier dark-eye-mask artifact.
+Two example scripts exercise different settings and voices: `studio/examples/kindness.json`
+(prop pickup and handover) and `studio/examples/first-hello.json` (wave, dialogue,
+laughter, office and stage). Test coverage includes the complete offline animation
+pipeline, background replacement, approvals, import/export, fixed heads, hand/object
+contact, pen/ink motion, dialogue mouths and every supported action.
 
 ```sh
 .venv/bin/python -m pip install httpx

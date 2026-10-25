@@ -33,11 +33,30 @@ slim navy limbs, small hands, expressive simple oval eyes. Warm illustrated sett
 but characters dominate. Specify continuity details in character_notes. No text inside art.
 movement is breathe, nod, or still; use sparingly. This is a storyboard, not full-action
 video generation: prefer intimate everyday stories over fights or complex choreography.'''
+        if brief.render_style=='rigged':
+            instructions += """
+Use render_style=rigged. This story is rendered with articulated 2D characters.
+Define characters with IDs hero and friend, colors as hex, accessories none/scarf/glasses.
+Every scene MUST have animation directions. Settings: cafe, park, street, home, office, stage.
+Light: day/sunset/night. Speaker narrator unless the entire scene is spoken by hero or friend.
+Supported actions ONLY: idle, walk, sit, stand, wave, talk, point, write, pick_up, put_down, give, laugh.
+One action per character per scene. Pose standing/seated. Actor x and end_x are .18 to .82.
+Props: book, bag, cup, flower, note, ball. Name each with a stable lowercase id.
+Props start on a small table (holder none) or in hero/friend's hand. No invisible props.
+write needs a book on the table. pick_up needs a free prop. give/put_down need a held prop.
+Prop x must be within .26 of interacting actor x. For give, actors must be within .42,
+and receiver uses idle. Preserve each prop's final holder in the next scene.
+Use time_jump only for an explicit change of time. Narration describes exactly the supported
+visible action; no unrenderable actions such as opening doors, cooking or pulling chairs.
+Keep heads rigid, dialogue separate from narration, and use movement=still.
+Do not promise a complex action using a similar simple action. Adapt the story to this vocabulary."""
         response = self.client.responses.parse(model=self.text_model,
             input=[{'role':'system','content':instructions}, {'role':'user','content':brief.prompt}],
             text_format=Story)
         if response.output_parsed is None:
             raise GenerationError('The story service did not return a usable story. Try a different brief.')
+        if response.output_parsed.render_style!=brief.render_style:
+            raise GenerationError('The story service returned a different animation style. Please retry the draft.')
         return response.output_parsed.reviewable()
 
     def illustrate(self, story, index, reference, first_scene, target):

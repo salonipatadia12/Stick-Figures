@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stick Figures · Story Studio</title><link rel="stylesheet" href="/static/style.css?v=4"><script src="/static/app.js?v=4" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stick Figures · Story Studio</title><link rel="stylesheet" href="/static/style.css?v=6"><script src="/static/app.js?v=6" defer></script></head>
 <body>
 <aside class="sidebar">
  <a href="/" class="brand"><span class="brand-icon">✳</span><span>stick figures<small>STORY STUDIO</small></span></a>
@@ -15,8 +15,8 @@
    <form id="brief-form">
     <div class="idea-starters" aria-label="Story starters"><button type="button" data-starter="kindness">A small kindness</button><button type="button" data-starter="comedy">Everyday comedy</button><button type="button" data-starter="mystery">A quiet mystery</button></div><label for="prompt">What’s your story about?</label><textarea id="prompt" rows="4" maxlength="2400" required placeholder="A shy person tries to make a new friend at their favorite café…"></textarea>
     <div class="form-row"><label>Mood<select id="mood"><option value="heartwarming">Heartwarming</option><option value="funny">Funny</option><option value="suspense">Suspense</option></select></label><label>Approximate length<select id="seconds"><option value="30">30 seconds</option><option value="45" selected>45 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option></select></label></div>
-    <button class="primary" id="draft-button" type="submit">Draft my story <span>↗</span></button><button id="manual-button" class="secondary" type="button">Write it myself</button>
-    <p id="ai-note" class="hint"></p>
+    <label>Animation style<select id="render-style"><option value="rigged">Reusable characters · animated actions</option><option value="illustrated">Illustrated scenes · still artwork</option></select></label><button class="primary" id="draft-button" type="submit">Draft my story <span>↗</span></button><button id="manual-button" class="secondary" type="button">Write it myself</button>
+    <p id="ai-note" class="hint"></p><button id="animated-example" class="secondary" type="button">Try the editable animation example →</button><label class="upload-label">Import a story JSON<input id="import-story" type="file" accept="application/json,.json"></label>
    </form>
   </div>
   <div class="example"><img src="/api/reference" alt="The illustrated stick character writing in a warm café"><div class="example-caption"><span class="eyebrow">MADE IN THIS STUDIO</span><h2>The Empty Chair</h2><p>A saved seat. A small connection.</p><button id="demo-button" class="light-button">Watch the revised example ↗</button></div><span class="example-tag">THE CHARACTER YOU CHOSE</span></div>
@@ -30,7 +30,7 @@
    <div class="panel-heading"><div><h2>Make the story yours.</h2><p>Read the narration out loud. Give every scene a reason to be here.</p></div><span id="word-count" class="pill"></span></div>
    <div class="story-view-switch" aria-label="Story view"><button type="button" data-story-view="read">Read the story</button><button type="button" data-story-view="edit">Edit the scenes</button></div><div id="story-read-pane" class="story-reader"></div><div id="story-edit-pane"><label>Title<input id="story-title" maxlength="100"></label><label>The story in one sentence<textarea id="logline" rows="2" maxlength="500"></textarea></label>
    <details><summary>Character & continuity notes</summary><textarea id="character-notes" rows="3" maxlength="1500" aria-label="Character and continuity notes"></textarea></details>
-   <div id="scene-editor"></div><button class="text-button" id="add-scene">＋ Add a scene</button></div>
+   <div id="character-editor"></div><div id="scene-editor"></div><button class="text-button" id="add-scene">＋ Add a scene</button></div>
    <div class="action-bar"><p id="story-approval-note">Nothing is illustrated until you approve this story.</p><button id="save-story" class="secondary">Save draft</button><button id="approve-story" class="primary">Approve story & continue →</button></div>
   </div>
   <div id="board-panel" class="panel" hidden>
@@ -43,7 +43,7 @@
    <div class="reel-layout"><div id="video-container" class="video-container"><div class="video-placeholder">Your reel will appear here.<small>Approve your story and storyboard first.</small></div></div><div class="reel-info"><span class="kicker">THE FINAL CUT</span><h2 id="reel-title"></h2><p id="reel-detail">Your narration sets the pace. We leave space for the expressions and ending.</p><button id="render-button" class="primary">Render my reel ↗</button><a id="download-video" class="primary" hidden download>Download MP4 ↓</a><a id="download-captions" class="secondary" hidden download>Download captions</a><p class="hint">The built-in narrator uses an online speech service. Upload your own recordings in the storyboard to use your voice.</p></div></div>
   </div>
  </section>
- <section id="setup" class="panel setup" hidden><button id="close-setup" class="text-button">Close ×</button><h2>Your studio setup</h2><p id="setup-status"></p><p>For AI-written stories and new illustrations, configure <code>OPENAI_API_KEY</code> in the server environment, then restart. Your key stays on the server. AI requests may incur provider charges.</p><p>You can also write a story yourself and upload illustrations and voice recordings without an AI key. The finished example uses existing files and makes no generation requests.</p><p>See <code>studio/README.md</code> for the local setup and Docker server instructions. This version makes illustrated 2D reels with subtle movement; it does not generate full-action footage or lip-synced dialogue.</p></section>
+ <section id="setup" class="panel setup" hidden><button id="close-setup" class="text-button">Close ×</button><h2>Your studio setup</h2><p id="setup-status"></p><p>For AI-written stories and new illustrations, configure <code>OPENAI_API_KEY</code> in the server environment, then restart. Your key stays on the server. AI requests may incur provider charges.</p><p>You can also write a story yourself and upload illustrations and voice recordings without an AI key. The finished example uses existing files and makes no generation requests.</p><p>See <code>studio/README.md</code> for the local setup and Docker server instructions. Reusable animation includes twelve actions, six settings, independent background uploads and audio-responsive mouths. It uses a fixed action library, not arbitrary choreography or phoneme-level lip sync. Story JSON exports the script and directions; keep uploaded images and recordings separately.</p></section>
  <div id="toast" role="status" hidden></div>
 </main>
 </body></html>

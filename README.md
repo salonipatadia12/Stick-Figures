@@ -1,3 +1,11 @@
+## Reusable animation studio update
+
+The browser studio now supports reusable articulated characters and independently
+changeable backgrounds. Choose a preset setting or upload a background per scene,
+direct actions and emotions, review movement, and render narration plus captions.
+Start with **Try the editable animation example**. See [studio setup and workflow](studio/README.md).
+Automatic prompt drafting needs a server API key; manual animation needs no AI credits.
+
 # Stick Figures — reusable reel builder
 
 ## Browser studio

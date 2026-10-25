@@ -1,0 +1,189 @@
+{
+  "render_style": "rigged",
+  "characters": [
+    {
+      "id": "hero",
+      "name": "Milo",
+      "color": "#F8F3E8",
+      "accent": "#3D8785",
+      "accessory": "none"
+    },
+    {
+      "id": "friend",
+      "name": "June",
+      "color": "#F8F3E8",
+      "accent": "#C68E55",
+      "accessory": "scarf"
+    }
+  ],
+  "voice": "en-US-AndrewNeural",
+  "title": "A Little Company",
+  "logline": "A missed call leaves June disappointed. Milo offers a flower and his company.",
+  "character_notes": "Milo has a cream body. June wears an amber scarf. The same flower passes from the table to Milo to June.",
+  "scenes": [
+    {
+      "narration": "June had spent all morning waiting for a call. It never came.",
+      "visual": "June looks sad. Milo notices her beside a small table with a flower.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "sunset",
+        "speaker": "narrator",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.32,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "worried",
+            "end_emotion": null,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.68,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "sad",
+            "end_emotion": null,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "gift",
+            "kind": "flower",
+            "x": 0.45,
+            "holder": "none"
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Milo couldn’t fix that. But he picked up the little flower on the table.",
+      "visual": "Milo reaches for the visible flower, grips its stem and lifts it.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "sunset",
+        "speaker": "narrator",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.32,
+            "pose": "standing",
+            "action": "pick_up",
+            "emotion": "neutral",
+            "end_emotion": null,
+            "prop": "gift"
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.68,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "sad",
+            "end_emotion": null,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "gift",
+            "kind": "flower",
+            "x": 0.45,
+            "holder": "none"
+          }
+        ]
+      }
+    },
+    {
+      "narration": "He held it out. June took it, and finally smiled.",
+      "visual": "Milo hands the flower to June. Their hands meet before June brings it back.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "sunset",
+        "speaker": "narrator",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.32,
+            "pose": "standing",
+            "action": "give",
+            "emotion": "happy",
+            "end_emotion": null,
+            "prop": "gift"
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.68,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "sad",
+            "end_emotion": "happy",
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "gift",
+            "kind": "flower",
+            "x": 0.45,
+            "holder": "hero"
+          }
+        ]
+      }
+    },
+    {
+      "narration": "The call still hadn’t come. At least now, she wasn’t waiting alone.",
+      "visual": "June holds her flower. Milo gives her a small reassuring wave.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "sunset",
+        "speaker": "narrator",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.32,
+            "pose": "standing",
+            "action": "wave",
+            "emotion": "happy",
+            "end_emotion": null,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.68,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "happy",
+            "end_emotion": null,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "gift",
+            "kind": "flower",
+            "x": 0.45,
+            "holder": "friend"
+          }
+        ]
+      }
+    }
+  ]
+}

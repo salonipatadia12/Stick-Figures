@@ -6,7 +6,7 @@ let config={},project=null,step='story',poll=null,dirty=false,requestPending=fal
 async function api(path,options={}){
  const response=await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers}});
  const body=await response.json();
- if(!response.ok)throw Error(typeof body.detail==='string'?body.detail:'Please check the fields and try again.');
+ if(!response.ok)throw Error(typeof body.detail==='string'?body.detail:Array.isArray(body.detail)?body.detail.map(e=>`${e.loc.slice(1).join(' → ')}: ${e.msg}`).join('; '):'Please check the fields and try again.');
  return body;
 }
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
@@ -17,16 +17,25 @@ function setStep(next){step=next;document.querySelectorAll('[data-step]').forEac
 function storyEditor(){
  const story=project.story;$('#story-title').value=story.title;$('#logline').value=story.logline;$('#character-notes').value=story.character_notes;
  $('#scene-editor').innerHTML=story.scenes.map((s,i)=>`<article class="scene-edit" data-scene="${i}"><div class="scene-top"><span>SCENE ${String(i+1).padStart(2,'0')}</span><button data-remove="${i}" ${story.scenes.length<=3?'disabled':''}>Remove</button></div><label>Narration<textarea data-field="narration" rows="4" maxlength="700">${escapeHTML(s.narration)}</textarea></label><label>What we see<textarea data-field="visual" rows="4" maxlength="2200">${escapeHTML(s.visual)}</textarea></label><label class="motion-label">Character movement<select data-field="movement"><option value="breathe" ${s.movement==='breathe'?'selected':''}>Subtle breathing</option><option value="nod" ${s.movement==='nod'?'selected':''}>A gentle nod</option><option value="still" ${s.movement==='still'?'selected':''}>Hold the pose</option></select></label></article>`).join('');
- updateWordCount();enhanceSceneEditor();
+ animationEditors();updateWordCount();enhanceSceneEditor();
 }
-function collectStory(){return {title:$('#story-title').value.trim(),logline:$('#logline').value.trim(),character_notes:$('#character-notes').value.trim(),scenes:[...document.querySelectorAll('.scene-edit')].map(card=>Object.fromEntries(['narration','visual','movement'].map(key=>[key,card.querySelector(`[data-field="${key}"]`).value.trim()])))};}
+function collectStory(){
+ const result={...project.story,title:$('#story-title').value.trim(),logline:$('#logline').value.trim(),character_notes:$('#character-notes').value.trim(),scenes:[...document.querySelectorAll('.scene-edit')].map((card,i)=>({...project.story.scenes[i],...Object.fromEntries(['narration','visual','movement'].map(key=>[key,card.querySelector(`[data-field="${key}"]`).value.trim()]))}))};
+ if(result.render_style==='rigged'){
+  result.voice=$('#voice-choice').value;
+  result.characters=[...document.querySelectorAll('[data-character-id]')].map(el=>({id:el.dataset.characterId,...Object.fromEntries([...el.querySelectorAll('[data-character]')].map(input=>[input.dataset.character,input.value]))}));
+  result.scenes.forEach((scene,i)=>scene.animation=readAnimation(document.querySelector(`[data-scene="${i}"]`)));
+ }
+ return result;
+}
 function updateWordCount(){const text=[...document.querySelectorAll('[data-field="narration"]')].map(el=>el.value).join(' ').trim();$('#word-count').textContent=`${text?text.split(/\s+/).length:0} spoken words`;}
 function drawBoard(){
- $('#storyboard').innerHTML=project.story.scenes.map((s,i)=>{const image=project.assets[String(i)];return `<article class="board-card"><div class="board-image">${image?`<img src="${fileURL(image.file)}" alt="Scene ${i+1} illustration">`:'Awaiting illustration'}<b>SCENE ${i+1}</b></div><div class="board-copy"><p>${escapeHTML(s.narration)}</p><details><summary>Visual direction</summary><p>${escapeHTML(s.visual)}</p></details><label class="upload-label">${image?'Replace illustration':'Upload illustration'}<input type="file" accept="image/png,image/jpeg,image/webp" data-upload="${i}" data-kind="image" ${busy(project)||!project.story_approval?'disabled':''}></label><label class="upload-label">${project.audio[String(i)]?'Voice recording added ✓':'Use your own voice (optional)'}<input type="file" accept="audio/*" data-upload="${i}" data-kind="audio" ${busy(project)||!project.story_approval?'disabled':''}></label></div></article>`;}).join('');
+ const rigged=project.story.render_style==='rigged';
+ $('#storyboard').innerHTML=project.story.scenes.map((s,i)=>{const image=project.assets[String(i)];return `<article class="board-card"><div class="board-image">${image?`<img src="${fileURL(image.file)}" alt="Scene ${i+1} illustration">`:'Awaiting illustration'}<b>SCENE ${i+1}</b></div><div class="board-copy">${rigged?`<div class="motion-preview"><button data-play="${i}" class="secondary" ${!project.story_approval?'disabled':''}>Play action preview</button><label>Scrub movement<input type="range" min="0" max="6" step="0.1" value="0" data-scrub="${i}" ${!project.story_approval?'disabled':''}></label><small>6-second silent preview; final timing follows the voice.</small>${project.backgrounds?.[i]?`<button class="text-button" data-reset-bg="${i}">Restore preset background</button>`:''}</div>`:''}<p>${escapeHTML(s.narration)}</p><details><summary>Visual direction</summary><p>${escapeHTML(s.visual)}</p></details><label class="upload-label">${rigged?'Upload background':image?'Replace illustration':'Upload illustration'}<input type="file" accept="image/png,image/jpeg,image/webp" data-upload="${i}" data-kind="${rigged?'background':'image'}" ${busy(project)||!project.story_approval?'disabled':''}></label><label class="upload-label">${project.audio[String(i)]?'Voice recording added ✓':'Use your own voice (optional)'}<input type="file" accept="audio/*" data-upload="${i}" data-kind="audio" ${busy(project)||!project.story_approval?'disabled':''}></label></div></article>`;}).join('');
  const missing=project.story.scenes.length-Object.keys(project.assets).length;
- $('#generate-images').textContent=missing?`Generate ${missing} illustration${missing===1?'':'s'} ↗`:'All illustrations added ✓';
- $('#generate-images').disabled=busy(project)||!project.story_approval||!config.ai_available||!missing;
- $('#image-cost').textContent=!project.story_approval?'Approve your story first.':missing?`Generating creates ${missing} new image${missing===1?'':'s'} and may incur AI provider charges. Existing images are reused. You can upload your own instead.`:'Review all the illustrations. You can replace any scene with an upload.';
+ $('#generate-images').textContent=rigged?'Build animated scenes':missing?`Generate ${missing} illustration${missing===1?'':'s'} ↗`:'All illustrations added ✓';
+ $('#generate-images').disabled=busy(project)||!project.story_approval||(!rigged&&(!config.ai_available||!missing));
+ $('#image-cost').textContent=rigged?'Built-in characters and backgrounds are free. Preview the actions, or upload your own background below.':!project.story_approval?'Approve your story first.':missing?`Generating creates ${missing} new image${missing===1?'':'s'} and may incur AI provider charges. Existing images are reused. You can upload your own instead.`:'Review all the illustrations. You can replace any scene with an upload.';
  $('#approve-board').disabled=busy(project)||!project.story_approval||missing>0;
 }
 function showProject(p,nextStep){
@@ -36,7 +45,7 @@ function showProject(p,nextStep){
  $('#download-story').href=fileURL('story.json');$('#download-story').hidden=!p.story;
  if(p.story){
   storyEditor();drawBoard();
-  $('#story-approval-note').textContent=p.story_approval?'Story approved. Editing it resets the storyboard and approvals.':'Nothing is illustrated until you approve this story.';
+  $('#story-approval-note').textContent=p.story_approval?'Story approved. Editing it resets the storyboard and approvals.':'Approve the story before building its scenes.';
   $('#save-story').disabled=busy(p);$('#approve-story').disabled=busy(p);$('#add-scene').disabled=busy(p)||p.story.scenes.length>=8;
   document.querySelectorAll('#story-panel input,#story-panel textarea,#story-panel select,#story-panel [data-remove]').forEach(el=>el.disabled=busy(p)||(el.hasAttribute('data-remove')&&p.story.scenes.length<=3));
  }
@@ -54,7 +63,7 @@ function newProject(){if(dirty){toast('Save your draft before opening a new stor
 async function create(mode){
  const prompt=$('#prompt').value.trim();if(prompt.length<5){toast('Give your story a brief first.');$('#prompt').focus();return;}
  $('#draft-button').disabled=true;$('#manual-button').disabled=true;
- try{const p=await api('/api/projects',{method:'POST',body:JSON.stringify({prompt,mood:$('#mood').value,seconds:Number($('#seconds').value),mode})});showProject(p,'story');}
+ try{const p=await api('/api/projects',{method:'POST',body:JSON.stringify({prompt,mood:$('#mood').value,seconds:Number($('#seconds').value),render_style:$('#render-style').value,mode})});showProject(p,'story');}
  finally{$('#draft-button').disabled=!config.ai_available;$('#manual-button').disabled=false;}
 }
 $('#brief-form').addEventListener('submit',e=>{e.preventDefault();action(()=>create('ai'));});
@@ -65,7 +74,7 @@ $('#demo-button').addEventListener('click',()=>action(async()=>showProject(await
 document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{if(dirty&&b.dataset.step!=='story'){toast('Save your story changes before switching steps.');return;}setStep(b.dataset.step);}));
 $('#story-panel').addEventListener('input',()=>{dirty=true;updateWordCount();});
 $('#scene-editor').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(!b||busy(project))return;const story=collectStory();if(story.scenes.length<=3)return;story.scenes.splice(Number(b.dataset.remove),1);project.story=story;storyEditor();dirty=true;});
-$('#add-scene').addEventListener('click',()=>{const story=collectStory();if(story.scenes.length>=8)return;story.scenes.push({narration:'',visual:'',movement:'breathe'});project.story=story;storyEditor();dirty=true;});
+$('#add-scene').addEventListener('click',()=>{const story=collectStory();if(story.scenes.length>=8)return;story.scenes.push({narration:'',visual:'',movement:'still',animation:story.render_style==='rigged'?defaultAnimation():null});project.story=story;storyEditor();dirty=true;});
 $('#save-story').addEventListener('click',()=>action(async()=>{await saveDraft();toast('Draft saved.');}));
 $('#approve-story').addEventListener('click',()=>action(async()=>{await saveDraft();showProject(await api(`/api/projects/${project.id}/approve-story`,{method:'POST'}),'board');}));
 $('#generate-images').addEventListener('click',()=>action(async()=>showProject(await api(`/api/projects/${project.id}/illustrate`,{method:'POST'}),'board')));
@@ -80,8 +89,8 @@ function toggleSetup(){$('#setup').hidden=!$('#setup').hidden;if(!$('#setup').hi
 $('#setup-toggle').addEventListener('click',toggleSetup);$('#setup-mobile').addEventListener('click',toggleSetup);$('#close-setup').addEventListener('click',()=>$('#setup').hidden=true);
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 (async()=>{try{
- config=await api('/api/config');$('#connection').textContent=config.ai_available?'AI generation connected':'Manual & example mode';$('#connection').classList.toggle('ready',config.ai_available);
- $('#draft-button').disabled=!config.ai_available;$('#ai-note').textContent=config.ai_available?'Story drafting uses your configured AI account. Illustrations wait for your approval.':'AI generation needs server setup. Try the finished example, or write your story and upload your own artwork.';
+ config=await api('/api/config');$('#connection').textContent=config.ai_available?'AI generation connected':'Animation studio · ready';$('#connection').classList.toggle('ready',config.ai_available);
+ $('#draft-button').disabled=!config.ai_available;$('#ai-note').textContent=config.ai_available?'Story drafting uses your configured AI account. Illustrations wait for your approval.':'Write your own story or try the editable example—animation needs no AI credits. Automatic prompt-to-story drafting requires a configured API key.';
  $('#demo-button').disabled=!config.demo_available;$('#setup-status').textContent=`AI generation: ${config.ai_available?'configured':'needs an API key'}. Video renderer: ${config.ffmpeg?'ready':'FFmpeg needs installation'}.`;
  await refreshProjects();const saved=sessionStorage.getItem('studio-project');if(saved){try{const p=await api(`/api/projects/${saved}`);showProject(p,sessionStorage.getItem('studio-step')||(p.video?'reel':'story'));}catch{sessionStorage.removeItem('studio-project');}}
 }catch(e){$('#connection').textContent='Connection unavailable';toast(e.message);}})();
@@ -135,3 +144,44 @@ $('#previous-scene').addEventListener('click',()=>focusBoard(focusedScene-1,true
 $('.idea-starters').addEventListener('click',e=>{const b=e.target.closest('[data-starter]');if(!b)return;const starters={kindness:['A reserved person makes one small gesture for a stranger, and discovers the connection mattered to them both.','heartwarming'],comedy:['Someone tries to make an ordinary morning run perfectly. One tiny mistake keeps making things funnier, until they learn to laugh at it.','funny'],mystery:['A person notices the same small object appearing at their doorstep each morning, and follows the clues to a simple, surprising explanation.','suspense']};const [prompt,mood]=starters[b.dataset.starter];$('#prompt').value=prompt;$('#mood').value=mood;$('#prompt').focus();});
 
 $('#add-scene').addEventListener('click',()=>{if(busy(project))return;const cards=[...document.querySelectorAll('.scene-edit')];cards.forEach((card,i)=>{const active=i===cards.length-1;card.classList.toggle('expanded',active);card.querySelector('[data-expand]').setAttribute('aria-expanded',String(active));});cards.at(-1)?.scrollIntoView({behavior:'smooth',block:'center'});});
+
+function options(values,selected){return values.map(v=>`<option value="${escapeHTML(v)}" ${v===selected?'selected':''}>${escapeHTML(v.replaceAll('_',' '))}</option>`).join('');}
+function selectField(label,key,values,value,attribute='anim'){return `<label>${label}<select data-${attribute}="${key}">${options(values,value)}</select></label>`;}
+function defaultAnimation(){return {setting:'cafe',light:'day',speaker:'narrator',time_jump:false,actors:[{character:'hero',x:.32,end_x:.65,pose:'standing',action:'idle',emotion:'neutral',prop:''}],props:[]};}
+function animationEditors(){
+ const rigged=project.story.render_style==='rigged';$('#character-editor').innerHTML='';
+ if(!rigged)return;
+ const chars=project.story.characters;
+ $('#character-editor').innerHTML=`<details class="character-controls"><summary>Characters & narrator</summary><p class="hint">Character identities stay consistent throughout the story.</p>${chars.map(c=>`<div class="control-grid" data-character-id="${c.id}"><label>${escapeHTML(c.id)} name<input data-character="name" maxlength="40" value="${escapeHTML(c.name)}"></label><label>Body color<input data-character="color" type="color" value="${c.color}"></label><label>Accent<input data-character="accent" type="color" value="${c.accent}"></label>${selectField('Accessory','accessory',['none','scarf','glasses'],c.accessory,'character')}</div>`).join('')}<label>Narrator<select id="voice-choice">${options(['en-US-AndrewNeural','en-US-AvaNeural','en-GB-SoniaNeural'],project.story.voice)}</select></label></details>`;
+ document.querySelectorAll('.scene-edit').forEach((card,i)=>{
+  card.querySelector('.motion-label').hidden=true;
+  const a=project.story.scenes[i].animation||defaultAnimation();
+  const div=document.createElement('div');div.className='animation-controls';
+  div.innerHTML=`<h3>Direct this scene</h3><div class="control-grid">${selectField('Background','setting',config.animation.settings,a.setting)}${selectField('Lighting','light',['day','sunset','night'],a.light)}${selectField('Voice belongs to','speaker',['narrator',...chars.map(c=>c.id)],a.speaker)}<label class="check-label"><input type="checkbox" data-anim="time_jump" ${a.time_jump?'checked':''}> A new moment in time</label></div><p class="hint">One action per character. Add another scene for the next action. Objects and hands move together.</p><div class="actor-controls">${a.actors.map(actor=>actorControl(actor,chars)).join('')}</div><button type="button" class="text-button" data-add-actor ${a.actors.length>=chars.length?'disabled':''}>＋ Add second character</button><h4>Objects in this scene</h4><div class="prop-controls">${a.props.map(propControl).join('')}</div><button type="button" class="text-button" data-add-prop>＋ Add object</button>`;
+  card.append(div);
+ });
+}
+function actorControl(a,chars){return `<fieldset data-actor="${a.character}"><legend>${escapeHTML(chars.find(c=>c.id===a.character)?.name||a.character)}</legend><div class="control-grid">${selectField('Action','action',config.animation.actions,a.action,'actor-field')}${selectField('Emotion','emotion',config.animation.emotions,a.emotion,'actor-field')}${selectField('Emotion at the end','end_emotion',['',...config.animation.emotions],a.end_emotion||'','actor-field')}${selectField('Starting pose','pose',['standing','seated'],a.pose||'standing','actor-field')}<label>Position (% from left)<input data-actor-field="x" type="number" min="18" max="82" step="1" value="${Math.round(a.x*100)}"></label><label>Walk destination (%)<input data-actor-field="end_x" type="number" min="18" max="82" step="1" value="${Math.round(a.end_x*100)}"></label><label>Object name for action<input data-actor-field="prop" maxlength="30" value="${escapeHTML(a.prop)}" placeholder="e.g. gift"></label></div><button type="button" class="text-button" data-remove-actor>Remove character</button></fieldset>`;}
+function propControl(p){return `<fieldset data-prop><div class="control-grid"><label>Object name<input data-prop-field="id" value="${escapeHTML(p.id)}" maxlength="30"></label>${selectField('Object','kind',config.animation.props,p.kind,'prop-field')}<label>Table position (%)<input data-prop-field="x" type="number" min="12" max="88" step="1" value="${Math.round(p.x*100)}"></label>${selectField('Starts held by','holder',['none','hero','friend'],p.holder,'prop-field')}</div><button type="button" class="text-button" data-remove-prop>Remove object</button></fieldset>`;}
+function readAnimation(card){
+ const a={};card.querySelectorAll('[data-anim]').forEach(el=>a[el.dataset.anim]=el.type==='checkbox'?el.checked:el.value);
+ a.actors=[...card.querySelectorAll('[data-actor]')].map(el=>({character:el.dataset.actor,...Object.fromEntries([...el.querySelectorAll('[data-actor-field]')].map(input=>[input.dataset.actorField,input.type==='number'?Number(input.value)/100:input.dataset.actorField==='end_emotion'?(input.value||null):input.value]))}));
+ a.props=[...card.querySelectorAll('[data-prop]')].map(el=>Object.fromEntries([...el.querySelectorAll('[data-prop-field]')].map(input=>[input.dataset.propField,input.type==='number'?Number(input.value)/100:input.value])));
+ return a;
+}
+$('#scene-editor').addEventListener('click',e=>{
+ const card=e.target.closest('.scene-edit');if(!card||busy(project))return;
+ if(e.target.matches('[data-add-actor]')){const used=[...card.querySelectorAll('[data-actor]')].map(el=>el.dataset.actor);const c=project.story.characters.find(c=>!used.includes(c.id));if(c)card.querySelector('.actor-controls').insertAdjacentHTML('beforeend',actorControl({...defaultAnimation().actors[0],character:c.id,x:.65,end_x:.32},project.story.characters));e.target.disabled=true;dirty=true;}
+ if(e.target.matches('[data-remove-actor]')&&card.querySelectorAll('[data-actor]').length>1){e.target.closest('[data-actor]').remove();card.querySelector('[data-add-actor]').disabled=false;dirty=true;}
+ if(e.target.matches('[data-add-prop]')&&card.querySelectorAll('[data-prop]').length<5){card.querySelector('.prop-controls').insertAdjacentHTML('beforeend',propControl({id:'object'+(card.querySelectorAll('[data-prop]').length+1),kind:'book',x:.5,holder:'none'}));dirty=true;}
+ if(e.target.matches('[data-remove-prop]')){e.target.closest('[data-prop]').remove();dirty=true;}
+});
+$('#animated-example').addEventListener('click',()=>action(async()=>showProject(await api('/api/animated-example',{method:'POST'}),'story')));
+$('#import-story').addEventListener('change',e=>action(async()=>{const file=e.target.files[0];if(!file)return;if(file.size>100000)throw Error('Story JSON must be below 100 KB.');const story=JSON.parse(await file.text());showProject(await api('/api/projects/import',{method:'POST',body:JSON.stringify(story)}),'story');e.target.value='';}));
+let playback=0;
+function previewFrame(index,t){const img=document.querySelectorAll('.board-card')[index]?.querySelector('.board-image img');if(img)img.src=`/api/projects/${project.id}/scenes/${index}/frame?t=${Number(t).toFixed(2)}`;return img;}
+$('#storyboard').addEventListener('input',e=>{if(e.target.matches('[data-scrub]')){playback++;previewFrame(Number(e.target.dataset.scrub),e.target.value);}});
+$('#storyboard').addEventListener('click',e=>{
+ const play=e.target.closest('[data-play]');if(play){const token=++playback;const id=project.id,index=Number(play.dataset.play);let t=0;play.textContent='Playing…';const tick=()=>{if(token!==playback||project?.id!==id||step!=='board'||focusedScene!==index){play.textContent='Play action preview';return;}const img=previewFrame(index,t);if(!img){play.textContent='Build scenes first';return;}const slider=play.closest('.motion-preview').querySelector('input');slider.value=t;img.onload=()=>{img.onload=null;if(t<6){t=Math.min(6,t+.16);setTimeout(tick,100);}else play.textContent='Play action preview';};img.onerror=()=>{play.textContent='Preview unavailable';};};tick();}
+ const reset=e.target.closest('[data-reset-bg]');if(reset)action(async()=>showProject(await api(`/api/projects/${project.id}/scenes/${reset.dataset.resetBg}/background`,{method:'DELETE'}),'board'));
+});

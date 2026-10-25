@@ -47,11 +47,11 @@ def wrap(text, face, width=600):
     return rows+[row] if row else rows
 
 
-async def speak(text, path):
+async def speak(text, path, voice="en-US-AndrewNeural"):
     import edge_tts
     temp=path.with_suffix('.partial.mp3')
     try:
-        await edge_tts.Communicate(text,'en-US-AndrewNeural',rate='-8%').save(str(temp))
+        await edge_tts.Communicate(text,voice,rate='-8%').save(str(temp))
         temp.replace(path)
     finally:temp.unlink(missing_ok=True)
 
@@ -121,15 +121,17 @@ def render_project(project, folder, progress):
     if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
         raise RuntimeError('FFmpeg is missing on this server.')
     folder=Path(folder);face=font(32);entries=[];cursor=0;captions=[]
+    rigged=project['story'].get('render_style')=='rigged'
+    voice=project['story'].get('voice','en-US-AndrewNeural')
     for index,scene in enumerate(project['story']['scenes']):
         progress(f'Preparing narration {index+1}/{len(project["story"]["scenes"])}')
         supplied=project['audio'].get(str(index))
         if supplied:audio=folder/supplied
         else:
-            key=hashlib.sha256((scene['narration']+'Andrew/-8%').encode()).hexdigest()[:20]
+            key=hashlib.sha256((scene['narration']+voice+'/-8%').encode()).hexdigest()[:20]
             audio=folder/f'voice-{key}.mp3'
             if not audio.exists():
-                try:asyncio.run(speak(scene['narration'],audio))
+                try:asyncio.run(speak(scene['narration'],audio,voice))
                 except Exception as exc:
                     raise RuntimeError('Narration service unavailable. Retry, or upload a voice recording for each scene.') from exc
         seconds=duration(audio)
@@ -142,7 +144,11 @@ def render_project(project, folder, progress):
         hold=beat_hold(scene['narration'],index==len(project['story']['scenes'])-1)
         length=math.ceil((seconds+.25+hold)*FPS)/FPS
         asset=project['assets'][str(index)]
-        actor=IllustratedActor(folder/asset['file'],asset.get('heads',[]))
+        if rigged:
+            from .animation import AnimatedScene
+            bg=project.get('backgrounds',{}).get(str(index))
+            actor=AnimatedScene(scene,project['story']['characters'],folder/bg if bg else None)
+        else:actor=IllustratedActor(folder/asset['file'],asset.get('heads',[]))
         words=scene['narration'].split();chunks=caption_chunks(scene['narration'])
         at=cursor+.25
         for text in chunks:
@@ -172,7 +178,12 @@ def render_project(project, folder, progress):
             for frame in range(round(cursor*FPS)):
                 t=frame/FPS
                 while entry_index+1<len(entries) and t>=entries[entry_index]['end']:entry_index+=1
-                e=entries[entry_index];im=e['actor'].frame(t-e['start'],e['movement'])
+                e=entries[entry_index];local=t-e['start']
+                if rigged:
+                    at=round((local-.25)*SR);chunk=e['pcm'][max(0,at):max(0,at)+960] if at>=0 else []
+                    energy=math.sqrt(sum(v*v for v in chunk)/max(1,len(chunk)))/32768
+                    im=e['actor'].frame(local,e['end']-e['start'],energy)
+                else:im=e['actor'].frame(local,'still')
                 text=next((text for a,b,text in captions if a<=t<b),'')
                 if text:
                     overlay=Image.new('RGBA',(W,H));d=ImageDraw.Draw(overlay);rows=wrap(text,face)

@@ -1,0 +1,127 @@
+{
+  "render_style": "rigged",
+  "characters": [
+    {
+      "id": "hero",
+      "name": "June",
+      "color": "#F8F3E8",
+      "accent": "#478887",
+      "accessory": "scarf"
+    },
+    {
+      "id": "friend",
+      "name": "Milo",
+      "color": "#F8F3E8",
+      "accent": "#C68E55",
+      "accessory": "none"
+    }
+  ],
+  "voice": "en-US-AvaNeural",
+  "title": "The First Hello",
+  "logline": "June faces her first presentation, with a friend in the audience.",
+  "character_notes": "June is the hero in a teal scarf. Milo is her supportive friend.",
+  "scenes": [
+    {
+      "narration": "June had rehearsed all morning. When she saw Milo in the audience, she gave him a little wave.",
+      "visual": "June waves beside Milo.",
+      "movement": "still",
+      "animation": {
+        "setting": "office",
+        "light": "day",
+        "speaker": "narrator",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.65,
+            "pose": "standing",
+            "action": "wave",
+            "emotion": "worried",
+            "end_emotion": "happy",
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.65,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "happy",
+            "end_emotion": null,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "Hi, everyone. If I forget my lines, please enjoy this very professional scarf.",
+      "visual": "June talks beside Milo.",
+      "movement": "still",
+      "animation": {
+        "setting": "stage",
+        "light": "day",
+        "speaker": "hero",
+        "time_jump": true,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.65,
+            "pose": "standing",
+            "action": "talk",
+            "emotion": "worried",
+            "end_emotion": "happy",
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.65,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "happy",
+            "end_emotion": null,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "Milo laughed. So did June. Suddenly, the room felt a little smaller.",
+      "visual": "June laughs beside Milo.",
+      "movement": "still",
+      "animation": {
+        "setting": "stage",
+        "light": "day",
+        "speaker": "narrator",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.32,
+            "end_x": 0.65,
+            "pose": "standing",
+            "action": "laugh",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.68,
+            "end_x": 0.65,
+            "pose": "standing",
+            "action": "laugh",
+            "emotion": "happy",
+            "end_emotion": null,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    }
+  ]
+}

@@ -11,8 +11,8 @@ from pathlib import Path
 import shutil
 from urllib.parse import urlparse
 
-from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, HTTPException, Request, Query
+from fastapi.responses import FileResponse, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 from PIL import Image, UnidentifiedImageError
@@ -21,6 +21,8 @@ from .models import Brief, Story, digest
 from .providers import GenerationError, OpenAIProvider
 from .rendering import render_project, duration
 from .store import BUSY, Store
+from .animation import AnimatedScene
+from .animation_models import ACTIONS, EMOTIONS, SETTINGS, PROPS
 
 ROOT=Path(__file__).resolve().parent.parent
 DEMO_STEM='the-empty-chair-story-order'
@@ -77,7 +79,7 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             raise HTTPException(409,'Approve the current story before making a storyboard.')
 
     def board_hash(p):
-        return digest({'story':p['story'],'assets':p['assets']})
+        return digest({'story':p['story'],'assets':p['assets'],'backgrounds':p.get('backgrounds',{})})
 
     def update(identifier,**fields):
         with store.lock:
@@ -104,7 +106,7 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
 
     @app.get('/api/config')
     def config():
-        return dict(ai_available=bool(os.getenv('OPENAI_API_KEY')),ffmpeg=bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
+        return dict(animation=dict(actions=ACTIONS,emotions=EMOTIONS,settings=SETTINGS,props=PROPS),ai_available=bool(os.getenv('OPENAI_API_KEY')),ffmpeg=bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
             demo_available=(ROOT/'outputs'/f'{DEMO_STEM}.mp4').is_file(),
             story_model=os.getenv('STORY_MODEL','gpt-4.1-mini'),image_model=os.getenv('IMAGE_MODEL','gpt-image-2'))
 
@@ -118,14 +120,40 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             if brief.mode=='ai' and not os.getenv('OPENAI_API_KEY'):
                 raise HTTPException(503,'Set OPENAI_API_KEY on the server, or choose Write it myself.')
             if brief.mode=='manual':
-                story=Story(title='Untitled story',logline=brief.prompt,character_notes=DEFAULT_CHARACTER,
-                    scenes=[dict(narration='',visual='',movement='breathe') for _ in range(3)])
+                story=Story(render_style=brief.render_style,title='Untitled story',logline=brief.prompt,character_notes=DEFAULT_CHARACTER,
+                    scenes=[dict(narration='',visual='',movement='still',animation=dict(actors=[dict(character='hero')]) if brief.render_style=='rigged' else None) for _ in range(3)])
                 return store.create(brief.model_dump(),story.model_dump())
             p=store.create(brief.model_dump())
             def draft():
                 story=provider_factory().draft(brief)
                 return dict(story=story.model_dump(),status='draft',progress='Your story is ready for review.')
             return enqueue(p,'drafting',draft)
+
+    @app.post('/api/projects/import')
+    def import_story(story:Story):
+        with store.lock:
+            return store.create(dict(prompt=story.logline or story.title,mode='manual',render_style=story.render_style),story.model_dump())
+
+    @app.post('/api/animated-example')
+    def animated_example():
+        story=Story.model_validate_json((ROOT/'studio/examples/kindness.json').read_text())
+        return import_story(story)
+
+    def thumbnail(p,index,folder):
+        scene=p['story']['scenes'][index];bg=p.get('backgrounds',{}).get(str(index))
+        name=f'animation-{index}-{digest(dict(scene=scene,characters=p["story"]["characters"],bg=bg))[:12]}.png'
+        AnimatedScene(scene,p['story']['characters'],folder/bg if bg else None).frame(3,6).save(folder/name)
+        return dict(file=name,heads=[])
+
+    @app.get('/api/projects/{identifier}/scenes/{index}/frame')
+    def preview(identifier:str,index:int,t:float=Query(default=0,ge=0,le=6,allow_inf_nan=False)):
+        with store.lock:
+            p=load(identifier);approved(p)
+            if p['story'].get('render_style')!='rigged' or not 0<=index<len(p['story']['scenes']):raise HTTPException(404,'Animated scene not found.')
+            bg=p.get('backgrounds',{}).get(str(index));folder=store.folder(identifier)
+            im=AnimatedScene(p['story']['scenes'][index],p['story']['characters'],folder/bg if bg else None).frame(t,6)
+        output=io.BytesIO();im.save(output,format='JPEG',quality=85)
+        return Response(output.getvalue(),media_type='image/jpeg',headers={'Cache-Control':'no-store'})
 
     @app.get('/api/projects/{identifier}')
     def project(identifier:str):
@@ -137,7 +165,7 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             p=load(identifier);editable(p)
             if p['story']!=story.model_dump():
                 p.update(story=story.model_dump(),story_approval=None,storyboard_approval=None,
-                    assets={},audio={},video=None,captions=None,status='draft',progress='Story saved. Review it before approval.')
+                    assets={},backgrounds={},audio={},video=None,captions=None,status='draft',progress='Story saved. Review it before approval.')
             return store.save(p)
 
     @app.post('/api/projects/{identifier}/approve-story')
@@ -146,13 +174,18 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             p=load(identifier);editable(p)
             try:Story.model_validate(p['story']).reviewable()
             except (ValueError,TypeError) as exc:raise HTTPException(422,str(exc))
-            p.update(story_approval=digest(p['story']),error=None,progress='Story approved. Add or generate the scene illustrations.')
+            p.update(story_approval=digest(p['story']),error=None,progress='Story approved. Build your animated scenes.' if p['story'].get('render_style')=='rigged' else 'Story approved. Add or generate the scene illustrations.')
             return store.save(p)
 
     @app.post('/api/projects/{identifier}/illustrate')
     def illustrate(identifier:str):
         with store.lock:
             p=load(identifier);editable(p);approved(p)
+            if p['story'].get('render_style')=='rigged':
+                folder=store.folder(identifier)
+                p['assets']={str(i):thumbnail(p,i,folder) for i in range(len(p['story']['scenes']))}
+                p.update(storyboard_approval=None,video=None,captions=None,status='storyboard',progress='Scenes built. Preview each action and approve the storyboard.')
+                return store.save(p)
             if not os.getenv('OPENAI_API_KEY'):raise HTTPException(503,'AI images need a server API key. You can upload your own illustrations instead.')
             if len(p['assets'])==len(p['story']['scenes']):raise HTTPException(409,'All images are present. Review them or replace one with an upload.')
             folder=store.folder(identifier);story=Story.model_validate(p['story'])
@@ -185,14 +218,19 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             except ValueError:raise HTTPException(422,'Invalid file encoding.')
             if len(data)>8*1024*1024:raise HTTPException(413,'Keep files below 8 MB.')
             folder=store.folder(identifier)
-            if body.kind=='image':
+            if body.kind in {'image','background'}:
+                rigged=p['story'].get('render_style')=='rigged'
+                if (body.kind=='background')!=rigged:raise HTTPException(422,'Use a background upload for animation, or an illustration for illustrated mode.')
                 try:
                     with Image.open(io.BytesIO(data)) as im:
                         if im.width*im.height>16_000_000:raise ValueError('Image too large.')
                         im.load();name=f'upload-{scene_index}-{hashlib.sha256(data).hexdigest()[:12]}.png'
                         im.convert('RGB').save(folder/name)
                 except (ValueError,OSError,UnidentifiedImageError,Image.DecompressionBombError):raise HTTPException(422,'Use a PNG, JPEG or WebP image up to 16 megapixels.')
-                p['assets'][str(scene_index)]=dict(file=name,heads=[])
+                if body.kind=='background':
+                    p.setdefault('backgrounds',{})[str(scene_index)]=name
+                    p['assets'][str(scene_index)]=thumbnail(p,scene_index,folder)
+                else:p['assets'][str(scene_index)]=dict(file=name,heads=[])
                 p['storyboard_approval']=None
             elif body.kind=='audio':
                 name=f'audio-{scene_index}-{hashlib.sha256(data).hexdigest()[:12]}.bin';path=folder/name;path.write_bytes(data)
@@ -202,6 +240,16 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
                 p['audio'][str(scene_index)]=name
             else:raise HTTPException(422,'Unsupported upload type.')
             p.update(video=None,captions=None,status='storyboard',error=None,progress='File saved. Review your storyboard.')
+            return store.save(p)
+
+    @app.delete('/api/projects/{identifier}/scenes/{index}/background')
+    def reset_background(identifier:str,index:int):
+        with store.lock:
+            p=load(identifier);editable(p);approved(p)
+            if p['story'].get('render_style')!='rigged' or not 0<=index<len(p['story']['scenes']):raise HTTPException(404,'Animated scene not found.')
+            p.setdefault('backgrounds',{}).pop(str(index),None)
+            p['assets'][str(index)]=thumbnail(p,index,store.folder(identifier))
+            p.update(storyboard_approval=None,video=None,captions=None,status='storyboard')
             return store.save(p)
 
     @app.post('/api/projects/{identifier}/approve-storyboard')
@@ -230,7 +278,7 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             if name=='story.json':
                 from fastapi.responses import Response
                 return Response(json.dumps(p['story'],indent=2),media_type='application/json',headers={'Content-Disposition':'attachment; filename="story.json"'})
-            allowed={a['file'] for a in p['assets'].values()}|set(p['audio'].values())|{p.get('video'),p.get('captions')}
+            allowed={a['file'] for a in p['assets'].values()}|set(p['audio'].values())|set(p.get('backgrounds',{}).values())|{p.get('video'),p.get('captions')}
             if name not in allowed or Path(name).name!=name:raise HTTPException(404,'File not found.')
             path=store.folder(identifier)/name
             if not path.is_file():raise HTTPException(404,'File not found.')
