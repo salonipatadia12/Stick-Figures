@@ -297,4 +297,11 @@ during narrator-only passages. New dialogue requires new timings.
 The acting revision holds one camera composition per scene. The ending includes
 a brief chuckle with original eyes and a small shoulder lift, then an outward chair pull
 with a coherent chair layer and attached gripping hand. Rebuild with the same
-`recut.py --motion` command; output is `outputs/the-empty-chair-subtle.mp4`.
+`recut.py --motion` command; output is `outputs/the-empty-chair-drawing.mp4`.
+
+
+The opening writing action now uses `outputs/the-empty-chair-source/writing.py`:
+the original hand and pen move together, two fixed-length arm segments bend at
+the elbow, and each ink stroke ends at the pen tip. Transfers lift the pen and
+leave no ink. This drawing animation is calibrated to the café artwork; new
+artwork needs its own attachment points and clean background plates.

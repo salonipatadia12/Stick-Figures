@@ -23,7 +23,7 @@ from .rendering import render_project, duration
 from .store import BUSY, Store
 
 ROOT=Path(__file__).resolve().parent.parent
-DEMO_STEM='the-empty-chair-subtle'
+DEMO_STEM='the-empty-chair-drawing'
 DEFAULT_CHARACTER='White filled round head, navy outline and slender navy limbs, rounded shaded white torso, expressive oval eyes, no hair. Give a second character one consistent distinguishing accessory.'
 security=HTTPBasic(auto_error=False)
 
@@ -251,7 +251,7 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
             shutil.copyfile(ROOT/'outputs'/f'{DEMO_STEM}.mp4',folder/'reel.mp4')
             shutil.copyfile(ROOT/'outputs'/f'{DEMO_STEM}.srt',folder/'captions.srt')
             p.update(status='ready',video='reel.mp4',captions='captions.srt',duration=data['duration'],
-                story_approval=digest(p['story']),storyboard_approval=board_hash(p),progress='Revised cut: tighter narration, a quieter wait, and a warmer return.')
+                story_approval=digest(p['story']),storyboard_approval=board_hash(p),progress='Revised example: the hand draws a sketch with visible pen strokes and pen lifts.')
             return store.save(p)
 
     # Serve static files explicitly so API/media access always passes owner auth.

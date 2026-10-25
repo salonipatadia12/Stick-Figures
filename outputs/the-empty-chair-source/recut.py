@@ -153,7 +153,7 @@ def stamp(t):
 
 def render(preview=False,with_motion=False):
     from motion import MovementScene
-    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-subtle.mp4' if with_motion else 'the-empty-chair-recut.mp4')
+    reel=Recut(MovementScene if with_motion else Scene);target=OUT/('the-empty-chair-drawing.mp4' if with_motion else 'the-empty-chair-recut.mp4')
     if preview:
         sheet=Image.new('RGB',(1080,1920))
         for n,i in enumerate([0,2,3,6,10,13,14,18,20]):sheet.paste(reel.frame(reel.starts[i]+.4).resize((360,640)),(n%3*360,n//3*640))

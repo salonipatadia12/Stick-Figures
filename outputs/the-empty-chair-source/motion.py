@@ -7,6 +7,7 @@ import math
 from PIL import Image, ImageDraw, ImageChops, ImageFilter
 from render import Scene, HERE, SIZE, ease, pulse
 from lipsync import LipSync, paint_mouth, paint_laugh
+from writing import WritingRig
 
 SOURCE=(941,1672)
 NAVY='#171A32'
@@ -118,10 +119,11 @@ class MovementScene(Scene):
     def __init__(self,name,spec):
         super().__init__(name,spec)
         self.lips=LipSync();self.timeline_t=0
+        self.writing=WritingRig() if name=='alone' else None
         self.rig=PropRig('bag',spec['file']) if name=='bag' else PropRig('chair',spec['file']) if name=='return' else None
 
     def frame(self,t,acting):
-        im=self.rig.frame(t,acting) if self.rig else self.im.copy()
+        im=self.writing.frame(self.timeline_t) if self.writing else self.rig.frame(t,acting) if self.rig else self.im.copy()
         from recut import at, PAUSES, LEAD
         # Invert the edit's inserted pauses, without making a paused word repeat.
         source_t=self.timeline_t-LEAD
@@ -158,7 +160,7 @@ class MovementScene(Scene):
             if acting=='laugh':
                 weight=ease((1-math.hypot((x-210)/105,(y-620)/100))/.55)
                 sy+=weight*1.5*chuckle
-            if acting=='draw':
+            if acting=='draw' and self.writing is None:
                 for cx,cy,rx,ry in self.hands:
                     weight=ease((1-math.hypot((x-cx)/rx,(y-cy)/ry))/.32)
                     sx-=weight*2*math.sin(t*6);sy-=weight*1.2*math.sin(t*9)
