@@ -58,7 +58,7 @@ class FakeProvider:
 
 class StudioTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory();self.env=patch.dict(os.environ,{'OPENAI_API_KEY':'','APP_PASSWORD':'','APP_ENV':''})
+        self.temp=tempfile.TemporaryDirectory();self.env=patch.dict(os.environ,{'OPENAI_API_KEY':'','ANTHROPIC_API_KEY':'','STORY_PROVIDER':'auto','APP_PASSWORD':'','APP_ENV':''})
         self.env.start();FakeProvider.calls=[];FakeProvider.fail_second=False
         self.app=create_app(self.temp.name,provider_factory=FakeProvider)
         self.client=TestClient(self.app);self.client.__enter__()
@@ -190,7 +190,7 @@ class StudioTests(unittest.TestCase):
 
 class ProviderContracts(unittest.TestCase):
     def test_structured_story_and_reference_image_contract(self):
-        fake=MagicMock();fake.responses.parse.side_effect=[SimpleNamespace(output_parsed=story()),SimpleNamespace(output_parsed=Landmarks(heads=[]))]
+        fake=MagicMock();fake.responses.input_tokens.count.return_value=SimpleNamespace(input_tokens=4000);fake.responses.parse.side_effect=[SimpleNamespace(output_parsed=story()),SimpleNamespace(output_parsed=Landmarks(heads=[]))]
         fake.images.edit.return_value=SimpleNamespace(data=[SimpleNamespace(b64_json=base64.b64encode(image_bytes()).decode())])
         with tempfile.TemporaryDirectory() as folder,patch.dict(os.environ,{'OPENAI_API_KEY':'test-only'}),patch('openai.OpenAI',return_value=fake):
             provider=OpenAIProvider();draft=provider.draft(Brief(prompt='A cup is repaired'))

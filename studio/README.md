@@ -25,8 +25,8 @@ cp .env.example .env
 ```
 
 Open http://127.0.0.1:8000. No API key is necessary for the finished example or the
-manual workflow. A key configured on the server enables prompt-to-story and new
-illustrations. If a password is configured, the browser asks for the username
+manual workflow. An Anthropic or OpenAI key enables prompt-to-story. New AI illustrations
+require OpenAI; animated characters and preset backgrounds render locally. If a password is configured, the browser asks for the username
 (`owner` by default) and password. Keys are never returned to the browser.
 
 ## Reusable animation workflow
@@ -80,11 +80,59 @@ only for the selected character speaker; narrator scenes do not make everyone ta
 This uses audio amplitude, not phoneme-level lip sync. A dialogue scene should contain
 only that character's spoken words. Captions use estimated phrase timing.
 
-**Prompt-to-story:** configure `OPENAI_API_KEY` on the server. Drafting makes a single
-structured request that is constrained to supported actions and prop continuity.
-It may incur provider charges. There is no API key configured in this development
-environment: live paid story drafting was not tested; provider contracts are mocked.
+**Prompt-to-story:** configure Anthropic or OpenAI on the server. Both use the same
+story schema, action vocabulary and continuity validation. Drafts still require
+story approval and storyboard approval. Live paid drafting has not been tested;
+provider contracts and the Anthropic-only application flow are tested with mocks.
 Manual editing, imported stories, backgrounds and character animation need no credits.
+
+### Anthropic setup
+
+Edit your local `.env` (already ignored by Git):
+
+```dotenv
+STORY_PROVIDER=anthropic
+ANTHROPIC_API_KEY=your-key-here
+ANTHROPIC_STORY_MODEL=claude-sonnet-5-5
+```
+
+Use a workspace-scoped key, or set `ANTHROPIC_WORKSPACE_ID` if your key requires it.
+Restart the server with `.venv/bin/uvicorn studio.app:app --env-file .env --host 127.0.0.1 --port 8000`,
+then refresh the studio. **Draft my story** becomes available and Setup shows
+Anthropic configured. This reports configuration, not a successful authentication
+check; invalid keys produce a readable error on drafting. Never paste keys into
+story prompts or commit them.
+
+`STORY_PROVIDER=auto` selects Anthropic when its key exists, otherwise OpenAI.
+An explicit `anthropic` or `openai` selection never silently falls back to the other
+provider. OpenAI retains `STORY_MODEL`; Claude uses `ANTHROPIC_STORY_MODEL`, so an
+older `.env` with a GPT model cannot accidentally send that model to Anthropic.
+Claude generates story text and structured scene directions. It does not generate
+new raster artwork here; existing art, preset backgrounds and uploads work without
+an OpenAI key.
+
+### $0.25 story drafting limit
+
+The server enforces a maximum **$0.25 API token budget per new story draft**, with
+only $0.20 allocated and $0.05 held back as a safety margin. Before generation it
+counts input tokens (including the story schema), adds a 1,024-token overhead
+allowance, and limits the output to the remaining budget or 8,192 tokens, whichever
+is smaller. If fewer than 2,048 output tokens fit, drafting stops before spending.
+Unknown model prices, unavailable token counts and invalid counts also stop the
+request. There are no automatic paid retries, repairs, provider fallbacks, premium
+service tiers, or server tools. A failed or truncated draft can still incur the
+cost of its one request. Clicking Draft again creates a new draft with a new budget.
+
+Rates verified on 2026-10-25: Claude Sonnet 5.5 $2 input / $10 output per million
+and GPT-4.1 mini $0.40 / $1.60. These are standard token rates; account taxes and
+future provider price changes are outside application control. Update
+`STORY_RATES` against official pricing before enabling another model. This limit
+covers story writing and directions, **not separately approved new AI illustrations**.
+The reusable animated workflow uses bundled artwork and no paid image calls.
+
+References: [Anthropic model pricing](https://platform.claude.com/docs/en/models/overview),
+[Anthropic token counting](https://platform.claude.com/docs/en/build-with-claude/token-counting),
+[OpenAI model pricing](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
 
 Story JSON includes characters, voice, settings and directions, but not uploaded
 media. Back up `studio-data/` to move complete projects, or import JSON and re-upload
@@ -128,7 +176,7 @@ included:
 
 ```sh
 cp .env.example .env
-# Set a strong APP_PASSWORD. Add OPENAI_API_KEY for AI generation if desired.
+# Set a strong APP_PASSWORD. Add ANTHROPIC_API_KEY for story drafting if desired.
 docker compose up --build -d
 docker compose logs -f studio
 ```
@@ -161,7 +209,10 @@ contracts, and a real offline render with uploaded illustrations/audio.
 
 Implementation follows the official [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 and [image generation](https://developers.openai.com/api/docs/guides/image-generation)
-APIs. Defaults are configurable via `STORY_MODEL` and `IMAGE_MODEL`.
+APIs, plus the [Anthropic Messages API](https://platform.claude.com/docs/en/api/overview)
+and [tool input schemas](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools).
+Model settings are `ANTHROPIC_STORY_MODEL`, `STORY_MODEL` and `IMAGE_MODEL`;
+story model changes require verified pricing in the budget allowlist.
 
 ## Café-style artwork and motion revision
 

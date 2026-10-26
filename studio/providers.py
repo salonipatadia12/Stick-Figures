@@ -10,17 +10,53 @@ class GenerationError(RuntimeError):
     pass
 
 
-class OpenAIProvider:
-    def __init__(self):
-        from openai import OpenAI
-        if not os.getenv('OPENAI_API_KEY'):
-            raise GenerationError('AI generation needs OPENAI_API_KEY on the server. You can use the manual workflow now.')
-        self.client = OpenAI(timeout=240, max_retries=0)
-        self.text_model = os.getenv('STORY_MODEL', 'gpt-4.1-mini')
-        self.image_model = os.getenv('IMAGE_MODEL', 'gpt-image-2')
+# Standard USD / million tokens, verified 2026-10-25 against provider model pages.
+# Unknown models fail closed; no model fallback or automatic paid retries.
+STORY_BUDGET_USD = 0.25
+STORY_RATES = {'claude-sonnet-5-5': (2, 10), 'gpt-4.1-mini': (.4, 1.6)}
 
-    def draft(self, brief):
-        instructions = f'''Write an ORIGINAL complete illustrated stick-figure story, about {brief.seconds} seconds.
+
+def budget_output_tokens(model, input_tokens):
+    from decimal import Decimal, ROUND_FLOOR
+    if model not in STORY_RATES:
+        raise GenerationError('This model has no verified pricing for the $0.25 story limit. Use the default story model.')
+    if type(input_tokens) is not int or input_tokens < 0:
+        raise GenerationError('Could not verify the input token count. No story generation was started.')
+    input_rate, output_rate = map(lambda v: Decimal(str(v)), STORY_RATES[model])
+    # Keep 20% of the budget unused and add 1024 input tokens for counting overhead.
+    allowance = Decimal('0.20') - (input_tokens + 1024) * input_rate / 1_000_000
+    maximum = int((allowance * 1_000_000 / output_rate).to_integral_value(rounding=ROUND_FLOOR))
+    if maximum < 2048:
+        raise GenerationError('This request cannot fit the $0.25 story budget. Shorten the brief; no story generation was started.')
+    return min(8192, maximum)
+
+
+def story_provider_name():
+    selected = os.getenv('STORY_PROVIDER', 'auto').strip().lower() or 'auto'
+    if selected == 'auto':
+        return 'anthropic' if os.getenv('ANTHROPIC_API_KEY', '').strip() else 'openai'
+    return selected if selected in {'anthropic', 'openai'} else None
+
+
+def story_available():
+    name = story_provider_name()
+    return bool(name and os.getenv(f'{name.upper()}_API_KEY', '').strip())
+
+
+def story_model():
+    if story_provider_name() == 'anthropic':
+        return os.getenv('ANTHROPIC_STORY_MODEL', '').strip() or 'claude-sonnet-5-5'
+    return os.getenv('STORY_MODEL', '').strip() or 'gpt-4.1-mini'
+
+
+def story_provider():
+    if not story_available():
+        raise GenerationError('Configure ANTHROPIC_API_KEY or OPENAI_API_KEY and select a matching STORY_PROVIDER, then restart the server.')
+    return AnthropicProvider() if story_provider_name() == 'anthropic' else OpenAIProvider()
+
+
+def story_instructions(brief):
+    instructions = f'''Write an ORIGINAL complete illustrated stick-figure story, about {brief.seconds} seconds.
 Mood: {brief.mood}. Use 3–8 visual scenes and roughly {round(brief.seconds*2.1)} spoken words.
 Give the protagonist a concrete goal, a believable obstacle, an action they choose,
 and a satisfying causal ending. Avoid random twists, coincidences, generic slogans,
@@ -33,8 +69,8 @@ slim navy limbs, small hands, expressive simple oval eyes. Warm illustrated sett
 but characters dominate. Specify continuity details in character_notes. No text inside art.
 movement is breathe, nod, or still; use sparingly. This is a storyboard, not full-action
 video generation: prefer intimate everyday stories over fights or complex choreography.'''
-        if brief.render_style=='rigged':
-            instructions += """
+    if brief.render_style=='rigged':
+        instructions += """
 Use render_style=rigged. This story is rendered with articulated 2D characters.
 Define characters with IDs hero and friend, colors as hex, accessories none/scarf/glasses.
 Every scene MUST have animation directions. Settings: cafe, park, street, home, office, stage.
@@ -50,9 +86,102 @@ Use time_jump only for an explicit change of time. Narration describes exactly t
 visible action; no unrenderable actions such as opening doors, cooking or pulling chairs.
 Keep heads rigid, dialogue separate from narration, and use movement=still.
 Do not promise a complex action using a similar simple action. Adapt the story to this vocabulary."""
-        response = self.client.responses.parse(model=self.text_model,
-            input=[{'role':'system','content':instructions}, {'role':'user','content':brief.prompt}],
-            text_format=Story)
+    return instructions
+
+
+class AnthropicProvider:
+    """One Messages request; tool output is data, never executed code."""
+    def draft(self, brief):
+        from pydantic import ValidationError
+        key = os.getenv('ANTHROPIC_API_KEY', '').strip()
+        if not key:
+            raise GenerationError('Set ANTHROPIC_API_KEY on the server, then restart.')
+        payload = dict(
+            model=os.getenv('ANTHROPIC_STORY_MODEL', '').strip() or 'claude-sonnet-5-5',
+            max_tokens=8192,
+            system=story_instructions(brief) + '\nReturn the complete story by calling submit_story exactly once.',
+            messages=[dict(role='user', content=brief.prompt)],
+            tools=[dict(name='submit_story', description='Submit the complete story and supported animation directions for user review.', input_schema=Story.model_json_schema())],
+            tool_choice=dict(type='auto'),
+        )
+        headers = {'x-api-key': key, 'anthropic-version': '2026-10-21', 'content-type': 'application/json'}
+        workspace = os.getenv('ANTHROPIC_WORKSPACE_ID', '').strip()
+        if workspace:
+            headers['anthropic-workspace-id'] = workspace
+        # Preflight is free; failure never falls through to a paid request.
+        budget_output_tokens(payload['model'], 0)
+        count_payload = {k: v for k, v in payload.items() if k != 'max_tokens'}
+        counted = self._request('/count_tokens', count_payload, headers)
+        payload['max_tokens'] = budget_output_tokens(payload['model'], counted.get('input_tokens'))
+        payload['service_tier'] = 'standard_only'
+        result = self._request('', payload, headers)
+        if result.get('stop_reason') == 'max_tokens':
+            raise GenerationError('The story was cut short. Try a shorter brief or duration.')
+        blocks = result.get('content') or []
+        drafts = [block.get('input') for block in blocks if isinstance(block, dict)
+                  and block.get('type') == 'tool_use' and block.get('name') == 'submit_story']
+        if len(drafts) != 1:
+            raise GenerationError('Anthropic did not return one complete story. Try a different brief.')
+        try:
+            story = Story.model_validate(drafts[0])
+        except ValidationError:
+            raise GenerationError('The generated story did not match the supported scene format. Try a simpler brief.') from None
+        if story.render_style != brief.render_style:
+            raise GenerationError('The story service returned a different animation style. Please retry the draft.')
+        try:
+            return story.reviewable()
+        except ValueError:
+            raise GenerationError('The generated actions or prop continuity could not be rendered safely. Try a simpler brief.') from None
+
+
+    @staticmethod
+    def _request(suffix, payload, headers):
+        import json
+        import urllib.request
+        from urllib.error import HTTPError, URLError
+        request = urllib.request.Request('https://api.anthropic.com/v1/messages' + suffix,
+            data=json.dumps(payload).encode(), headers=headers, method='POST')
+        try:
+            with urllib.request.urlopen(request, timeout=240) as response:
+                result = json.load(response)
+        except HTTPError as exc:
+            messages = {401: 'Anthropic rejected the API key. Check ANTHROPIC_API_KEY and restart.',
+                403: 'Anthropic denied access. Check key permissions, workspace and model access.',
+                429: 'Anthropic rate or spending limit reached. Check your account and retry later.',
+                400: 'Anthropic rejected the request. Check model access, workspace and available API credits.',
+                404: 'Anthropic model unavailable. Check ANTHROPIC_STORY_MODEL.'}
+            message = messages.get(exc.code, 'Anthropic is temporarily unavailable. Retry later.')
+            exc.close()
+            raise GenerationError(message) from None
+        except (URLError, TimeoutError, OSError):
+            raise GenerationError('Could not reach Anthropic. Check the server connection and retry.') from None
+        except (ValueError, UnicodeError):
+            raise GenerationError('Anthropic returned an unreadable response. Please retry.') from None
+        if not isinstance(result, dict):
+            raise GenerationError('Anthropic returned an unusable response. Please retry.')
+        return result
+
+
+class OpenAIProvider:
+    def __init__(self):
+        from openai import OpenAI
+        if not os.getenv('OPENAI_API_KEY'):
+            raise GenerationError('AI generation needs OPENAI_API_KEY on the server. You can use the manual workflow now.')
+        self.client = OpenAI(timeout=240, max_retries=0)
+        self.text_model = os.getenv('STORY_MODEL', 'gpt-4.1-mini')
+        self.image_model = os.getenv('IMAGE_MODEL', 'gpt-image-2')
+
+    def draft(self, brief):
+        instructions = story_instructions(brief)
+        from openai.lib._parsing._responses import type_to_text_format_param
+        inputs = [{'role':'system','content':instructions}, {'role':'user','content':brief.prompt}]
+        budget_output_tokens(self.text_model, 0)
+        # Use the same strict schema as responses.parse, with the pinned SDK.
+        count = self.client.responses.input_tokens.count(model=self.text_model, input=inputs,
+            text={'format': type_to_text_format_param(Story)})
+        maximum = budget_output_tokens(self.text_model, count.input_tokens)
+        response = self.client.responses.parse(model=self.text_model, input=inputs,
+            text_format=Story, max_output_tokens=maximum, service_tier='default')
         if response.output_parsed is None:
             raise GenerationError('The story service did not return a usable story. Try a different brief.')
         if response.output_parsed.render_style!=brief.render_style:

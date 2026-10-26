@@ -95,7 +95,7 @@ class AnimationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'closer'):Story.model_validate(s).reviewable()
 
     def test_free_workflow_background_and_offline_render(self):
-        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ',{'OPENAI_API_KEY':'','APP_PASSWORD':'','APP_ENV':''}), TestClient(create_app(tmp)) as c:
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ',{'OPENAI_API_KEY':'','ANTHROPIC_API_KEY':'','STORY_PROVIDER':'auto','APP_PASSWORD':'','APP_ENV':''}), TestClient(create_app(tmp)) as c:
             r=c.post('/api/animated-example');self.assertEqual(r.status_code,200,r.text)
             p=r.json();base='/api/projects/'+p['id']
             self.assertEqual(c.post(base+'/illustrate').status_code,409)

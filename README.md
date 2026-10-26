@@ -14,8 +14,10 @@ The new [Story Studio](studio/README.md) adds a browser workflow: prompt → edi
 story → story approval → illustrations → storyboard approval → narrated MP4.
 It includes the corrected **The Empty Chair** as a finished example and supports
 manual stories, uploaded artwork, and your own voice recordings without an AI key.
-AI drafting and illustration require a server-side `OPENAI_API_KEY`; no key is
-configured in the checked-in project.
+Story drafting accepts a server-side `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`, with
+a $0.25 token budget per draft. New AI illustrations use OpenAI separately; reusable
+animated scenes use bundled artwork. No keys are included in the checked-in project.
+See [Anthropic setup and budget details](studio/README.md#anthropic-setup).
 
 ```sh
 python3 -m venv .venv

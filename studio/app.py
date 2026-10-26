@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from PIL import Image, UnidentifiedImageError
 
 from .models import Brief, Story, digest
-from .providers import GenerationError, OpenAIProvider
+from .providers import GenerationError, OpenAIProvider, story_provider, story_provider_name, story_available, story_model, STORY_BUDGET_USD
 from .rendering import render_project, duration
 from .store import BUSY, Store
 from .animation import AnimatedScene
@@ -31,7 +31,7 @@ DEFAULT_CHARACTER='White filled round head, navy outline and slender navy limbs,
 security=HTTPBasic(auto_error=False)
 
 
-def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_project):
+def create_app(data_dir=None, provider_factory=None, renderer=render_project):
     store=Store(data_dir or os.getenv('STUDIO_DATA_DIR',ROOT/'studio-data'))
     executor=ThreadPoolExecutor(max_workers=1,thread_name_prefix='reel')
 
@@ -107,9 +107,9 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
 
     @app.get('/api/config')
     def config():
-        return dict(animation=dict(actions=ACTIONS,emotions=EMOTIONS,settings=SETTINGS,props=PROPS),ai_available=bool(os.getenv('OPENAI_API_KEY')),ffmpeg=bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
+        return dict(animation=dict(actions=ACTIONS,emotions=EMOTIONS,settings=SETTINGS,props=PROPS),story_budget_usd=STORY_BUDGET_USD,ai_available=story_available(),story_provider=story_provider_name(),image_available=bool(os.getenv('OPENAI_API_KEY', '').strip()),ffmpeg=bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
             demo_available=(ROOT/'outputs'/f'{DEMO_STEM}.mp4').is_file(),
-            story_model=os.getenv('STORY_MODEL','gpt-4.1-mini'),image_model=os.getenv('IMAGE_MODEL','gpt-image-2'))
+            story_model=story_model(),image_model=os.getenv('IMAGE_MODEL','gpt-image-2'))
 
     @app.get('/api/projects')
     def projects():
@@ -118,15 +118,15 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
     @app.post('/api/projects')
     def create(brief:Brief):
         with store.lock:
-            if brief.mode=='ai' and not os.getenv('OPENAI_API_KEY'):
-                raise HTTPException(503,'Set OPENAI_API_KEY on the server, or choose Write it myself.')
+            if brief.mode=='ai' and not story_available():
+                raise HTTPException(503,'Configure ANTHROPIC_API_KEY or OPENAI_API_KEY and a matching STORY_PROVIDER on the server, or choose Write it myself.')
             if brief.mode=='manual':
                 story=Story(render_style=brief.render_style,title='Untitled story',logline=brief.prompt,character_notes=DEFAULT_CHARACTER,
                     scenes=[dict(narration='',visual='',movement='still',animation=dict(actors=[dict(character='hero')]) if brief.render_style=='rigged' else None) for _ in range(3)])
                 return store.create(brief.model_dump(),story.model_dump())
             p=store.create(brief.model_dump())
             def draft():
-                story=provider_factory().draft(brief)
+                story=(provider_factory or story_provider)().draft(brief)
                 return dict(story=story.model_dump(),status='draft',progress='Your story is ready for review.')
             return enqueue(p,'drafting',draft)
 
@@ -189,12 +189,12 @@ def create_app(data_dir=None, provider_factory=OpenAIProvider, renderer=render_p
                 p['assets']={str(i):thumbnail(p,i,folder) for i in range(len(p['story']['scenes']))}
                 p.update(storyboard_approval=None,video=None,captions=None,status='storyboard',progress='Scenes built. Preview each action and approve the storyboard.')
                 return store.save(p)
-            if not os.getenv('OPENAI_API_KEY'):raise HTTPException(503,'AI images need a server API key. You can upload your own illustrations instead.')
+            if not os.getenv('OPENAI_API_KEY'):raise HTTPException(503,'New AI images need OPENAI_API_KEY; Anthropic is used for stories. You can upload your own illustrations instead.')
             if len(p['assets'])==len(p['story']['scenes']):raise HTTPException(409,'All images are present. Review them or replace one with an upload.')
             folder=store.folder(identifier);story=Story.model_validate(p['story'])
             p.update(storyboard_approval=None,video=None,captions=None)
             def images():
-                provider=provider_factory();assets=dict(p['assets'])
+                provider=(provider_factory or OpenAIProvider)();assets=dict(p['assets'])
                 for i in range(len(story.scenes)):
                     if str(i) in assets:continue
                     update(identifier,progress=f'Illustrating scene {i+1}/{len(story.scenes)}…')
