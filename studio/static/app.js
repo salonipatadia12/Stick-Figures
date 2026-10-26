@@ -39,14 +39,14 @@ function drawBoard(){
  $('#approve-board').disabled=busy(project)||!project.story_approval||missing>0;
 }
 function showProject(p,nextStep){
- project=p;dirty=false;clearTimeout(poll);$('#welcome').hidden=true;$('#workspace').hidden=false;
+ project=p;dirty=false;clearTimeout(poll);if(p.video&&p.brief?.workflow==='automatic')nextStep='reel';$('#welcome').hidden=true;$('#workspace').hidden=false;
  $('#project-title').textContent=p.story?.title||(p.status==='error'?'Draft needs attention':'Writing your story…');$('#reel-title').textContent=p.story?.title||'';
  $('#job-status').textContent=p.progress;$('#job-status').classList.toggle('busy',busy(p));$('#error').hidden=!p.error;$('#error').textContent=p.error||'';
  $('#download-story').href=fileURL('story.json');$('#download-story').hidden=!p.story;
  if(p.story){
   storyEditor();drawBoard();
   $('#story-approval-note').textContent=p.story_approval?'Story approved. Editing it resets the storyboard and approvals.':'Approve the story before building its scenes.';
-  $('#save-story').disabled=busy(p);$('#approve-story').disabled=busy(p);$('#add-scene').disabled=busy(p)||p.story.scenes.length>=8;
+  $('#save-story').disabled=busy(p);$('#approve-story').disabled=busy(p);$('#approve-story').textContent=p.brief?.workflow==='automatic'?'Save changes & review scenes →':'Approve story & continue →';$('#add-scene').disabled=busy(p)||p.story.scenes.length>=8;
   document.querySelectorAll('#story-panel input,#story-panel textarea,#story-panel select,#story-panel [data-remove]').forEach(el=>el.disabled=busy(p)||(el.hasAttribute('data-remove')&&p.story.scenes.length<=3));
  }
  document.querySelector('[data-step="story"]').classList.toggle('done',!!p.story_approval);document.querySelector('[data-step="board"]').classList.toggle('done',!!p.storyboard_approval);document.querySelector('[data-step="reel"]').classList.toggle('done',!!p.video);
@@ -54,7 +54,7 @@ function showProject(p,nextStep){
  $('#download-video').hidden=!p.video;$('#download-captions').hidden=!p.captions;
  if(p.video){$('#video-container').innerHTML=`<video controls playsinline preload="metadata" src="${fileURL(p.video)}"></video>`;$('#download-video').href=fileURL(p.video);$('#download-captions').href=fileURL(p.captions);$('#reel-detail').textContent=`${Math.round(p.duration||0)} seconds · 720 × 1280 · MP4`;}
  else{$('#video-container').innerHTML='<div class="video-placeholder">Your reel will appear here.<small>Approve your story and storyboard first.</small></div>';$('#reel-detail').textContent='Your narration sets the pace. We leave space for the expressions and ending.';}
- refreshFlow(p);setStep(nextStep||step);if(!p.story)$('#story-panel').hidden=true;
+ refreshFlow(p);setStep(nextStep||step);if(!p.story||busy(p)&&p.brief?.workflow==='automatic')$('#story-panel').hidden=true;
  sessionStorage.setItem('studio-project',p.id);refreshProjects().catch(e=>toast(e.message));
  if(busy(p))poll=setTimeout(async()=>{try{showProject(await api(`/api/projects/${p.id}`));}catch(e){toast(e.message);}},1800);
 }
@@ -63,7 +63,7 @@ function newProject(){if(dirty){toast('Save your draft before opening a new stor
 async function create(mode){
  const prompt=$('#prompt').value.trim();if(prompt.length<5){toast('Give your story a brief first.');$('#prompt').focus();return;}
  $('#draft-button').disabled=true;$('#manual-button').disabled=true;
- try{const p=await api('/api/projects',{method:'POST',body:JSON.stringify({prompt,mood:$('#mood').value,seconds:Number($('#seconds').value),render_style:$('#render-style').value,mode})});showProject(p,'story');}
+ try{const p=await api('/api/projects',{method:'POST',body:JSON.stringify({prompt,mood:$('#mood').value,seconds:Number($('#seconds').value),render_style:$('#render-style').value,ending:$('#ending').value,workflow:mode==='manual'?'review':$('#workflow').value,mode})});showProject(p,'story');}
  finally{$('#draft-button').disabled=!config.ai_available;$('#manual-button').disabled=false;}
 }
 $('#brief-form').addEventListener('submit',e=>{e.preventDefault();action(()=>create('ai'));});
@@ -90,7 +90,7 @@ $('#setup-toggle').addEventListener('click',toggleSetup);$('#setup-mobile').addE
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
 (async()=>{try{
  config=await api('/api/config');$('#connection').textContent=config.ai_available?`${config.story_provider==='anthropic'?'Anthropic':'OpenAI'} story drafting · configured`:'Animation studio · ready';$('#connection').classList.toggle('ready',config.ai_available);
- $('#draft-button').disabled=!config.ai_available;$('#ai-note').textContent=config.ai_available?`Story drafting uses ${config.story_provider==='anthropic'?'Anthropic':'OpenAI'}. Animated characters and preset backgrounds render locally. New AI illustrations require OpenAI or your own uploads.`:'Write your own story or try the editable example—animation needs no AI credits. To enable Draft my story, add ANTHROPIC_API_KEY or OPENAI_API_KEY on the server and restart. See Setup.';
+ $('#draft-button').disabled=!config.ai_available;$('#ai-note').textContent=config.ai_available?`Ready to create. ${config.story_provider==='anthropic'?'Anthropic':'OpenAI'} writes the story; the app handles scenes, narration and animation. You can edit the finished result.`:'Write your own story or try the editable example—animation needs no AI credits. To enable Create my reel, add ANTHROPIC_API_KEY or OPENAI_API_KEY on the server and restart. See Setup.';
  $('#demo-button').disabled=!config.demo_available;$('#setup-status').textContent=`Story drafting: ${config.ai_available?config.story_provider+' configured':'needs an Anthropic or OpenAI key'}. New AI illustrations: ${config.image_available?'OpenAI configured':'upload your own or add an OpenAI key'}. Video renderer: ${config.ffmpeg?'ready':'FFmpeg needs installation'}.`;
  await refreshProjects();const saved=sessionStorage.getItem('studio-project');if(saved){try{const p=await api(`/api/projects/${saved}`);showProject(p,sessionStorage.getItem('studio-step')||(p.video?'reel':'story'));}catch{sessionStorage.removeItem('studio-project');}}
 }catch(e){$('#connection').textContent='Connection unavailable';toast(e.message);}})();
@@ -185,3 +185,11 @@ $('#storyboard').addEventListener('click',e=>{
  const play=e.target.closest('[data-play]');if(play){const token=++playback;const id=project.id,index=Number(play.dataset.play);let t=0;play.textContent='Playing…';const tick=()=>{if(token!==playback||project?.id!==id||step!=='board'||focusedScene!==index){play.textContent='Play action preview';return;}const img=previewFrame(index,t);if(!img){play.textContent='Build scenes first';return;}const slider=play.closest('.motion-preview').querySelector('input');slider.value=t;img.onload=()=>{img.onload=null;if(t<6){t=Math.min(6,t+.16);setTimeout(tick,100);}else play.textContent='Play action preview';};img.onerror=()=>{play.textContent='Preview unavailable';};};tick();}
  const reset=e.target.closest('[data-reset-bg]');if(reset)action(async()=>showProject(await api(`/api/projects/${project.id}/scenes/${reset.dataset.resetBg}/background`,{method:'DELETE'}),'board'));
 });
+
+function syncCreationMode(){
+ const automatic=$('#workflow').value==='automatic';
+ if(automatic)$('#render-style').value='rigged';
+ $('#render-style').disabled=automatic;
+ $('#draft-button').innerHTML=automatic?'Create my reel <span>↗</span>':'Draft my story <span>↗</span>';
+}
+$('#workflow').addEventListener('change',syncCreationMode);syncCreationMode();

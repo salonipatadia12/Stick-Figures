@@ -1,3 +1,29 @@
+## Prompt → ending → finished reel
+
+The default browser flow now asks for a prompt and ending, then **Create my reel**.
+Endings: happy, bittersweet, twist, funny, cliffhanger, tragic. Mood, duration and
+manual review are under **More options**. The selected ending is sent as an explicit
+story requirement. The app cannot objectively guarantee the literary quality of
+that ending; the completed story stays editable.
+
+Automatic mode makes one budget-capped story call, validates and stages the animated
+characters, creates scene previews, synthesizes narration, adds captions, renders
+and validates the MP4. It skips manual approval gates because the user requested
+that workflow; records identify the approval source as `automatic_workflow_requested`.
+No new paid images are purchased. Manual review remains available, and existing
+projects retain their original workflow. API clients opt in with
+`workflow: "automatic"`, `render_style: "rigged"`, and `ending: "happy"` (or another
+supported ending). Omitted workflow remains `review` for compatibility.
+
+There are no automatic paid retries. A failed voice/render job preserves the story,
+assets and approvals for a render-only retry. Local staging separates actor paths,
+corrects standing-still poses, preserves continuous lighting and carried objects,
+and keeps interaction targets within reach. Walks now lift alternating feet while
+the other foot stays planted; held props no longer create a table automatically.
+Expressions blend instead of switching at one frame. These are improvements to the
+existing 2D rig, not a replacement for authored character acting or arbitrary action
+animation. Narration/action semantic alignment still requires further evaluation.
+
 # Stick Figures · Story Studio
 
 A browser app for the illustrated storytelling style developed in this repository.
@@ -83,8 +109,10 @@ only that character's spoken words. Captions use estimated phrase timing.
 **Prompt-to-story:** configure Anthropic or OpenAI on the server. Both use the same
 story schema, action vocabulary and continuity validation. Drafts still require
 story approval and storyboard approval. Provider contracts and the Anthropic-only application flow are tested with mocks.
-A live capped recovery request authenticated and returned usage, but was truncated;
-a successful complete live draft with the revised settings remains unverified.
+A live automatic prompt-to-MP4 run completed with Anthropic, online narration,
+local character rendering and captions. The saved example is The Poem in Her Pocket.
+The pipeline is functional; arbitrary prompts can still produce unsupported narrated
+actions or inaccurate dialogue assignment, so animation/story quality needs further work.
 Manual editing, imported stories, backgrounds and character animation need no credits.
 
 ### Anthropic setup

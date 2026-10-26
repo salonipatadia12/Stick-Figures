@@ -10,7 +10,7 @@ class Strict(BaseModel):
 
 
 class Scene(Strict):
-    narration: str = Field(max_length=700)
+    narration: str = Field(max_length=700, description="Exact words the voice speaks. If animation.speaker is hero or friend, write ONLY that character’s direct first-person dialogue, never third-person narration about them. If narrator, do not mix in quoted dialogue.")
     visual: str = Field(max_length=2200)
     movement: Literal['breathe', 'nod', 'still'] = 'still'
     animation: Animation | None = None
@@ -54,6 +54,8 @@ class Brief(Strict):
     mood: Literal['heartwarming', 'funny', 'suspense'] = 'heartwarming'
     seconds: int = Field(default=45, ge=20, le=120)
     mode: Literal['ai', 'manual'] = 'ai'
+    ending: Literal['happy','bittersweet','twist','funny','cliffhanger','tragic'] = 'happy'
+    workflow: Literal['review','automatic'] = 'review'
     render_style: Literal['illustrated','rigged'] = 'illustrated'
 
 

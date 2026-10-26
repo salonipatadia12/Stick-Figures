@@ -92,7 +92,7 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
             update(identifier,**result,error=None)
         except Exception as exc:
             # Never expose HTTP request details, raw API exceptions, or credentials.
-            if isinstance(exc,(GenerationError,ValueError)) or (kind=='rendering' and isinstance(exc,RuntimeError)):
+            if isinstance(exc,(GenerationError,ValueError)) or (kind in {'rendering','drafting'} and isinstance(exc,RuntimeError)):
                 message=str(exc)
             else:message='Generation failed. Check the server API key, model access, quota, and connection, then retry. Saved work is retained.'
             update(identifier,status='error',error=message,progress='Job stopped. Review and retry when ready.')
@@ -118,6 +118,11 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
     @app.post('/api/projects')
     def create(brief:Brief):
         with store.lock:
+            if brief.workflow=='automatic':
+                if brief.mode!='ai' or brief.render_style!='rigged':
+                    raise HTTPException(422,'Automatic reels use AI stories and the built-in animated characters.')
+                if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
+                    raise HTTPException(503,'Install FFmpeg before creating an automatic reel.')
             if brief.mode=='ai' and not story_available():
                 raise HTTPException(503,'Configure ANTHROPIC_API_KEY or OPENAI_API_KEY and a matching STORY_PROVIDER on the server, or choose Write it myself.')
             if brief.mode=='manual':
@@ -129,7 +134,20 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
                 provider=(provider_factory or story_provider)()
                 try:
                     story=provider.draft(brief)
-                    return dict(story=story.model_dump(),status='draft',progress='Your story is ready for review.')
+                    if brief.workflow!='automatic':
+                        return dict(story=story.model_dump(),status='draft',progress='Your story is ready for review.')
+                    from .directing import prepare_story
+                    story=prepare_story(story)
+                    update(p['id'],story=story.model_dump(),story_approval=digest(story),
+                        approval_source='automatic_workflow_requested',status='illustrating',
+                        progress='Story written. Staging the characters and checking continuity…')
+                    current=load(p['id']);folder=store.folder(p['id'])
+                    assets={str(i):thumbnail(current,i,folder) for i in range(len(story.scenes))}
+                    current.update(assets=assets)
+                    update(p['id'],assets=assets,storyboard_approval=board_hash(current),
+                        status='rendering',progress='Recording narration and making your reel…')
+                    result=renderer(load(p['id']),folder,lambda text:update(p['id'],progress=text))
+                    return dict(**result,status='ready',progress='Your reel is ready. Watch it or edit the story and scenes.')
                 finally:
                     attempt=getattr(provider,'last_attempt',None)
                     if attempt:

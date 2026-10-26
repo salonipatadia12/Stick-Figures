@@ -58,13 +58,19 @@ def story_provider():
     return AnthropicProvider() if story_provider_name() == 'anthropic' else OpenAIProvider()
 
 
+def finish_story(story, brief):
+    if brief.workflow=='automatic' and story.render_style=='rigged':
+        from .directing import prepare_story
+        return prepare_story(story)
+    return story.reviewable()
+
+
 def story_instructions(brief):
     instructions = f'''Write an ORIGINAL complete illustrated stick-figure story, about {brief.seconds} seconds.
-Mood: {brief.mood}. Use {3 if brief.seconds <= 45 else "4–8"} visual scenes and roughly {round(brief.seconds*2.1)} spoken words.
+Mood: {brief.mood}. The user requires a {brief.ending} ending. Build the setup and character choices toward that ending; do not substitute another ending. Use {3 if brief.seconds <= 45 else "4–8"} visual scenes and roughly {round(brief.seconds*2.1)} spoken words.
 Give the protagonist a concrete goal, a believable obstacle, an action they choose,
 and a satisfying causal ending. Avoid random twists, coincidences, generic slogans,
-and copying an existing story. Narration must sound conversational. Use one consistent
-third-person narrator, short sentences, contractions, and occasional quoted dialogue.
+and copying an existing story. Narration must sound conversational. Use short sentences and contractions. Keep third-person narration separate from direct dialogue: a character-speaker scene contains only the exact words that character says. Never assign a character speaker to third-person narration about that character.
 Each scene's visual must enact its narration, specifying pose, facial expression,
 place, props and framing. Vary shots. Keep at most two recurring characters.
 Character design: shaded white filled round head and rounded torso, navy outlines,
@@ -75,6 +81,16 @@ video generation: prefer intimate everyday stories over fights or complex choreo
     if brief.render_style=='rigged':
         instructions += """
 Use render_style=rigged. This story is rendered with articulated 2D characters.
+Plan the supported physical actions first; write narration that describes only those actions.
+Use idle for a person already standing. stand is ONLY rising from a seated pose.
+For two actors keep hero x/end_x .20–.34 and friend x/end_x .66–.80 so heads cannot collide.
+Keep lighting consistent across continuous scenes. Keep a carried prop visible in later scenes;
+put it down in its own scene before picking up a different one. Do not introduce bags unless
+carrying or putting down the bag is essential; opening/searching a bag is unsupported.
+Each scene can enact only ONE action per actor. Split picking up, walking and speaking into
+separate scenes. Dialogue must be a separate scene with speaker hero/friend for mouth motion.
+Do not narrate shaking, reading, opening objects, or looking inside them: these are unsupported.
+Prefer simple goals, clear gestures and a small cast. The ending must happen on screen.
 Define characters with IDs hero and friend, colors as hex, accessories none/scarf/glasses.
 Use only the schema's emotion names: neutral, happy, sad, worried, surprised, angry.
 Use prop="" for actions that do not interact with a prop; do not use null or "none".
@@ -204,7 +220,7 @@ class AnthropicProvider:
         if story.render_style != brief.render_style:
             raise GenerationError('The story service returned a different animation style. Please retry the draft.')
         try:
-            return story.reviewable()
+            return finish_story(story, brief)
         except ValueError as exc:
             self.last_attempt['validation_errors'] = [dict(path='scenes', message=str(exc))]
             raise GenerationError('The draft was saved, but an animation direction needs correction: ' + str(exc) + ' No automatic paid retry was made.') from None
@@ -262,7 +278,7 @@ class OpenAIProvider:
             raise GenerationError('The story service did not return a usable story. Try a different brief.')
         if response.output_parsed.render_style!=brief.render_style:
             raise GenerationError('The story service returned a different animation style. Please retry the draft.')
-        return response.output_parsed.reviewable()
+        return finish_story(response.output_parsed, brief)
 
     def illustrate(self, story, index, reference, first_scene, target):
         scene = story.scenes[index]

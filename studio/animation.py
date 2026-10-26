@@ -54,6 +54,21 @@ def arm_target(z,side,upper_degrees=87,forearm_degrees=78):
 def action_phase(actor,q):
     return max(0,min(1,(q-actor.action_start)/(actor.action_end-actor.action_start)))
 
+def walking_feet(actor,q):
+    """Alternating swing and planted stance; feet advance in world coordinates."""
+    distance=(actor.end_x-actor.x)*W
+    steps=max(1,math.ceil(abs(distance)/48))
+    progress=ease(q)*steps
+    cycle=min(steps,int(progress));phase=progress-cycle
+    stride=distance/steps
+    feet=[]
+    for side,offset in [(-1,0),(1,.5)]:
+        swing=max(0,min(1,(phase-offset)*2))
+        x=actor.x*W+side*38+stride*(cycle+ease(swing))
+        lift=14*math.sin(math.pi*swing) if abs(distance)>1 else 0
+        feet.append((x,996-lift))
+    return feet
+
 def actor_pose(actor,q):
     direction=1 if actor.x<.5 else -1
     x=W*(actor.x+(actor.end_x-actor.x)*ease(q) if actor.action=='walk' else actor.x)
@@ -65,6 +80,11 @@ def actor_pose(actor,q):
     hip=800+65*seated+bob;shoulder=hip-160
     z=dict(x=x,hip=hip,cy=hip-270,shoulder=shoulder,seated=seated,direction=direction)
     z['hand']=arm_target(z,direction);z['backhand']=arm_target(z,-direction)
+    if actor.action=='walk':
+        steps=max(1,math.ceil(abs(actor.end_x-actor.x)*W/48))
+        swing=6*math.sin(ease(q)*steps*math.pi*2)
+        z['hand']=arm_target(z,direction,87+swing,78)
+        z['backhand']=arm_target(z,-direction,87-swing,78)
     return z
 
 class AnimatedScene:
@@ -146,7 +166,7 @@ class AnimatedScene:
                 p.rect((x-78,875,x+80,896),'#BE9566',NAVY,3,8)
                 for dx in [-58,58]:p.line([(x+dx,893),(x+dx,1000)],'#A2774C',12)
         for a in self.plan.actors:self.body(p,a,poses[a.character],action_phase(a,q))
-        free=[dict(position=(v.x*W,802)) for v in self.plan.props ]
+        free=[dict(position=(v.x*W,802)) for v in self.plan.props if v.holder=='none' or any(a.action=='put_down' and a.prop==v.id for a in self.plan.actors)]
         if free:
             lo=max(30,min(v['position'][0] for v in free)-85);hi=min(690,max(v['position'][0] for v in free)+85)
             p.line([(lo+25,831),(lo+25,1000)],'#997249',12);p.line([(hi-25,831),(hi-25,1000)],'#997249',12)
@@ -165,11 +185,14 @@ class AnimatedScene:
     def body(self,p,a,z,q):
         c=self.characters[a.character];x,hip,seat=z['x'],z['hip'],z['seated'];sign=z['direction']
         p.line([(x,z['cy']+80),(x,z['shoulder']+5)],NAVY,18)
-        gait=math.sin(q*math.pi*8)*35 if a.action=='walk' else 0
-        for side in [-1,1]:
-            h=(x+side*23,hip);foot=(x+side*38+side*gait+sign*35*seat,996)
-            knee=((h[0]+foot[0])/2+sign*40*seat,hip+(996-hip)*.52)
-            p.line([h,knee,foot],NAVY,17);p.ellipse((foot[0]-17,984,foot[0]+24,1004),NAVY)
+        feet=walking_feet(a,q) if a.action=='walk' else None
+        for i,side in enumerate([-1,1]):
+            h=(x+side*23,hip)
+            foot=feet[i] if feet else (x+side*38+sign*35*seat,996)
+            lift=996-foot[1]
+            knee=((h[0]+foot[0])/2+sign*(40*seat+lift*.55),hip+(foot[1]-hip)*.52)
+            p.line([h,knee,foot],NAVY,17)
+            p.ellipse((foot[0]-17,foot[1]-12,foot[0]+24,foot[1]+8),NAVY)
         torso=cel('torso',round(116*p.s),round(196*p.s),color=c.color)
         place(p.image,torso,(torso.width/2,0),(x*p.s,(z['shoulder']-14)*p.s))
         if c.accessory=='scarf':
@@ -217,28 +240,37 @@ class AnimatedScene:
         place(p.image,head,(head.width/2,head.height/2),(x*p.s,y*p.s))
         x+=z['direction']*5
         laugh_q=q-(.10 if a.character=='hero' else 0)
-        emotion='happy' if a.action=='laugh' else (a.end_emotion if a.end_emotion and q>=.65 else a.emotion)
+        emotion='happy' if a.action=='laugh' else a.emotion
+        end='happy' if a.action=='laugh' else (a.end_emotion or emotion)
+        blend=ease((q-.45)/.30) if end!=emotion else 0
+        def mix(values):return values.get(emotion,0)*(1-blend)+values.get(end,0)*blend
+        surprise=mix({'surprised':1})
+        brow_slope=mix({'sad':6,'worried':6,'angry':-7})
+        brow_arch=mix({'happy':5,'neutral':5,'surprised':9})
+        brow_y=-10-9*surprise
+        eye_open=1-.90*pulse(laugh_q,.15,.65) if a.action=='laugh' else 1
+        smile=mix({'happy':9,'neutral':7,'sad':-7,'worried':-7,'angry':-7})
         for side in [-1,1]:
             ex=x+side*34
-            if a.action=='laugh' and .2<laugh_q<.6:p.arc((ex-12,y+8,ex+12,y+22),185,355,NAVY,4)
-            else:
-                p.ellipse((ex-9,y+1,ex+9,y+30),NAVY)
-                p.ellipse((ex+2,y+4,ex+6,y+12),'#FFFFFF')
-            if emotion=='sad' or emotion=='worried':p.line([(ex-14,y-10-side*6),(ex+14,y-10+side*6)],NAVY,3)
-            elif emotion=='angry':p.line([(ex-14,y-9+side*7),(ex+14,y-9-side*7)],NAVY,3)
-            elif emotion=='surprised':p.arc((ex-13,y-26,ex+13,y-8),185,350,NAVY,3)
-            else:p.arc((ex-14,y-19,ex+14,y-8),190,340,NAVY,3)
+            half=14.5*eye_open*(1+.08*surprise);ey=y+15.5
+            p.ellipse((ex-9,ey-half,ex+9,ey+half),NAVY)
+            if eye_open>.35:p.ellipse((ex+2,ey-half+3,ex+6,ey-half+min(11,half)),'#FFFFFF')
+            points=[]
+            for i in range(9):
+                u=i/8
+                points.append((ex-14+28*u,y+brow_y+side*brow_slope*(2*u-1)-brow_arch*4*u*(1-u)))
+            p.line(points,NAVY,3)
         if c.accessory=='glasses':
             for side in [-1,1]:p.ellipse((x+side*30-20,y-1,x+side*30+20,y+33),None,NAVY,3)
             p.line([(x-10,y+10),(x+10,y+10)],NAVY,3)
-        opening=min(1,energy*10)
+        opening=max(min(1,energy*10),.25*surprise)
         if a.action=='laugh':opening=max(opening,.35*pulse(laugh_q,.15,.65))
         if opening>.08:
             h=5+19*opening;p.ellipse((x-15,y+40,x+15,y+40+h),NAVY)
             p.ellipse((x-8,y+40+h*.6,x+8,y+40+h-1),'#D8917A')
-        elif emotion in {'happy','neutral'}:p.arc((x-20,y+30,x+20,y+53),0,180,NAVY,3)
-        elif emotion in {'sad','worried','angry'}:p.arc((x-17,y+43,x+17,y+62),185,355,NAVY,3)
-        else:p.ellipse((x-7,y+40,x+7,y+54),NAVY)
+        else:
+            points=[(x-18+36*i/12,y+44+smile*4*(i/12)*(1-i/12)) for i in range(13)]
+            p.line(points,NAVY,3)
 
     def prop(self,p,item):
         x,y=item['position'];kind=item['kind']

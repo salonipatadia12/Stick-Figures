@@ -1,3 +1,12 @@
+## Create a reel from a prompt and ending
+
+Enter a prompt, choose the ending, and click **Create my reel**. Automatic mode
+writes the story, stages the built-in characters, generates narration and captions,
+and exports an MP4. **More options** keeps duration, mood and manual review available.
+Story API usage is guarded by the $0.25 cap; the automatic workflow uses existing
+artwork. The workflow is functional, while character acting and narration/action
+alignment still need improvement. See [workflow details](studio/README.md).
+
 ## Reusable animation studio update
 
 The browser studio uses shaded café-style characters, restrained gestures, and independently
