@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from studio.app import create_app
 from studio.models import Brief, Story
 from studio.providers import (AnthropicProvider, GenerationError, story_available,
-    story_provider, story_provider_name, budget_output_tokens, STORY_RATES)
+    story_provider, story_provider_name, budget_output_tokens, STORY_RATES, anthropic_story_schema, normalize_story_enums)
 
 
 def response(value):
@@ -57,7 +57,10 @@ class AnthropicTests(unittest.TestCase):
         self.assertNotIn('max_tokens',counted)
         self.assertEqual(generated['max_tokens'],8192)
         self.assertEqual(generated['service_tier'],'standard_only')
-        self.assertEqual(generated['tools'][0]['input_schema'],Story.model_json_schema())
+        self.assertEqual(generated['thinking'], {'type':'between_tools'})
+        self.assertEqual(counted['thinking'],generated['thinking'])
+        self.assertTrue(generated['tools'][0]['strict'])
+        self.assertEqual(generated['tools'][0]['input_schema'],anthropic_story_schema())
         self.assertEqual(generated['messages'],counted['messages'])
         self.assertEqual(generated['system'],counted['system'])
         self.assertEqual(generated['tools'],counted['tools'])
@@ -113,12 +116,56 @@ class AnthropicTests(unittest.TestCase):
                     if project['status']!='drafting':break
                     time.sleep(.02)
             self.assertEqual(project['status'],'draft',project.get('error'))
+            self.assertTrue((Path(folder)/project['id']/'draft-attempt.json').exists())
+            self.assertEqual(client.get(url+'/files/draft-attempt.json').status_code,404)
             self.assertIsNone(project['story_approval'])
             self.assertEqual(client.post(url+'/illustrate').status_code,409)
             self.assertEqual(client.post(url+'/approve-story').status_code,200)
             scenes=client.post(url+'/illustrate').json()
             self.assertEqual(scenes['status'],'storyboard')
             self.assertEqual(len(scenes['assets']),len(project['story']['scenes']))
+
+    def test_strict_schema_preserves_enums_and_moves_bounds_to_descriptions(self):
+        schema=anthropic_story_schema()
+        self.assertEqual(schema['required'],list(schema['properties']))
+        self.assertNotIn('minItems',schema['properties']['scenes'])
+        self.assertIn('minItems: 3',schema['properties']['scenes']['description'])
+        actor=schema['$defs']['Actor']
+        self.assertEqual(actor['required'],list(actor['properties']))
+        self.assertNotIn('minimum',actor['properties']['x'])
+        self.assertIn('minimum: 0.18',actor['properties']['x']['description'])
+        self.assertIn('wave',actor['properties']['action']['enum'])
+        self.assertFalse(actor['additionalProperties'])
+
+    def test_case_normalization_does_not_invent_unsupported_actions(self):
+        candidate=valid_story()
+        candidate['scenes'][0]['animation']['actors'][0]['action']='Wave'
+        candidate['scenes'][0]['animation']['setting']='Office'
+        normalized=normalize_story_enums(candidate)
+        self.assertEqual(normalized['scenes'][0]['animation']['actors'][0]['action'],'wave')
+        self.assertEqual(normalized['scenes'][0]['animation']['setting'],'office')
+        candidate['scenes'][0]['animation']['actors'][0]['action']='fly'
+        self.assertEqual(normalize_story_enums(candidate)['scenes'][0]['animation']['actors'][0]['action'],'fly')
+
+    def test_failed_candidate_is_retained_with_specific_validation_diagnostics(self):
+        candidate=valid_story();candidate['scenes'][0]['animation']['actors'][0]['emotion']='elated'
+        provider=AnthropicProvider()
+        with patch('urllib.request.urlopen',side_effect=[response({'input_tokens':5000}),response(submitted(candidate))]):
+            with self.assertRaisesRegex(GenerationError,'scenes.0.animation.actors.0.emotion'):provider.draft(self.brief)
+        self.assertEqual(provider.last_attempt['candidate'],candidate)
+        self.assertIn('validation_errors',provider.last_attempt)
+        self.assertNotIn('test-only-anthropic',json.dumps(provider.last_attempt))
+        self.assertNotIn('input',provider.last_attempt['validation_errors'][0])
+
+    def test_smaller_recovery_budget_does_not_spend_prior_allowance_again(self):
+        count=5000;model='claude-sonnet-5-5'
+        maximum=budget_output_tokens(model,count,.05)
+        reserved=((count+1024)*2+maximum*10)/1_000_000
+        self.assertLessEqual(reserved,.040001)
+        self.assertLessEqual(.20+reserved,.25)
+        with self.assertRaises(GenerationError):budget_output_tokens(model,10000,.05)
+        for cap in [.26, 0, -1, float('nan')]:
+            with self.assertRaises(GenerationError):budget_output_tokens(model,0,cap)
 
     def test_budget_caps_worst_case_for_all_approved_models(self):
         for model,(input_rate,output_rate) in STORY_RATES.items():

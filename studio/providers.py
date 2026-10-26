@@ -16,7 +16,7 @@ STORY_BUDGET_USD = 0.25
 STORY_RATES = {'claude-sonnet-5-5': (2, 10), 'gpt-4.1-mini': (.4, 1.6)}
 
 
-def budget_output_tokens(model, input_tokens):
+def budget_output_tokens(model, input_tokens, budget_usd=STORY_BUDGET_USD):
     from decimal import Decimal, ROUND_FLOOR
     if model not in STORY_RATES:
         raise GenerationError('This model has no verified pricing for the $0.25 story limit. Use the default story model.')
@@ -24,7 +24,10 @@ def budget_output_tokens(model, input_tokens):
         raise GenerationError('Could not verify the input token count. No story generation was started.')
     input_rate, output_rate = map(lambda v: Decimal(str(v)), STORY_RATES[model])
     # Keep 20% of the budget unused and add 1024 input tokens for counting overhead.
-    allowance = Decimal('0.20') - (input_tokens + 1024) * input_rate / 1_000_000
+    budget = Decimal(str(budget_usd))
+    if not budget.is_finite() or not Decimal('0') < budget <= Decimal('0.25'):
+        raise GenerationError('The story budget must be positive and at most $0.25.')
+    allowance = budget * Decimal('0.8') - (input_tokens + 1024) * input_rate / 1_000_000
     maximum = int((allowance * 1_000_000 / output_rate).to_integral_value(rounding=ROUND_FLOOR))
     if maximum < 2048:
         raise GenerationError('This request cannot fit the $0.25 story budget. Shorten the brief; no story generation was started.')
@@ -57,7 +60,7 @@ def story_provider():
 
 def story_instructions(brief):
     instructions = f'''Write an ORIGINAL complete illustrated stick-figure story, about {brief.seconds} seconds.
-Mood: {brief.mood}. Use 3–8 visual scenes and roughly {round(brief.seconds*2.1)} spoken words.
+Mood: {brief.mood}. Use {3 if brief.seconds <= 45 else "4–8"} visual scenes and roughly {round(brief.seconds*2.1)} spoken words.
 Give the protagonist a concrete goal, a believable obstacle, an action they choose,
 and a satisfying causal ending. Avoid random twists, coincidences, generic slogans,
 and copying an existing story. Narration must sound conversational. Use one consistent
@@ -73,6 +76,10 @@ video generation: prefer intimate everyday stories over fights or complex choreo
         instructions += """
 Use render_style=rigged. This story is rendered with articulated 2D characters.
 Define characters with IDs hero and friend, colors as hex, accessories none/scarf/glasses.
+Use only the schema's emotion names: neutral, happy, sad, worried, surprised, angry.
+Use prop="" for actions that do not interact with a prop; do not use null or "none".
+Use action_start=0 and action_end=1 unless a specific later timing is needed.
+Keep directions concise, but fill all schema fields and respect their limits.
 Every scene MUST have animation directions. Settings: cafe, park, street, home, office, stage.
 Light: day/sunset/night. Speaker narrator unless the entire scene is spoken by hero or friend.
 Supported actions ONLY: idle, walk, sit, stand, wave, talk, point, write, pick_up, put_down, give, laugh.
@@ -89,8 +96,62 @@ Do not promise a complex action using a similar simple action. Adapt the story t
     return instructions
 
 
+def anthropic_story_schema():
+    """Strict API subset; all original bounds still validated locally."""
+    def transform(node):
+        if isinstance(node, list):
+            return [transform(v) for v in node]
+        if not isinstance(node, dict):
+            return node
+        result = {}
+        constraints = []
+        for key, value in node.items():
+            if key in {'minimum','maximum','exclusiveMinimum','exclusiveMaximum','multipleOf',
+                       'minLength','maxLength','maxItems'} or (key == 'minItems' and value > 1):
+                constraints.append(f'{key}: {value}')
+            else:
+                result[key] = transform(value)
+        if constraints:
+            result['description'] = (result.get('description', '') + ' Required limits: ' + '; '.join(constraints)).strip()
+        if result.get('type') == 'object':
+            result['additionalProperties'] = False
+            # Avoid Claude's 24-optional-field grammar limit for the full scene tree.
+            result['required'] = list(result.get('properties', {}))
+        return result
+    return transform(Story.model_json_schema())
+
+
+def normalize_story_enums(value):
+    """Claude strict outputs can vary enum casing. Do not invent actions or poses."""
+    schema = Story.model_json_schema()
+    def visit(value, spec):
+        if '$ref' in spec:
+            return visit(value, schema['$defs'][spec['$ref'].rsplit('/', 1)[-1]])
+        for option in spec.get('anyOf', []):
+            if value is None and option.get('type') == 'null':return None
+            if value is not None and option.get('type') != 'null':return visit(value, option)
+        if isinstance(value, str) and 'enum' in spec:
+            return next((v for v in spec['enum'] if isinstance(v, str) and v.casefold() == value.strip().casefold()), value)
+        if isinstance(value, dict):
+            return {k: visit(v, spec.get('properties', {}).get(k, {})) for k, v in value.items()}
+        if isinstance(value, list):
+            return [visit(v, spec.get('items', {})) for v in value]
+        return value
+    return visit(value, schema)
+
+
+def validation_details(exc):
+    # Exclude model inputs, exception context and URLs from stored diagnostics.
+    return [dict(path='.'.join(map(str, e['loc'])), message=e['msg'], type=e['type'])
+            for e in exc.errors(include_input=False, include_context=False, include_url=False)]
+
+
 class AnthropicProvider:
     """One Messages request; tool output is data, never executed code."""
+    def __init__(self, budget_usd=STORY_BUDGET_USD):
+        self.budget_usd = budget_usd
+        self.last_attempt = None
+
     def draft(self, brief):
         from pydantic import ValidationError
         key = os.getenv('ANTHROPIC_API_KEY', '').strip()
@@ -101,37 +162,52 @@ class AnthropicProvider:
             max_tokens=8192,
             system=story_instructions(brief) + '\nReturn the complete story by calling submit_story exactly once.',
             messages=[dict(role='user', content=brief.prompt)],
-            tools=[dict(name='submit_story', description='Submit the complete story and supported animation directions for user review.', input_schema=Story.model_json_schema())],
+            tools=[dict(name='submit_story', description='Submit the complete story and supported animation directions for user review.', strict=True, input_schema=anthropic_story_schema())],
             tool_choice=dict(type='auto'),
+            thinking=dict(type='between_tools'),
         )
         headers = {'x-api-key': key, 'anthropic-version': '2026-10-21', 'content-type': 'application/json'}
         workspace = os.getenv('ANTHROPIC_WORKSPACE_ID', '').strip()
         if workspace:
             headers['anthropic-workspace-id'] = workspace
         # Preflight is free; failure never falls through to a paid request.
-        budget_output_tokens(payload['model'], 0)
+        budget_output_tokens(payload['model'], 0, self.budget_usd)
         count_payload = {k: v for k, v in payload.items() if k != 'max_tokens'}
         counted = self._request('/count_tokens', count_payload, headers)
-        payload['max_tokens'] = budget_output_tokens(payload['model'], counted.get('input_tokens'))
+        payload['max_tokens'] = budget_output_tokens(payload['model'], counted.get('input_tokens'), self.budget_usd)
         payload['service_tier'] = 'standard_only'
         result = self._request('', payload, headers)
-        if result.get('stop_reason') == 'max_tokens':
-            raise GenerationError('The story was cut short. Try a shorter brief or duration.')
+        rates = STORY_RATES[payload['model']]
+        usage = result.get('usage') or {}
+        self.last_attempt = dict(model=payload['model'], budget_usd=self.budget_usd,
+            input_tokens_counted=counted['input_tokens'], max_output_tokens=payload['max_tokens'],
+            reserved_usd=((counted['input_tokens']+1024)*rates[0]+payload['max_tokens']*rates[1])/1_000_000,
+            usage={k: usage.get(k) for k in ('input_tokens','output_tokens','cache_read_input_tokens','cache_creation_input_tokens')},
+            stop_reason=result.get('stop_reason'))
         blocks = result.get('content') or []
         drafts = [block.get('input') for block in blocks if isinstance(block, dict)
                   and block.get('type') == 'tool_use' and block.get('name') == 'submit_story']
+        if len(drafts) == 1:
+            self.last_attempt['candidate'] = drafts[0]
+        if result.get('stop_reason') == 'max_tokens':
+            raise GenerationError('The story service reached its token limit before finishing. Any returned draft was saved for recovery; no automatic paid retry was made.')
         if len(drafts) != 1:
-            raise GenerationError('Anthropic did not return one complete story. Try a different brief.')
+            raise GenerationError('The story service did not return one complete scene plan. No automatic paid retry was made.')
         try:
-            story = Story.model_validate(drafts[0])
-        except ValidationError:
-            raise GenerationError('The generated story did not match the supported scene format. Try a simpler brief.') from None
+            self.last_attempt['candidate'] = drafts[0]
+            story = Story.model_validate(normalize_story_enums(drafts[0]))
+        except ValidationError as exc:
+            details = validation_details(exc)
+            self.last_attempt['validation_errors'] = details
+            issue = details[0]
+            raise GenerationError(f"The draft was saved, but needs a scene correction at {issue['path']}: {issue['message']}. No automatic paid retry was made.") from None
         if story.render_style != brief.render_style:
             raise GenerationError('The story service returned a different animation style. Please retry the draft.')
         try:
             return story.reviewable()
-        except ValueError:
-            raise GenerationError('The generated actions or prop continuity could not be rendered safely. Try a simpler brief.') from None
+        except ValueError as exc:
+            self.last_attempt['validation_errors'] = [dict(path='scenes', message=str(exc))]
+            raise GenerationError('The draft was saved, but an animation direction needs correction: ' + str(exc) + ' No automatic paid retry was made.') from None
 
 
     @staticmethod

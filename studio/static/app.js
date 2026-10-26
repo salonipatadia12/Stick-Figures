@@ -40,7 +40,7 @@ function drawBoard(){
 }
 function showProject(p,nextStep){
  project=p;dirty=false;clearTimeout(poll);$('#welcome').hidden=true;$('#workspace').hidden=false;
- $('#project-title').textContent=p.story?.title||'Writing your story…';$('#reel-title').textContent=p.story?.title||'';
+ $('#project-title').textContent=p.story?.title||(p.status==='error'?'Draft needs attention':'Writing your story…');$('#reel-title').textContent=p.story?.title||'';
  $('#job-status').textContent=p.progress;$('#job-status').classList.toggle('busy',busy(p));$('#error').hidden=!p.error;$('#error').textContent=p.error||'';
  $('#download-story').href=fileURL('story.json');$('#download-story').hidden=!p.story;
  if(p.story){

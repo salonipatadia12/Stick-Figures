@@ -113,7 +113,7 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
 
     @app.get('/api/projects')
     def projects():
-        with store.lock:return [dict(id=p['id'],title=(p.get('story') or {}).get('title','Writing a story…'),status=p['status'],updated_at=p['updated_at']) for p in store.all()]
+        with store.lock:return [dict(id=p['id'],title=(p.get('story') or {}).get('title','Draft needs attention' if p['status']=='error' else 'Writing a story…'),status=p['status'],updated_at=p['updated_at']) for p in store.all()]
 
     @app.post('/api/projects')
     def create(brief:Brief):
@@ -126,8 +126,15 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
                 return store.create(brief.model_dump(),story.model_dump())
             p=store.create(brief.model_dump())
             def draft():
-                story=(provider_factory or story_provider)().draft(brief)
-                return dict(story=story.model_dump(),status='draft',progress='Your story is ready for review.')
+                provider=(provider_factory or story_provider)()
+                try:
+                    story=provider.draft(brief)
+                    return dict(story=story.model_dump(),status='draft',progress='Your story is ready for review.')
+                finally:
+                    attempt=getattr(provider,'last_attempt',None)
+                    if attempt:
+                        # Local recovery artifact, intentionally excluded from the media API.
+                        (store.folder(p['id'])/'draft-attempt.json').write_text(json.dumps(attempt,indent=2))
             return enqueue(p,'drafting',draft)
 
     @app.post('/api/projects/import')

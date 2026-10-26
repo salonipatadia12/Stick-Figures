@@ -82,8 +82,9 @@ only that character's spoken words. Captions use estimated phrase timing.
 
 **Prompt-to-story:** configure Anthropic or OpenAI on the server. Both use the same
 story schema, action vocabulary and continuity validation. Drafts still require
-story approval and storyboard approval. Live paid drafting has not been tested;
-provider contracts and the Anthropic-only application flow are tested with mocks.
+story approval and storyboard approval. Provider contracts and the Anthropic-only application flow are tested with mocks.
+A live capped recovery request authenticated and returned usage, but was truncated;
+a successful complete live draft with the revised settings remains unverified.
 Manual editing, imported stories, backgrounds and character animation need no credits.
 
 ### Anthropic setup
@@ -232,3 +233,28 @@ The new example renders are `outputs/reusable-first-hello-cafe.mp4` and
 Motion checks cover continuous elbows, constant arm segment lengths, a settled
 beginning/end and modest speaking gestures. Visual inspection is still necessary;
 these checks cannot certify that every arbitrary story looks natural.
+
+
+### Reliable Claude scene plans
+
+Claude now uses `strict: true` on the story tool with an API-compatible schema.
+Unsupported numeric, length and array limits are described in the schema and still
+enforced locally. All fields are required in the API schema to stay within the
+optional-field grammar limit. Exact enum values are preserved; casing alone is
+normalized because the provider documents that enum capitalization can vary.
+Custom prop, timing, reach and continuity rules still run before accepting a draft.
+
+Sonnet 5.5 uses `thinking: {type: "between_tools"}` so a short story does not spend
+its output allowance on up-front reasoning. Both preflight and generation carry
+this setting. The token and dollar caps remain unchanged. No automatic repair
+request is made when a candidate fails validation.
+
+Returned candidate data (when present), token usage and specific validation failures
+are saved in the project's local `draft-attempt.json`, without request headers,
+API credentials or model thinking. This artifact is excluded from browser file
+access and Git. It enables local corrections without paying for another response.
+The UI distinguishes a failed draft from an actively running job.
+
+See [strict tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use),
+[schema limitations](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations),
+and [Sonnet 5.5 reasoning settings](https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5).
