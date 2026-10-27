@@ -158,6 +158,7 @@ def render_project(project, folder, progress):
             from .animation import AnimatedScene
             bg=project.get('backgrounds',{}).get(str(index))
             actor=AnimatedScene(scene,project['story']['characters'],folder/bg if bg else None)
+            actor.time_offset=cursor
         else:actor=IllustratedActor(folder/asset['file'],asset.get('heads',[]))
         words=scene['narration'].split();chunks=caption_chunks(scene['narration'])
         at=cursor+.25

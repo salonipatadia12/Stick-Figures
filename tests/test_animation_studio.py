@@ -78,6 +78,9 @@ class AnimationTests(unittest.TestCase):
             scene=copy.deepcopy(s['scenes'][0]);a=scene['animation'];a['speaker']='hero'
             a['actors'][0].update(action=action,prop='gift' if action in {'write','give','pick_up','put_down'} else '')
             a['props'][0].update(kind='book' if action=='write' else 'flower',holder='hero' if action in {'give','put_down'} else 'none')
+            if action=='swing':
+                a['actors'][0].update(pose='seated',end_x=a['actors'][0]['x'],prop='')
+                a['props']=[]
             engine=AnimatedScene(scene,s['characters'])
             for t in [0,1.5,3,4.5,6]:
                 for energy in [0,.01,.08]:self.assertEqual(engine.frame(t,energy=energy).size,(720,1280))

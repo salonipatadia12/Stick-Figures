@@ -76,7 +76,7 @@ or draft from a prompt using a configured AI account. The default API Brief rema
 6. Approve the storyboard and render. Download MP4, SRT and editable story JSON.
 
 The library supports idle, walk, sit, stand, wave, talk, point, write, pick up,
-put down, give and laugh. Objects: book, bag, cup, flower, note and ball. Use one
+put down, give, laugh and swing. Objects: book, bag, cup, flower, note and ball. Use one
 primary action per actor per scene; add another scene for a subsequent action.
 Each actor has a starting emotion and optional ending emotion (changes at 65% of
 its action window). Action start/end controls place the movement within the scene.
@@ -251,6 +251,28 @@ Model settings are `ANTHROPIC_STORY_MODEL`, `STORY_MODEL` and `IMAGE_MODEL`;
 story model changes require verified pricing in the budget allowlist.
 
 ## Café-style artwork and motion revision
+
+### Swing action and prompt fidelity
+
+`swing` is a seated action with empty hands and `x=end_x`. It builds the frame,
+ropes and seats, keeps riders attached to seats and hands on the rope lines, and
+moves the legs through a small pumping cycle. Motion uses elapsed video time so it
+continues across dialogue turns; the speaker field controls voice independently.
+Swing scenes use a fixed full view to keep the apparatus visible. This is a
+stylized 2D pendulum motion, not a simulation of swinging in depth.
+
+New draft instructions preserve the user's central activity. A targeted check
+rejects recognized playground-swing prompts if the plan lacks a swing action
+(two riders when the prompt specifies two). This guard does not yet verify every
+possible action in arbitrary prompts. It makes no extra paid repair request.
+Existing generated stories are not silently rewritten.
+
+Rebuild the corrected example, with no story/image API request:
+`.venv/bin/python scripts/render_dialogue_test.py --story studio/examples/swing-together.json --output outputs/swing-together`
+
+Gesture elbows now retain the authored joint positions instead of reconstructing
+an alternative fold from the wrist target. Object-reaching arms use an outward
+elbow bend. Tests cover joint lengths, smoothness, rope contact and cut continuity.
 
 ### Dialogue acting test
 

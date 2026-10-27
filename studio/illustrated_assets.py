@@ -8,7 +8,7 @@ from pathlib import Path
 import math
 from PIL import Image, ImageOps, ImageChops
 
-ART_VERSION='cafe-cels-3'
+ART_VERSION='cafe-cels-4'
 ROOT=Path(__file__).resolve().parent/'assets/illustrated'
 
 @lru_cache(maxsize=24)

@@ -59,6 +59,9 @@ def story_provider():
 
 
 def finish_story(story, brief):
+    if story.render_style=='rigged':
+        from .directing import check_prompt_actions
+        check_prompt_actions(story,brief.prompt)
     if brief.workflow=='automatic' and story.render_style=='rigged':
         from .directing import prepare_story
         return prepare_story(story)
@@ -81,6 +84,13 @@ video generation: prefer intimate everyday stories over fights or complex choreo
     if brief.render_style=='rigged':
         instructions += """
 Use render_style=rigged. This story is rendered with articulated 2D characters.
+The user's central activity and objects are requirements. Do not invent an unrelated
+gift/flower plot in place of the requested activity. Do not merely mention an object
+in speech if the story needs the characters to interact with it visually.
+For friends on swings, use action=swing and pose=seated for both riders, with
+x=end_x and empty hands. The renderer draws seats, ropes and a frame automatically;
+do not add a swing to props. Keep the swing action during dialogue too: speaker
+controls the voice and mouth independently. Use framing=two_shot and park setting.
 Write the interaction as a conversation performed by the characters. Use brief narrator
 lines only for setup, a necessary transition, or the closing beat. When two people converse,
 include at least one direct line from each, responding to the other's actual words.
@@ -110,7 +120,7 @@ Use action_start=0 and action_end=1 unless a specific later timing is needed.
 Keep directions concise, but fill all schema fields and respect their limits.
 Every scene MUST have animation directions. Settings: cafe, park, street, home, office, stage.
 Light: day/sunset/night. Speaker narrator unless the entire scene is spoken by hero or friend.
-Supported actions ONLY: idle, walk, sit, stand, wave, talk, point, write, pick_up, put_down, give, laugh.
+Supported actions ONLY: idle, walk, sit, stand, wave, talk, point, write, pick_up, put_down, give, laugh, swing.
 One action per character per scene. action_start/action_end are scene fractions 0 to 1, at least .15 apart; use these to place the action near the words describing it. Pose standing/seated. Actor x and end_x are .18 to .82.
 Props: book, bag, cup, flower, note, ball. Name each with a stable lowercase id.
 Props start on a small table (holder none) or in hero/friend's hand. No invisible props.

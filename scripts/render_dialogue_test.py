@@ -5,6 +5,7 @@ Run from the repository root: .venv/bin/python scripts/render_dialogue_test.py
 import json
 from pathlib import Path
 import sys
+import argparse
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
@@ -14,8 +15,12 @@ from studio.rendering import render_project
 
 
 def main():
-    story=Story.model_validate_json((ROOT/'studio/examples/listening.json').read_text()).reviewable().model_dump()
-    folder=ROOT/'outputs/dialogue-acting-test';folder.mkdir(exist_ok=True,parents=True)
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--story',default='studio/examples/listening.json')
+    parser.add_argument('--output',default='outputs/dialogue-acting-test')
+    args=parser.parse_args()
+    story=Story.model_validate_json((ROOT/args.story).read_text()).reviewable().model_dump()
+    folder=ROOT/args.output;folder.mkdir(exist_ok=True,parents=True)
     assets={}
     for i,scene in enumerate(story['scenes']):
         filename=f'scene-{i}.jpg'

@@ -2,7 +2,7 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-ACTIONS=['idle','walk','sit','stand','wave','talk','point','write','pick_up','put_down','give','laugh']
+ACTIONS=['idle','walk','sit','stand','wave','talk','point','write','pick_up','put_down','give','laugh','swing']
 EMOTIONS=['neutral','happy','sad','worried','surprised','angry']
 SETTINGS=['cafe','park','street','home','office','stage']
 PROPS=['book','bag','cup','flower','note','ball']
@@ -22,7 +22,7 @@ class Actor(Strict):
     x: float=Field(default=.32,ge=.18,le=.82)
     end_x: float=Field(default=.65,ge=.18,le=.82)
     pose: Literal['standing','seated']='standing'
-    action: Literal['idle','walk','sit','stand','wave','talk','point','write','pick_up','put_down','give','laugh']='idle'
+    action: Literal['idle','walk','sit','stand','wave','talk','point','write','pick_up','put_down','give','laugh','swing']='idle'
     emotion: Literal['neutral','happy','sad','worried','surprised','angry']='neutral'
     end_emotion: Literal['neutral','happy','sad','worried','surprised','angry'] | None=None
     action_start: float=Field(default=0,ge=0,le=.85)
@@ -57,6 +57,10 @@ class Animation(Strict):
         if len(held)!=len(set(held)):raise ValueError('Each character can hold one object at a time.')
         interactions=set()
         for a in self.actors:
+            if a.action=='swing':
+                if a.pose!='seated':raise ValueError('Swinging needs a seated character.')
+                if any(p.holder==a.character for p in self.props):raise ValueError('Swing riders need both hands free to hold the ropes.')
+                if a.end_x!=a.x:raise ValueError('A swing stays attached to its fixed support; keep x and end_x equal.')
             if a.action_end-a.action_start<.15-1e-9:raise ValueError('Leave at least 15% of the scene for an action.')
             if a.action in {'pick_up','put_down','give','write'}:
                 if a.prop not in objects:raise ValueError(f'{a.action} needs a prop in this scene.')

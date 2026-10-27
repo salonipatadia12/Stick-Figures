@@ -48,6 +48,7 @@ def joint(shoulder,wrist,length=90,side=1):
 
 def arm_target(z,side,upper_degrees=87,forearm_degrees=78):
     upper,lower=math.radians(upper_degrees),math.radians(forearm_degrees)
+    z.setdefault('elbows',{})[side]=(z['x']+side*(43+90*math.cos(upper)),z['shoulder']+5+90*math.sin(upper))
     return (z['x']+side*(43+90*math.cos(upper)+90*math.cos(lower)),
             z['shoulder']+5+90*math.sin(upper)+90*math.sin(lower))
 
@@ -114,12 +115,14 @@ def actor_pose(actor,q):
 class AnimatedScene:
     def __init__(self,scene,characters,background_path=None):
         self.scene=scene;self.plan=Animation.model_validate(scene['animation'])
+        self.time_offset=0
         self.characters={c['id']:Character.model_validate(c) for c in characters}
         positions=[a.x*W for a in self.plan.actors]+[a.end_x*W for a in self.plan.actors if a.action=='walk']
         width=min(W,max(580,max(positions)-min(positions)+264))
         left=max(0,min(W-width,(min(positions)+max(positions)-width)/2))
         self.camera_box=(left,H-width*H/W,left+width,H)
-        if self.plan.framing=='speaker' and self.plan.speaker!='narrator':
+        if any(a.action=='swing' for a in self.plan.actors):self.camera_box=(0,0,W,H)
+        if self.plan.framing=='speaker' and self.plan.speaker!='narrator' and not any(a.action=='swing' for a in self.plan.actors):
             subject=next(a for a in self.plan.actors if a.character==self.plan.speaker)
             # A fixed shot per speaking turn. No animated zoom or face scaling.
             width=470;left=max(0,min(W-width,subject.x*W-width/2))
@@ -131,7 +134,7 @@ class AnimatedScene:
             with Image.open(background_path) as im:self.bg=ImageOps.fit(im.convert('RGB'),(W,H),Image.Resampling.LANCZOS)
         else:self.bg=background(self.plan.setting,self.plan.light)
 
-    def poses(self,q):
+    def poses(self,q,elapsed=None):
         global_q=q
         poses={a.character:actor_pose(a,action_phase(a,q)) for a in self.plan.actors}
         props={p.id:dict(kind=p.kind,position=(p.x*W,{'bag':744,'flower':787,'ball':792,'note':795}.get(p.kind,802)),holder=p.holder) for p in self.plan.props}
@@ -149,9 +152,10 @@ class AnimatedScene:
                 z['interacting']=True
                 # A small palm-up conversational gesture; upper arm stays low.
                 amount=pulse(q,.22,.68)
-                z['hand']=arm_target(z,sign,87+(-4 if a.action=='point' else 10)*amount,78-(45 if a.action=='point' else 58)*amount)
+                z['hand']=arm_target(z,sign,87-(4 if a.action=='point' else 12)*amount,78-(45 if a.action=='point' else 38)*amount)
                 z['gesture']=amount
             elif a.action in {'pick_up','put_down','write','give'}:
+                z['elbows'].pop(sign,None)
                 z['interacting']=True
                 item=props[a.prop];target=item['position']
                 if a.action=='pick_up':
@@ -170,6 +174,7 @@ class AnimatedScene:
                 else:
                     other=next(b for b in self.plan.actors if b.character!=a.character)
                     receiver=poses[other.character];receiver['interacting']=True;mid=((x+receiver['x'])/2,min(z['shoulder'],receiver['shoulder'])+100)
+                    receiver['elbows'].pop(receiver['direction'],None)
                     if q<.65:
                         z['hand']=lerp(base,mid,ease(q/.55))
                         receiver['hand']=lerp(receiver['hand'],mid,ease((q-.2)/.45))
@@ -190,23 +195,48 @@ class AnimatedScene:
             if acting and held and held['kind']=='note':
                 z['hand']=(z['x']+z['direction']*10,z['shoulder']+126-5*z['tension'])
                 z['grip']=True
+                z['elbows'].pop(z['direction'],None)
                 if a.action=='talk':z['backhand']=arm_target(z,-z['direction'],87-5*pulse(phase,.22,.68),78-24*pulse(phase,.22,.68))
             pivot=(z['x'],z['hip']);angle=z['lean']
             z['shoulder_point']=tilt_point((z['x'],z['shoulder']),pivot,angle)
             z['head_point']=tilt_point((z['x'],z['cy']),pivot,angle)
             for key in ['hand','backhand']:z[key]=tilt_point(z[key],pivot,angle)
+            z['elbows']={side:tilt_point(point,pivot,angle) for side,point in z['elbows'].items()}
+            if a.action=='swing':
+                # A real hanging seat follows a pendulum arc. Riders and seats
+                # translate together; head dimensions and the camera stay fixed.
+                t=(q*6 if elapsed is None else elapsed)+self.time_offset
+                theta=math.radians(7)*math.sin(t*2*math.pi/3.4)
+                dx=550*math.sin(theta);dy=550*(1-math.cos(theta))
+                rest=a.x*W;z.update(x=rest+dx,hip=800-dy,shoulder=640-dy,cy=530-dy,seated=1,
+                    lean=0,head_angle=0,head_point=(rest+dx,530-dy),shoulder_point=(rest+dx,640-dy),swing=True,
+                    swing_anchor=rest,swing_seat=(rest+dx,820-dy),swing_leg=math.sin(t*2*math.pi/3.4),elbows={})
+                for side,key in [(z['direction'],'hand'),(-z['direction'],'backhand')]:
+                    y=z['shoulder']+140;fraction=(y-270)/(550-dy)
+                    z[key]=(rest+side*66+dx*fraction,y)
         for item in props.values():
             if item['holder']!='none':item['position']=poses[item['holder']]['hand']
         return poses,props
 
     def frame(self,t,length=6,energy=0):
-        q=max(0,min(1,t/max(.1,length)));poses,props=self.poses(q)
+        q=max(0,min(1,t/max(.1,length)));poses,props=self.poses(q,t)
         im=self.bg.resize((W*S,H*S),Image.Resampling.LANCZOS);p=Pen(im,S)
+        riders=[a for a in self.plan.actors if a.action=='swing']
+        if riders:
+            lo=max(24,min(a.x*W for a in riders)-175);hi=min(696,max(a.x*W for a in riders)+175)
+            p.line([(lo-12,1050),(lo+10,250),(hi-10,250),(hi+12,1050)],'#384D4C',16)
+            p.line([(lo+10,260),(hi-10,260)],'#79938B',5)
+            for a in riders:
+                z=poses[a.character];sx,sy=z['swing_seat'];rest=z['swing_anchor']
+                for side in [-1,1]:
+                    p.line([(rest+side*66,270),(sx+side*66,sy)],'#8C7956',5)
+                    p.line([(rest+side*66-1,270),(sx+side*66-1,sy)],'#D9C69A',1.5)
+                p.rect((sx-75,sy-6,sx+75,sy+10),'#AE7342',NAVY,3,5)
         # Seating and contact shadows are behind the actors.
         for a in self.plan.actors:
             z=poses[a.character];x=z['x']
             im.paste(self.shadow,(round((x-95)*S),978*S),self.shadow)
-            if a.pose=='seated' or a.action in {'sit','stand'}:
+            if not z.get('swing') and (a.pose=='seated' or a.action in {'sit','stand'}):
                 p.rect((x-68,742,x+70,785),'#AD8055',NAVY,3,9)
                 for dx in [-50,-20,20,50]:p.line([(x+dx,780),(x+dx,883)],'#A2774C',9)
                 p.rect((x-78,875,x+80,896),'#BE9566',NAVY,3,8)
@@ -241,6 +271,9 @@ class AnimatedScene:
             foot=feet[i] if feet else (x+side*38+sign*35*seat,996)
             lift=996-foot[1]
             knee=((h[0]+foot[0])/2+sign*(40*seat+lift*.55),hip+(foot[1]-hip)*.52)
+            if z.get('swing'):
+                kick=z['swing_leg']
+                knee=(x+side*32+22+12*kick,hip+40);foot=(x+side*37+35+25*kick,hip+123-8*abs(kick))
             p.line([h,knee,foot],NAVY,17)
             p.ellipse((foot[0]-17,foot[1]-12,foot[0]+24,foot[1]+8),NAVY)
         torso=cel('torso',round(116*p.s),round(196*p.s),color=c.color)
@@ -254,12 +287,13 @@ class AnimatedScene:
     def arms(self,p,z,a):
         for side,wrist in [(z['direction'],z['hand']),(-z['direction'],z['backhand'])]:
             shoulder=tilt_point((z['x']+side*43,z['shoulder']+5),(z['x'],z['hip']),z['lean'])
-            elbow,wrist=joint(shoulder,wrist,90,-side if z.get('grip') and side==z['direction'] else side)
+            if side in z.get('elbows',{}):elbow=z['elbows'][side]
+            else:elbow,wrist=joint(shoulder,wrist,77 if z.get('swing') else 90,-side)
             # Rounded navy limbs with a fine reflected edge; no silhouette warp.
             p.line([shoulder,elbow,wrist],NAVY,14)
             for xx,yy in [shoulder,elbow,wrist]:p.ellipse((xx-7,yy-7,xx+7,yy+7),NAVY)
             active=side==z['direction']
-            if active and (a.action in {'write','give','pick_up','put_down'} or z.get('grip')):
+            if z.get('swing') or (active and (a.action in {'write','give','pick_up','put_down'} or z.get('grip'))):
                 p.ellipse((wrist[0]-12,wrist[1]-10,wrist[0]+12,wrist[1]+12),NAVY)
                 for dy in [-3,3,8]:p.arc((wrist[0]-9,wrist[1]+dy-5,wrist[0]+10,wrist[1]+dy+4),200,335,'#71665F',.8)
                 continue

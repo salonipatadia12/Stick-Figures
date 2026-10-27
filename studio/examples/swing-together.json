@@ -1,0 +1,259 @@
+{
+  "render_style": "rigged",
+  "characters": [
+    {
+      "id": "hero",
+      "name": "Milo",
+      "color": "#F8F3E8",
+      "accent": "#3D8785",
+      "accessory": "scarf"
+    },
+    {
+      "id": "friend",
+      "name": "June",
+      "color": "#F8F3E8",
+      "accent": "#D9825B",
+      "accessory": "none"
+    }
+  ],
+  "voice": "en-US-AvaNeural",
+  "title": "Two Friends on the Swings",
+  "logline": "Two friends turn an afternoon on the swings into a very ambitious competition.",
+  "character_notes": "Milo (hero): white shaded round head, rounded torso, navy outlines, slim navy limbs, teal scarf. June (friend): same white design, no scarf, warm orange cheeks and orange accent. Both stick-figure style with oval eyes. Warm sunny park with a swing set. A single yellow flower (id flower) is Milo's gift.",
+  "scenes": [
+    {
+      "narration": "Two friends found the swings empty. Milo proposed a competition.",
+      "visual": "Two friends riding adjacent rope swings in the park. Both grip the ropes, seats move with their bodies, and feet stay off the ground.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "day",
+        "speaker": "narrator",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.29,
+            "end_x": 0.29,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.71,
+            "end_x": 0.71,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "First one to touch the clouds wins.",
+      "visual": "Two friends riding adjacent rope swings in the park. Both grip the ropes, seats move with their bodies, and feet stay off the ground.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "day",
+        "speaker": "hero",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.29,
+            "end_x": 0.29,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.71,
+            "end_x": 0.71,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "Deal. But if I win, you\u2019re buying ice cream.",
+      "visual": "Two friends riding adjacent rope swings in the park. Both grip the ropes, seats move with their bodies, and feet stay off the ground.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "day",
+        "speaker": "friend",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.29,
+            "end_x": 0.29,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.71,
+            "end_x": 0.71,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "They swung side by side. Neither got anywhere near the clouds.",
+      "visual": "Two friends riding adjacent rope swings in the park. Both grip the ropes, seats move with their bodies, and feet stay off the ground.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "day",
+        "speaker": "narrator",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.29,
+            "end_x": 0.29,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.71,
+            "end_x": 0.71,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "This swing is broken. I'm still on Earth.",
+      "visual": "Two friends riding adjacent rope swings in the park. Both grip the ropes, seats move with their bodies, and feet stay off the ground.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "day",
+        "speaker": "hero",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.29,
+            "end_x": 0.29,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.71,
+            "end_x": 0.71,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    },
+    {
+      "narration": "Good. That\u2019s where they keep the ice cream.",
+      "visual": "Two friends riding adjacent rope swings in the park. Both grip the ropes, seats move with their bodies, and feet stay off the ground.",
+      "movement": "still",
+      "animation": {
+        "setting": "park",
+        "light": "day",
+        "speaker": "friend",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.29,
+            "end_x": 0.29,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          },
+          {
+            "character": "friend",
+            "x": 0.71,
+            "end_x": 0.71,
+            "pose": "seated",
+            "action": "swing",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": []
+      }
+    }
+  ]
+}
