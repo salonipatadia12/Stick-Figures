@@ -67,7 +67,7 @@ def finish_story(story, brief):
 
 def story_instructions(brief):
     instructions = f'''Write an ORIGINAL complete illustrated stick-figure story, about {brief.seconds} seconds.
-Mood: {brief.mood}. The user requires a {brief.ending} ending. Build the setup and character choices toward that ending; do not substitute another ending. Use {3 if brief.seconds <= 45 else "4–8"} visual scenes and roughly {round(brief.seconds*2.1)} spoken words.
+Mood: {brief.mood}. The user requires a {brief.ending} ending. Build the setup and character choices toward that ending; do not substitute another ending. Use {"5–8 short speaking turns" if brief.render_style=='rigged' else (3 if brief.seconds <= 45 else "4–8 visual scenes")} and roughly {round(brief.seconds*2.1)} spoken words.
 Give the protagonist a concrete goal, a believable obstacle, an action they choose,
 and a satisfying causal ending. Avoid random twists, coincidences, generic slogans,
 and copying an existing story. Narration must sound conversational. Use short sentences and contractions. Keep third-person narration separate from direct dialogue: a character-speaker scene contains only the exact words that character says. Never assign a character speaker to third-person narration about that character.
@@ -81,6 +81,18 @@ video generation: prefer intimate everyday stories over fights or complex choreo
     if brief.render_style=='rigged':
         instructions += """
 Use render_style=rigged. This story is rendered with articulated 2D characters.
+Write the interaction as a conversation performed by the characters. Use brief narrator
+lines only for setup, a necessary transition, or the closing beat. When two people converse,
+include at least one direct line from each, responding to the other's actual words.
+Each scene is one speaking turn, not necessarily a new location or camera shot.
+Use framing=two_shot for setup and shared actions, framing=speaker for a dialogue
+turn whose facial reaction matters. These are static cuts, never moving zooms.
+Keep both characters and their staging consistent across consecutive dialogue turns.
+For example: narrator: "Mia hesitated." hero: "Will you stay?" friend: "Of course."
+Never replace this exchange with "Mia asked him to stay and he said yes."
+Use action=talk for the current speaker, and a restrained appropriate action and
+emotion/end_emotion reaction for the listener. Only the speaker's mouth follows speech.
+The renderer casts a separate consistent voice for narrator, hero and friend.
 Plan the supported physical actions first; write narration that describes only those actions.
 Use idle for a person already standing. stand is ONLY rising from a seated pose.
 For two actors keep hero x/end_x .20–.34 and friend x/end_x .66–.80 so heads cannot collide.

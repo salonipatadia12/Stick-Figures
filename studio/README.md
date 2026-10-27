@@ -103,6 +103,13 @@ review guidance; structured animation controls determine what is actually drawn.
 Edge TTS at -8%, an external service whose availability is not guaranteed. If all
 recordings are uploaded, rendering is fully offline. Audio-responsive mouths move
 only for the selected character speaker; narrator scenes do not make everyone talk.
+The selected narrator voice is reserved for narrator turns. Hero and friend each
+receive one of the other two voices, consistently across their turns. This is
+automatic role casting, not voice cloning or character-specific emotional delivery.
+The audio cache includes the chosen voice, and uploaded recordings take precedence.
+New rigged-story prompts request 5–8 speaking turns: brief narrator setup and actual
+back-and-forth dialogue with a listener reaction. Existing scripts and rendered
+videos are not rewritten automatically; rerendering applies the new voice casting.
 This uses audio amplitude, not phoneme-level lip sync. A dialogue scene should contain
 only that character's spoken words. Captions use estimated phrase timing.
 
@@ -244,6 +251,22 @@ Model settings are `ANTHROPIC_STORY_MODEL`, `STORY_MODEL` and `IMAGE_MODEL`;
 story model changes require verified pricing in the budget allowlist.
 
 ## Café-style artwork and motion revision
+
+### Dialogue acting test
+
+`studio/examples/listening.json` is a four-turn performance test: narrator setup,
+Mia's question, Theo's reply, and Mia's response. Render it with
+`.venv/bin/python scripts/render_dialogue_test.py`. The result is saved under
+`outputs/dialogue-acting-test/`; the first run uses online TTS and subsequent runs
+reuse the cached audio. No story or image API call is made by this script.
+
+The reusable renderer now adds a directed gaze change, slight posture lean, one
+listener acknowledgment, brief coordinated blinks, a reading-height page grip,
+and a smoothed speech envelope. Heads retain constant dimensions. The new optional
+`animation.framing` is `two_shot` (default) or `speaker` (a fixed closer shot, selected
+in the scene editor). These improvements use the existing painted rig; they do not
+reproduce the detailed bespoke café artwork, full 3D turning, or phoneme lip sync.
+The generated plan still determines which emotion and action is performed.
 
 `studio/assets/illustrated/` contains the generated source atlases and extracted
 head, torso, relaxed hand, open hand and six painted backgrounds. These were made

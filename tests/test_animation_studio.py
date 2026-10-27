@@ -58,8 +58,10 @@ class AnimationTests(unittest.TestCase):
             previous=elbow
         e=AnimatedScene(s['scenes'][1],s['characters'])
         poses=[e.poses(i/144)[0]['hero'] for i in range(145)]
-        self.assertLess(max(p['hand'][1] for p in poses)-min(p['hand'][1] for p in poses),20)
-        self.assertLess(max(p['hand'][0] for p in poses)-min(p['hand'][0] for p in poses),40)
+        self.assertLess(max(p['hand'][1] for p in poses)-min(p['hand'][1] for p in poses),110)
+        self.assertLess(max(p['hand'][0] for p in poses)-min(p['hand'][0] for p in poses),110)
+        for previous,current in zip(poses,poses[1:]):
+            self.assertLess(math.dist(previous['hand'],current['hand']),7)
 
     def test_write_pen_and_mouth(self):
         s=example();scene=copy.deepcopy(s['scenes'][0]);scene['animation'].update(setting='office',speaker='hero',actors=[dict(character='hero',x=.32,action='write',prop='page')],props=[dict(id='page',kind='book',x=.45)])
@@ -110,7 +112,7 @@ class AnimationTests(unittest.TestCase):
             frame=Image.open(io.BytesIO(c.get(base+'/scenes/0/frame?t=0').content));self.assertLess(abs(frame.getpixel((20,20))[0]-146),3)
             self.assertEqual(c.post(base+'/render').status_code,409)
             self.assertEqual(c.delete(base+'/scenes/0/background').status_code,200)
-            exported=c.get(base+'/files/story.json').json();self.assertEqual(exported,example())
+            exported=c.get(base+'/files/story.json').json();self.assertEqual(exported,Story.model_validate(example()).model_dump())
             self.assertEqual(c.post('/api/projects/import',json=exported).status_code,200)
             b=io.BytesIO()
             with wave.open(b,'wb') as f:f.setnchannels(1);f.setsampwidth(2);f.setframerate(24000);f.writeframes(bytes(24000))

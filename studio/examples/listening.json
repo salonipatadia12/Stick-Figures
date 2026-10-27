@@ -1,0 +1,209 @@
+{
+  "render_style": "rigged",
+  "characters": [
+    {
+      "id": "hero",
+      "name": "Mia",
+      "color": "#F8F3E8",
+      "accent": "#478887",
+      "accessory": "scarf"
+    },
+    {
+      "id": "friend",
+      "name": "Theo",
+      "color": "#F8F3E8",
+      "accent": "#C68E55",
+      "accessory": "none"
+    }
+  ],
+  "voice": "en-GB-SoniaNeural",
+  "title": "I\u2019m Listening \u2014 character acting test",
+  "logline": "Mia is nervous about sharing her writing. Her friend gives her room to begin.",
+  "character_notes": "June is the hero in a teal scarf. Milo is her supportive friend.",
+  "scenes": [
+    {
+      "narration": "Mia had something to share. She wasn\u2019t sure it was any good.",
+      "visual": "Mia holds her page while Theo listens. Both remain in the same caf\u00e9.",
+      "movement": "still",
+      "animation": {
+        "setting": "cafe",
+        "light": "day",
+        "speaker": "narrator",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.3,
+            "end_x": 0.3,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "worried",
+            "end_emotion": "worried",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": "page"
+          },
+          {
+            "character": "friend",
+            "x": 0.7,
+            "end_x": 0.7,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "page",
+            "kind": "note",
+            "x": 0.39,
+            "holder": "hero"
+          }
+        ]
+      }
+    },
+    {
+      "narration": "I wrote something. But what if it sounds silly?",
+      "visual": "Mia holds her page while Theo listens. Both remain in the same caf\u00e9.",
+      "movement": "still",
+      "animation": {
+        "setting": "cafe",
+        "light": "day",
+        "speaker": "hero",
+        "framing": "speaker",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.3,
+            "end_x": 0.3,
+            "pose": "standing",
+            "action": "talk",
+            "emotion": "worried",
+            "end_emotion": "worried",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": "page"
+          },
+          {
+            "character": "friend",
+            "x": 0.7,
+            "end_x": 0.7,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "page",
+            "kind": "note",
+            "x": 0.39,
+            "holder": "hero"
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Then it sounds silly. I still want to hear it.",
+      "visual": "Mia holds her page while Theo listens. Both remain in the same caf\u00e9.",
+      "movement": "still",
+      "animation": {
+        "setting": "cafe",
+        "light": "day",
+        "speaker": "friend",
+        "framing": "two_shot",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.3,
+            "end_x": 0.3,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "worried",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": "page"
+          },
+          {
+            "character": "friend",
+            "x": 0.7,
+            "end_x": 0.7,
+            "pose": "standing",
+            "action": "talk",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "page",
+            "kind": "note",
+            "x": 0.39,
+            "holder": "hero"
+          }
+        ]
+      }
+    },
+    {
+      "narration": "Okay. Here goes.",
+      "visual": "Mia holds her page while Theo listens. Both remain in the same caf\u00e9.",
+      "movement": "still",
+      "animation": {
+        "setting": "cafe",
+        "light": "day",
+        "speaker": "hero",
+        "framing": "speaker",
+        "time_jump": false,
+        "actors": [
+          {
+            "character": "hero",
+            "x": 0.3,
+            "end_x": 0.3,
+            "pose": "standing",
+            "action": "talk",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": "page"
+          },
+          {
+            "character": "friend",
+            "x": 0.7,
+            "end_x": 0.7,
+            "pose": "standing",
+            "action": "idle",
+            "emotion": "happy",
+            "end_emotion": "happy",
+            "action_start": 0,
+            "action_end": 1,
+            "prop": ""
+          }
+        ],
+        "props": [
+          {
+            "id": "page",
+            "kind": "note",
+            "x": 0.39,
+            "holder": "hero"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -43,7 +43,8 @@ class Story(Strict):
                 for frame in range(25):
                     poses,_=engine.poses(frame/24)
                     for z in poses.values():
-                        shoulder=(z['x']+z['direction']*43,z['shoulder']+5)
+                        from .animation import tilt_point
+                        shoulder=tilt_point((z['x']+z['direction']*43,z['shoulder']+5),(z['x'],z['hip']),z['lean'])
                         if math.dist(shoulder,z['hand'])>180:
                             raise ValueError(f'Scene {i+1}: move the object closer to the character or change the starting pose so the hand can reach it.')
         return self

@@ -117,14 +117,24 @@ def stamp(t):
     ms=round(t*1000);return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}'
 
 
+def scene_voice(story, scene):
+    """Cast stable, distinct voices by role, independent of scene/character order."""
+    narrator=story.get('voice','en-US-AndrewNeural')
+    if story.get('render_style')!='rigged':return narrator
+    speaker=(scene.get('animation') or {}).get('speaker','narrator')
+    if speaker=='narrator':return narrator
+    cast=[v for v in ('en-US-AvaNeural','en-US-AndrewNeural','en-GB-SoniaNeural') if v!=narrator]
+    return cast[{'hero':0,'friend':1}[speaker]]
+
+
 def render_project(project, folder, progress):
     if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
         raise RuntimeError('FFmpeg is missing on this server.')
     folder=Path(folder);face=font(32);entries=[];cursor=0;captions=[]
     rigged=project['story'].get('render_style')=='rigged'
-    voice=project['story'].get('voice','en-US-AndrewNeural')
     for index,scene in enumerate(project['story']['scenes']):
-        progress(f'Preparing narration {index+1}/{len(project["story"]["scenes"])}')
+        voice=scene_voice(project['story'],scene)
+        progress(f'Preparing speech {index+1}/{len(project["story"]["scenes"])}')
         supplied=project['audio'].get(str(index))
         if supplied:audio=folder/supplied
         else:
@@ -156,7 +166,7 @@ def render_project(project, folder, progress):
             rows=wrap(text,face)
             if len(rows)>3:raise ValueError('Caption is too long. Use shorter words or sentences.')
             captions.append((at,at+span,text));at+=span
-        entries.append(dict(start=cursor,end=cursor+length,actor=actor,pcm=pcm,movement=scene['movement']))
+        entries.append(dict(start=cursor,end=cursor+length,actor=actor,pcm=pcm,movement=scene['movement'],mouth_energy=0))
         cursor+=length
     if cursor>180:raise ValueError('The narration exceeds three minutes. Shorten the story.')
     mixed=array('h',[0])*round(cursor*SR)
@@ -182,6 +192,10 @@ def render_project(project, folder, progress):
                 if rigged:
                     at=round((local-.25)*SR);chunk=e['pcm'][max(0,at):max(0,at)+960] if at>=0 else []
                     energy=math.sqrt(sum(v*v for v in chunk)/max(1,len(chunk)))/32768
+                    # Smooth the audio envelope across frames without sustaining
+                    # speech through pauses. Avoid a jittering open/closed mouth.
+                    e['mouth_energy']+=.65*(energy-e['mouth_energy'])
+                    energy=e['mouth_energy']
                     im=e['actor'].frame(local,e['end']-e['start'],energy)
                 else:im=e['actor'].frame(local,'still')
                 text=next((text for a,b,text in captions if a<=t<b),'')

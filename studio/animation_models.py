@@ -39,6 +39,7 @@ class Animation(Strict):
     setting: Literal['cafe','park','street','home','office','stage']='cafe'
     light: Literal['day','sunset','night']='day'
     speaker: Literal['narrator','hero','friend']='narrator'
+    framing: Literal['two_shot','speaker']='two_shot'
     time_jump: bool=False
     actors: list[Actor]=Field(min_length=1,max_length=2)
     props: list[Prop]=Field(default_factory=list,max_length=5)
