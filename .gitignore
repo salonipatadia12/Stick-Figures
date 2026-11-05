@@ -24,3 +24,6 @@ legacy/bespoke/the-empty-chair-source/qa-*
 # pipeline-v2 episodes: commit episode.json and ledger.json; never caches or renders
 episodes/*/cache/
 episodes/*/out/
+
+# Local model runtimes (one per engine; see docs/LOCAL_MODELS.md)
+.venvs/

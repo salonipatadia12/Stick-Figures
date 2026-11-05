@@ -286,7 +286,8 @@ on what the repo already uses, driven by `episode.json`:
   reads). Web search costs $10 per 1,000 searches, plus result tokens billed as input. The Phase 1
   script stage reserves at most about $0.45: research up to $0.28 (4 searches, a 100k-token
   result bound) and the script up to $0.17 (16k output tokens). The ledger records actual usage.
-- **Voice (decided).** ElevenLabs is the narrator for finished videos; its key goes in `.env`.
+- **Voice (superseded on 2026-11-05 by decision 7: local Kokoro and Chatterbox; no ElevenLabs,
+  no edge-tts in v2).** ElevenLabs is the narrator for finished videos; its key goes in `.env`.
   edge-tts remains only as the free voice for drafts and previews. It is an unofficial client of
   Microsoft Edge's read-aloud service, with no SLA and unclear terms for commercial use.
 - **Word timing.** ElevenLabs' timestamped speech endpoint returns character-level alignment, and
@@ -356,6 +357,13 @@ the character reference) will point at `legacy/bespoke/…`.
    `reel.py` renders are not style references.
 
    It becomes the default `cozy` style pack and is used for the Phase 5 sample. `lineart` comes later.
+7. **Local open-source models only (2026-11-05).** This replaces decision 5 and the gpt-image plan in
+   Section 5.
+   - No OpenAI images and no ElevenLabs.
+   - Images and voice run on this Mac, using only models whose licences allow commercial use
+     (`LOCAL_MODELS.md`).
+   - The Claude script call is the only paid step, still under the $2 cap.
+   - A rented GPU needs the user's OK first.
 
 ## Appendix: how this was verified
 

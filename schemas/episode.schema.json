@@ -289,12 +289,13 @@
     },
     "Voice": {
       "additionalProperties": false,
+      "description": "Narration runs locally on open-source TTS: Kokoro (Apache-2.0) by default, Chatterbox (MIT) for expressive reads.",
       "properties": {
         "provider": {
-          "default": "elevenlabs",
+          "default": "kokoro",
           "enum": [
-            "elevenlabs",
-            "edge"
+            "kokoro",
+            "chatterbox"
           ],
           "title": "Provider",
           "type": "string"
@@ -302,11 +303,6 @@
         "voice_id": {
           "default": "",
           "title": "Voice Id",
-          "type": "string"
-        },
-        "draft_voice": {
-          "default": "en-US-AndrewNeural",
-          "title": "Draft Voice",
           "type": "string"
         }
       },

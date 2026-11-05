@@ -12,8 +12,10 @@ The approach is:
 - captions synced word by word
 - sound effects
 
-Everything is composited locally in Python. The existing studio rig stays as a separate,
-zero-cost lane for formats with a recurring character.
+Images and narration come from open-source models whose licences allow commercial use, running
+locally on this Mac (see [LOCAL_MODELS.md](LOCAL_MODELS.md)). Everything is composited locally in
+Python. The existing studio rig stays as a separate, zero-cost lane for formats with a recurring
+character.
 
 Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 
@@ -22,9 +24,12 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 - **Git:** work on `pipeline-v2`. Never push to `main`, force-push or rewrite history.
 - **Nothing is deleted without asking.** Files are archived instead; the GitHub Release
   `archive-2026-11` holds the first batch.
-- **Keys** come only from `.env`: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, and optionally `GEMINI_API_KEY`.
+- **Keys** come only from `.env`. The only one is `ANTHROPIC_API_KEY`, for the script.
+- **Local models only** for images and voice, and only under licences that allow commercial use.
+  No FLUX "dev"-licence models, no F5-TTS or XTTS (non-commercial). A rented GPU is never used
+  without asking first.
 - **Budget:** every paid call goes through the episode's cost ledger, with a per-video cap
-  (`--budget`, default $2.00).
+  (`--budget`, default $2.00). With local models, the script-writing call is the only paid step.
   - Each step's worst case is reserved before it is sent.
   - If the cap would be exceeded, the pipeline stops cleanly, records nothing and sends nothing.
   - There are no automatic paid retries. The SDK clients use `max_retries=0`, and Anthropic's
@@ -55,7 +60,7 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 - Moved 81 iteration files (89.7 MB) to the Release `archive-2026-11`.
 - Saved the local work-in-progress on branch `local-wip-builder`.
 
-### 1. Episode spec and script engine (built; waiting on a real run)
+### 1. Episode spec and script engine (done; the salary script is approved)
 
 - **`episode.json`** is the single source of truth. It is defined by Pydantic models, with a
   JSON schema in `schemas/episode.schema.json`.
@@ -84,20 +89,32 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
   - `character_sheet.png` (front, side and 3 expressions), built from The Empty Chair frames
   - palette and caption spec
   - the SFX map and motion defaults
-- **`pipeline/images.py`:** OpenAI gpt-image through `IMAGE_MODEL`, with Gemini optional.
-  - Every call passes the character sheet and the style lock.
-  - Images are generated at the chosen aspect, at medium quality by default, and cached.
-- **Pose variants:** generated as image edits of the same frame.
+- **Local image engines,** each in its own environment under `.venvs/` (see `LOCAL_MODELS.md`).
+  The shortlist:
+  - **Z-Image Turbo** (Apache-2.0): fast text-to-image, via mflux on MLX.
+  - **SDXL + a LoRA trained on The Empty Chair frames** (CreativeML Open RAIL++-M): style lock,
+    via diffusers on PyTorch/MPS.
+  - **Qwen-Image-Edit** (Apache-2.0): reference consistency and pose variants. It does not fit in
+    16 GB of RAM, so it is parked unless the hardware changes.
+- **Bake-off first:** the same 3 style-board frames (hook, a mid beat, ending) from each engine,
+  side by side with an Empty Chair frame, with the time per image. The engine is picked from it.
+- **`pipeline/images.py`:** runs the chosen engine as a subprocess. Every call uses the style
+  lock (`styles/cozy/style_lock.txt`) and the cast descriptions. Images are generated at the
+  chosen aspect and cached by beat digest.
+- **Pose variants:** generated from the same frame (image-to-image or an edit model).
 - **`pipeline/layers.py`:** cuts out the character and keeps a clean background, for parallax,
   bobs and entrances.
 - **`--approve style`:** first renders a 3-frame style board (the hook, a middle frame and the end).
 
 ### 3. Voice and captions
 
-- **`pipeline/voice.py`:** ElevenLabs is the narrator for finished videos. edge-tts is the free
-  voice for drafts and previews. One voice per episode, cached by text and voice.
-- **`pipeline/align.py`:** word timings come from the TTS provider, with faster-whisper as the
-  fallback. Beat durations come from the real audio; speech is never stretched to fit.
+- **`pipeline/voice.py`:** local text-to-speech. One voice per episode, cached by text and voice.
+  - **Kokoro** (Apache-2.0) is the default narrator.
+  - **Chatterbox** (MIT) is the expressive and voice-clone option. Its maintainers retired it in
+    August 2026, so it is used as-is with no upstream fixes.
+  - The voice is picked from short audition clips of the beat-1 line.
+- **`pipeline/align.py`:** word timings from faster-whisper (MIT), run locally. Beat durations
+  come from the real audio; speech is never stretched to fit.
 - **Captions:**
   - one line at a time, grouped by meaning
   - the current word highlighted
@@ -124,7 +141,8 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 - captions: one line, inside safe areas, every narrated word present
 - loudness and true peak
 - duration within ±15% of the target
-- character consistency, by sending the contact sheet and the character sheet to Claude vision
+- character consistency, checked locally. A Claude vision check of the contact sheet is optional
+  and off by default, because it would be a second paid call.
 
 **Sample:** "Why Your Paycheck Is Gone a Week Later" (personal finance, for US salaried workers on
 any pay schedule; the brief was "Why your salary disappears by the 20th"), in the **cozy** style,

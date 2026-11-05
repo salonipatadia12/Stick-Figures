@@ -134,9 +134,9 @@ class Source(Strict):
 
 
 class Voice(Strict):
-    provider: Literal['elevenlabs', 'edge'] = 'elevenlabs'
-    voice_id: str = ''              # ElevenLabs voice; empty means ELEVENLABS_VOICE_ID from .env
-    draft_voice: str = 'en-US-AndrewNeural'  # free edge-tts voice for drafts and previews
+    """Narration runs locally on open-source TTS: Kokoro (Apache-2.0) by default, Chatterbox (MIT) for expressive reads."""
+    provider: Literal['kokoro', 'chatterbox'] = 'kokoro'
+    voice_id: str = ''  # Kokoro voice name (e.g. af_heart); empty means the default picked after the Phase 3 auditions
 
 
 class Episode(Strict):

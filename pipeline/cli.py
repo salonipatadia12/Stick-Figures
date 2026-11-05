@@ -237,7 +237,7 @@ def build_parser():
     m.add_argument('--length', type=int, help=f'target seconds (default {config.DEFAULT_LENGTH})')
     m.add_argument('--aspect', choices=['9:16', '1:1', '16:9'], help=f'(default {config.DEFAULT_ASPECT})')
     m.add_argument('--budget', type=float, help=f'per-video cap in USD (default {config.DEFAULT_BUDGET_USD:.2f})')
-    m.add_argument('--voice-id', help='ElevenLabs voice id (default ELEVENLABS_VOICE_ID from .env)')
+    m.add_argument('--voice-id', help='local narrator voice, e.g. a Kokoro voice such as af_heart (default: the style default)')
     m.add_argument('--approve', help='comma-separated gates to stop at (default "script"; "none" to skip)')
     m.add_argument('--auto', action='store_true', help='skip all gates (still refuses scripts that fail checks)')
     m.add_argument('--no-research', action='store_true', help='skip web research; the script may then use no statistics')

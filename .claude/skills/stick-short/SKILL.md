@@ -16,8 +16,9 @@ Phases 2–4. Say so if the user asks for the finished video.
 
 1. Run the CLI as `.venv/bin/stick`. If it's missing, create the venv and install the package:
    `python3 -m venv .venv && .venv/bin/python -m pip install -e .`
-2. Paid steps need keys in `.env` at the repository root: `ANTHROPIC_API_KEY` for scripts.
-   ElevenLabs and OpenAI keys come in later phases.
+2. The only paid step, the script, needs `ANTHROPIC_API_KEY` in `.env` at the repository root.
+   Images and narration run on local open-source models (`docs/LOCAL_MODELS.md`) and need no keys.
+   Never suggest a paid image or voice API or a rented GPU without the user asking.
    - Never print, read aloud or commit `.env`.
    - If a key is missing, tell the user which one and stop. Don't ask them to paste it into the chat.
 

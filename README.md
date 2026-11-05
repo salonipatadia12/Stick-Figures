@@ -2,7 +2,7 @@
 
 ```sh
 python3 -m venv .venv && .venv/bin/python -m pip install -e .
-cp .env.example .env   # add ANTHROPIC_API_KEY (scripts), later OPENAI_API_KEY and ELEVENLABS_API_KEY
+cp .env.example .env   # add ANTHROPIC_API_KEY (scripts); images and voice run locally, no keys
 .venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance" --dry-run
 .venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance"
 ```
