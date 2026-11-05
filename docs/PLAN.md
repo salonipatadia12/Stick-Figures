@@ -28,7 +28,9 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
   - Each step's worst case is reserved before it is sent.
   - If the cap would be exceeded, the pipeline stops cleanly, records nothing and sends nothing.
   - There are no automatic paid retries. The SDK clients use `max_retries=0`, and Anthropic's
-    server-side refusal fallback stays off.
+    server-side refusal fallback stays off. Both stay off until you decide otherwise.
+  - **Phase 5 sample:** if the full Short would exceed $2.00, stop and ask before raising the cap
+    to $3.00. Never lower image quality to fit the budget.
 - **Caching:** script, images and audio are cached by content hash, and each beat has its own
   digest. After editing one beat, only that beat is regenerated.
 - **Proof after each phase:** run the tests and show real output: frames, a contact sheet and the MP4.

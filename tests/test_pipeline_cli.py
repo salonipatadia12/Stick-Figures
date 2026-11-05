@@ -78,6 +78,21 @@ class CliFlow(unittest.TestCase):
         self.assertIn('estimated offline', out)
         self.assertEqual(self.client.messages.created, [])
 
+    def test_brief_updates_before_a_script_and_is_guarded_after(self):
+        slug = 'why-your-salary-disappears-by-the-20th'
+        with mock.patch.object(config, 'has_anthropic_key', lambda: False):
+            self.run_cli('make', TOPIC, '--dry-run')
+            code, out = self.run_cli('make', TOPIC, '--audience', 'US salaried workers', '--dry-run')
+        self.assertEqual(code, 0)
+        self.assertIn('brief: audience = "US salaried workers"', out)
+        self.run_cli('make', TOPIC)  # writes the script for that audience
+        sent = self.client.messages.created[0]['messages'][0]['content']
+        self.assertIn('Audience: US salaried workers', sent)
+        code, out = self.run_cli('make', TOPIC, '--audience', 'UK students')
+        self.assertEqual(code, cli.EXIT_ERROR)
+        self.assertIn('--regenerate script', out)
+        self.assertEqual(len(self.client.messages.created), 2)  # refused before any new paid call
+
     def test_cost_and_list(self):
         self.run_cli('make', TOPIC, '--auto')
         code, out = self.run_cli('cost', 'why-your-salary-disappears-by-the-20th')

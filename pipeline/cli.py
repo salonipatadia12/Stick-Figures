@@ -58,8 +58,43 @@ def interactive_gate(episode, base):
             return False
 
 
+BRIEF_DEFAULTS = dict(niche='', audience='', style=config.DEFAULT_STYLE, aspect=config.DEFAULT_ASPECT,
+                      target_length=config.DEFAULT_LENGTH)
+
+
+def brief_from(args):
+    """Brief fields the user passed explicitly on this command line."""
+    given = dict(niche=args.niche, audience=args.audience, style=args.style, aspect=args.aspect,
+                 target_length=args.length)
+    return {k: v for k, v in given.items() if v is not None}
+
+
+def apply_brief(episode, base, brief, regenerate, voice_id):
+    """Update an episode's brief. Allowed freely before a script exists; afterwards only when the
+    script is being regenerated, so a changed brief never sits next to a script written for the old one."""
+    changed = {k: v for k, v in brief.items() if getattr(episode, k) != v}
+    if changed and episode.beats and not (regenerate & {'script', 'research'}):
+        listing = ', '.join(f'{k}: "{getattr(episode, k)}" -> "{v}"' for k, v in changed.items())
+        raise ValueError(f'This episode already has a script written for a different brief ({listing}). '
+                         'Pass --regenerate script to rewrite it with the new brief (a new paid call), '
+                         'or start a separate episode with --slug.')
+    update = dict(changed)
+    if voice_id and voice_id != episode.voice.voice_id:
+        update['voice'] = episode.voice.model_copy(update=dict(voice_id=voice_id))
+    if not update:
+        return episode
+    if 'style' in update:
+        styles.load(update['style'])
+    episode = Episode.model_validate(episode.model_copy(update=update).model_dump())
+    store.save(episode, base)
+    for k, v in changed.items():
+        print(f'  brief: {k} = "{v}"')
+    return episode
+
+
 def cmd_make(args):
     config.load_env()
+    regenerate = set(args.regenerate or ())
     if args.episode:
         episode, base = store.load(args.episode)
     elif args.topic:
@@ -69,20 +104,22 @@ def cmd_make(args):
             if episode.topic != args.topic:
                 raise ValueError(f'Episode "{slug}" already exists for topic "{episode.topic}". Pass --slug to start a new one.')
         else:
-            styles.load(args.style)  # fail early on an unknown style
-            episode = Episode(slug=slug, topic=args.topic, niche=args.niche, audience=args.audience, style=args.style,
-                              aspect=args.aspect, target_length=args.length,
+            fields = BRIEF_DEFAULTS | brief_from(args)
+            styles.load(fields['style'])  # fail early on an unknown style
+            episode = Episode(slug=slug, topic=args.topic, **fields,
                               voice=Voice(voice_id=args.voice_id) if args.voice_id else Voice())
             base = store.folder(slug)
             store.save(episode, base)
     else:
         raise ValueError('Give a topic, or --episode SLUG to continue an existing episode.')
+    episode = apply_brief(episode, base, brief_from(args), regenerate, args.voice_id)
     style = styles.load(episode.style)
     ledger = store.ledger(base, args.budget)
     print(f'Episode {episode.slug}  ({base})')
+    print(f'Audience: {episode.audience or "general"} · niche: {episode.niche or "general"} · '
+          f'{episode.style} · {episode.aspect} · {episode.target_length}s')
     print(f'Budget ${usd(ledger.budget):.2f}, spent so far ${usd(ledger.spent()):.4f}')
 
-    regenerate = set(args.regenerate or ())
     needs_script = not episode.beats or bool(regenerate & {'script', 'research'})
     if args.dry_run:
         from .script import plan
@@ -192,11 +229,13 @@ def build_parser():
     m.add_argument('topic', nargs='?')
     m.add_argument('--episode', help='continue an existing episode by slug')
     m.add_argument('--slug', help='slug for a new episode (default: from the topic)')
-    m.add_argument('--niche', default='')
-    m.add_argument('--audience', default='', help='who it is for, e.g. "salaried workers in India"')
-    m.add_argument('--style', default=config.DEFAULT_STYLE, choices=styles.available() or [config.DEFAULT_STYLE])
-    m.add_argument('--length', type=int, default=config.DEFAULT_LENGTH, help='target seconds (default 45)')
-    m.add_argument('--aspect', default=config.DEFAULT_ASPECT, choices=['9:16', '1:1', '16:9'])
+    # Brief options default to None so an explicit value can update an episode that has no script yet.
+    m.add_argument('--niche')
+    m.add_argument('--audience', help='who it is for, e.g. "US salaried workers"')
+    m.add_argument('--style', choices=styles.available() or [config.DEFAULT_STYLE],
+                   help=f'visual style (default {config.DEFAULT_STYLE})')
+    m.add_argument('--length', type=int, help=f'target seconds (default {config.DEFAULT_LENGTH})')
+    m.add_argument('--aspect', choices=['9:16', '1:1', '16:9'], help=f'(default {config.DEFAULT_ASPECT})')
     m.add_argument('--budget', type=float, help=f'per-video cap in USD (default {config.DEFAULT_BUDGET_USD:.2f})')
     m.add_argument('--voice-id', help='ElevenLabs voice id (default ELEVENLABS_VOICE_ID from .env)')
     m.add_argument('--approve', help='comma-separated gates to stop at (default "script"; "none" to skip)')
