@@ -4,9 +4,9 @@ WORKDIR /app
 COPY requirements-studio.txt ./
 RUN pip install --no-cache-dir -r requirements-studio.txt
 COPY studio ./studio
-COPY outputs/character-focus-reference.png ./outputs/character-focus-reference.png
-COPY outputs/the-empty-chair-story-order.mp4 outputs/the-empty-chair-story-order.srt ./outputs/
-COPY outputs/the-empty-chair-source/assets ./outputs/the-empty-chair-source/assets
+COPY legacy/bespoke/character-focus-reference.png ./legacy/bespoke/character-focus-reference.png
+COPY legacy/bespoke/the-empty-chair-story-order.mp4 legacy/bespoke/the-empty-chair-story-order.srt ./legacy/bespoke/
+COPY legacy/bespoke/the-empty-chair-source/assets ./legacy/bespoke/the-empty-chair-source/assets
 RUN useradd --create-home studio && mkdir /data && chown studio:studio /data
 USER studio
 ENV APP_ENV=production STUDIO_DATA_DIR=/data PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1

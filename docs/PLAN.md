@@ -38,7 +38,7 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 ## Style
 
 - **`cozy` (default):** taken from The Empty Chair, which is the only approved video and the only
-  style reference. That means `outputs/the-empty-chair-story-order.mp4` and its storyboard.
+  style reference. That means `legacy/bespoke/the-empty-chair-story-order.mp4` and its storyboard.
   It covers:
   - white round-headed figures with navy outlines (`lead`, plus a `friend` in a teal scarf)
   - painted café-world backgrounds in warm golden light

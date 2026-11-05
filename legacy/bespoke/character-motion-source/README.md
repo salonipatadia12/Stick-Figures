@@ -32,8 +32,8 @@ additional drawn poses and joints.
 Use the existing environment from the repository root:
 
 ```sh
-outputs/the-message-source/.venv/bin/python outputs/character-motion-source/render.py
-outputs/the-message-source/.venv/bin/python outputs/character-motion-source/render.py --preview
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/character-motion-source/render.py
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/character-motion-source/render.py --preview
 ```
 
 A fresh environment needs Python, Pillow 13 and FFmpeg on PATH. The narration is
@@ -88,8 +88,8 @@ cels, purposeful medium/close cuts, persistent notebook content, captions,
 small time-jump labels, and an original quiet synthesized sound bed.
 
 ```sh
-outputs/the-message-source/.venv/bin/python outputs/character-motion-source/assemble.py --preview
-outputs/the-message-source/.venv/bin/python outputs/character-motion-source/assemble.py
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/character-motion-source/assemble.py --preview
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/character-motion-source/assemble.py
 ```
 
 Run those commands from the repository root. The renderer uses bundled artwork and

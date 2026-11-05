@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 import unittest
 from PIL import ImageChops
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'outputs/the-empty-chair-source'))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'legacy/bespoke/the-empty-chair-source'))
 from motion import MovementScene,PropRig
 from render import SPECS,HERE
 from recut import cues, SHOTS, at

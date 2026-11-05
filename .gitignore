@@ -1,10 +1,9 @@
 .DS_Store
 work/
-outputs/*
-!outputs/the-message-script.txt
-!outputs/the-message-source/
+# Old render folder: everything tracked from it now lives in legacy/; keep stray renders out of git.
+outputs/
 
-# Local reel builder environments and generated projects
+# Local environments and generated projects
 .venv/
 .reel-cache/
 **/.reel-cache/
@@ -15,39 +14,13 @@ renders/
 .env.*
 !.env.example
 studio-data/
-
 __pycache__/
+*.egg-info/
 
-!outputs/character-reference-study.md
-!outputs/character-focus-reference.png
-!outputs/character-focus-production/
-!outputs/character-motion-source/
-!outputs/the-first-page-illustrated.mp4
-!outputs/the-first-page-illustrated.storyboard.jpg
-!outputs/the-first-page-illustrated.timeline.json
-!outputs/the-first-page-illustrated.srt
-!outputs/two-minutes-source/
-!outputs/two-minutes.mp4
-!outputs/two-minutes.storyboard.jpg
-!outputs/two-minutes.timeline.json
-!outputs/the-empty-chair-source/
-outputs/the-empty-chair-source/recut*.wav
-
-outputs/the-empty-chair-source/qa-*
-
-
-
-
-
-
-!outputs/the-empty-chair-story-order.mp4
-!outputs/the-empty-chair-story-order.srt
-!outputs/the-empty-chair-story-order.storyboard.jpg
-!outputs/the-empty-chair-story-order.timeline.json
-
-
+# Legacy bespoke rebuild by-products (the tracked recut-source.wav and recut-voice.wav stay tracked)
+legacy/bespoke/the-empty-chair-source/recut*.wav
+legacy/bespoke/the-empty-chair-source/qa-*
 
 # pipeline-v2 episodes: commit episode.json and ledger.json; never caches or renders
 episodes/*/cache/
 episodes/*/out/
-*.egg-info/

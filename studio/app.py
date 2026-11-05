@@ -26,6 +26,7 @@ from .illustrated_assets import ART_VERSION
 from .animation_models import ACTIONS, EMOTIONS, SETTINGS, PROPS
 
 ROOT=Path(__file__).resolve().parent.parent
+LEGACY=ROOT/'legacy/bespoke'  # finished illustrated example and its artwork
 DEMO_STEM='the-empty-chair-story-order'
 DEFAULT_CHARACTER='White filled round head, navy outline and slender navy limbs, rounded shaded white torso, expressive oval eyes, no hair. Give a second character one consistent distinguishing accessory.'
 security=HTTPBasic(auto_error=False)
@@ -108,7 +109,7 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
     @app.get('/api/config')
     def config():
         return dict(animation=dict(actions=ACTIONS,emotions=EMOTIONS,settings=SETTINGS,props=PROPS),story_budget_usd=STORY_BUDGET_USD,ai_available=story_available(),story_provider=story_provider_name(),image_available=bool(os.getenv('OPENAI_API_KEY', '').strip()),ffmpeg=bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
-            demo_available=(ROOT/'outputs'/f'{DEMO_STEM}.mp4').is_file(),
+            demo_available=(LEGACY/f'{DEMO_STEM}.mp4').is_file(),
             story_model=story_model(),image_model=os.getenv('IMAGE_MODEL','gpt-image-2'))
 
     @app.get('/api/projects')
@@ -225,7 +226,7 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
                     update(identifier,progress=f'Illustrating scene {i+1}/{len(story.scenes)}…')
                     target=folder/f'image-{i}-{digest(story)[:10]}.png'
                     first=folder/assets['0']['file'] if '0' in assets else None
-                    heads=provider.illustrate(story,i,ROOT/'outputs/character-focus-reference.png',first,target)
+                    heads=provider.illustrate(story,i,LEGACY/'character-focus-reference.png',first,target)
                     # Verify decoded media before making it visible in the storyboard.
                     with Image.open(target) as im:im.verify()
                     assets[str(i)]=dict(file=target.name,heads=heads)
@@ -313,19 +314,19 @@ def create_app(data_dir=None, provider_factory=None, renderer=render_project):
             return FileResponse(path)
 
     @app.get('/api/reference')
-    def reference():return FileResponse(ROOT/'outputs/character-focus-reference.png')
+    def reference():return FileResponse(LEGACY/'character-focus-reference.png')
 
     @app.post('/api/demo')
     def demo():
         with store.lock:
-            if not (ROOT/'outputs'/f'{DEMO_STEM}.mp4').is_file():raise HTTPException(404,'The example is not installed.')
+            if not (LEGACY/f'{DEMO_STEM}.mp4').is_file():raise HTTPException(404,'The example is not installed.')
             data=json.loads((ROOT/'studio/demo.json').read_text());story=Story.model_validate(data['story'])
             p=store.create({'prompt':'The Empty Chair — completed example','mode':'demo'},story.model_dump());folder=store.folder(p['id'])
             for i,name in enumerate(data['images']):
-                target=f'image-{i}.png';shutil.copyfile(ROOT/'outputs/the-empty-chair-source/assets'/name,folder/target)
+                target=f'image-{i}.png';shutil.copyfile(LEGACY/'the-empty-chair-source/assets'/name,folder/target)
                 p['assets'][str(i)]={'file':target,'heads':[]}
-            shutil.copyfile(ROOT/'outputs'/f'{DEMO_STEM}.mp4',folder/'reel.mp4')
-            shutil.copyfile(ROOT/'outputs'/f'{DEMO_STEM}.srt',folder/'captions.srt')
+            shutil.copyfile(LEGACY/f'{DEMO_STEM}.mp4',folder/'reel.mp4')
+            shutil.copyfile(LEGACY/f'{DEMO_STEM}.srt',folder/'captions.srt')
             p.update(status='ready',video='reel.mp4',captions='captions.srt',duration=data['duration'],
                 story_approval=digest(p['story']),storyboard_approval=board_hash(p),progress='Revised example: the hand draws a sketch with visible pen strokes and pen lifts.')
             return store.save(p)

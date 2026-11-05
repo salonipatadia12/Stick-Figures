@@ -11,7 +11,7 @@ installed as executable skills.
 
 ## Applied in this project
 
-The original local renderer in `builder/cozy.py` adapts Style 4's visual contract:
+The original local renderer in `legacy/reel-builder/the-message-source/builder/cozy.py` adapts Style 4's visual contract:
 white circular head, simple dark eyes, closed white tapered torso, single-line
 limbs, dark hands/feet, and full-color cartoon environments. It also applies the
 repository's guidance on purposeful wide/close/detail cuts, consistent props,

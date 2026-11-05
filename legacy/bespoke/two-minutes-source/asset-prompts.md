@@ -1,7 +1,7 @@
 # Illustration prompts
 
 Built-in image-generation tool; input character reference:
-`outputs/character-focus-reference.png`.
+`legacy/bespoke/character-focus-reference.png`.
 
 Shared design: preserve the appealing large round white shaded head with navy outline,
 expressive navy oval eyes and small highlights, curved brows/mouth, rounded slim white

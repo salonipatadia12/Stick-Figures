@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 from PIL import Image, ImageDraw
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'outputs/the-message-source'))
+sys.path.insert(0,str(ROOT/'legacy/reel-builder/the-message-source'))
 from builder.visuals import draw
 from builder.story import validate
 from builder.art import font
@@ -31,4 +31,4 @@ def build(output):
         d.text((200+i*400,830),label,font=font(23),fill='#397E78',anchor='mm')
     sheet.save(output/'character-pose-sheet.png')
 
-if __name__=='__main__':build(Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'outputs')
+if __name__=='__main__':build(Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'renders')

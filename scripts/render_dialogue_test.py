@@ -17,7 +17,7 @@ from studio.rendering import render_project
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--story',default='studio/examples/listening.json')
-    parser.add_argument('--output',default='outputs/dialogue-acting-test')
+    parser.add_argument('--output',default='renders/dialogue-acting-test')
     args=parser.parse_args()
     story=Story.model_validate_json((ROOT/args.story).read_text()).reviewable().model_dump()
     folder=ROOT/args.output;folder.mkdir(exist_ok=True,parents=True)

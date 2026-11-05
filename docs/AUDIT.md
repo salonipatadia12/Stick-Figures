@@ -6,6 +6,7 @@ Audited 2026-11-04 on branch `pipeline-v2`, created from `origin/main` @ `39b9fe
 - Your decisions are recorded in Section 7.
 - The cleanup in Section 3 is done: the files are in the Release `archive-2026-11`.
 - Remotion is dropped. The compositor is Python (Pillow + FFmpeg); see Section 4.
+- `reel.py` and the old reel sources moved to `legacy/`. Older paths below say `outputs/`.
 
 ## 0. Repository state (read this first)
 
@@ -333,8 +334,12 @@ the character reference) will point at `legacy/bespoke/…`.
 1. Create the Release, then remove the archived files from the tree. **Done** (`678e8a3`).
 2. Add `pyproject.toml` and the new `.gitignore` entries. **Done in Phase 1.**
 3. Move files with `git mv` into `legacy/`, then update the Dockerfile, `studio/app.py`, 4 test
-   files, 2 scripts, `examples/the-message.json` and the README. **Not done yet.** Nothing in
-   v2 depends on it, so it waits for an explicit go-ahead.
+   files, 2 scripts, `examples/the-message.json` and the README. **Done** (separate commit).
+   - `outputs/` is gone: the builder is in `legacy/reel-builder/` and the bespoke reels in
+     `legacy/bespoke/`.
+   - Paths in Sections 1–3 of this audit name the original `outputs/` locations.
+   - While rewriting the build-context rules, a pre-existing Docker bug was fixed: `.dockerignore`
+     shipped `06-return-final.png`, but the studio demo copies `06-held-doodle.png`.
 
 ## 7. Decisions (2026-11-04)
 

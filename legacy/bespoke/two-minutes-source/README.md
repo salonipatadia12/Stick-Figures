@@ -27,8 +27,8 @@ locally; no external music is used.
 From the repository root:
 
 ```sh
-outputs/the-message-source/.venv/bin/python outputs/two-minutes-source/render.py --preview
-outputs/the-message-source/.venv/bin/python outputs/two-minutes-source/render.py
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/two-minutes-source/render.py --preview
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/two-minutes-source/render.py
 ```
 
 The included images and narration allow offline rebuilding using Python, Pillow 13

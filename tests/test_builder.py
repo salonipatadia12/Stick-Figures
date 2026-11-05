@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'outputs/the-message-source'))
+sys.path.insert(0,str(ROOT/'legacy/reel-builder/the-message-source'))
 from builder.story import validate, load, authoring_prompt
 from builder.visuals import preflight, draw
 from builder.pipeline import cache_key, render
@@ -18,7 +18,7 @@ from builder.character import joint
 from builder.story import ACTIONS_BY_BACKGROUND
 
 class StoryTests(unittest.TestCase):
-    def setUp(self):self.story=load(ROOT/'examples/the-message.json')
+    def setUp(self):self.story=load(ROOT/'legacy/reel-builder/examples/the-message.json')
     def test_character_style_and_classic_compatibility(self):
         self.assertEqual(validate({'scenes':[{}]})['character_style'],'expressive')
         scene=self.story['scenes'][0]
@@ -42,7 +42,7 @@ class StoryTests(unittest.TestCase):
                     with self.subTest(background=bg,action=action,t=t):
                         self.assertEqual(draw(scene,t).size,(1080,1920))
     def test_examples_and_all_layouts(self):
-        for path in (ROOT/'examples').glob('*.json'):
+        for path in (ROOT/'legacy/reel-builder/examples').glob('*.json'):
             if path.name.endswith('.schema.json'):continue
             story=load(path);preflight(story)
             for scene in story['scenes']:
@@ -50,7 +50,7 @@ class StoryTests(unittest.TestCase):
     def test_cozy_contacts_and_cuts(self):
         from builder.cozy import actor_pose, camera_for
         import math
-        story=load(ROOT/'examples/the-first-page-cozy.json')
+        story=load(ROOT/'legacy/reel-builder/examples/the-first-page-cozy.json')
         for scene in story['scenes']:
             for t in [0,.3,.7,1.34,1.36,2.34,2.36,3.15,4.1]:
                 shoulder,hip,head,left,right,tip=actor_pose(scene,t)
@@ -65,7 +65,7 @@ class StoryTests(unittest.TestCase):
         self.assertEqual(camera_for(writing,1.5),'detail')
         self.assertEqual(camera_for(writing,4.1),'close')
     def test_cozy_rejects_unsupported_props_and_controls(self):
-        story=load(ROOT/'examples/the-first-page-cozy.json')
+        story=load(ROOT/'legacy/reel-builder/examples/the-first-page-cozy.json')
         story['scenes'][0]['background']='home'
         with self.assertRaisesRegex(ValueError,'desk'):validate(story)
         story['scenes'][0]['background']='desk'

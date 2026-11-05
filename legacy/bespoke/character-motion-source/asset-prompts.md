@@ -1,7 +1,7 @@
 # Asset generation prompts
 
 Tool: built-in `image_gen.imagegen`. Source: user-approved
-`outputs/character-focus-reference.png` (941×1672).
+`legacy/bespoke/character-focus-reference.png` (941×1672).
 
 ## Café plate
 

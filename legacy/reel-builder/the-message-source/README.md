@@ -1,4 +1,4 @@
-> For new stories, use the [reusable builder guide](../../README.md) and repository-root `reel.py`. The files described below preserve the original reel exactly.
+> For new stories, use the [reusable builder guide](../../../README.md) and `legacy/reel-builder/reel.py`. The files described below preserve the original reel exactly.
 
 # The Message — stick figure reel
 
@@ -9,7 +9,7 @@ A 29.23-second original friendship story, rendered at 1080 × 1920, 30 fps, with
 Requires Python 3.10+, FFmpeg and ffprobe on PATH. From the repository root, run:
 
 ```sh
-cd outputs/the-message-source
+cd legacy/reel-builder/the-message-source
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

@@ -81,8 +81,8 @@ Writing hands and pencils share an anchor; feet stay planted.
 [Integration and MIT attribution](references/stickman-video-director/UPSTREAM.md)
 
 ```sh
-python reel.py preview examples/the-first-page-cozy.json --output renders/cozy.jpg
-python reel.py render examples/the-first-page-cozy.json --output renders/cozy.mp4
+python legacy/reel-builder/reel.py preview legacy/reel-builder/examples/the-first-page-cozy.json --output renders/cozy.jpg
+python legacy/reel-builder/reel.py render legacy/reel-builder/examples/the-first-page-cozy.json --output renders/cozy.mp4
 ```
 
 This is a local adaptation of the repository's visual/directing guidance.
@@ -103,11 +103,11 @@ other objects and actions need additional drawing components.
 
 New renders use `"character_style": "expressive"` by default: simple oval eyes, bold rounded limbs, small hands and feet, and a teal scarf. The previous character is available with `"character_style": "classic"`. Existing exported videos are preserved.
 
-[Before / after](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-redesign.png) · [Pose sheet](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-pose-sheet.png) · [Narrated redesigned reel](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-first-page-redesigned.mp4) · [Reference study and engagement counts](outputs/character-reference-study.md)
+[Before / after](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-redesign.png) · [Pose sheet](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-pose-sheet.png) · [Narrated redesigned reel](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-first-page-redesigned.mp4) · [Reference study and engagement counts](legacy/bespoke/character-reference-study.md)
 
 ```sh
-python reel.py render examples/the-first-page.json --output renders/redesigned.mp4
-python scripts/character_review.py outputs
+python legacy/reel-builder/reel.py render legacy/reel-builder/examples/the-first-page.json --output renders/redesigned.mp4
+python scripts/character_review.py renders
 ```
 
 The design combines simpler facial detail with readable bent joints, grounded feet and deliberate motion. It is an original local drawing system; reference video footage/assets are not bundled. See the reference study for what was actually sampled and the limitations of engagement comparisons.
@@ -121,35 +121,35 @@ From the repository root:
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r outputs/the-message-source/requirements.txt
-python reel.py --help
+pip install -r legacy/reel-builder/the-message-source/requirements.txt
+python legacy/reel-builder/reel.py --help
 ```
 
-On Windows, font paths currently need adapting in `outputs/the-message-source/builder/art.py`. macOS/Linux are the supported defaults.
+On Windows, font paths currently need adapting in `legacy/reel-builder/the-message-source/builder/art.py`. macOS/Linux are the supported defaults.
 
 ## Make a reel from a different prompt — no paid API needed
 
 **1. Create an authoring prompt:**
 
 ```sh
-python reel.py prompt \
+python legacy/reel-builder/reel.py prompt \
   --prompt "A 30-second story about someone who keeps waiting to write the perfect first page" \
   --output authoring.md
 ```
 
-**2. Paste `authoring.md` into your writing assistant** (including this Codex chat). Save the returned JSON as `my-story.json`. You can also copy and edit `examples/the-first-page.json` directly. A short topic still needs a writing step; the local renderer does not invent an arbitrary story itself.
+**2. Paste `authoring.md` into your writing assistant** (including this Codex chat). Save the returned JSON as `my-story.json`. You can also copy and edit `legacy/reel-builder/examples/the-first-page.json` directly. A short topic still needs a writing step; the local renderer does not invent an arbitrary story itself.
 
 **3. Check the story and inspect its storyboard:**
 
 ```sh
-python reel.py validate my-story.json
-python reel.py preview my-story.json --output renders/storyboard.jpg
+python legacy/reel-builder/reel.py validate my-story.json
+python legacy/reel-builder/reel.py preview my-story.json --output renders/storyboard.jpg
 ```
 
 **4. Render it:**
 
 ```sh
-python reel.py render my-story.json --output renders/my-reel.mp4
+python legacy/reel-builder/reel.py render my-story.json --output renders/my-reel.mp4
 ```
 
 The first render creates neural narration through edge-tts, which needs internet access. There is no API key for that speech path, but service availability can change. Audio is cached by narration text, voice and speaking rate. Later renders reuse it; edits to those fields generate new audio.
@@ -161,12 +161,12 @@ The output folder contains the MP4, a storyboard, a timing JSON, a render log, a
 This is an optional paid API path, separate from the no-API workflow above. Configure `OPENAI_API_KEY` in your environment. Do not put keys into story files or commit them. Use an available model that supports Responses structured outputs:
 
 ```sh
-python reel.py draft \
+python legacy/reel-builder/reel.py draft \
   --prompt "A warm 30-second story about asking a friend for help" \
   --model YOUR_SUPPORTED_MODEL \
   --output my-story.json
-python reel.py preview my-story.json --output renders/storyboard.jpg
-python reel.py render my-story.json --output renders/my-reel.mp4
+python legacy/reel-builder/reel.py preview my-story.json --output renders/storyboard.jpg
+python legacy/reel-builder/reel.py render my-story.json --output renders/my-reel.mp4
 ```
 
 Drafting saves a validated storyboard rather than immediately rendering, so you can review the story before speech generation. The integration follows [OpenAI's structured outputs documentation](https://developers.openai.com/api/docs/guides/structured-outputs). Its request/response handling is covered by mocked tests; a live paid API call has not been tested in this project.
@@ -176,14 +176,14 @@ Drafting saves a validated storyboard rather than immediately rendering, so you 
 Rebuild **The Message** entirely offline, using the included narration:
 
 ```sh
-python reel.py render examples/the-message.json \
+python legacy/reel-builder/reel.py render legacy/reel-builder/examples/the-message.json \
   --output renders/the-message.mp4 --offline
 ```
 
 Make **The First Page**, a different story using desk and standing scenes:
 
 ```sh
-python reel.py render examples/the-first-page.json \
+python legacy/reel-builder/reel.py render legacy/reel-builder/examples/the-first-page.json \
   --output renders/the-first-page.mp4
 ```
 
@@ -236,10 +236,10 @@ Top-level `character_style`: `expressive` (default), `classic`, or `cozy` (the n
 
 ```sh
 # No speech/network: estimate timings from narration text for a motion preview
-python reel.py render my-story.json --output renders/silent.mp4 --silent
+python legacy/reel-builder/reel.py render my-story.json --output renders/silent.mp4 --silent
 
 # No network: require all narration to be supplied or already cached
-python reel.py render my-story.json --output renders/offline.mp4 --offline
+python legacy/reel-builder/reel.py render my-story.json --output renders/offline.mp4 --offline
 ```
 
 `--silent` includes a silent audio track. `--offline` fails with a clear error if any narration is missing. Use the same output directory to reuse its narration cache.
@@ -248,7 +248,7 @@ python reel.py render my-story.json --output renders/offline.mp4 --offline
 
 The builder supports small everyday stories using the listed layouts, expressions and gestures. A prompt cannot currently create arbitrary new locations, clothing, objects, camera angles or fight choreography. Those need new drawing components. Output is fixed at 1080 × 1920, 30 fps, H.264/AAC; stories support 1–20 scenes up to 180 seconds total. The first example shows a roughly 30-second result, not a promise that every prompt produces exactly 30 seconds.
 
-The original renderer and its exact shipped video remain available under [outputs/the-message-source](outputs/the-message-source/README.md). New projects should use `reel.py`.
+The original renderer and its exact shipped video remain available under [legacy/reel-builder/the-message-source](legacy/reel-builder/the-message-source/README.md). New projects should use `reel.py`.
 
 ## Tests
 
@@ -260,14 +260,14 @@ Tests cover fixed arm lengths, reachable contacts throughout supported gestures,
 
 ## Character-first production direction
 
-The latest visual target is [this generated reference](outputs/character-focus-reference.png).
+The latest visual target is [this generated reference](legacy/bespoke/character-focus-reference.png).
 It puts the face, upper body and hands in the foreground, closely following the
 README café character from Stickman Video Director. The earlier Pillow render is
 not equivalent to the generative animation used by that repository's demos.
 
-[Production analysis and pilot plan](outputs/character-focus-production/README.md)
+[Production analysis and pilot plan](legacy/bespoke/character-focus-production/README.md)
 records the exact distinction and the proposed acting beats. The
-[pilot prompt](outputs/character-focus-production/pilot-prompt.txt) is a prepared
+[pilot prompt](legacy/bespoke/character-focus-production/pilot-prompt.txt) is a prepared
 external-generation input, not evidence that a video has already been generated.
 The Flow attempt did not produce a video. Production now uses the local illustrated
 character renderer described below; the original local outputs remain available for comparison.
@@ -278,31 +278,31 @@ The approved shaded character is now animated locally in a
 [10.5-second narrated study](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-acting-test.mp4), with blinking,
 a small head movement and breathing, a rigidly held pen, and a two-bone writing arm.
 The background stays still while the character carries the action.
-[Source, artwork, narration and rebuild instructions](outputs/character-motion-source/README.md)
+[Source, artwork, narration and rebuild instructions](legacy/bespoke/character-motion-source/README.md)
 are included. Rebuilding uses Pillow/FFmpeg and the bundled narration; it does not
 require Flow, credits or an API key. This is a motion study before a full reel.
 
 ## Complete illustrated reel
 
-[The First Page — complete 30.5-second illustrated cut](outputs/the-first-page-illustrated.mp4)
+[The First Page — complete 30.5-second illustrated cut](legacy/bespoke/the-first-page-illustrated.mp4)
 puts the approved character into a complete story, with continuous narration,
 worried/relieved expressions, a notebook that fills over time, captions, original
 quiet music and timed pencil sounds. The background remains secondary to the face
 and hands. Rebuild it locally with:
 
 ```sh
-outputs/the-message-source/.venv/bin/python outputs/character-motion-source/assemble.py
+.venv/bin/python legacy/bespoke/character-motion-source/assemble.py
 ```
 
-[Storyboard](outputs/the-first-page-illustrated.storyboard.jpg) ·
-[Source and instructions](outputs/character-motion-source/README.md)
+[Storyboard](legacy/bespoke/the-first-page-illustrated.storyboard.jpg) ·
+[Source and instructions](legacy/bespoke/character-motion-source/README.md)
 
 ## New short story: Two Minutes
 
-[Watch the 10.5-second reel](outputs/two-minutes.mp4): an everyday scrolling joke with
+[Watch the 10.5-second reel](legacy/bespoke/two-minutes.mp4): an everyday scrolling joke with
 three distinct illustrations (daylight study → nighttime sofa → sunrise bedroom),
 new narration, captions, subtle 2D motion and an alarm punchline.
-[Source, offline rebuild and research notes](outputs/two-minutes-source/README.md).
+[Source, offline rebuild and research notes](legacy/bespoke/two-minutes-source/README.md).
 The topic follows recurring recent scrolling stories; it is not presented as a
 verified highest-engagement trend.
 
@@ -313,7 +313,7 @@ for a stranger, waits for his return, and discovers he has tried drawing their t
 The story was approved before production. It uses the selected illustrated character,
 distinct acting scenes, narration, captions and quiet original music.
 
-[Source and offline rebuild instructions](outputs/the-empty-chair-source/README.md) ·
+[Source and offline rebuild instructions](legacy/bespoke/the-empty-chair-source/README.md) ·
 [Storyboard](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-empty-chair-recut.storyboard.jpg)
 
 The rhythm revision keeps the illustrations and approved story arc, with tighter
@@ -325,15 +325,15 @@ To rebuild the illustrated example with articulated bag lifting, a chair pull,
 dialogue mouths and writing gestures, run:
 
 ```sh
-.venv/bin/python outputs/the-empty-chair-source/recut.py --motion
+.venv/bin/python legacy/bespoke/the-empty-chair-source/recut.py --motion
 ```
 
 This edition uses layered 2D animation with reconstructed clean plates. Original
 face artwork is preserved without blink overlays. The scene-specific prop rigs
-are in `outputs/the-empty-chair-source/motion.py`; arbitrary new illustrations
+are in `legacy/bespoke/the-empty-chair-source/motion.py`; arbitrary new illustrations
 need their own prop masks and attachment points.
 
-Dialogue mouth animation is defined in `outputs/the-empty-chair-source/lipsync.py`.
+Dialogue mouth animation is defined in `legacy/bespoke/the-empty-chair-source/lipsync.py`.
 It uses manually timed dialogue words, cartoon mouth shapes and the included
 speech waveform to close the mouth in gaps. It does not animate the character
 during narrator-only passages. New dialogue requires new timings.
@@ -341,10 +341,10 @@ during narrator-only passages. New dialogue requires new timings.
 The acting revision holds one camera composition per scene. The ending includes
 a brief chuckle with the original eyes, then an outward chair pull
 with a coherent chair layer and attached gripping hand. Rebuild with the same
-`recut.py --motion` command; output is `outputs/the-empty-chair-story-order.mp4`.
+`recut.py --motion` command; output is `legacy/bespoke/the-empty-chair-story-order.mp4`.
 
 
-The opening writing action now uses `outputs/the-empty-chair-source/writing.py`:
+The opening writing action now uses `legacy/bespoke/the-empty-chair-source/writing.py`:
 the original hand and pen move together, two fixed-length arm segments bend at
 the elbow, and each ink stroke ends at the pen tip. Transfers lift the pen and
 leave no ink. This drawing animation is calibrated to the café artwork; new

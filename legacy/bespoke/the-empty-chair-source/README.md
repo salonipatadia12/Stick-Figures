@@ -11,8 +11,8 @@ and door chimes are synthesized locally. Caption phrases remain short and stable
 `recut.py` owns this edit independently of the retained 49-second original.
 
 ```sh
-.venv/bin/python outputs/the-empty-chair-source/recut.py --preview
-.venv/bin/python outputs/the-empty-chair-source/recut.py
+.venv/bin/python legacy/bespoke/the-empty-chair-source/recut.py --preview
+.venv/bin/python legacy/bespoke/the-empty-chair-source/recut.py
 ```
 
 The new continuous take is `narration-recut.mp3`; its text and original timing are
@@ -50,8 +50,8 @@ Requires Python 3, Pillow, and FFmpeg on PATH. The project's existing environmen
 already contains Pillow. From the repository root:
 
 ```sh
-outputs/the-message-source/.venv/bin/python outputs/the-empty-chair-source/render.py --preview
-outputs/the-message-source/.venv/bin/python outputs/the-empty-chair-source/render.py
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/the-empty-chair-source/render.py --preview
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/the-empty-chair-source/render.py
 ```
 
 The included illustrations and narration make rebuilding offline possible. No Flow
@@ -70,11 +70,11 @@ two drawings can be read. The complete runtime is calculated in `render.py`.
 To regenerate the source narration (online access required):
 
 ```sh
-outputs/the-message-source/.venv/bin/edge-tts \
-  -f outputs/the-empty-chair-source/narration.txt \
+legacy/bespoke/the-message-source/.venv/bin/edge-tts \
+  -f legacy/bespoke/the-empty-chair-source/narration.txt \
   -v en-US-AndrewNeural --rate=-8% \
-  --write-media outputs/the-empty-chair-source/narration.mp3 \
-  --write-subtitles outputs/the-empty-chair-source/narration.srt
+  --write-media legacy/bespoke/the-empty-chair-source/narration.mp3 \
+  --write-subtitles legacy/bespoke/the-empty-chair-source/narration.srt
 ```
 
 If a new recording changes timing, update `VOICE_LENGTH`, `EDIT`, and `PAUSES`;
@@ -103,6 +103,6 @@ original illustrated eyes remain intact while head and hand movement continues.
 in all three scenes with the visitor. To rebuild the corrected filename:
 
 ```sh
-outputs/the-message-source/.venv/bin/python outputs/the-empty-chair-source/render.py \
-  --output outputs/the-empty-chair-fixed.mp4
+legacy/bespoke/the-message-source/.venv/bin/python legacy/bespoke/the-empty-chair-source/render.py \
+  --output legacy/bespoke/the-empty-chair-fixed.mp4
 ```

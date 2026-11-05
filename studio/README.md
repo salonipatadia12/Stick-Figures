@@ -268,7 +268,7 @@ possible action in arbitrary prompts. It makes no extra paid repair request.
 Existing generated stories are not silently rewritten.
 
 Rebuild the corrected example, with no story/image API request:
-`.venv/bin/python scripts/render_dialogue_test.py --story studio/examples/swing-together.json --output outputs/swing-together`
+`.venv/bin/python scripts/render_dialogue_test.py --story studio/examples/swing-together.json --output renders/swing-together`
 
 Gesture elbows now retain the authored joint positions instead of reconstructing
 an alternative fold from the wrist target. Object-reaching arms use an outward
@@ -279,7 +279,7 @@ elbow bend. Tests cover joint lengths, smoothness, rope contact and cut continui
 `studio/examples/listening.json` is a four-turn performance test: narrator setup,
 Mia's question, Theo's reply, and Mia's response. Render it with
 `.venv/bin/python scripts/render_dialogue_test.py`. The result is saved under
-`outputs/dialogue-acting-test/`; the first run uses online TTS and subsequent runs
+`renders/dialogue-acting-test/`; the first run uses online TTS and subsequent runs
 reuse the cached audio. No story or image API call is made by this script.
 
 The reusable renderer now adds a directed gaze change, slight posture lean, one
@@ -292,7 +292,7 @@ The generated plan still determines which emotion and action is performed.
 
 `studio/assets/illustrated/` contains the generated source atlases and extracted
 head, torso, relaxed hand, open hand and six painted backgrounds. These were made
-with the built-in image-generation tool, using `outputs/character-focus-reference.png`
+with the built-in image-generation tool, using `legacy/bespoke/character-focus-reference.png`
 as the style reference. Exact prompts are saved in `prompts.json`. Regenerate the
 registered crops with `python scripts/prepare_illustrated_assets.py`; the crop bounds
 are tied to the checked-in source atlases. All assets are bundled with the app and
@@ -301,8 +301,8 @@ need no image service at runtime. Character body color and scarf accent remain e
 A fixed, character-focused composition replaces the old distant full-frame view.
 It does not animate a zoom. Custom background uploads still work, and lighting
 choices grade the static plate. Images may be cropped to fit that composition.
-The new example renders are `outputs/reusable-first-hello-cafe.mp4` and
-`outputs/reusable-kindness-cafe.mp4`; the earlier flat renders are retained for comparison.
+The new example renders `reusable-first-hello-cafe.mp4` and
+`reusable-kindness-cafe.mp4` are in the `archive-2026-11` release; the earlier flat renders are retained for comparison.
 Motion checks cover continuous elbows, constant arm segment lengths, a settled
 beginning/end and modest speaking gestures. Visual inspection is still necessary;
 these checks cannot certify that every arbitrary story looks natural.

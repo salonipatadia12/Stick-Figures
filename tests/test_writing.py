@@ -2,7 +2,7 @@ import math
 from pathlib import Path
 import sys
 import unittest
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'outputs/the-empty-chair-source'))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'legacy/bespoke/the-empty-chair-source'))
 from writing import pose, attached, arm_elbow, PIVOT, WRIST, SHOULDER, UPPER_LENGTH, FOREARM_LENGTH
 
 class WritingTests(unittest.TestCase):

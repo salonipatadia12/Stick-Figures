@@ -1,6 +1,6 @@
 """Rhythm revision: original illustrations and stable eyes, new narration and edit.
 
-Offline rebuild: python outputs/the-empty-chair-source/recut.py [--preview]
+Offline rebuild: python legacy/bespoke/the-empty-chair-source/recut.py [--preview]
 """
 from array import array
 import argparse

@@ -14,7 +14,7 @@
       "message": "“We should catch up.”\nThree months ago.",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/0.mp3"
+      "audio": "../the-message-source/audio/0.mp3"
     },
     {
       "narration": "He typed, ‘Want to grab a coffee?’ Then deleted it. They were probably busy.",
@@ -26,7 +26,7 @@
       "message": "They’re probably busy.",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/1.mp3"
+      "audio": "../the-message-source/audio/1.mp3"
     },
     {
       "narration": "A week later, his friend messaged. ‘It's been a rough week.’",
@@ -38,7 +38,7 @@
       "message": "It’s been a rough week.",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/2.mp3"
+      "audio": "../the-message-source/audio/2.mp3"
     },
     {
       "narration": "This time, Sam didn't overthink it. ‘Coffee tomorrow? My treat.’",
@@ -50,7 +50,7 @@
       "message": "Coffee tomorrow?\nMy treat.",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/3.mp3"
+      "audio": "../the-message-source/audio/3.mp3"
     },
     {
       "narration": "The reply came straight back. ‘I'd really like that.’",
@@ -62,7 +62,7 @@
       "message": "I’d really like that.",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/4.mp3"
+      "audio": "../the-message-source/audio/4.mp3"
     },
     {
       "narration": "Two coffees. One long conversation.",
@@ -74,7 +74,7 @@
       "message": "",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/5.mp3"
+      "audio": "../the-message-source/audio/5.mp3"
     },
     {
       "narration": "Turns out, his friend had been waiting to reach out, too.",
@@ -86,7 +86,7 @@
       "message": "",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": "../outputs/the-message-source/audio/6.mp3"
+      "audio": "../the-message-source/audio/6.mp3"
     }
   ],
   "character_style": "expressive"
