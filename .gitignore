@@ -1,7 +1,6 @@
 .DS_Store
 work/
 outputs/*
-!outputs/the-message.mp4
 !outputs/the-message-script.txt
 !outputs/the-message-source/
 
@@ -18,22 +17,11 @@ renders/
 studio-data/
 
 __pycache__/
-!outputs/the-first-page.mp4
-!outputs/the-first-page.storyboard.jpg
 
-!outputs/the-first-page-redesigned.mp4
-!outputs/the-first-page-redesigned.storyboard.jpg
-!outputs/character-redesign.png
-!outputs/character-pose-sheet.png
 !outputs/character-reference-study.md
-!outputs/the-first-page-cozy.mp4
-!outputs/the-first-page-cozy.storyboard.jpg
 !outputs/character-focus-reference.png
 !outputs/character-focus-production/
 !outputs/character-motion-source/
-!outputs/character-acting-test.mp4
-!outputs/character-acting-storyboard.jpg
-!outputs/character-acting-test.json
 !outputs/the-first-page-illustrated.mp4
 !outputs/the-first-page-illustrated.storyboard.jpg
 !outputs/the-first-page-illustrated.timeline.json
@@ -43,73 +31,18 @@ __pycache__/
 !outputs/two-minutes.storyboard.jpg
 !outputs/two-minutes.timeline.json
 !outputs/the-empty-chair-source/
-!outputs/the-empty-chair.mp4
-!outputs/the-empty-chair.storyboard.jpg
-!outputs/the-empty-chair.timeline.json
-!outputs/the-empty-chair.srt
-!outputs/the-empty-chair.validation.json
-!outputs/the-empty-chair-fixed.mp4
-!outputs/the-empty-chair-fixed.srt
-!outputs/the-empty-chair-fixed.timeline.json
-!outputs/the-empty-chair-fixed.validation.json
-!outputs/studio-preview.jpg
-!outputs/studio-validation.json
-!outputs/the-empty-chair-recut.mp4
-!outputs/the-empty-chair-recut.srt
-!outputs/the-empty-chair-recut.storyboard.jpg
-!outputs/the-empty-chair-recut.timeline.json
-!outputs/the-empty-chair-recut.validation.json
-!outputs/studio-flow-preview.jpg
 outputs/the-empty-chair-source/recut*.wav
 
-!outputs/the-empty-chair-motion.mp4
-!outputs/the-empty-chair-motion.srt
-!outputs/the-empty-chair-motion.storyboard.jpg
-!outputs/the-empty-chair-motion.timeline.json
 outputs/the-empty-chair-source/qa-*
 
-!outputs/the-empty-chair-dialogue.mp4
-!outputs/the-empty-chair-dialogue.srt
-!outputs/the-empty-chair-dialogue.storyboard.jpg
-!outputs/the-empty-chair-dialogue.timeline.json
 
-!outputs/the-empty-chair-acting.mp4
-!outputs/the-empty-chair-acting.srt
-!outputs/the-empty-chair-acting.storyboard.jpg
-!outputs/the-empty-chair-acting.timeline.json
-!outputs/the-empty-chair-acting-preview.mp4
 
-!outputs/the-empty-chair-subtle.mp4
-!outputs/the-empty-chair-subtle.srt
-!outputs/the-empty-chair-subtle.storyboard.jpg
-!outputs/the-empty-chair-subtle.timeline.json
-!outputs/the-empty-chair-subtle-preview.mp4
 
-!outputs/the-empty-chair-drawing.mp4
-!outputs/the-empty-chair-drawing.srt
-!outputs/the-empty-chair-drawing.storyboard.jpg
-!outputs/the-empty-chair-drawing.timeline.json
-!outputs/the-empty-chair-drawing-preview.mp4
 
-!outputs/the-empty-chair-continuity.mp4
-!outputs/the-empty-chair-continuity.srt
-!outputs/the-empty-chair-continuity.storyboard.jpg
-!outputs/the-empty-chair-continuity.timeline.json
 
 !outputs/the-empty-chair-story-order.mp4
 !outputs/the-empty-chair-story-order.srt
 !outputs/the-empty-chair-story-order.storyboard.jpg
 !outputs/the-empty-chair-story-order.timeline.json
-!outputs/the-empty-chair-story-order-preview.mp4
 
-!outputs/reusable-kindness.mp4
-!outputs/reusable-kindness.srt
-!outputs/reusable-first-hello.mp4
-!outputs/reusable-first-hello.srt
-!outputs/reusable-studio-preview.jpg
 
-!outputs/reusable-first-hello-cafe.mp4
-!outputs/reusable-first-hello-cafe.srt
-!outputs/reusable-kindness-cafe.mp4
-!outputs/reusable-kindness-cafe.srt
-!outputs/reusable-cafe-preview.jpg

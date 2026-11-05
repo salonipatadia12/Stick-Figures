@@ -51,8 +51,8 @@ It adds a white filled torso, illustrated study/café/garden settings, purposefu
 wide/close/overhead cuts, and notebook content that persists across scenes.
 Writing hands and pencils share an anchor; feet stay planted.
 
-[Watch the updated 28-second reel](outputs/the-first-page-cozy.mp4) ·
-[Storyboard](outputs/the-first-page-cozy.storyboard.jpg) ·
+[Watch the updated 28-second reel](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-first-page-cozy.mp4) ·
+[Storyboard](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-first-page-cozy.storyboard.jpg) ·
 [Integration and MIT attribution](references/stickman-video-director/UPSTREAM.md)
 
 ```sh
@@ -78,7 +78,7 @@ other objects and actions need additional drawing components.
 
 New renders use `"character_style": "expressive"` by default: simple oval eyes, bold rounded limbs, small hands and feet, and a teal scarf. The previous character is available with `"character_style": "classic"`. Existing exported videos are preserved.
 
-[Before / after](outputs/character-redesign.png) · [Pose sheet](outputs/character-pose-sheet.png) · [Narrated redesigned reel](outputs/the-first-page-redesigned.mp4) · [Reference study and engagement counts](outputs/character-reference-study.md)
+[Before / after](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-redesign.png) · [Pose sheet](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-pose-sheet.png) · [Narrated redesigned reel](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-first-page-redesigned.mp4) · [Reference study and engagement counts](outputs/character-reference-study.md)
 
 ```sh
 python reel.py render examples/the-first-page.json --output renders/redesigned.mp4
@@ -162,7 +162,7 @@ python reel.py render examples/the-first-page.json \
   --output renders/the-first-page.mp4
 ```
 
-[Watch The Message](outputs/the-message.mp4) · [Watch The First Page](outputs/the-first-page.mp4)
+[Watch The Message](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-message.mp4) · [Watch The First Page](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-first-page.mp4)
 
 ## Editing a story
 
@@ -250,7 +250,7 @@ character renderer described below; the original local outputs remain available 
 ## Local illustrated character acting study
 
 The approved shaded character is now animated locally in a
-[10.5-second narrated study](outputs/character-acting-test.mp4), with blinking,
+[10.5-second narrated study](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/character-acting-test.mp4), with blinking,
 a small head movement and breathing, a rigidly held pen, and a two-bone writing arm.
 The background stays still while the character carries the action.
 [Source, artwork, narration and rebuild instructions](outputs/character-motion-source/README.md)
@@ -283,13 +283,13 @@ verified highest-engagement trend.
 
 ## The Empty Chair — approved story
 
-[Watch the revised 40-second reel](outputs/the-empty-chair-recut.mp4): a café regular makes room
+[Watch the revised 40-second reel](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-empty-chair-recut.mp4): a café regular makes room
 for a stranger, waits for his return, and discovers he has tried drawing their table.
 The story was approved before production. It uses the selected illustrated character,
 distinct acting scenes, narration, captions and quiet original music.
 
 [Source and offline rebuild instructions](outputs/the-empty-chair-source/README.md) ·
-[Storyboard](outputs/the-empty-chair-recut.storyboard.jpg)
+[Storyboard](https://github.com/salonipatadia12/Stick-Figures/releases/download/archive-2026-11/the-empty-chair-recut.storyboard.jpg)
 
 The rhythm revision keeps the illustrations and approved story arc, with tighter
 narration, varied shot lengths, a quieter waiting sequence and a musical return.
