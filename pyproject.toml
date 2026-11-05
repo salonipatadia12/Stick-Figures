@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stick-figures"
+version = "0.2.0"
+description = "One-command narrated, captioned stick-figure Shorts driven by episode.json"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic==2.5.0",
+    "pydantic>=2.11,<3",
+    "python-dotenv>=1.2",
+    "Pillow>=13.0",
+    "edge-tts>=7.3",
+]
+
+[project.optional-dependencies]
+# The FastAPI studio (rig lane) keeps its own pins in requirements-studio.txt.
+studio = ["fastapi==0.159.1", "uvicorn==0.54.0", "openai==3.36.1"]
+
+[project.scripts]
+stick = "pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pipeline*"]

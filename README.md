@@ -1,3 +1,28 @@
+## pipeline-v2: a Short about any topic from one request (in progress)
+
+```sh
+python3 -m venv .venv && .venv/bin/python -m pip install -e .
+cp .env.example .env   # add ANTHROPIC_API_KEY (scripts), later OPENAI_API_KEY and ELEVENLABS_API_KEY
+.venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance" --dry-run
+.venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance"
+```
+
+Or ask Claude Code, in this repository, to "make a stick figure Short about …". The
+[`stick-short` skill](.claude/skills/stick-short/SKILL.md) runs the same commands and shows each
+approval gate in the chat.
+
+- Everything for one video lives in `episodes/<slug>/episode.json`
+  ([schema](schemas/episode.schema.json)).
+- Every paid call goes through a per-video cost ledger, capped at `--budget` (default $2.00), with
+  no automatic paid retries.
+- The default look is `cozy`, taken from The Empty Chair.
+- **Phase 1** (the researched script plus the approval gate) is built. Images, voice, captions
+  and compositing follow in Phases 2–4.
+
+See [docs/PLAN.md](docs/PLAN.md) and [docs/AUDIT.md](docs/AUDIT.md). Iteration renders that
+used to live in `outputs/` are in the Release
+[`archive-2026-11`](https://github.com/salonipatadia12/Stick-Figures/releases/tag/archive-2026-11).
+
 ## Create a reel from a prompt and ending
 
 Enter a prompt, choose the ending, and click **Create my reel**. Automatic mode

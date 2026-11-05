@@ -1,7 +1,11 @@
 # Stick-Figures audit — Phase 0 of pipeline-v2
 
 Audited 2026-11-04 on branch `pipeline-v2`, created from `origin/main` @ `39b9fe1`.
-Nothing has been moved or deleted. Sections 3 and 6 are proposals awaiting approval.
+
+**Updated 2026-11-04 after review.**
+- Your decisions are recorded in Section 7.
+- The cleanup in Section 3 is done: the files are in the Release `archive-2026-11`.
+- Remotion is dropped. The compositor is Python (Pillow + FFmpeg); see Section 4.
 
 ## 0. Repository state (read this first)
 
@@ -13,7 +17,7 @@ Nothing has been moved or deleted. Sections 3 and 6 are proposals awaiting appro
 
 `origin/main` went a different way: it kept `builder/` under `outputs/the-message-source/` and
 added `cozy.py`, `character.py` and `legacy_visuals.py` there. The local work-in-progress therefore
-conflicts with the current code and needs a decision (Section 7, Q2).
+conflicts with the current code. It is now saved, unmerged, on branch `local-wip-builder` (commit `e7414c6`).
 
 ## 1. The engines
 
@@ -69,7 +73,7 @@ video MD5 matches the committed MP4, SSIM is 1.000 and `git status` stays clean.
 coordinates. This is the quality bar for v2, not a reusable engine.
 
 **Worth keeping for v2:**
-- The art direction: `character-focus-reference.png` becomes the `cozy` style reference.
+- The art direction: The Empty Chair defines the `cozy` style pack (decision 6).
 - The layering approach (clean plate plus character sprite), which `layers.py` will automate.
 - The editing rhythm. The Empty Chair recut cuts 21 shots across 40 s, about 1.9 s per shot,
   which already meets the v2 rule "never static > 2.5 s".
@@ -141,7 +145,13 @@ doesn't explain. v2 will have one `pyproject.toml`, with optional extras for eac
 
 The local `main` checkout (dirty, 20 commits behind) runs only its own 17 builder tests, which pass.
 
-## 3. Size and cleanup proposal (nothing moved yet)
+## 3. Size and cleanup (done: Option A, commit `678e8a3`)
+
+The 81 files are attached to the Release
+[`archive-2026-11`](https://github.com/salonipatadia12/Stick-Figures/releases/tag/archive-2026-11),
+and all 82 uploads (the files plus `MANIFEST.md`) were verified against GitHub's SHA-256 digests.
+They were then removed from the `pipeline-v2` tree. After the removal, all 76 tests pass and the
+three references still rebuild byte-identically.
 
 ### 3.1 The measurement that changes the plan
 
@@ -181,8 +191,8 @@ hook. This list comes from that trace, not from guesswork.
   - `two-minutes` `.mp4`, `.storyboard.jpg`, `.timeline.json`
 
   Together these are 9.1 MB.
-- `character-focus-reference.png` (1.6 MB): used by the studio and the Dockerfile, and becomes
-  the `cozy` style reference.
+- `character-focus-reference.png` (1.6 MB): used by the studio and the Dockerfile. It is **not**
+  a v2 style reference; the `cozy` pack is built from The Empty Chair only (Section 7).
 - `the-message-source/` (0.2 MB): builder code, plus the narration that `the-message.json` uses offline.
 - **Source folders:** all code, READMEs and prompt files, plus the media that the rebuilds and
   tests open:
@@ -209,7 +219,7 @@ The exact list, with each file's size and SHA-256, is in
 | Character studies | `character-acting-test.{mp4,json}`, `character-acting-storyboard.jpg`, `character-redesign.png`, `character-pose-sheet.png` |
 | Original reel | `the-message.mp4` (1.1 MB) |
 
-`the-message.mp4` is the only output of the `reel.py` lane. See Q4 in Section 7.
+`the-message.mp4` was the only output of the `reel.py` lane. It is archived (decision 4).
 
 **Unused heavy media inside `the-empty-chair-source/` (14 files, ≈ 16.9 MB):** `voice-final.wav`,
 `voice-paced.wav`, `music-and-foley.wav`, `narration.mp3`, `narration-recut.mp3`, `06-return.png`,
@@ -222,8 +232,8 @@ That edition's MP4 is archived in the same Release, so the pair stays together.
 `narration.mp3`, `.srt` and `.txt` (50 KB), left over from the archived 10.5 s acting test.
 They stay.
 
-The Release will contain a `MANIFEST.md` with each file's original path and SHA-256, so any
-file can be restored to where it was.
+The Release's `MANIFEST.md` gives each file's original path and SHA-256, so any file can be
+restored to where it was. Another way to restore one: `git checkout 39b9fe1 -- <path>`.
 
 ### 3.4 Stop the growth
 
@@ -234,40 +244,28 @@ yet they are tracked anyway.
 v2 ignores `episodes/*/cache/` and `episodes/*/out/` by default. Finished deliverables go to
 Releases, and only `episode.json` plus the approved style packs are committed.
 
-## 4. Compositor: Remotion vs FFmpeg/MoviePy
+## 4. Compositor: Python (Pillow + FFmpeg). Decided
 
-**Recommendation: use Remotion for the picture, and FFmpeg for audio mastering, muxing and QA.**
-This depends on the license question below.
+Remotion is dropped: nothing is installed and nothing depends on Node. Video assembly stays
+on what the repo already uses, driven by `episode.json`:
 
-Arguments for Remotion:
-- The motion-recipe library maps directly onto React components: `spring()`/`interpolate()`
-  for punch-ins, text slams, counters, draw-on underlines and icon pops.
-- CSS does text layout, which handles per-word caption highlights, safe areas and font fallback.
-- Remotion Studio previews any frame without a full render.
-- A typed `render_plan.json` passed as `inputProps` keeps it driven by `episode.json`.
-
-Today every one of those effects is hand-written easing math in Pillow, in three separate
-copies (builder, bespoke and studio).
-
-Arguments against Remotion, and how to contain them:
-- **A second toolchain** (Node plus headless Chromium). Node 24 is installed here. Python owns
-  the plan; Remotion only renders it.
-- **Audio.** Remotion can mix audio, but two-pass `loudnorm` to −14 LUFS with true peak ≤ −1 dB and
-  sidechain ducking are better done in FFmpeg. So Remotion renders the picture (or the picture plus
-  a draft mix), and FFmpeg builds the final audio and muxes it.
-- **Lock-in.** v2 keeps a renderer-neutral `render_plan.json` (layers, keyframes, word timings and
-  cues). If the license is unacceptable, a Pillow/FFmpeg renderer can consume the same plan. That
-  covers the same ground as MoviePy without MoviePy's speed or text limits.
-
-**License** (from the [LICENSE](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md)
-and [pricing](https://www.remotion.pro/license) pages, read 2026-11-04):
-- **Free** for individuals, non-profits and **for-profit companies with up to 3 employees**,
-  including commercial use.
-- Otherwise a Company License is required. "Creators" costs $25 per seat per month and covers
-  manual or local work. "**Automators**" costs **$0.01 per render with a $100/month minimum** and
-  covers batch or automated rendering and prompt-to-video products. Enterprise starts at $500/month.
-- A one-command `stick make` pipeline is the Automators use case, so for a company with more than
-  3 people the realistic cost is $100/month. **I need your headcount to say which applies** (Q1).
+- **One motion-recipe library.** `pipeline/motion.py` holds each recipe as a pure function of
+  time and word timings: push_in, pan, punch_in, parallax, breathe, pose_swap, enter/exit,
+  impact_shake, text_slam, number_counter, underline/arrow draw-on, icon_pop, checklist_tick and
+  split_compare. Each returns a layer transform or overlay. This replaces the three hand-written
+  copies of easing math in the builder, the bespoke scripts and the studio.
+- **Per-beat segments.** Each beat renders to its own intermediate clip, cached under that beat's
+  `beat_digest()`. The final picture is an FFmpeg concat of those clips. After editing one beat,
+  only that clip is re-rendered, which is the definition-of-done requirement.
+- **Text.** Captions and info graphics are drawn with Pillow at 2× and downsampled, using the
+  font bundled in `assets/fonts/`. That gives one-line captions with the current word highlighted.
+  Existing measured speed: the builder renders 29 s of 1080×1920 in 47 s.
+- **Audio in FFmpeg.** The voice, the SFX placed on word timings and an optional music bed are
+  mixed with `sidechaincompress` ducking. Then a two-pass `loudnorm` targets −14 LUFS with true
+  peak ≤ −1 dB. The final mux and decode check also run in FFmpeg.
+- **Driven by Claude Code.** The pipeline is packaged as a Claude Code skill
+  (`.claude/skills/stick-short/`). "Make a stick figure Short about X" runs the `stick` CLI, and
+  the approval gates appear in the chat.
 
 ## 5. External facts and risks that shape Phases 1–5
 
@@ -282,26 +280,30 @@ and [pricing](https://www.remotion.pro/license) pages, read 2026-11-04):
 - **Portrait size.** 1080 isn't a multiple of 16, and the exact sizes gpt-image-2 accepts aren't
   documented on its model page. The plan is to generate at the nearest accepted portrait size and
   scale or crop to 1080×1920. This will be verified in Phase 2.
-- **Script cost.** Claude Sonnet 5.5 is recorded in the repo at $2 / $10 per M tokens (verified
-  2026-10-25). A researched script, including a few web searches, should cost about $0.05–0.15.
-- **Voice licensing.** edge-tts is an unofficial client for Microsoft Edge's read-aloud service.
-  It has no SLA, and it is unclear whether automated commercial use is allowed. The same voices
-  (Andrew, Ava, Sonia) are sold as licensed Azure AI Speech neural voices. Proposal: keep edge-tts
-  as the free default for development, and add a licensed provider before monetized publishing (Q5).
-- **Word timing.** edge-tts 7.3.1 supports `boundary="WordBoundary"`, so the default voice
-  provides exact word timings itself. faster-whisper stays as the aligner for ElevenLabs,
-  uploaded audio and verification. Beat durations still come from the real audio.
-- **Cut-outs on line art.** rembg is trained on photo-like subjects, and thin black strokes on
-  near-white paper are a hard case for it. Phase 2 will test rembg first, with two fallbacks:
-  threshold or flood-fill masks (lineart is two-tone), or generating the character on a flat key
-  colour.
+- **Script cost.** Claude Sonnet 5.5 costs $2 per M input tokens, $10 per M output and $0.10
+  per M cache reads (the pricing page, read 2026-11-04; the repo had recorded $0.20 for cache
+  reads). Web search costs $10 per 1,000 searches, plus result tokens billed as input. The Phase 1
+  script stage reserves at most about $0.45: research up to $0.28 (4 searches, a 100k-token
+  result bound) and the script up to $0.17 (16k output tokens). The ledger records actual usage.
+- **Voice (decided).** ElevenLabs is the narrator for finished videos; its key goes in `.env`.
+  edge-tts remains only as the free voice for drafts and previews. It is an unofficial client of
+  Microsoft Edge's read-aloud service, with no SLA and unclear terms for commercial use.
+- **Word timing.** ElevenLabs' timestamped speech endpoint returns character-level alignment, and
+  edge-tts 7.3.1 supports `boundary="WordBoundary"`, so both providers give word timings
+  directly. faster-whisper is the fallback aligner and the verification pass. Beat durations
+  always come from the real audio. The exact ElevenLabs endpoint will be verified in Phase 3.
+- **Cut-outs.** The `cozy` characters are white figures with dark outlines on painted
+  backgrounds, so rembg should separate them reasonably well. Phase 2 tests this on The Empty
+  Chair frames first. If edges are poor, the fallback is generating the character on a flat key
+  colour. Lineart (thin strokes on paper) is deferred with that style.
 
-## 6. Proposed layout and how the lanes coexist
+## 6. Layout and how the lanes coexist
 
 ```
-pipeline/   cli.py script.py images.py layers.py voice.py align.py qa.py cost.py models.py   ← new primary lane
-styles/     lineart/  cozy/ (character_reference.png ← outputs/character-focus-reference.png)
-compose/    Remotion project (reads render_plan.json)
+pipeline/   cli.py models.py cost.py script.py store.py styles.py review.py      ← Phase 1 (done)
+            images.py layers.py voice.py align.py motion.py compose.py qa.py    ← Phases 2-5
+styles/     cozy/ (default; built from The Empty Chair only)   lineart/ later
+.claude/skills/stick-short/   Claude Code skill that drives the CLI
 assets/     sfx/ (CC0, with LICENSES.md)  fonts/
 episodes/   <slug>/episode.json  cache/ (ignored)  out/ (ignored)
 studio/     unchanged location: the "rig" lane, and in Phase 6 the episode.json editor
@@ -320,32 +322,35 @@ pyproject.toml   `stick` console script; extras: [pipeline] [studio] [legacy]
 13 passing tests. It is also where the Phase 6 editor will live. Moving it would change the
 Dockerfile, tests and imports for no benefit.
 
-What does change: its three paths into `outputs/` (the demo MP4 and SRT, the demo PNGs and
-the character reference) point at `legacy/bespoke/…` and `styles/cozy/…`.
+What will change: its three paths into `outputs/` (the demo MP4 and SRT, the demo PNGs and
+the character reference) will point at `legacy/bespoke/…`.
 
 **Why `reel.py` moves to `legacy/`.** Its JSON schema and its 4 layouts are superseded by
 `episode.json`. It stays runnable as `python legacy/reel-builder/reel.py`, and its 18 tests keep passing.
 
 **Order of operations.** Each step is a separate commit, with tests green after each:
 
-1. Create the Release, then remove the archived files from the tree.
-2. Move files with `git mv` into `legacy/` and `styles/`, then update the Dockerfile,
-   `studio/app.py`, 4 test files, 2 scripts, `examples/the-message.json` and the README.
-3. Add `pyproject.toml` and the new `.gitignore`.
+1. Create the Release, then remove the archived files from the tree. **Done** (`678e8a3`).
+2. Add `pyproject.toml` and the new `.gitignore` entries. **Done in Phase 1.**
+3. Move files with `git mv` into `legacy/`, then update the Dockerfile, `studio/app.py`, 4 test
+   files, 2 scripts, `examples/the-message.json` and the README. **Not done yet.** Nothing in
+   v2 depends on it, so it waits for an explicit go-ahead.
 
-## 7. Decisions needed before Phase 1
+## 7. Decisions (2026-11-04)
 
-1. **Remotion license:** how many employees does the company have? 3 or fewer means it's free;
-   otherwise Automators at $100/month, or I build the Pillow/FFmpeg renderer for the same plan.
-2. **Local uncommitted work on `main`** (the builder move and `the-ask.json`): keep it on a branch
-   such as `wip/local-builder-move` for reference, port `the-ask.json` into legacy, or drop it?
-   Until you decide, it stays untouched.
-3. **Cleanup:** do Option A (Release + remove), and is Option C (history rewrite plus
-   force-push) ever acceptable?
-4. Archive `the-message.mp4` (1.1 MB, the only output of the reel.py lane), or keep it as that
-   lane's reference?
-5. **Voice for published videos:** edge-tts is fine for development. Do you want a licensed TTS
-   (Azure Speech or ElevenLabs) wired in before the Phase 5 sample?
+1. **Remotion: dropped.** Video assembly is Python (Pillow + FFmpeg), driven by `episode.json`
+   and packaged as a Claude Code skill (Section 4).
+2. **Local uncommitted work:** saved to branch `local-wip-builder` (`e7414c6`). It is not merged.
+3. **Cleanup:** Option A, done. No history rewrite and no force-push; the `.git` size is fine as it is.
+4. **`the-message.mp4`:** archived in the Release.
+5. **Voice:** ElevenLabs is set up before the Phase 5 sample, with its key in `.env`. edge-tts is
+   kept only as the free fallback for drafts and previews.
+6. **Style:** The Empty Chair (`the-empty-chair-story-order.mp4` and its storyboard) is the only
+   approved video and the only style reference. It defines the characters, the painted café
+   backgrounds, the warm light and the pacing. The First Page, Two Minutes, the studio rig and the
+   `reel.py` renders are not style references.
+
+   It becomes the default `cozy` style pack and is used for the Phase 5 sample. `lineart` comes later.
 
 ## Appendix: how this was verified
 

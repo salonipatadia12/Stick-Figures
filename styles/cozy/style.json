@@ -1,0 +1,27 @@
+{
+  "name": "cozy",
+  "title": "Cozy café — The Empty Chair look",
+  "default": true,
+  "reference": {
+    "note": "The Empty Chair is the only approved video and the only style reference for this pack.",
+    "video": "outputs/the-empty-chair-story-order.mp4",
+    "storyboard": "outputs/the-empty-chair-story-order.storyboard.jpg",
+    "frames": [
+      "outputs/the-empty-chair-source/assets/01-alone.png",
+      "outputs/the-empty-chair-source/assets/03-together.png",
+      "outputs/the-empty-chair-source/assets/06-held-doodle.png",
+      "outputs/the-empty-chair-source/assets/07-books-final.png"
+    ]
+  },
+  "cast": [
+    {"id": "lead", "description": "the main character: large white round head, no accessories"},
+    {"id": "friend", "description": "a second character with the same body, wearing a teal scarf"}
+  ],
+  "pacing": {
+    "words_per_second": 2.7,
+    "mean_shot_seconds": 1.9,
+    "median_shot_seconds": 1.7,
+    "measured_from": "outputs/the-empty-chair-story-order.timeline.json (21 shots, 40.0 s, 88 words in 32.2 s of speech)"
+  },
+  "script_brief": "script_brief.md"
+}

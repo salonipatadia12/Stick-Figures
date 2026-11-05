@@ -1,0 +1,413 @@
+{
+  "$defs": {
+    "Beat": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^b\\d{2}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "hook",
+            "setup",
+            "tension",
+            "reveal",
+            "payoff",
+            "ending"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "narration": {
+          "title": "Narration",
+          "type": "string"
+        },
+        "on_screen_text": {
+          "default": "",
+          "title": "On Screen Text",
+          "type": "string"
+        },
+        "visual_intent": {
+          "title": "Visual Intent",
+          "type": "string"
+        },
+        "shot": {
+          "$ref": "#/$defs/Shot"
+        },
+        "sfx": {
+          "items": {
+            "$ref": "#/$defs/SfxCue"
+          },
+          "title": "Sfx",
+          "type": "array"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "illustrative_numbers": {
+          "default": false,
+          "title": "Illustrative Numbers",
+          "type": "boolean"
+        },
+        "duration": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duration"
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "narration",
+        "visual_intent",
+        "shot"
+      ],
+      "title": "Beat",
+      "type": "object"
+    },
+    "Layer": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "background",
+            "character",
+            "prop",
+            "variant"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "file": {
+          "title": "File",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "file"
+      ],
+      "title": "Layer",
+      "type": "object"
+    },
+    "Motion": {
+      "additionalProperties": false,
+      "properties": {
+        "recipe": {
+          "enum": [
+            "push_in",
+            "pan_left",
+            "pan_right",
+            "punch_in",
+            "parallax",
+            "breathe",
+            "pose_swap",
+            "enter_left",
+            "enter_right",
+            "exit_left",
+            "exit_right",
+            "impact_shake",
+            "text_slam",
+            "number_counter",
+            "underline_draw",
+            "arrow_draw",
+            "icon_pop",
+            "checklist_tick",
+            "split_compare"
+          ],
+          "title": "Recipe",
+          "type": "string"
+        },
+        "anchor": {
+          "description": "Exact word or short phrase from THIS beat's narration where the change happens. Required for punch_in, pose_swap, impact_shake and every info recipe; empty string for continuous moves (push_in, pan, parallax, breathe).",
+          "title": "Anchor",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Recipe data or empty string. number_counter: \"0 -> 31\"; checklist_tick: items separated by \" | \"; icon_pop: one concrete object; split_compare: \"left label | right label\".",
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recipe",
+        "anchor",
+        "detail"
+      ],
+      "title": "Motion",
+      "type": "object"
+    },
+    "SfxCue": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "pop",
+            "whoosh",
+            "ding",
+            "coin",
+            "thud",
+            "paper",
+            "typing"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "anchor": {
+          "description": "Exact word from this beat's narration where the sound lands.",
+          "title": "Anchor",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "anchor"
+      ],
+      "title": "SfxCue",
+      "type": "object"
+    },
+    "Shot": {
+      "additionalProperties": false,
+      "properties": {
+        "framing": {
+          "enum": [
+            "wide",
+            "medium",
+            "close",
+            "insert",
+            "top_down"
+          ],
+          "title": "Framing",
+          "type": "string"
+        },
+        "cast": {
+          "description": "Style cast ids visible in the frame; empty for object-only inserts.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Cast",
+          "type": "array"
+        },
+        "image_prompt": {
+          "description": "One painted frame: setting, who is where, pose, expression, props, lighting. Concrete and visual. No text, numbers or letters in the art. Do not describe the art style; it is appended separately.",
+          "title": "Image Prompt",
+          "type": "string"
+        },
+        "pose_variants": {
+          "description": "0-2 alternate poses for the SAME frame (same camera, setting, props; only the character changes), used by pose_swap.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Pose Variants",
+          "type": "array"
+        },
+        "motion": {
+          "description": "1-2 motion recipes.",
+          "items": {
+            "$ref": "#/$defs/Motion"
+          },
+          "title": "Motion",
+          "type": "array"
+        },
+        "transition": {
+          "description": "cut unless a whip or match cut is motivated by the story.",
+          "enum": [
+            "cut",
+            "whip",
+            "match_cut"
+          ],
+          "title": "Transition",
+          "type": "string"
+        },
+        "layers": {
+          "items": {
+            "$ref": "#/$defs/Layer"
+          },
+          "title": "Layers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "framing",
+        "cast",
+        "image_prompt",
+        "pose_variants",
+        "motion",
+        "transition"
+      ],
+      "title": "Shot",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^s\\d+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "url": {
+          "pattern": "^https?://",
+          "title": "Url",
+          "type": "string"
+        },
+        "title": {
+          "default": "",
+          "title": "Title",
+          "type": "string"
+        },
+        "quote": {
+          "default": "",
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "claim",
+        "url"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Voice": {
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "default": "elevenlabs",
+          "enum": [
+            "elevenlabs",
+            "edge"
+          ],
+          "title": "Provider",
+          "type": "string"
+        },
+        "voice_id": {
+          "default": "",
+          "title": "Voice Id",
+          "type": "string"
+        },
+        "draft_voice": {
+          "default": "en-US-AndrewNeural",
+          "title": "Draft Voice",
+          "type": "string"
+        }
+      },
+      "title": "Voice",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "slug": {
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+      "title": "Slug",
+      "type": "string"
+    },
+    "topic": {
+      "minLength": 3,
+      "title": "Topic",
+      "type": "string"
+    },
+    "niche": {
+      "default": "",
+      "title": "Niche",
+      "type": "string"
+    },
+    "audience": {
+      "default": "",
+      "title": "Audience",
+      "type": "string"
+    },
+    "style": {
+      "default": "cozy",
+      "title": "Style",
+      "type": "string"
+    },
+    "aspect": {
+      "default": "9:16",
+      "enum": [
+        "9:16",
+        "1:1",
+        "16:9"
+      ],
+      "title": "Aspect",
+      "type": "string"
+    },
+    "target_length": {
+      "default": 45,
+      "maximum": 180,
+      "minimum": 15,
+      "title": "Target Length",
+      "type": "integer"
+    },
+    "voice": {
+      "$ref": "#/$defs/Voice"
+    },
+    "title": {
+      "default": "",
+      "title": "Title",
+      "type": "string"
+    },
+    "hook_promise": {
+      "default": "",
+      "title": "Hook Promise",
+      "type": "string"
+    },
+    "beats": {
+      "items": {
+        "$ref": "#/$defs/Beat"
+      },
+      "title": "Beats",
+      "type": "array"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "approvals": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Approvals",
+      "type": "object"
+    },
+    "meta": {
+      "additionalProperties": true,
+      "title": "Meta",
+      "type": "object"
+    }
+  },
+  "required": [
+    "slug",
+    "topic"
+  ],
+  "title": "Stick-Figures episode",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

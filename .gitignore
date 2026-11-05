@@ -46,3 +46,8 @@ outputs/the-empty-chair-source/qa-*
 !outputs/the-empty-chair-story-order.timeline.json
 
 
+
+# pipeline-v2 episodes: commit episode.json and ledger.json; never caches or renders
+episodes/*/cache/
+episodes/*/out/
+*.egg-info/
