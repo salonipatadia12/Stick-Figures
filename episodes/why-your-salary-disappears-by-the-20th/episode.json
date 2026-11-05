@@ -8,9 +8,8 @@
   "aspect": "9:16",
   "target_length": 45,
   "voice": {
-    "provider": "elevenlabs",
-    "voice_id": "",
-    "draft_voice": "en-US-AndrewNeural"
+    "provider": "kokoro",
+    "voice_id": ""
   },
   "title": "Why Your Paycheck Is Gone a Week Later",
   "hook_promise": "Show where a paycheck really goes in the first week, and the simple payday split that makes it last till the next one.",
@@ -203,7 +202,7 @@
     {
       "id": "b06",
       "role": "reveal",
-      "narration": "Here's the catch. You never see the total, because it's spread across the whole month.",
+      "narration": "Here's the catch. You never see the total, because it's spread across every day until the next payday.",
       "on_screen_text": "",
       "visual_intent": "The lead and friend discover a receipt stretching across the café floor and out the door, and the lead is startled.",
       "shot": {
@@ -364,7 +363,9 @@
     }
   ],
   "sources": [],
-  "approvals": {},
+  "approvals": {
+    "script": "39e8949ed08fd337be2aaa8d0765e2127e08eb52d487203409326b511d796963"
+  },
   "meta": {
     "script": {
       "model": "claude-sonnet-5-5",
@@ -383,6 +384,22 @@
           "b09"
         ],
         "note": "works for any US pay schedule: a week later, $1,500 every other Friday, two weekly jars, last till the next one"
+      },
+      {
+        "at": "2026-11-05T00:40:24",
+        "by": "user request",
+        "beats": [
+          "b06"
+        ],
+        "note": "spread across every day until the next payday"
+      }
+    ],
+    "approval_log": [
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-05T00:40:24",
+        "digest": "39e8949ed08f"
       }
     ]
   }
