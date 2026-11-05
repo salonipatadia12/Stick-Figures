@@ -140,6 +140,32 @@ class ScriptEngine(unittest.TestCase):
         self.assertEqual(len(facts), 2)
         self.assertNotIn('uncited', ' '.join(f.claim for f in facts))
 
+    def test_research_uses_direct_search_so_answers_carry_url_citations(self):
+        client = FakeClient([research_response(), script_response()])
+        self.run_generate(client)
+        tool = client.messages.created[0]['tools'][0]
+        self.assertEqual(tool['allowed_callers'], ['direct'])
+        raw = list((self.base / 'cache').glob('research-raw-*.json'))
+        self.assertEqual(len(raw), 1)
+        self.assertIn('Household spending', raw[0].read_text())
+
+    def test_research_without_cited_facts_stops_before_the_script_call(self):
+        client = FakeClient([research_response(facts=[]), script_response()])
+        with self.assertRaises(script.ScriptError) as ctx:
+            self.run_generate(client)
+        self.assertIn('no cited facts', str(ctx.exception))
+        self.assertEqual(len(client.messages.created), 1)  # the script call was never sent
+        self.assertEqual(list((self.base / 'cache').glob('research-[0-9a-f]*.json')), [])  # empty result not cached
+        self.assertEqual(len(list((self.base / 'cache').glob('research-raw-*.json'))), 1)
+
+    def test_search_result_citations_use_their_source_url(self):
+        from types import SimpleNamespace as NS
+        cite = NS(type='search_result_location', source='https://www.bls.gov/cex/', title='Consumer Expenditures',
+                  cited_text='...', search_result_index=0, start_block_index=0, end_block_index=0)
+        facts = script.facts_from_content([NS(type='text', text='Housing is the largest share of US household spending.',
+                                              citations=[cite])])
+        self.assertEqual(facts[0].url, 'https://www.bls.gov/cex/')
+
     def test_uncited_lead_in_is_dropped_from_a_fact(self):
         from types import SimpleNamespace as NS
         cite = NS(type='web_search_result_location', url='https://www.example.gov/x', title='X', cited_text='...')

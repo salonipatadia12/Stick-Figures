@@ -20,7 +20,7 @@ from . import config
 from .cost import token_cost, usage_dict
 from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest
 
-PROMPT_VERSION = 'script-v1'
+PROMPT_VERSION = 'script-v2'  # v2: direct web search so answers carry URL citations
 RESEARCH_MAX_SEARCHES = 4
 RESEARCH_MAX_TOKENS = 4096
 # Search results are billed as input tokens and can't be counted before the call. This is the
@@ -96,9 +96,14 @@ def make_client():
 def research_request(episode):
     user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}')
+    # allowed_callers=['direct']: results go straight into Claude's context, so the answer carries
+    # web_search_result_location citations with URLs. The default for this tool version routes
+    # searches through code-execution filtering; the 2026-11-04 run returned 4 searches and no
+    # usable citations that way.
     return dict(model=config.SCRIPT_MODEL, max_tokens=RESEARCH_MAX_TOKENS, system=RESEARCH_SYSTEM,
                 messages=[{'role': 'user', 'content': user}],
-                tools=[{'type': 'web_search_20260209', 'name': 'web_search', 'max_uses': RESEARCH_MAX_SEARCHES}],
+                tools=[{'type': 'web_search_20260209', 'name': 'web_search', 'max_uses': RESEARCH_MAX_SEARCHES,
+                        'allowed_callers': ['direct']}],
                 thinking={'type': 'between_tools'}, output_config={'effort': 'medium'})
 
 
@@ -205,8 +210,7 @@ def facts_from_content(content):
         if getattr(block, 'type', None) != 'text':
             lines.append([])
             continue
-        cites = [c for c in (getattr(block, 'citations', None) or [])
-                 if getattr(c, 'type', '') == 'web_search_result_location']
+        cites = [c for c in (getattr(block, 'citations', None) or []) if citation_url(c)]
         for i, part in enumerate(block.text.split('\n')):
             if i:
                 lines.append([])
@@ -223,14 +227,32 @@ def facts_from_content(content):
             continue
         seen.add(claim)
         c = kept[0][1][0]
-        facts.append(Source(id=f's{len(facts) + 1}', claim=claim, url=c.url, title=getattr(c, 'title', '') or '',
-                            quote=getattr(c, 'cited_text', '') or ''))
+        facts.append(Source(id=f's{len(facts) + 1}', claim=claim, url=citation_url(c),
+                            title=getattr(c, 'title', '') or '', quote=getattr(c, 'cited_text', '') or ''))
     return facts[:8]
+
+
+def citation_url(citation):
+    """URL behind a web-search citation (direct results use `url`, search_result blocks use `source`)."""
+    kind = getattr(citation, 'type', '')
+    url = getattr(citation, 'url', '') if kind == 'web_search_result_location' else (
+        getattr(citation, 'source', '') if kind == 'search_result_location' else '')
+    return url if isinstance(url, str) and url.startswith(('http://', 'https://')) else ''
+
+
+def _plain(obj):
+    if hasattr(obj, 'model_dump'):
+        return obj.model_dump(mode='json')
+    if hasattr(obj, '__dict__'):
+        return {k: _plain(v) for k, v in vars(obj).items()}
+    if isinstance(obj, (list, tuple)):
+        return [_plain(v) for v in obj]
+    return obj
 
 
 def research(episode, base, ledger, client, regenerate=False):
     request = research_request(episode)
-    key = digest([PROMPT_VERSION, 'research', request['model'], request['system'], request['messages'], RESEARCH_MAX_SEARCHES])
+    key = digest([PROMPT_VERSION, 'research', request['model'], request['system'], request['messages'], request['tools']])
     path = _cache(base, 'research', key)
     if path.exists() and not regenerate:
         return [Source.model_validate(f) for f in json.loads(path.read_text())['facts']], path, True
@@ -250,9 +272,15 @@ def research(episode, base, ledger, client, regenerate=False):
         n += usage_dict(response.usage)['input'] + usage_dict(response.usage)['output']
     else:
         raise ScriptError('Research did not finish within the allowed resumes.')
+    raw = _cache(base, 'research-raw', key)
+    _write_json(raw, dict(content=_plain(content), created=time.strftime('%Y-%m-%dT%H:%M:%S')))
     facts = facts_from_content(content)
+    if not facts:
+        # Don't cache an empty result and don't pay for a script that was asked to be researched.
+        raise ScriptError(f'Research returned no cited facts, so no script was written (raw response: {raw}). '
+                          'Re-run with --regenerate research, or use --no-research for a script without statistics.')
     _write_json(path, dict(facts=[f.model_dump() for f in facts], created=time.strftime('%Y-%m-%dT%H:%M:%S'),
-                           model=request['model'], prompt_version=PROMPT_VERSION))
+                           model=request['model'], prompt_version=PROMPT_VERSION, raw=raw.name))
     return facts, path, False
 
 
