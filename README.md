@@ -11,11 +11,11 @@ From the repository root:
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r outputs/the-message-source/requirements.txt
+pip install -r requirements.txt
 python reel.py --help
 ```
 
-On Windows, font paths currently need adapting in `outputs/the-message-source/builder/art.py`. macOS/Linux are the supported defaults.
+On Windows, font paths currently need adapting in `builder/art.py`. macOS/Linux are the supported defaults.
 
 ## Make a reel from a different prompt — no paid API needed
 
@@ -77,6 +77,13 @@ python reel.py render examples/the-first-page.json \
   --output renders/the-first-page.mp4
 ```
 
+Make **The Ask**, which uses every location and message style:
+
+```sh
+python reel.py render examples/the-ask.json \
+  --output renders/the-ask.mp4
+```
+
 [Watch The Message](outputs/the-message.mp4) · [Watch The First Page](outputs/the-first-page.mp4)
 
 ## Editing a story
@@ -98,7 +105,9 @@ python reel.py render examples/the-first-page.json \
       "message": "",
       "event_delay": 0.6,
       "duration": 3,
-      "audio": ""
+      "audio": "",
+      "message_style": "note",
+      "message_effect": "auto"
     }
   ]
 }
@@ -111,14 +120,18 @@ python reel.py render examples/the-first-page.json \
 | `cafe` | `idle`, `nod` | Two people with coffee |
 | `standing` | `idle`, `think`, `nod`, `celebrate` | One standing character |
 
-Expressions: `neutral`, `happy`, `tired`, `shock`.
+Expressions: `neutral`, `happy`, `tired`, `shock`, `nervous`, `sad`.
 
 - `narration` controls the spoken words. Audio duration determines scene length, with a short pause afterward.
 - `caption` is the short bottom caption; `overlay` is a top label; `message` is an optional message panel. Keep these concise. Validation fits text into fixed safe regions and rejects text that cannot fit.
-- `event_delay` is when a message panel appears, in seconds from scene start.
+- `message_style` sets how the message looks: `note` (plain card, the default), `incoming` (white chat bubble from someone else), `outgoing` (dark chat bubble the main character writes; a `send` scene adds "Delivered"), or `thought` (an unspoken worry).
+- `message_effect` sets how it appears: `auto` (incoming shows typing dots, outgoing types out, others pop in; an outgoing message in a `send` scene is already on screen), `none`, `pop`, `dots`, `type`, or `retype` (typed, deleted, typed again). A scene is lengthened when needed so the effect can finish.
+- `event_delay` is when the message effect starts, in seconds from scene start.
 - `duration` is used for scenes without narration/audio. It is not a target for speeding up narrated speech.
 - `audio` optionally points to your own local narration file, relative to the JSON file. When supplied, that file takes precedence over generated speech; changing narration text will not replace your chosen recording.
 - `voice` and `rate` configure generated narration. A different voice/rate requires new cached speech.
+
+Gestures repeat through the whole scene, and the camera slowly pushes in across consecutive scenes in the same location. Changing location fades briefly through white. Incoming messages play a soft two-note ping; sending plays a tick.
 
 ## Offline and motion previews
 

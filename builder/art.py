@@ -34,28 +34,40 @@ def head(im,x,y,expression,t,tilt=0,scale=1):
  # three wisps; keeps same identity throughout
  curve(d,[(145,47),(145,25),(163,17),(177,12)],5)
  curve(d,[(165,47),(178,23),(195,21),(207,23)],5)
- sleepy=expression in ('sleep','tired');surprise=expression in ('shock','alarm')
+ sleepy=expression in ('sleep','tired');surprise=expression in ('shock','alarm');worried=expression in ('nervous','sad')
  blink=(int(t*30)%117 in range(0,4))
  if sleepy:
   for ex in (115,225):
    curve(d,[(ex-23,150),(ex-5,166),(ex+12,167),(ex+27,146)],6)
    if expression=='tired':curve(d,[(ex-27,176),(ex-12,189),(ex+16,190),(ex+30,176)],3)
  else:
+  look=10 if expression in ('tempt','scroll','resolve') else 0
+  if expression=='nervous':look=round(9*math.sin(t*2.3))  # darting glance
+  drop=8 if expression=='sad' else 0
   for ex in (115,225):
    if blink:line(d,[(ex-23,151),(ex+25,151)],6)
    else:
     d.ellipse((ex-28,112,ex+31,183),fill=WHITE,outline=INK,width=5)
-    look=10 if expression in ('tempt','scroll','resolve') else 0
-    d.ellipse((ex-7+look,133,ex+9+look,160),fill=INK)
+    d.ellipse((ex-7+look,133+drop,ex+9+look,160+drop),fill=INK)
  if expression in ('happy','resolve','tempt'):
   curve(d,[(114,217),(147,248),(200,248),(228,211)],7)
   curve(d,[(79,100),(98,85),(118,85),(140,96)],5);curve(d,[(203,94),(228,84),(246,89),(255,103)],5)
  elif surprise:
   d.ellipse((145,218,197,274),fill=INK)
   curve(d,[(79,95),(105,71),(126,71),(143,89)],6);curve(d,[(201,90),(222,68),(246,74),(264,95)],6)
+ elif worried:
+  # brows rise toward the middle; never the angled-down glare of anger
+  curve(d,[(80,104),(98,98),(120,88),(140,80)],5);curve(d,[(201,80),(221,88),(243,98),(262,104)],5)
+  if expression=='sad':curve(d,[(132,240),(150,224),(184,224),(204,240)],6)
+  else:
+   curve(d,[(130,234),(146,224),(158,240),(170,231)],5);curve(d,[(170,231),(182,222),(194,238),(206,230)],5)
+   # sweat drop above the brow line, clear of where an ear would be
+   d.ellipse((262,62,282,84),fill=WHITE,outline=INK,width=3)
+   line(d,[(264,69),(272,47),(280,69)],3)
  else:
-  curve(d,[(134,237),(153,222),(181,222),(202,234)],6)
-  curve(d,[(78,100),(101,114),(123,111),(141,100)],5);curve(d,[(201,101),(226,112),(245,111),(265,98)],5)
+  # neutral: level brows and a near-flat mouth (an upward arch reads as a frown)
+  curve(d,[(136,232),(155,238),(181,238),(202,231)],6)
+  curve(d,[(80,96),(100,87),(121,87),(140,93)],5);curve(d,[(200,93),(219,87),(240,87),(262,96)],5)
  if expression=='tired':
   curve(d,[(62,197),(68,209),(74,209),(81,196)],3)
  face=face.resize((int(350*scale),int(350*scale)),Image.Resampling.LANCZOS).rotate(tilt,resample=Image.Resampling.BICUBIC,expand=True)
@@ -64,6 +76,10 @@ def head(im,x,y,expression,t,tilt=0,scale=1):
 def pulse(t,start,length):
  q=(t-start)/length
  return math.sin(math.pi*q)**2 if 0<q<1 else 0
+
+def loop(t,start,period,length):
+ # repeating pulse so a gesture keeps going for the whole scene, not just its first seconds
+ return pulse((t-start)%period,0,length) if t>=start else 0
 
 def phone(d,x,y):
  d.rounded_rectangle((x-45,y-85,x+45,y+85),15,fill=INK)

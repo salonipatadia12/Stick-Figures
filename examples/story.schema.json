@@ -53,7 +53,9 @@
               "neutral",
               "happy",
               "tired",
-              "shock"
+              "shock",
+              "nervous",
+              "sad"
             ]
           },
           "caption": {
@@ -73,6 +75,26 @@
           },
           "audio": {
             "type": "string"
+          },
+          "message_style": {
+            "type": "string",
+            "enum": [
+              "note",
+              "incoming",
+              "outgoing",
+              "thought"
+            ]
+          },
+          "message_effect": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "none",
+              "pop",
+              "dots",
+              "type",
+              "retype"
+            ]
           }
         },
         "required": [
@@ -85,7 +107,9 @@
           "message",
           "event_delay",
           "duration",
-          "audio"
+          "audio",
+          "message_style",
+          "message_effect"
         ]
       }
     }

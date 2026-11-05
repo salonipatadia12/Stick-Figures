@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'outputs/the-message-source'))
+sys.path.insert(0,str(ROOT))
 from builder.story import validate, load, authoring_prompt
 from builder.visuals import preflight, draw
 from builder.pipeline import cache_key, render
@@ -41,6 +41,26 @@ class StoryTests(unittest.TestCase):
         self.story['scenes'][0]['duration']=3
         self.story['rate']='90%'
         with self.assertRaises(ValueError):validate(self.story)
+    def test_message_fields_default_for_older_stories(self):
+        for scene in self.story['scenes']:
+            scene.pop('message_style',None);scene.pop('message_effect',None)
+        scene=validate(self.story)['scenes'][0]
+        self.assertEqual((scene['message_style'],scene['message_effect']),('note','auto'))
+    def test_bad_message_style_is_rejected(self):
+        self.story['scenes'][0]['message_style']='shout'
+        with self.assertRaisesRegex(ValueError,'message_style'):validate(self.story)
+    def test_every_style_and_effect_draws_through_the_scene(self):
+        from builder.story import MESSAGE_STYLES, MESSAGE_EFFECTS
+        for style in MESSAGE_STYLES:
+            for effect in MESSAGE_EFFECTS:
+                scene=validate(dict(scenes=[dict(message='Got ten minutes tomorrow?',action='type',
+                                                 message_style=style,message_effect=effect)]))['scenes'][0]
+                for t in (0,.5,1,1.6,2.5,4):self.assertEqual(draw(scene,t,1.03).size,(1080,1920))
+    def test_retype_scene_lasts_until_the_message_is_retyped(self):
+        from builder.visuals import message_done
+        scene=self.story['scenes'][0]
+        typed=message_done({**scene,'message_style':'outgoing','message_effect':'type'})
+        self.assertGreater(message_done({**scene,'message_style':'outgoing','message_effect':'retype'}),2*typed-scene['event_delay'])
     def test_voice_and_text_invalidate_cache(self):
         first=cache_key('hello','voice1','-3%')
         self.assertNotEqual(first,cache_key('goodbye','voice1','-3%'))

@@ -11,10 +11,12 @@ import wave
 import math
 from PIL import Image, ImageDraw
 from .story import load
-from .visuals import draw, preflight
+from .visuals import draw, preflight, message_done, arrival
 
 FPS=30
 SR=44100
+DISSOLVE=11  # frames of the fade through white when the location changes
+PUSH_IN=.05  # camera zoom gained across a run of scenes in one location
 
 
 def require_ffmpeg():
@@ -24,6 +26,13 @@ def require_ffmpeg():
 
 def run(args):
     subprocess.run(args, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+
+
+def chime(mix, at, freq, gain=.05, length=.18):
+    at=round(at*SR)
+    for k in range(round(length*SR)):
+        if at+k<len(mix):
+            t=k/SR;mix[at+k]+=gain*math.sin(2*math.pi*freq*t)*math.exp(-t*18)
 
 
 def cache_key(text, voice, rate):
@@ -77,7 +86,7 @@ def storyboard(story,output):
     cols=min(4,len(story['scenes']));rows=math.ceil(len(story['scenes'])/cols)
     sheet=Image.new('RGB',(cols*270,rows*520),'#EEEEEE')
     for i,scene in enumerate(story['scenes']):
-        t=max(1.8,scene['event_delay']+.3)
+        t=max(1.8,message_done(scene)+.3)
         img=draw(scene,t).resize((270,480))
         x=(i%cols)*270;y=(i//cols)*520
         sheet.paste(img,(x,y));ImageDraw.Draw(sheet).text((x+10,y+490),f"Scene {i+1}: {scene['background']}",fill='black')
@@ -104,9 +113,17 @@ def render(story_path,output,offline=False,silent=False,force=False):
             duration=seconds+.55
         else:
             duration=max(scene['duration'],len(scene['narration'].split())/2.7+.55) if silent else scene['duration']
-        if scene['message']:duration=max(duration,scene['event_delay']+1.0)
+        if scene['message']:duration=max(duration,message_done(scene)+1.0)
         n=round(duration*FPS)
         timeline.append(dict(scene=scene,start=cursor,end=cursor+n,wav=wav));cursor+=n
+    for i,entry in enumerate(timeline):
+        # consecutive scenes in one location share a continuous camera move
+        first=i
+        while first>0 and timeline[first-1]['scene']['background']==entry['scene']['background']:first-=1
+        last=i
+        while last+1<len(timeline) and timeline[last+1]['scene']['background']==entry['scene']['background']:last+=1
+        entry['run']=(timeline[first]['start'],timeline[last]['end'])
+        entry['dissolve']=i==first and i>0
     if cursor/FPS>180:raise ValueError('Keep a reel under 180 seconds; shorten the story')
     mix=array('f',[0])*round(cursor/FPS*SR)
     for entry in timeline:
@@ -118,10 +135,11 @@ def render(story_path,output,offline=False,silent=False,force=False):
             for k,v in enumerate(samples):
                 if at+k<len(mix):mix[at+k]+=v/32768*.92
         if not silent and entry['scene']['action']=='send':
-            at=round((entry['start']/FPS+entry['scene']['event_delay'])*SR)
-            for k in range(round(.18*SR)):
-                if at+k<len(mix):
-                    t=k/SR;mix[at+k]+=.05*math.sin(2*math.pi*1046*t)*math.exp(-t*18)
+            chime(mix,entry['start']/FPS+entry['scene']['event_delay'],1046)
+        if not silent and arrival(entry['scene']) is not None:
+            # incoming messages get a two-note ping, distinct from the send tick
+            at=entry['start']/FPS+arrival(entry['scene'])
+            chime(mix,at,880);chime(mix,at+.09,1175)
     audio_filter='loudnorm=I=-16:TP=-1.5:LRA=9' if any(abs(v)>1e-8 for v in mix) else 'anull'
     audio=cache/'mix.wav';pcm=array('h',(round(max(-.95,min(.95,v))*32767) for v in mix))
     if sys.byteorder!='little':pcm.byteswap()
@@ -136,10 +154,20 @@ def render(story_path,output,offline=False,silent=False,force=False):
         with log.open('w') as errors:
             p=subprocess.Popen(cmd,stdin=subprocess.PIPE,stderr=errors)
             try:
+                previous=None
                 for entry in timeline:
                     print(f'Rendering {entry["scene"]["background"]}: {entry["start"]/FPS:.1f}s',flush=True)
+                    run_start,run_end=entry['run']
                     for frame in range(entry['end']-entry['start']):
-                        p.stdin.write(draw(entry['scene'],frame/FPS).tobytes())
+                        zoom=1+PUSH_IN*(entry['start']+frame-run_start)/(run_end-run_start)
+                        image=draw(entry['scene'],frame/FPS,zoom)
+                        if entry['dissolve'] and frame<DISSOLVE:
+                            # dip through white: overlapping two line-art layouts reads as ghosting
+                            fade=(frame+1)/(DISSOLVE+1);paper=Image.new('RGB',image.size,'white')
+                            image=Image.blend(previous,paper,fade*2) if fade<.5 else Image.blend(paper,image,fade*2-1)
+                        p.stdin.write(image.tobytes())
+                        last_image=image
+                    previous=last_image
                 p.stdin.close()
                 if p.wait()!=0:raise ValueError(f'FFmpeg failed. See {log}')
             except BaseException as exc:

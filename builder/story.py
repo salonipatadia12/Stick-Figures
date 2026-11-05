@@ -5,7 +5,9 @@ from pathlib import Path
 
 BACKGROUNDS = ('home', 'desk', 'cafe', 'standing')
 ACTIONS = ('idle', 'read', 'type', 'send', 'think', 'nod', 'celebrate')
-EXPRESSIONS = ('neutral', 'happy', 'tired', 'shock')
+EXPRESSIONS = ('neutral', 'happy', 'tired', 'shock', 'nervous', 'sad')
+MESSAGE_STYLES = ('note', 'incoming', 'outgoing', 'thought')
+MESSAGE_EFFECTS = ('auto', 'none', 'pop', 'dots', 'type', 'retype')
 ACTIONS_BY_BACKGROUND = {
     'home': ACTIONS,
     'desk': ('idle', 'read', 'type', 'think', 'nod'),
@@ -14,7 +16,8 @@ ACTIONS_BY_BACKGROUND = {
 }
 SCENE_DEFAULTS = dict(background='home', action='idle', expression='neutral',
                       caption='', overlay='', message='', event_delay=0.6,
-                      duration=3.0, audio='')
+                      duration=3.0, audio='', message_style='note',
+                      message_effect='auto')
 SCENE_PROPERTIES = {
     'narration': {'type': 'string'},
     'background': {'type': 'string', 'enum': list(BACKGROUNDS)},
@@ -23,6 +26,8 @@ SCENE_PROPERTIES = {
     'caption': {'type': 'string'}, 'overlay': {'type': 'string'},
     'message': {'type': 'string'}, 'event_delay': {'type': 'number'},
     'duration': {'type': 'number'}, 'audio': {'type': 'string'},
+    'message_style': {'type': 'string', 'enum': list(MESSAGE_STYLES)},
+    'message_effect': {'type': 'string', 'enum': list(MESSAGE_EFFECTS)},
 }
 SCHEMA = {
     'type': 'object', 'additionalProperties': False,
@@ -74,7 +79,8 @@ def validate(raw):
         scene = {**SCENE_DEFAULTS, **item}
         for key, limit in [('narration', 500), ('caption', 100), ('message', 130), ('overlay', 55), ('audio', 500)]:
             scene[key] = clean_text(scene.get(key, ''), f'{prefix}.{key}', limit)
-        for key, values in [('background', BACKGROUNDS), ('action', ACTIONS), ('expression', EXPRESSIONS)]:
+        for key, values in [('background', BACKGROUNDS), ('action', ACTIONS), ('expression', EXPRESSIONS),
+                            ('message_style', MESSAGE_STYLES), ('message_effect', MESSAGE_EFFECTS)]:
             if scene[key] not in values:
                 raise ValueError(f'{prefix}.{key} must be one of {values}')
         if scene['action'] not in ACTIONS_BY_BACKGROUND[scene['background']]:
@@ -105,12 +111,17 @@ image-generation prompts: all characters use preset, fixed layouts. Match each
 visual to what the narrator says. Vary expressions and actions sparingly.
 Place is background: home (seated with phone), desk (seated with notebook), cafe
 (two people at coffee), standing (one person gesturing). Actions: idle/read/type/
-send/think/nod/celebrate. Expressions: neutral/happy/tired/shock.
+send/think/nod/celebrate. Expressions: neutral/happy/tired/shock/nervous/sad.
 Allowed combinations: home accepts all actions; desk accepts idle/read/type/think/nod;
 cafe accepts idle/nod; standing accepts idle/think/nod/celebrate.
 Caption: at most 70 characters. Message: at most 100 characters, or empty.
 Overlay: a short time/location label, or empty. event_delay: when an on-screen
-message appears, usually 0.5–1.5 seconds. duration: 3 for narrated scenes (audio
+message appears, usually 0.5–1.5 seconds. message_style: note (plain card),
+incoming (chat bubble from someone else), outgoing (chat bubble the protagonist
+writes), or thought (unspoken worry). message_effect: auto (incoming shows typing
+dots, outgoing types out, others pop in), none (already on screen, e.g. a message
+typed in the previous scene and now sent), pop, dots, type, or retype (typed,
+deleted, typed again). duration: 3 for narrated scenes (audio
 will determine their actual duration), 0.5–30 for scenes with no narration.
 Use audio="" for all generated scenes. Voice en-US-AndrewNeural, rate -3%.
 Schema:
