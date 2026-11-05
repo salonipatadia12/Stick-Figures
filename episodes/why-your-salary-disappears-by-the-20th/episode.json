@@ -12,21 +12,21 @@
     "voice_id": "",
     "draft_voice": "en-US-AndrewNeural"
   },
-  "title": "Why Your Salary Vanishes Before the 20th",
-  "hook_promise": "Show where a paycheck really goes before the 20th, and the simple payday split that makes it last.",
+  "title": "Why Your Paycheck Is Gone a Week Later",
+  "hook_promise": "Show where a paycheck really goes in the first week, and the simple payday split that makes it last till the next one.",
   "beats": [
     {
       "id": "b01",
       "role": "hook",
-      "narration": "Payday feels rich. So why are you broke by the 20th?",
-      "on_screen_text": "Broke by the 20th",
-      "visual_intent": "A lead figure at the café table turns an empty wallet inside out while a wall calendar with one circled day hangs behind.",
+      "narration": "Payday feels rich. So why are you broke a week later?",
+      "on_screen_text": "Broke a week later",
+      "visual_intent": "A lead figure at the café table turns an empty wallet inside out while a wall calendar behind shows one circled payday and the week of days after it crossed off.",
       "shot": {
         "framing": "medium",
         "cast": [
           "lead"
         ],
-        "image_prompt": "Sunlit café, wooden round table, lead sits slightly slumped holding a thin empty wallet open toward the viewer, small worried eyes, a wall calendar with a blank grid and one circled day on the wall behind, green coffee cup, ivy and tall windows with golden light and dappled shadows.",
+        "image_prompt": "Sunlit café, wooden round table, lead sits slightly slumped holding a thin empty wallet open toward the viewer, small worried eyes, a wall calendar with a blank grid on the wall behind, one day circled as payday and the seven days after it crossed off with X marks, green coffee cup, ivy and tall windows with golden light and dappled shadows.",
         "pose_variants": [],
         "motion": [
           {
@@ -36,7 +36,7 @@
           },
           {
             "recipe": "text_slam",
-            "anchor": "20th",
+            "anchor": "week",
             "detail": ""
           }
         ],
@@ -56,8 +56,8 @@
     {
       "id": "b02",
       "role": "setup",
-      "narration": "Say you take home 3,000 a month. It lands on the 1st and feels huge.",
-      "on_screen_text": "Example: 3,000",
+      "narration": "Say $1,500 lands every other Friday. It feels huge.",
+      "on_screen_text": "Example: $1,500",
       "visual_intent": "A glass jar on the table fills to the brim with golden coins while the lead looks on happily.",
       "shot": {
         "framing": "top_down",
@@ -69,8 +69,8 @@
         "motion": [
           {
             "recipe": "number_counter",
-            "anchor": "3,000",
-            "detail": "0 -> 3,000"
+            "anchor": "$1,500",
+            "detail": "$0 -> $1,500"
           },
           {
             "recipe": "punch_in",
@@ -286,19 +286,19 @@
       "role": "payoff",
       "narration": "So split it on payday. Bills in one jar, then one spending jar for each week. When a jar's empty, you see it early.",
       "on_screen_text": "Split it on payday",
-      "visual_intent": "The lead pours coins from the big jar into one bills jar and four small weekly jars lined up on the table.",
+      "visual_intent": "The lead pours coins from the big jar into one bills jar and two small weekly jars (one per week of the pay period) lined up on the table.",
       "shot": {
         "framing": "top_down",
         "cast": [
           "lead"
         ],
-        "image_prompt": "Top-down view of the wooden table, one larger jar and four small matching jars in a neat row, lead's mitten hands pouring coins from a big jar into them, each jar holding a tidy share, warm golden light.",
+        "image_prompt": "Top-down view of the wooden table, one larger jar and two small matching jars in a neat row, lead's mitten hands pouring coins from a big jar into them, each jar holding a tidy share, warm golden light.",
         "pose_variants": [],
         "motion": [
           {
             "recipe": "checklist_tick",
             "anchor": "Bills",
-            "detail": "Bills | Week one | Week two | Week three | Week four"
+            "detail": "Bills | Week one | Week two"
           },
           {
             "recipe": "underline_draw",
@@ -326,8 +326,8 @@
     {
       "id": "b09",
       "role": "ending",
-      "narration": "Payday feels rich. Make it last past the 20th.",
-      "on_screen_text": "Last past the 20th",
+      "narration": "Payday feels rich. Make it last till the next one.",
+      "on_screen_text": "Make it last",
       "visual_intent": "Lead and friend clink green coffee cups in the café, with the calendar's circled day behind them and the jars still stocked.",
       "shot": {
         "framing": "wide",
@@ -345,7 +345,7 @@
           },
           {
             "recipe": "text_slam",
-            "anchor": "20th",
+            "anchor": "last",
             "detail": ""
           }
         ],
@@ -371,6 +371,19 @@
       "prompt_version": "script-v1",
       "research": true,
       "generated": "2026-11-04T23:29:41"
-    }
+    },
+    "edits": [
+      {
+        "at": "2026-11-04T23:51:02",
+        "by": "user request",
+        "beats": [
+          "b01",
+          "b02",
+          "b08",
+          "b09"
+        ],
+        "note": "works for any US pay schedule: a week later, $1,500 every other Friday, two weekly jars, last till the next one"
+      }
+    ]
   }
 }

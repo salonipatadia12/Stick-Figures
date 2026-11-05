@@ -126,7 +126,8 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 - duration within ±15% of the target
 - character consistency, by sending the contact sheet and the character sheet to Claude vision
 
-**Sample:** "Why your salary disappears by the 20th" (personal finance), in the **cozy** style,
+**Sample:** "Why Your Paycheck Is Gone a Week Later" (personal finance, for US salaried workers on
+any pay schedule; the brief was "Why your salary disappears by the 20th"), in the **cozy** style,
 at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and the actual cost.
 
 ### 6. After the sample is approved
