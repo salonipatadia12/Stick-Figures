@@ -134,9 +134,9 @@ class Source(Strict):
 
 
 class Voice(Strict):
-    """Narration runs locally on open-source TTS: Kokoro (Apache-2.0) by default, Chatterbox (MIT) for expressive reads."""
-    provider: Literal['kokoro', 'chatterbox'] = 'kokoro'
-    voice_id: str = ''  # Kokoro voice name (e.g. af_heart); empty means the default picked after the Phase 3 auditions
+    """Narration runs locally on Kokoro-82M (Apache-2.0)."""
+    provider: Literal['kokoro'] = 'kokoro'
+    voice_id: str = ''  # Kokoro voice: am_michael or af_heart (the user's shortlist); empty = the style default
 
 
 class Episode(Strict):

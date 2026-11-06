@@ -11,7 +11,7 @@ licences, F5-TTS and XTTS.
 | Machine | MacBook Pro (Mac17,2), macOS 26.5.2 |
 | Chip | Apple M5: 10-core CPU (4 performance, 6 efficiency), 10-core GPU, Metal 4 |
 | Memory | 16 GB unified |
-| Free disk | 77 GB before the bake-off; about 28 GB after the model downloads |
+| Free disk | 77 GB before the bake-off; about 28 GB after the model downloads; about 58 GB after the unused 31 GB full-precision Z-Image download was deleted (2026-11-05) |
 
 Memory is the limit. Each image engine has to fit, alongside macOS and the editor, in about 10 GB.
 Engines run one at a time, never in parallel.
@@ -25,7 +25,7 @@ Engines run one at a time, never in parallel.
 | SDXL LoRA training, diffusers + peft/MPS | one-off per style | **Yes, slowly** | about 12 s per step at 768×1344, so about 2 h for 600 steps |
 | Qwen-Image-Edit-2511, mflux/MLX | reference consistency, pose variants | **No** | see the note below |
 | Kokoro-82M, PyTorch/CPU | narration | **Yes**, faster than real time | 1.3–2.0 s per 3.7–4.3 s clip; loads in 3 s |
-| Chatterbox 0.1.7, PyTorch/MPS | expressive narration and voice cloning | **Yes**, slower than real time | 9–16 s per 3 s clip; loads in 11 s |
+| Chatterbox 0.1.7, PyTorch/MPS | expressive narration and voice cloning | **Dropped 2026-11-05** | 9–16 s per 3 s clip in the bake-off; slower than real time |
 | faster-whisper small.en, CTranslate2/CPU | word timings and checking that every word was spoken | **Yes** | a few seconds per clip |
 
 **Qwen-Image-Edit** pairs a 20B image model with a 7B Qwen2.5-VL text encoder.
@@ -48,7 +48,7 @@ Each licence was checked on the model's Hugging Face card or the package metadat
 | [stabilityai/stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/LICENSE.md) | CreativeML Open RAIL++-M | Yes. See the note after this table. |
 | [Qwen/Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) | Apache-2.0 | Yes (but it doesn't run here) |
 | [hexgrad/Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) | Apache-2.0 | Yes |
-| [ResembleAI/chatterbox](https://huggingface.co/ResembleAI/chatterbox) | MIT | Yes |
+| [ResembleAI/chatterbox](https://huggingface.co/ResembleAI/chatterbox) | MIT | Yes (dropped; bake-off only) |
 | [Systran/faster-whisper-small.en](https://huggingface.co/Systran/faster-whisper-small.en) | MIT | Yes |
 
 The SDXL licence grants a royalty-free licence to use, reproduce and distribute the model, and
@@ -73,7 +73,9 @@ Notes on the libraries:
 - **espeak-ng 1.52 (Homebrew)** is GPL-3.0. Kokoro's phonemizer calls it for words that aren't in
   its dictionary. It runs as a separate local program. The GPL covers distributing that program, not
   the audio we make with it.
-- **Chatterbox's maintainers retired it in August 2026.** The code and weights stay MIT, but there
+- **Chatterbox was dropped from Stick_Figures on 2026-11-05** (no environment, not in the pipeline).
+  Its weights in the shared Hugging Face cache were downloaded by Faceless Reels and are kept for it.
+  Its maintainers retired it in August 2026. The code and weights stay MIT, but there
   will be no fixes. Every file it generates carries an inaudible Perth watermark, which marks the
   audio as AI-generated.
 - **Training data:** the cozy LoRA is trained only on the 8 approved Empty Chair frames from this
@@ -88,13 +90,10 @@ pinned dependencies conflict. Weights live in the shared Hugging Face cache (`~/
 uv venv -p 3.12 .venvs/mlx    && uv pip install -p .venvs/mlx/bin/python mflux huggingface_hub
 uv venv -p 3.12 .venvs/torch  && uv pip install -p .venvs/torch/bin/python torch diffusers transformers accelerate peft safetensors "kokoro>=0.9.4" soundfile pillow faster-whisper \
   "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
-uv venv -p 3.11 .venvs/chatterbox && uv pip install -p .venvs/chatterbox/bin/python chatterbox-tts soundfile "setuptools<81"
 brew install espeak-ng ffmpeg
 ```
 
-Two setup gotchas:
-- **Chatterbox's watermarker** imports `pkg_resources`, which uv environments don't include.
-  Hence `setuptools<81`.
+A setup gotcha:
 - **Kokoro's English phonemizer** needs spaCy's `en_core_web_sm`. It can't download that itself
   inside a uv environment, so it's installed explicitly.
 
@@ -126,3 +125,14 @@ Notes:
 - **The cozy LoRA** was trained on the 8 approved frames plus mirrored copies (16 samples), at 576×1024, rank 16, for 500 steps. That took 21.7 min at 2.6 s per step.
 - **The first attempt at 768×1344** ran at 24 s per step and was stopped. Memory pressure from other apps pushed it into swapping.
 - **SDXL's prompts** are cut at 77 tokens (a CLIP limit), so the scene details at the end of each prompt are lost.
+
+## Motion direction (2026-11-05)
+
+The bake-off images are no longer used as finished frames. SDXL + the cozy LoRA draws only empty
+backgrounds and props (`scripts/motion_test/gen_assets.py`); characters are rigs (`docs/RIG.md`).
+- **Empty background:** 1 of 1 usable on the first seed (`bg-cafe-s11`, 63 s at 768×1344, LoRA 0.75,
+  "nobody" in the prompt and people in the negative prompt). No figures appeared.
+- **Props:** the wallet came out in the cel style (navy outline, painted leather) at LoRA 0.6 on a
+  plain white background, and is cut out by flood-filling the background.
+- **Not used:** FLUX.2 klein 4B (the rig parts did not need it) and the Z-Image LoRA side experiment
+  (not run yet).

@@ -289,14 +289,11 @@
     },
     "Voice": {
       "additionalProperties": false,
-      "description": "Narration runs locally on open-source TTS: Kokoro (Apache-2.0) by default, Chatterbox (MIT) for expressive reads.",
+      "description": "Narration runs locally on Kokoro-82M (Apache-2.0).",
       "properties": {
         "provider": {
+          "const": "kokoro",
           "default": "kokoro",
-          "enum": [
-            "kokoro",
-            "chatterbox"
-          ],
           "title": "Provider",
           "type": "string"
         },

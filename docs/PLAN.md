@@ -82,39 +82,36 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
   script is shown in the chat. `--auto` skips the gate but refuses scripts that fail the checks.
 - **Claude Code skill:** `.claude/skills/stick-short/`.
 
-### 2. Style pack and consistent images
+### 2. Backgrounds, props and moving characters (changed 2026-11-05: characters must move)
 
-- **Complete `styles/cozy/`:**
-  - `style_lock.txt`
-  - `character_sheet.png` (front, side and 3 expressions), built from The Empty Chair frames
-  - palette and caption spec
-  - the SFX map and motion defaults
-- **Local image engines,** each in its own environment under `.venvs/` (see `LOCAL_MODELS.md`).
-  The shortlist:
-  - **Z-Image Turbo** (Apache-2.0): fast text-to-image, via mflux on MLX.
-  - **SDXL + a LoRA trained on The Empty Chair frames** (CreativeML Open RAIL++-M): style lock,
-    via diffusers on PyTorch/MPS.
-  - **Qwen-Image-Edit** (Apache-2.0): reference consistency and pose variants. It does not fit in
-    16 GB of RAM, so it is parked unless the hardware changes.
-- **Bake-off first:** the same 3 style-board frames (hook, a mid beat, ending) from each engine,
-  side by side with an Empty Chair frame, with the time per image. The engine is picked from it.
-- **`pipeline/images.py`:** runs the chosen engine as a subprocess. Every call uses the style
-  lock (`styles/cozy/style_lock.txt`) and the cast descriptions. Images are generated at the
-  chosen aspect and cached by beat digest.
-- **Pose variants:** generated from the same frame (image-to-image or an edit model).
-- **`pipeline/layers.py`:** cuts out the character and keeps a clean background, for parallax,
-  bobs and entrances.
-- **`--approve style`:** first renders a 3-frame style board (the hook, a middle frame and the end).
+Not a slideshow of AI pictures: the characters are animated cut-out rigs, like The Empty Chair
+motion edition. See `docs/RIG.md`.
+
+- **AI draws only EMPTY backgrounds and props**, never characters: SDXL + the cozy LoRA
+  (CreativeML Open RAIL++-M), prompted with "nobody" and a no-people negative prompt.
+  - 2–4 backgrounds per video, reused across beats with different framings.
+  - Props (wallet, coin, ...) on a plain background, cut out automatically.
+  - Props whose insides animate (calendar marks, a filling jar, cash, a moth) are drawn in code
+    in the same cel style.
+- **Characters are jointed rigs** (`pipeline/rig/`) built from The Empty Chair artwork: the head
+  plate is cut from the approved art (shading kept, features animated), with torso, two-bone arms
+  and legs, hands with grip anchors, and feet. Held props move with the hand.
+- **Every beat needs a real body action** that matches the narration, plus idle life (breathing,
+  blinks, weight shift). Camera moves alone never count as movement.
+- **Actions are keyed to narration words** (Kokoro word timings), so the same choreography
+  re-times itself to the voice.
+- **Optional:** FLUX.2 klein 4B (Apache-2.0) only if it helps make clean part artwork or new
+  poses; a Z-Image LoRA only as a free side experiment. Qwen-Image-Edit stays parked (too big
+  for 16 GB).
+- **Proof stop:** a 10–15 s animated test of beats 1–2 (`scripts/motion_test/beats_1_2.py`).
 
 ### 3. Voice and captions
 
-- **`pipeline/voice.py`:** local text-to-speech. One voice per episode, cached by text and voice.
-  - **Kokoro** (Apache-2.0) is the default narrator.
-  - **Chatterbox** (MIT) is the expressive and voice-clone option. Its maintainers retired it in
-    August 2026, so it is used as-is with no upstream fixes.
-  - The voice is picked from short audition clips of the beat-1 line.
-- **`pipeline/align.py`:** word timings from faster-whisper (MIT), run locally. Beat durations
-  come from the real audio; speech is never stretched to fit.
+- **`pipeline/voice.py`:** Kokoro-82M (Apache-2.0), local. One voice per episode, cached by text
+  and voice. The narrator is `am_michael` or `af_heart` (the user's shortlist). Chatterbox was
+  dropped on 2026-11-05.
+- **Word timings** come from Kokoro itself; faster-whisper (MIT) checks that every word was spoken.
+  Beat durations come from the real audio; speech is never stretched to fit.
 - **Captions:**
   - one line at a time, grouped by meaning
   - the current word highlighted

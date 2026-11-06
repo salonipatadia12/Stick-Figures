@@ -1,4 +1,7 @@
-"""Chatterbox (MIT) audition clip with its built-in voice. Run with .venvs/chatterbox/bin/python."""
+"""Chatterbox (MIT) audition clip with its built-in voice. Run with .venvs/chatterbox/bin/python.
+
+Kept as the Phase 2 bake-off record only: Chatterbox was dropped on 2026-11-05 and its environment is gone.
+"""
 import sys, time
 from pathlib import Path
 import torch, torchaudio

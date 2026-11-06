@@ -364,6 +364,15 @@ the character reference) will point at `legacy/bespoke/…`.
      (`LOCAL_MODELS.md`).
    - The Claude script call is the only paid step, still under the $2 cap.
    - A rented GPU needs the user's OK first.
+8. **Characters must move (2026-11-05).** This replaces the "pose variants and cut-outs from
+   generated frames" plan in Phase 2.
+   - AI (SDXL + the cozy LoRA) draws only empty backgrounds and props; 2–4 backgrounds per video.
+   - Characters are jointed cut-out rigs built from The Empty Chair art (`docs/RIG.md`). Every beat
+     has a real body action keyed to the narration, plus idle life. Camera moves alone never count.
+   - Narrator: Kokoro `am_michael` or `af_heart`. Chatterbox is dropped from Stick_Figures; its
+     weights in the shared model cache belong to Faceless Reels and stay (the user's choice).
+   - The unused full-precision Z-Image download (31 GB) was deleted with the user's OK.
+   - The two folders were merged: Stick_Figures is the only checkout, on `pipeline-v2`.
 
 ## Appendix: how this was verified
 
