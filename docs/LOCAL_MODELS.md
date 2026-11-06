@@ -177,3 +177,18 @@ pixels where a moving part used to be are used, after aligning each edit to the 
 | The friend seated alone (03-together with the lead removed) | `cand-friend-seated-s51` and `-s52` are both usable |
 | The lead standing (b06) | FLUX kept the seated pose from the reference (`cand-lead-standing-s31`–`s33`). The retry starts from 02-question, where the friend stands by the table: it removes the seated character and the scarf (`cand-lead-standing-b`) |
 | The lead seated, facing the other way | Not usable: one seed drew both characters, the other gave the lead a scarf |
+
+### Fourth round: clean plates for the approved bases, liftable cups
+
+| Edit | Seed used | Result |
+|---|---|---|
+| `friend-at-table`: arms off | `plate-friend-arms-s71` | Clean, but FLUX kept the small extra cup (both seeds, and the empty plate too) |
+| `friend-at-table`: only that cup removed | `plate-friend-nocup-s75` | Clean when it was the only instruction (`s76` kept it) |
+| `lead-standing`: arms off | `plate-standing-arms-s82` | Clean; `s81` deleted the whole body. A stray sleeve line is painted out by the builder |
+| Cups lifted out of 04 and 03 | `plate-04-nocup-b-s97`, `plate-03-nocups2-s95` | FLUX also removed or re-coloured the saucers, so the builder puts the original saucers back and cuts the cups with measured shapes |
+
+**SDXL props for beats 3–9 were rejected:**
+- `prop-takeout-s61` / `s62`: flat line-art with a printed symbol, or a grey backdrop.
+- `prop-phone-s63` / `s64`: the phone fills the frame with scenery that won't key out.
+
+The phone, the takeout box and the receipts are code-drawn with the painted finish instead.

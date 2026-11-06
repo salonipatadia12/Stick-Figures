@@ -73,7 +73,8 @@ def build_performance(T: dict, cut: float, end: float, lead: Puppet, jar_top: fl
         """'broke': the head sinks; the free hand goes under the table for the wallet."""
         u = t - T['broke']
         drop = keys(u, [(0, 0), (0.08, 1.0), (0.25, 0.8)], ease_out)
-        return replace(p, head_dy=0.05 * drop, head_tilt=-5 * drop, lh=B(UNDER), l_shape='grip', l_rot=0,
+        return replace(p, head_dy=0.04 * drop, head_tilt=-5 * drop, lean=2.5 * drop, crouch=0.08 * drop,
+                       lh=B(UNDER), l_shape='grip', l_rot=0,
                        rh=rest_r, r_shape='resting', r_rot=20, extra={'l_under': 1.0},
                        smile=-0.6, brow_worry=1.0, brow_raise=0.2, eye_wide=0.2, turn=0.7, gaze_y=0.6)
 
@@ -103,12 +104,14 @@ def build_performance(T: dict, cut: float, end: float, lead: Puppet, jar_top: fl
                        smile=0.8, brow_raise=0.35)
 
     def coin_rain(t, p):
-        """'Say $1,500 lands': fists together under the chin, bouncing, eyes tracking the falling coins."""
-        bounce = abs(math.sin(2 * math.pi * (t - T['amount']) * 2.2)) * 0.03
+        """'Say $1,500 lands': both hands on the table edge, leaning in toward the jar, bouncing a little,
+        eyes tracking the falling coins."""
+        bounce = abs(math.sin(2 * math.pi * (t - T['amount']) * 2.2)) * 0.05
         track = 0.5 + 0.5 * math.sin(2 * math.pi * (t - T['amount']) * 1.6)
-        return replace(p, lh=B((338, 762)), rh=B((394, 750)), l_shape='fist', r_shape='fist', l_rot=-28, r_rot=28,
-                       lift=bounce, turn=1.0, gaze_x=0.9, gaze_y=-0.9 + 1.5 * track, eye_wide=0.55,
-                       smile=0.95, mouth_open=0.35, brow_raise=0.7)
+        lean_in = ease((t - T['amount']) / 0.35)
+        return replace(p, lh=B((300, 905)), rh=B((432, 900)), l_shape='resting', r_shape='resting', l_rot=-20, r_rot=25,
+                       lean=3.0 * lean_in, lift=bounce, head_dx=0.03 * lean_in, turn=1.0, gaze_x=0.9,
+                       gaze_y=-0.9 + 1.5 * track, eye_wide=0.55, smile=0.95, mouth_open=0.35, brow_raise=0.7)
 
     def fist_pump(t, p):
         """'lands': a quick 'yes!' fist pump."""
@@ -194,7 +197,7 @@ class Scene:
                for k in ('prop-bill', 'prop-moth', 'prop-jar')}
         self.bill = art['prop-bill'] or props.painterly(props.bill_sprite(300), 3)
         self.moth = props.keep_centre(art['prop-moth'], cut=13) if art['prop-moth'] else props.painterly(props.moth_sprite(1.2, 200), 5)
-        self.jar = (props.glass(props.key_neutral(str(A / CHOICES['prop-jar']), holes=False)) if art['prop-jar']
+        self.jar = (props.clean_alpha(props.glass(props.key_neutral(str(A / CHOICES['prop-jar']), holes=False))) if art['prop-jar']
                     else props.painterly(props.stand_in_jar(), 7, 0.6))
         self.jar = self.jar.resize((self.jar.width, round(self.jar.width * JAR_ASPECT)), Image.LANCZOS)
         self.calendar = props.WallCalendar(420)

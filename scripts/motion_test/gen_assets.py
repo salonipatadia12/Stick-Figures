@@ -59,7 +59,16 @@ ITEMS = {
     'prop-bill2': dict(size=(1024, 640), lora=0.45, seeds=[19, 52], prompt=(
         'cozystick style illustration, one plain green paper money note with a simple oval leaf ornament in the middle, '
         'blank, centered, isolated on a plain flat white background'),
-        negative='portrait, face, president, person, text, letters, numbers, words, seal, ')
+        negative='portrait, face, president, person, text, letters, numbers, words, seal, '),
+    # Beats 3-9 (2026-11-06): the delivery box and a phone for the small daily spends.
+    'prop-takeout': dict(size=(768, 768), lora=0.5, seeds=[61, 62], prompt=(
+        'cozystick style illustration, one white paper takeout food box with a folded top and a thin wire handle, '
+        'simple object illustration, centered, isolated on a plain flat white background'),
+        negative='room, kitchen, table, food, noodles, chopsticks, scenery, background, logo, '),
+    'prop-phone': dict(size=(640, 960), lora=0.5, seeds=[63, 64], prompt=(
+        'cozystick style illustration, one modern smartphone seen from the front, dark rounded body, softly glowing '
+        'blank teal screen, simple object illustration, centered, isolated on a plain flat white background'),
+        negative='hand, fingers, room, table, scenery, background, app icons, logo, '),
 }
 OUT.mkdir(parents=True, exist_ok=True)
 t0 = time.perf_counter()

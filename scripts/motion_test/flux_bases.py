@@ -54,6 +54,54 @@ JOBS = {
         "the open sketchbook. Show what is behind them: two empty wooden chairs at the round table, the tall windows "
         "with trees and ivy, the cafe wall and the tiled floor. Keep the round table with the two green cups and saucers, "
         "the orange bag on the floor, the plants and the cafe exactly the same. " + KEEP)),
+    # ---- plates for the bases approved on 2026-11-06 (sources are the approved candidates) ----
+    'plate-friend-arms': dict(images=['cand-friend-seated-s52.png'], seeds=[71, 72], prompt=(
+        "Edit this illustration. Delete the seated character's navy arms, navy mitten hands and the pencil entirely, and "
+        "also remove the small extra green cup that stands just left of their own cup (keep their own cup and saucer). "
+        "Their torso becomes one smooth white bulb shape, like a bowling pin, with a single dark navy outline along each "
+        "side: no arms, no sleeves and no lines inside the white torso. Show the wooden chair behind them and the bare "
+        "wooden tabletop. Keep their round head and face, the teal scarf, the navy legs, the other cups, the round table, "
+        "the chairs, the bag and the cafe exactly the same. " + KEEP)),
+    'plate-friend-nocup': dict(images=['plate-friend-arms-s71.png'], seeds=[75, 76], prompt=(
+        "Edit this illustration. Remove the small green cup without a saucer that stands on the table just left of the "
+        "larger cup on its saucer. Show the plain wooden tabletop with its dappled light where the small cup stood. Keep "
+        "everything else exactly the same: the character, the scarf, the larger cup and saucer, the table and the cafe.")),
+    'plate-friend-empty': dict(images=['cand-friend-seated-s52.png'], seeds=[73], prompt=(
+        "Edit this illustration. Remove the seated white round-headed character with the teal scarf completely (head, "
+        "torso, scarf, arms, hands and legs) and the small extra green cup next to their cup. Show what is behind them: "
+        "the empty wooden chair, the cafe wall, the plants and the window. Keep the round table, the two remaining green "
+        "cups and saucers, the chairs, the bag and the cafe exactly the same. " + KEEP)),
+    'plate-standing-arms': dict(images=['cand-lead-standing-b-s62.png'], seeds=[81, 82], prompt=(
+        "Edit this illustration. Delete the standing character's navy arms and both navy mitten hands entirely, including "
+        "the hand resting on the chair back. Their torso becomes one smooth white bulb shape with a single dark navy "
+        "outline along each side: no arms, no sleeves and no lines inside the white torso. Show the chair back, the door "
+        "and the cafe behind where the arms were. Keep their round head and face, the white torso, the navy legs and feet, "
+        "the round table, the cup, the chair with the orange bag and the cafe exactly the same. " + KEEP)),
+    'plate-standing-empty': dict(images=['cand-lead-standing-b-s62.png'], seeds=[83], prompt=(
+        "Edit this illustration. Remove the standing white round-headed character completely (head, torso, arms, hands, "
+        "legs and feet). Show what is behind them: the green door, the cafe wall, the plants and the tiled floor. Keep "
+        "the round table, the cup, the chair with the orange bag and the cafe exactly the same. " + KEEP)),
+    'plate-03-nocups': dict(images=['03-together.png'], seeds=[91, 92], prompt=(
+        "Edit this illustration. Delete both characters' navy arms and navy mitten hands entirely, the open sketchbook, "
+        "and the two green coffee cups (keep the two green saucers on the table). Each character's torso becomes one "
+        "smooth white bulb shape, like a bowling pin, with a single dark navy outline along each side: no arms, no "
+        "sleeves and no lines inside the white torsos. Show the wooden chairs behind them and the bare wooden tabletop "
+        "with the two empty saucers. Keep both round heads and faces, the teal scarf, the navy legs, the orange bag, the "
+        "round table and the cafe exactly the same. " + KEEP)),
+    'plate-03-nocups2': dict(images=['plate-03-nocups-s91.png'], seeds=[95, 96], prompt=(
+        "Edit this illustration. Remove the green coffee cup that stands on its saucer on the right side of the table, "
+        "and keep that saucer exactly as it is: an empty sage-green saucer. Keep everything else exactly the same: both "
+        "characters, the scarf, the other empty saucer, the table and the cafe.")),
+    'plate-04-nocup-b': dict(images=['plate-04-arms-s11.png'], seeds=[97, 98, 99], prompt=(
+        "Edit this illustration. Remove only the green coffee cup from its saucer. The empty saucer stays exactly the "
+        "same sage green as before, in the same place and size. Keep everything else exactly the same: the character, "
+        "the table and the cafe.")),
+    'plate-04-nocup': dict(images=['04-waiting.png'], seeds=[93, 94], prompt=(
+        "Edit this illustration. Remove ONLY the character's two navy arms and both navy mitten hands, the green pen, the "
+        "open sketchbook and the green coffee cup (keep its green saucer on the table). Where the arms were, show the "
+        "plain white torso with its dark navy outline, the wooden chair back behind it and the bare wooden tabletop with "
+        "the empty saucer. Keep the round white head and its face, the white torso, the navy legs, the chairs, the round "
+        "table, the cafe, the ivy and the light exactly the same. " + KEEP)),
     # ---- new base-pose candidates (for review only) ----
     'cand-lead-standing': dict(images=['04-waiting.png', '02-question.png'], seeds=[31, 32, 33], prompt=(
         "Using the character from the first image and the cafe from both images: the same white round-headed character "
@@ -103,7 +151,7 @@ def main(names):
                 print('cached', dst.name)
                 continue
             t1 = time.time()
-            image = model.generate_image(seed=seed, prompt=job['prompt'], image_paths=[str(EC / p) for p in job['images']],
+            image = model.generate_image(seed=seed, prompt=job['prompt'], image_paths=[str(EC / p if (EC / p).exists() else OUT / p) for p in job['images']],
                                          num_inference_steps=4, width=944, height=1680)
             image.save(str(dst))
             print(f'{dst.name}: {time.time() - t1:.0f}s', flush=True)

@@ -1,0 +1,115 @@
+{
+ "name": "friend-at-table",
+ "source": "renders/bases/flux/cand-friend-seated-s52.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-friend-nocup-s75.png",
+  "empty": "plate-friend-empty-s73.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": {
+  "top": [
+   92,
+   905,
+   802,
+   1110
+  ]
+ },
+ "layers": {
+  "table": [
+   91,
+   904
+  ],
+  "front": [
+   175,
+   883
+  ]
+ },
+ "cups": [],
+ "seats": [
+  {
+   "name": "friend",
+   "head": [
+    662.9,
+    558.5
+   ],
+   "D": 296.2,
+   "facing": -1,
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     616.0,
+     732
+    ],
+    "r": [
+     773.0,
+     732
+    ]
+   },
+   "rest": {
+    "l": [
+     588,
+     902
+    ],
+    "r": [
+     772,
+     1010
+    ]
+   },
+   "hip": [
+    770,
+    1100
+   ],
+   "neck": {
+    "scarf": [
+     [
+      632,
+      720
+     ],
+     [
+      644,
+      620
+     ],
+     [
+      726,
+      620
+     ],
+     [
+      740,
+      720
+     ]
+    ]
+   },
+   "body": {
+    "sprite": "body-friend.png",
+    "xy": [
+     607,
+     620
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     609,
+     689
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     165.87,
+     165.53
+    ],
+    "size": [
+     289.5,
+     302.8
+    ],
+    "angle": 23.9
+   }
+  }
+ ]
+}

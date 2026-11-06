@@ -6,7 +6,7 @@
   1672
  ],
  "flux": {
-  "arms": "plate-04-arms-s11.png",
+  "arms": "plate-04-nocup-b-s97.png",
   "empty": "plate-04-empty-s6.png"
  },
  "light": "right",
@@ -22,23 +22,31 @@
    840,
    690,
    1062
-  ],
-  "surface_y": 951
+  ]
  },
  "layers": {
   "table": [
-   49,
-   837
-  ],
-  "front": [
-   63,
-   859
-  ],
-  "occluder": [
-   177,
-   703
+   51,
+   839
   ]
  },
+ "cups": [
+  {
+   "sprite": "cup-0.png",
+   "xy": [
+    72,
+    874
+   ],
+   "size": [
+    134,
+    91
+   ],
+   "saucer": [
+    148.5,
+    961
+   ]
+  }
+ ],
  "seats": [
   {
    "name": "lead",
@@ -47,34 +55,21 @@
     569.2
    ],
    "D": 288.5,
-   "head_art": {
-    "sprite": "head-lead.png",
-    "centre": [
-     161.44,
-     161.2
-    ],
-    "size": [
-     279.9,
-     297.2
-    ],
-    "angle": 64.5
-   },
    "facing": 1,
-   "shade": "left",
    "accessory": "",
    "shoulders": {
     "l": [
-     212,
-     734
+     197.5,
+     739
     ],
     "r": [
-     296,
-     736
+     311.0,
+     739
     ]
    },
    "rest": {
     "l": [
-     236,
+     246,
      902
     ],
     "r": [
@@ -82,28 +77,52 @@
      878
     ]
    },
+   "hip": [
+    205,
+    1080
+   ],
    "neck": {
     "join_y": 726.0,
+    "stroke": [
+     7,
+     4
+    ],
     "left": [
-     [
-      199.5,
-      732.0
-     ],
-     [
-      267.2,
-      612.5
-     ]
+     0.0,
+     -0.5794,
+     201.4875
     ],
     "right": [
-     [
-      310.5,
-      732.0
-     ],
-     [
-      323.7,
-      612.5
-     ]
+     0.0,
+     0.351,
+     308.9559
     ]
+   },
+   "body": {
+    "sprite": "body-lead.png",
+    "xy": [
+     120,
+     591
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     173,
+     710
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     163.44,
+     163.2
+    ],
+    "size": [
+     279.9,
+     297.2
+    ],
+    "angle": 64.5
    }
   }
  ]

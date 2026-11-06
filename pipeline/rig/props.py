@@ -503,11 +503,11 @@ class WallCalendar:
 
     FONT = '/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf'
 
-    def __init__(self, width: int = 420, payday_col: int = 4, crossed: int = 7, seed: int = 9):
+    def __init__(self, width: int = 420, payday_col: int = 4, crossed: int = 7, seed: int = 9, payday_row: int = 0):
         from PIL import ImageFont
         self.w = w = width
         self.h = h = int(width * 0.88)
-        self.payday = (0, payday_col)
+        self.payday = (payday_row, payday_col)
         self.crossed = crossed
         im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
         d = ImageDraw.Draw(im)
@@ -576,3 +576,17 @@ class WallCalendar:
                 _wobble_line(d, (x + a, y - a), (x + a - 2 * a * second, y - a + 2 * a * second), width, (196, 44, 38, 245), k * 2 + 1)
         im.alpha_composite(ink.filter(ImageFilter.GaussianBlur(0.7)))
         return im
+
+
+def clean_alpha(sprite: Image.Image, solid: int = 100, soft: float = 1.0) -> Image.Image:
+    """Drop the faint leftover alpha a keyed backdrop leaves around a see-through object: keep only what lies
+    inside the object's solid outline (filled), so it shows no pale box when it is enlarged."""
+    a = np.asarray(sprite.getchannel('A'))
+    core = Image.fromarray(((a > solid) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))
+    filled = core.copy()
+    ImageDraw.floodfill(filled, (0, 0), 128)
+    inside = np.asarray(filled) != 128
+    m = Image.fromarray((inside * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(soft))
+    out = sprite.copy()
+    out.putalpha(Image.fromarray(np.minimum(a, np.asarray(m)).astype(np.uint8)))
+    return out

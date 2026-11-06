@@ -169,11 +169,32 @@ class PaintedBaseTest(unittest.TestCase):
         self.assertGreater(puppet.ARM_W[1], 0.11)   # thick navy segments, like the painted sleeves
 
     def test_arm_roots_are_hidden_behind_the_torso_side(self):
-        occ, (ox, oy) = self.base.layers['occluder']
-        a = np.asarray(occ.getchannel('A'))
-        for side in ('l', 'r'):
-            sx, sy = self.lead.shoulders[side]
-            self.assertGreater(a[round(sy) - oy, round(sx) - ox], 200, f'{side} shoulder is not covered by the torso')
+        for name in ('lead-at-table', 'together', 'friend-at-table', 'lead-standing'):
+            base = load_base(name)
+            for seat in base.meta['seats']:
+                occ, (ox, oy) = base.occluders[seat['name']]
+                a = np.asarray(occ.getchannel('A'))
+                for side in ('l', 'r'):
+                    sx, sy = seat['shoulders'][side]
+                    self.assertGreater(a[round(sy) - oy, round(sx) - ox], 120, f'{name} {seat["name"]} {side} shoulder is not behind the torso')
+
+    def test_the_seated_body_leans_about_its_hip_and_the_head_follows(self):
+        pose = replace(Pose(), lean=3.0)
+        still = self.lead.joints(Pose())
+        leaned = self.lead.joints(pose)
+        self.assertGreater(leaned['head'][0] - still['head'][0], 5)          # the top moves toward the lean
+        hip = self.lead.s['hip']
+        M = leaned['body_M']
+        moved_hip = M @ (np.array(hip) - np.array(hip)) + np.array(hip)
+        self.assertTrue(np.allclose(moved_hip, hip))                         # the hips stay on the chair
+        self.assertLess(abs(math.degrees(math.atan2(M[1, 0], M[0, 0]))), 4.01)
+
+    def test_cups_lift_off_their_saucers(self):
+        base = load_base('together')
+        self.assertEqual(len(base.cups), 2)
+        for cup, (x, y) in base.cups:
+            a = np.asarray(cup.getchannel('A'))
+            self.assertGreater((a > 200).mean(), 0.4)                         # a solid painted cup, no table around it
 
     def test_held_prop_sits_in_the_grip_on_the_painted_base(self):
         sprite = Image.new('RGBA', (40, 20), (200, 100, 50, 255))
@@ -211,6 +232,44 @@ class PaintedBaseTest(unittest.TestCase):
         base = load_base('together')
         lead, friend = Puppet(base, 'lead'), Puppet(base, 'friend')
         self.assertLess(max(lead.s['rest']['l'][0], lead.s['rest']['r'][0]), min(friend.s['rest']['l'][0], friend.s['rest']['r'][0]))
+
+
+class EpisodeChoreographyTest(unittest.TestCase):
+    """Every beat of the full sample keeps the anatomy rules: wrists within their limit, held props only in
+    gripping hands, and no arm across a face unless the action needs it."""
+
+    @classmethod
+    def setUpClass(cls):
+        import episode_salary as E
+        import salary_beats as SB
+        cls.E, cls.SB = E, SB
+        cls.tl = E.timeline('am_michael')
+
+    def test_every_beat(self):
+        for name, t0, t1 in self.E.shots(self.tl):
+            if name == 'b01-02':
+                continue
+            scene = self.E.make_scene(name, self.tl, load_art=False)
+            for i in range(int(t0 * 30), int(t1 * 30), 2):
+                t = i / 30
+                active = set()
+                for who in scene.cast:
+                    active |= set(scene.perfs[who].active(t))
+                for who in scene.cast:
+                    pup, pose = scene.p[who], scene.pose(who, t)
+                    j = pup.joints(pose)
+                    for side in ('l', 'r'):
+                        pup.hand_placement(pose, j, side)
+                        requested = pose.l_rot if side == 'l' else pose.r_rot
+                        self.assertLessEqual(abs(j[side + '_bend']), hands.WRIST_LIMIT, f'{name} {t:.2f}s {who} {side} wrist')
+                    for side in scene.holds(who, t):
+                        shape = pose.l_shape if side == 'l' else pose.r_shape
+                        self.assertIn(shape, GRIPPING, f'{name} {t:.2f}s {who} holds a prop with a {shape!r} hand')
+                    if not active & set(scene.face_ok):
+                        for side in ('l', 'r'):
+                            for a, b in ((side + '_sh', side + '_el'), (side + '_el', side + '_wr')):
+                                self.assertGreater(segment_distance(j['head'], j[a], j[b]), 0.25 * pup.D,
+                                                   f'{name} {t:.2f}s {who} {side} arm crosses the face ({active})')
 
 
 class PerformanceTest(unittest.TestCase):

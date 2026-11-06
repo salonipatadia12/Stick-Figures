@@ -1,0 +1,98 @@
+{
+ "name": "lead-standing",
+ "source": "renders/bases/flux/cand-lead-standing-b-s62.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-standing-arms-s82.png",
+  "empty": "plate-standing-empty-s83.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": {
+  "top": [
+   -60,
+   880,
+   690,
+   1085
+  ]
+ },
+ "layers": {
+  "table": [
+   0,
+   879
+  ]
+ },
+ "cups": [],
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    643.4,
+    460.6
+   ],
+   "D": 284.8,
+   "facing": -1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     567.0,
+     622
+    ],
+    "r": [
+     696.0,
+     622
+    ]
+   },
+   "rest": {
+    "l": [
+     528,
+     862
+    ],
+    "r": [
+     744,
+     866
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 617.0,
+    "stroke": [
+     7,
+     6
+    ],
+    "left": [
+     0.0,
+     -0.5009,
+     566.5357
+    ],
+    "right": [
+     0.0,
+     0.3994,
+     697.3891
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     549,
+     603
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     159.43,
+     159.61
+    ],
+    "size": [
+     279.6,
+     289.9
+    ],
+    "angle": 51.3
+   }
+  }
+ ]
+}

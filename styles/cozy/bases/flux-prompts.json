@@ -155,5 +155,157 @@
       62
     ],
     "prompt": "Edit this illustration. Remove the seated white character on the left completely (head, torso, arms, hands, legs and pen) and the open sketchbook, and show the empty wooden chair and the cafe behind them. Remove the teal scarf from the standing character on the right, so their white torso is plain with the same navy outline and their neck shows. Keep the standing character's pose, head, face, arms, legs and feet exactly the same, and keep the table, the cup, the orange bag, the chairs and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png"
+    ],
+    "seeds": [
+      71,
+      72
+    ],
+    "prompt": "Edit this illustration. Delete the seated character's navy arms, navy mitten hands and the pencil entirely, and also remove the small extra green cup that stands just left of their own cup (keep their own cup and saucer). Their torso becomes one smooth white bulb shape, like a bowling pin, with a single dark navy outline along each side: no arms, no sleeves and no lines inside the white torso. Show the wooden chair behind them and the bare wooden tabletop. Keep their round head and face, the teal scarf, the navy legs, the other cups, the round table, the chairs, the bag and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png"
+    ],
+    "seeds": [
+      73
+    ],
+    "prompt": "Edit this illustration. Remove the seated white round-headed character with the teal scarf completely (head, torso, scarf, arms, hands and legs) and the small extra green cup next to their cup. Show what is behind them: the empty wooden chair, the cafe wall, the plants and the window. Keep the round table, the two remaining green cups and saucers, the chairs, the bag and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-standing-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-lead-standing-b-s62.png"
+    ],
+    "seeds": [
+      81,
+      82
+    ],
+    "prompt": "Edit this illustration. Delete the standing character's navy arms and both navy mitten hands entirely, including the hand resting on the chair back. Their torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves and no lines inside the white torso. Show the chair back, the door and the cafe behind where the arms were. Keep their round head and face, the white torso, the navy legs and feet, the round table, the cup, the chair with the orange bag and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-standing-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-lead-standing-b-s62.png"
+    ],
+    "seeds": [
+      83
+    ],
+    "prompt": "Edit this illustration. Remove the standing white round-headed character completely (head, torso, arms, hands, legs and feet). Show what is behind them: the green door, the cafe wall, the plants and the tiled floor. Keep the round table, the cup, the chair with the orange bag and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-03-nocups": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      91,
+      92
+    ],
+    "prompt": "Edit this illustration. Delete both characters' navy arms and navy mitten hands entirely, the open sketchbook, and the two green coffee cups (keep the two green saucers on the table). Each character's torso becomes one smooth white bulb shape, like a bowling pin, with a single dark navy outline along each side: no arms, no sleeves and no lines inside the white torsos. Show the wooden chairs behind them and the bare wooden tabletop with the two empty saucers. Keep both round heads and faces, the teal scarf, the navy legs, the orange bag, the round table and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-04-nocup": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png"
+    ],
+    "seeds": [
+      93,
+      94
+    ],
+    "prompt": "Edit this illustration. Remove ONLY the character's two navy arms and both navy mitten hands, the green pen, the open sketchbook and the green coffee cup (keep its green saucer on the table). Where the arms were, show the plain white torso with its dark navy outline, the wooden chair back behind it and the bare wooden tabletop with the empty saucer. Keep the round white head and its face, the white torso, the navy legs, the chairs, the round table, the cafe, the ivy and the light exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-nocup": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "plate-friend-arms-s71.png"
+    ],
+    "seeds": [
+      75,
+      76
+    ],
+    "prompt": "Edit this illustration. Remove the small green cup without a saucer that stands on the table just left of the larger cup on its saucer. Show the plain wooden tabletop with its dappled light where the small cup stood. Keep everything else exactly the same: the character, the scarf, the larger cup and saucer, the table and the cafe."
+  },
+  "plate-03-nocups2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "plate-03-nocups-s91.png"
+    ],
+    "seeds": [
+      95,
+      96
+    ],
+    "prompt": "Edit this illustration. Remove the green coffee cup that stands on its saucer on the right side of the table, and keep that saucer exactly as it is: an empty sage-green saucer. Keep everything else exactly the same: both characters, the scarf, the other empty saucer, the table and the cafe."
+  },
+  "plate-04-nocup-b": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "plate-04-arms-s11.png"
+    ],
+    "seeds": [
+      97,
+      98,
+      99
+    ],
+    "prompt": "Edit this illustration. Remove only the green coffee cup from its saucer. The empty saucer stays exactly the same sage green as before, in the same place and size. Keep everything else exactly the same: the character, the table and the cafe."
   }
 }

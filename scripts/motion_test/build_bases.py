@@ -2,13 +2,17 @@
 clean plates revealed only where a moving part used to be).
 
 For each base:
-- plate.png     the original frame; inside the old arms/hands/props it shows the FLUX clean plate, and
-                inside the old heads the empty café (plus a neck, so a moving head never comes loose).
-- table.png     the round table cut from the plate, laid over a hand that goes under the table.
-- front.png     things on the table that sit in front of the arms (the cups).
-- occluder.png  the torso around each shoulder, laid over the arm roots so the arms come out from
-                behind the torso side, as the Empty Chair sleeves do.
-- base.json     anchors in plate pixels: heads, shoulders, rest hands, tabletop, wall spot, light.
+- plate.png       the frame with everything that moves taken out: arms, hands, props, heads, and (for
+                  seated bases) the torso, which becomes its own layer. FLUX clean plates fill in
+                  only where those parts were; everything else is the original painting.
+- body-<seat>.png the painted torso (with the friend's scarf), a neck continuing its outline under the
+                  head, and a little extra below the tabletop, so it can lean and squash about the hip.
+- head-<seat>.png the frame's own head, cut at the outer edge of its outline, face painted out.
+- occluder-<seat>.png  the torso around each shoulder, laid back over the arm roots.
+- table.png       the round table (laid over the body and over a hand that reaches under it).
+- front.png       cups that stay on the table and sit in front of the arms.
+- cup-<n>.png     cups that can be lifted (where a no-cup plate exists); their saucers stay painted.
+- base.json       anchors in plate pixels.
 
 Runs in .venvs/mlx (OpenCV):  .venvs/mlx/bin/python scripts/motion_test/build_bases.py [name ...]
 FLUX edits come from scripts/motion_test/flux_bases.py (renders/bases/flux).
@@ -16,6 +20,7 @@ FLUX edits come from scripts/motion_test/flux_bases.py (renders/bases/flux).
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -28,41 +33,73 @@ EC = ROOT / 'legacy/bespoke/the-empty-chair-source/assets'
 FLUX = ROOT / 'renders/bases/flux'
 OUT = ROOT / 'styles/cozy/bases'
 DEBUG = ROOT / 'renders/bases'
+NAVY = (24, 26, 50)
 
 # Anchors are measured on the plates (see renders/bases/debug-*.jpg). Units: plate pixels (941x1672).
+# Shoulders sit on the torso outline (measured), so a resting arm covers the outline as in the paintings.
 BASES = {
     'lead-at-table': dict(
-        source='04-waiting.png', arms='plate-04-arms-s11.png', empty='plate-04-empty-s6.png',
-        edit_roi=[(28, 688), (612, 688), (612, 990), (28, 990)],
-        keep=[('ellipse', (66, 860, 210, 992))],                      # the cup: original pixels
-        front=[('ellipse', (66, 862, 206, 990))],                     # the cup sits in front of the arms
+        source='04-waiting.png', arms='plate-04-nocup-b-s97.png', empty='plate-04-empty-s6.png', inserts=True,
+        edit_roi=[(28, 688), (612, 688), (612, 995), (28, 995)],
+        lift_cups=[dict(rim=(150, 885.5, 52, 8.5), base=(110, 192, 950, 961), handle=(-1, 75, 102, 892, 937, 83, 100, 900, 927),
+                        saucer=(148.5, 961, 74, 19.5))],                              # the cup can be picked up; its saucer stays
         table=dict(top=(52, 840, 690, 1062), stem=[(352, 1040), (392, 1040), (396, 1452), (348, 1452)],
                    foot=(222, 1448, 534, 1540)),
-        wall=(458, 196, 668, 470),                                   # where the calendar hangs
-        seats=[dict(name='lead', head_box=(120, 395, 485, 720), facing=1, shade='left',
-                    torso_seed=(240, 800),
-                    shoulders=dict(l=(212, 734), r=(296, 736)),
-                    rest=dict(l=(236, 902), r=(392, 878)))],
+        wall=(458, 196, 668, 470),
+        seats=[dict(name='lead', head_box=(120, 395, 485, 720), facing=1, torso_seed=(240, 800), hip=(205, 1080),
+                    rest=dict(l=(246, 902), r=(392, 878)))],
         light='right'),
     'together': dict(
-        source='03-together.png', arms='plate-03-arms-b-s6.png', empty='plate-03-empty-s7.png',
+        source='03-together.png', arms='plate-03-nocups2-s95.png', empty='plate-03-empty-s7.png',
         edit_roi=[(40, 700), (900, 700), (900, 1010), (40, 1010)],
-        keep=[('ellipse', (164, 862, 312, 975)), ('ellipse', (594, 862, 734, 965))],
-        front=[('ellipse', (166, 866, 310, 972)), ('ellipse', (596, 866, 732, 962))],
+        lift_cups=[dict(rim=(240, 878.3, 47, 7), base=(205, 273, 943, 951), handle=(-1, 171, 197, 883, 922, 182, 195, 892, 915),
+                        saucer=(239, 944, 68, 16.5)),
+                   dict(rim=(664, 875.5, 46.5, 7.5), base=(627, 700, 935, 942), handle=(1, 708, 729, 881, 918, 712, 723, 888, 910),
+                        saucer=(666.7, 938, 70.5, 18.5))],
         table=dict(top=(88, 880, 800, 1080), stem=[(410, 1060), (446, 1060), (448, 1480), (408, 1480)],
                    foot=(286, 1440, 560, 1530)),
+        wall=(546, 330, 690, 486),
+        seats=[dict(name='lead', head_box=(90, 430, 410, 730), facing=1, torso_seed=(220, 820), hip=(185, 1085),
+                    rest=dict(l=(245, 905), r=(468, 900))),
+               dict(name='friend', head_box=(480, 400, 830, 720), facing=-1, accessory='scarf', head_grow=6,
+                    torso_seed=(720, 880), hip=(760, 1090),
+                    scarf_neck=dict(poly=[(632, 716), (644, 612), (722, 612), (738, 716)], colour_at=(690, 696)),
+                    rest=dict(l=(556, 904), r=(772, 918)))],
+        light='right'),
+    'friend-at-table': dict(
+        source='cand-friend-seated-s52.png', arms='plate-friend-nocup-s75.png', empty='plate-friend-empty-s73.png',
+        edit_roi=[(480, 700), (900, 700), (900, 1000), (480, 1000)],
+        front_cups=[(170, 890, 310, 990), (598, 884, 734, 982)],
+        table=dict(top=(92, 905, 802, 1110), stem=[(404, 1090), (446, 1090), (448, 1560), (404, 1560)],
+                   foot=(300, 1520, 560, 1600)),
         wall=None,
-        seats=[dict(name='lead', head_box=(90, 430, 410, 730), facing=1, shade='left', torso_seed=(220, 820),
-                    shoulders=dict(l=(178, 750), r=(292, 752)), rest=dict(l=(318, 912), r=(468, 900))),
-               dict(name='friend', head_box=(480, 400, 830, 720), facing=-1, shade='left', accessory='scarf', head_grow=6,
-                    torso_seed=(720, 880), scarf_neck=dict(poly=[(632, 716), (644, 612), (722, 612), (738, 716)], colour_at=(690, 696)),
-                    shoulders=dict(l=(598, 752), r=(790, 754)), rest=dict(l=(556, 904), r=(772, 918)))],
+        seats=[dict(name='friend', head_box=(500, 390, 830, 730), facing=-1, accessory='scarf', head_grow=6,
+                    torso_seed=(700, 900), hip=(770, 1100),
+                    scarf_neck=dict(poly=[(632, 720), (644, 620), (726, 620), (740, 720)], colour_at=(690, 712)),
+                    rest=dict(l=(588, 902), r=(772, 1010)))],
+        light='right'),
+    'lead-standing': dict(
+        source='cand-lead-standing-b-s62.png', arms='plate-standing-arms-s82.png', empty='plate-standing-empty-s83.png',
+        edit_roi=[(470, 560), (920, 560), (920, 900), (470, 900)],
+        front_cups=[],
+        table=dict(top=(-60, 880, 690, 1085), stem=[(330, 1060), (372, 1060), (374, 1600), (330, 1600)],
+                   foot=(200, 1560, 500, 1650)),
+        wall=None,
+        seats=[dict(name='lead', head_box=(470, 300, 820, 640), facing=-1, torso_seed=(620, 720), hip=None,
+                    rest=dict(l=(528, 862), r=(744, 866)))],
         light='right'),
 }
 
 
-def load(path: Path) -> np.ndarray:
-    return np.asarray(Image.open(path).convert('RGB'))
+def src(name: str) -> Path:
+    return EC / name if (EC / name).exists() else FLUX / name
+
+
+def load(path: Path, size=None) -> np.ndarray:
+    im = Image.open(path).convert('RGB')
+    if size and im.size != size:
+        im = im.resize(size, Image.LANCZOS)
+    return np.asarray(im)
 
 
 def register(orig: np.ndarray, gen: np.ndarray, valid: np.ndarray) -> np.ndarray:
@@ -80,12 +117,10 @@ def register(orig: np.ndarray, gen: np.ndarray, valid: np.ndarray) -> np.ndarray
 
 
 def fit_head(im: np.ndarray, box) -> tuple:
-    """The painted head's outline as an ellipse ((cx, cy), (width, height), angle), fitted to its dark ring.
-    Heads are slightly wider than tall in three-quarter view, so a circle would leave the old outline showing."""
+    """The painted head's outline as an ellipse ((cx, cy), (width, height), angle), fitted to its dark ring."""
     x0, y0, x1, y1 = box
     crop = im[y0:y1, x0:x1].astype(np.float32)
-    dark = crop.mean(-1) < 70
-    ys, xs = np.nonzero(dark)
+    ys, xs = np.nonzero(crop.mean(-1) < 70)
     cx, cy, r = (x1 - x0) / 2, (y1 - y0) / 2 - 10, (x1 - x0) * 0.42
     for _ in range(6):                      # circle first, to pick the ring out from the face marks
         d = np.hypot(xs - cx, ys - cy)
@@ -103,215 +138,500 @@ def fit_head(im: np.ndarray, box) -> tuple:
 def ellipse_mask(shape, ell, grow: float = 0.0) -> np.ndarray:
     (cx, cy), (ew, eh), ang = ell
     m = np.zeros(shape[:2], np.uint8)
-    cv2.ellipse(m, ((cx, cy), (ew + 2 * grow, eh + 2 * grow), ang), 255, -1)
+    cv2.ellipse(m, ((cx, cy), (max(1, ew + 2 * grow), max(1, eh + 2 * grow)), ang), 255, -1)
     return m > 0
 
 
+def disk(r: int):
+    return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
+
+
+def fill_holes(m: np.ndarray) -> np.ndarray:
+    h, w = m.shape
+    ff = m.astype(np.uint8) * 255
+    canvas = np.zeros((h + 2, w + 2), np.uint8)
+    flood = ff.copy()
+    cv2.floodFill(flood, canvas, (0, 0), 255)
+    return m | (flood == 0)
+
+
 def head_sprite(orig: np.ndarray, ell) -> tuple[Image.Image, list]:
-    """The painted head with its eyes, brows and mouth painted out (the shading and outline are kept),
-    so the face can be animated on top. Returns the sprite and its centre in sprite pixels."""
+    """The painted head, cut exactly at the outer edge of its own dark outline (so no ring of the old
+    background or torso comes with it), with the eyes, brows and mouth painted out."""
     (cx, cy), (ew, eh), ang = ell
-    inner = ellipse_mask(orig.shape, ell, -3.8)          # the outline's inner edge: brow ends that touch it go too
-    outer = ellipse_mask(orig.shape, ell, 7)            # the whole outline, with its warm outer edge
     f = orig.astype(np.float32)
     lum = f.mean(-1)
     sat = f.max(-1) - f.min(-1)
+    inner = ellipse_mask(orig.shape, ell, -3.8)
+    band = ellipse_mask(orig.shape, ell, 9) & ~ellipse_mask(orig.shape, ell, -7)
+    stroke = band & (lum < 135)
+    stroke = cv2.morphologyEx(stroke.astype(np.uint8), cv2.MORPH_OPEN, disk(1)) > 0   # drop specks
+    # keep only the stroke ring connected around the head (not spurs of the torso outline joining it)
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(stroke.astype(np.uint8))
+    if n > 1:
+        stroke = lab == (1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA])))
+    region = ellipse_mask(orig.shape, ell, -2) | stroke
+    region = fill_holes(region) & ellipse_mask(orig.shape, ell, 9)
+    # spurs: anything sticking out more than the stroke's own width is the torso outline, not the head
+    region = cv2.morphologyEx(region.astype(np.uint8), cv2.MORPH_OPEN, disk(3)) > 0
     marks = inner & ((lum < 175) | (sat > 48))
-    marks = cv2.dilate(marks.astype(np.uint8) * 255, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
-    marks[~inner] = 0                                   # never touch the outline itself
-    # Inpaint from the head's own shading only: outside the interior, show its white, so the dark
-    # outline can't bleed into the fill.
+    marks = cv2.dilate(marks.astype(np.uint8) * 255, disk(4))
+    marks[~inner] = 0
     work = orig.copy()
     work[~inner] = np.median(orig[inner & (marks == 0)].reshape(-1, 3), 0).astype(np.uint8)
     clean = cv2.inpaint(work, marks, 7, cv2.INPAINT_TELEA)
     clean = cv2.inpaint(clean, cv2.erode(marks, np.ones((3, 3), np.uint8)), 4, cv2.INPAINT_NS)
     clean[~inner] = orig[~inner]
-    alpha = cv2.GaussianBlur(outer.astype(np.float32), (0, 0), 0.9)
-    x0, y0 = int(cx - max(ew, eh) / 2 - 12), int(cy - max(ew, eh) / 2 - 12)
-    x1, y1 = int(cx + max(ew, eh) / 2 + 13), int(cy + max(ew, eh) / 2 + 13)
-    rgba = np.dstack([clean, (alpha * 255).astype(np.uint8)])[y0:y1, x0:x1]
+    # a one-pixel soft edge in the outline's own colour, over whatever is behind the head
+    ring = cv2.dilate(region.astype(np.uint8), disk(1)) > 0
+    edge = ring & ~region
+    core = stroke & (lum < 70)
+    stroke_col = np.median(orig[core].reshape(-1, 3), 0) if core.any() else np.array(NAVY)
+    clean[edge] = stroke_col.astype(np.uint8)
+    alpha = cv2.GaussianBlur((region * 1.0 + edge * 0.55).astype(np.float32), (0, 0), 0.6)
+    # an unbroken outline at the painting's own stroke weight, behind the head (shows where the old torso
+    # outline used to join and the stroke was thin)
+    widths = []
+    for k in range(0, 360, 6):
+        a = np.radians(k)
+        xs = (cx + np.cos(a) * np.linspace(min(ew, eh) / 2 - 10, max(ew, eh) / 2 + 10, 40)).astype(int)
+        ys = (cy + np.sin(a) * np.linspace(min(ew, eh) / 2 - 10, max(ew, eh) / 2 + 10, 40)).astype(int)
+        ok = (xs >= 0) & (ys >= 0) & (xs < orig.shape[1]) & (ys < orig.shape[0])
+        widths.append(int(stroke[ys[ok], xs[ok]].sum()))
+    sw = max(4, int(np.median([v for v in widths if v > 0] or [5])))
+    ring = np.zeros(orig.shape[:2], np.uint8)
+    cv2.ellipse(ring, ((cx, cy), (ew + sw * 0.4, eh + sw * 0.4), ang), 255, sw, cv2.LINE_AA)
+    ring_a = ring.astype(np.float32) / 255
+    a_s, a_r = np.clip(alpha, 0, 1), ring_a * (1 - np.clip(alpha, 0, 1))          # the head over the ring
+    a_out = a_s + a_r
+    num = clean.astype(np.float32) * a_s[..., None] + np.array(stroke_col, np.float32) * a_r[..., None]
+    clean = np.clip(num / np.maximum(a_out, 1e-6)[..., None], 0, 255).astype(np.uint8)
+    alpha = a_out
+    r = max(ew, eh) / 2
+    x0, y0, x1, y1 = int(cx - r - 14), int(cy - r - 14), int(cx + r + 15), int(cy + r + 15)
+    rgba = np.dstack([clean, (np.clip(alpha, 0, 1) * 255).astype(np.uint8)])[y0:y1, x0:x1]
     return Image.fromarray(rgba, 'RGBA'), [round(cx - x0, 2), round(cy - y0, 2)]
 
 
-def shape_mask(size, shapes, fill=255) -> Image.Image:
+def torso_mask(img: np.ndarray, seed, scarf: bool) -> np.ndarray:
+    """The painted torso: its white, its navy outline and (for the friend) the scarf on it."""
+    h, w = img.shape[:2]
+    m = np.zeros((h + 2, w + 2), np.uint8)
+    cv2.floodFill(img.copy(), m, seed, (255, 0, 255), (58, 58, 58), (16, 16, 16),
+                  cv2.FLOODFILL_MASK_ONLY | cv2.FLOODFILL_FIXED_RANGE | (255 << 8) | 4)
+    white = m[1:-1, 1:-1] > 0
+    f = img.astype(np.int32)
+    lum = f.mean(-1)
+    navy = (lum < 120) & (f[..., 2] >= f[..., 0] - 6)
+    teal = (f[..., 1] > f[..., 0] + 12) & (f[..., 2] > f[..., 0] + 4) & (lum > 50) & (lum < 200)
+    near = cv2.dilate(white.astype(np.uint8), disk(9)) > 0
+    body = white | (near & navy)
+    if scarf:
+        sc = teal & (cv2.dilate(white.astype(np.uint8), disk(30)) > 0)
+        n, lab, stats, _ = cv2.connectedComponentsWithStats(sc.astype(np.uint8))
+        for i in range(1, n):
+            if stats[i, cv2.CC_STAT_AREA] > 400:
+                body |= lab == i
+        body |= near & navy
+    body = fill_holes(body)
+    return cv2.morphologyEx(body.astype(np.uint8), cv2.MORPH_OPEN, disk(1)) > 0
+
+
+def stroke_width(img: np.ndarray, y: int, x_edge: int, step: int) -> int:
+    lum = img[y].astype(np.float32).mean(-1)
+    n, x = 0, x_edge
+    while 0 <= x < len(lum) and lum[x] < 120 and n < 20:
+        n, x = n + 1, x + step
+    return max(4, n)
+
+
+def neck_layer(img: np.ndarray, body: np.ndarray, ell, D: float, size) -> tuple[Image.Image, dict]:
+    """A neck that continues the torso's own curved outline up under the head, with the torso's shading
+    copied from its top row and the same outline weight, so a nodding head never shows a seam."""
+    (cx, cy), _, _ = ell
+    clear = body & ~ellipse_mask(img.shape, ell, 14)
+    rows = []
+    for y in range(int(cy), img.shape[0]):
+        xs = np.nonzero(clear[y])[0]
+        if len(xs) and xs.max() - xs.min() > 0.25 * D and xs.max() - xs.min() + 1 - len(xs) < 6:
+            rows.append((y, xs.min(), xs.max()))
+        if len(rows) >= 50:
+            break
+    e = np.array(rows, float)
+    y_j = e[0, 0]
+    kl = np.polyfit(e[:, 0] - y_j, e[:, 1], 2)
+    kr = np.polyfit(e[:, 0] - y_j, e[:, 2], 2)
+    # extrapolate the curves gently: limit the quadratic term so the neck narrows, never flares
+    kl[0], kr[0] = min(kl[0], 0.0) * 0.5, max(kr[0], 0.0) * 0.5
+    wl = stroke_width(img, int(y_j + 6), int(np.polyval(kl, 6)), 1)
+    wr = stroke_width(img, int(y_j + 6), int(np.polyval(kr, 6)), -1)
+    src_y = int(y_j + 8)
+    xl0, xr0 = np.polyval(kl, 8), np.polyval(kr, 8)
+    profile = img[src_y, int(xl0):int(xr0) + 1].astype(np.float32)
+    top = cy + 0.08 * D
+    layer = np.zeros((size[1], size[0], 4), np.uint8)
+    min_w = 0.26 * D                         # a neck, never a point
+    for y in range(int(top), int(y_j + 12)):
+        xl, xr = np.polyval(kl, y - y_j), np.polyval(kr, y - y_j)
+        if xr - xl < min_w:
+            mid = (xl + xr) / 2
+            xl, xr = mid - min_w / 2, mid + min_w / 2
+        xs = np.arange(int(np.floor(xl)), int(np.ceil(xr)) + 1)
+        u = np.clip((xs - xl) / (xr - xl), 0, 1)
+        cols = profile[np.clip((u * (len(profile) - 1)).astype(int), 0, len(profile) - 1)]
+        layer[y, xs, :3] = cols.astype(np.uint8)
+        layer[y, xs, 3] = 255
+    return Image.fromarray(layer, 'RGBA'), dict(join_y=round(y_j, 1), stroke=[wl, wr], left=[round(v, 4) for v in kl],
+                                                right=[round(v, 4) for v in kr])
+
+
+def clean_torso(img: np.ndarray, body: np.ndarray, scarf: bool) -> np.ndarray:
+    """Paint out navy strokes inside a torso (the outlines of arms FLUX turned into white sleeves), keeping
+    the torso's own outline and any scarf."""
+    f = img.astype(np.int32)
+    lum = f.mean(-1)
+    navy = (lum < 140) & (f[..., 2] >= f[..., 0] - 6)
+    interior = cv2.erode(body.astype(np.uint8), disk(11)) > 0
+    stray = interior & navy
+    if scarf:
+        teal = (f[..., 1] > f[..., 0] + 12) & (f[..., 2] > f[..., 0] + 4)
+        stray &= ~(cv2.dilate(teal.astype(np.uint8), disk(10)) > 0)
+    if not stray.any():
+        return img
+    m = cv2.dilate(stray.astype(np.uint8) * 255, disk(3))
+    return cv2.inpaint(img, m, 6, cv2.INPAINT_TELEA)
+
+
+def shoulders_from(body: np.ndarray, img: np.ndarray, ell, D: float) -> dict:
+    """Shoulders on the torso outline, a little below where it clears the head."""
+    (cx, cy), _, _ = ell
+    clear = body & ~ellipse_mask(img.shape, ell, 14)
+    for y in range(int(cy), img.shape[0]):
+        xs = np.nonzero(clear[y])[0]
+        if len(xs) and xs.max() - xs.min() > 0.25 * D:
+            break
+    y = int(y + 0.05 * D)
+    xs = np.nonzero(body[y])[0]
+    xl, xr = xs.min(), xs.max()
+    wl, wr = stroke_width(img, y, xl, 1), stroke_width(img, y, xr, -1)
+    return dict(l=[round(xl + wl / 2, 1), y], r=[round(xr - wr / 2, 1), y])
+
+
+def shape_mask(size, shapes) -> Image.Image:
     m = Image.new('L', size, 0)
     d = ImageDraw.Draw(m)
     for kind, geo in shapes:
-        if kind == 'ellipse':
-            d.ellipse(geo, fill=fill)
-        else:
-            d.polygon(geo, fill=fill)
+        (d.ellipse if kind == 'ellipse' else d.polygon)(geo, fill=255)
     return m
 
 
 def feather(mask: np.ndarray, grow: int, soft: float) -> np.ndarray:
     m = mask.astype(np.uint8) * 255
     if grow:
-        m = cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * grow + 1, 2 * grow + 1)))
+        m = cv2.dilate(m, disk(grow))
     if soft:
         m = cv2.GaussianBlur(m, (0, 0), soft)
     return m.astype(np.float32) / 255
 
 
+def cup_matte(img: np.ndarray, box) -> np.ndarray:
+    """A painted green cup (and saucer) on the wooden table: its own pixels only, no table around it."""
+    x0, y0, x1, y1 = box
+    f = img.astype(np.int32)
+    r, g, b = f[..., 0], f[..., 1], f[..., 2]
+    lum = f.mean(-1)
+    green = (g >= r - 6) & (g > b) & (lum > 45)
+    pale = (lum > 150) & (np.abs(r - g) < 40) & (np.abs(g - b) < 60)      # crema, rim highlights
+    m = np.zeros(img.shape[:2], bool)
+    m[y0:y1, x0:x1] = True
+    cup = m & (green | (pale & (cv2.dilate((m & green).astype(np.uint8), disk(10)) > 0)))
+    cup = cv2.morphologyEx(cup.astype(np.uint8), cv2.MORPH_CLOSE, disk(4)) > 0
+    cup = fill_holes(cup)
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(cup.astype(np.uint8))
+    if n > 1:
+        cup = lab == (1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA])))
+    return cup
+
+
+def cup_shapes(size, g) -> tuple[np.ndarray, np.ndarray]:
+    """(cup, saucer) masks for a painted cup from its measured geometry: the rim ellipse, a bowl tapering to its
+    base, a handle ring on one side, and the saucer ellipse."""
+    w, h = size
+    cup = Image.new('L', size, 0)
+    d = ImageDraw.Draw(cup)
+    cx, cy, rx, ry = g['rim']
+    d.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=255)
+    bl, br, by, bottom = g['base']
+    left, right = [], []
+    for i in range(13):
+        t = i / 12
+        y = cy + (by - cy) * t
+        left.append((cx - rx + (bl - (cx - rx)) * t * t, y))
+        right.append((cx + rx + (br - (cx + rx)) * t * t, y))
+    arc = [((bl + br) / 2 + (br - bl) / 2 * math.cos(math.pi * i / 12), by + (bottom - by) * math.sin(math.pi * i / 12)) for i in range(13)]
+    d.polygon(left + arc[::-1] + right[::-1], fill=255)
+    _, ox0, ox1, oy0, oy1, ix0, ix1, iy0, iy1 = g['handle']
+    d.ellipse((ox0, oy0, ox1, oy1), fill=255)
+    d.ellipse((ix0, iy0, ix1, iy1), fill=0)
+    m = np.asarray(cup) > 0
+    # the handle's hole is cut, but the bowl over it stays
+    bowl = Image.new('L', size, 0)
+    db = ImageDraw.Draw(bowl)
+    db.ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=255)
+    db.polygon(left + arc[::-1] + right[::-1], fill=255)
+    m |= np.asarray(bowl) > 0
+    sc = Image.new('L', size, 0)
+    sx, sy, srx, sry = g['saucer']
+    ImageDraw.Draw(sc).ellipse((sx - srx, sy - sry, sx + srx, sy + sry), fill=255)
+    return cv2.dilate(m.astype(np.uint8), disk(1)) > 0, np.asarray(sc) > 0
+
+
+def cut(img: np.ndarray, mask: np.ndarray, soft: float = 0.7) -> tuple[Image.Image, list]:
+    a = cv2.GaussianBlur(mask.astype(np.float32), (0, 0), soft) if soft else mask.astype(np.float32)
+    ys, xs = np.nonzero(a > 0.01)
+    x0, y0, x1, y1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+    rgba = np.dstack([img, (np.clip(a, 0, 1) * 255).astype(np.uint8)])[y0:y1, x0:x1]
+    return Image.fromarray(rgba, 'RGBA'), [int(x0), int(y0)]
+
+
 def build(name: str, spec: dict):
     print(name)
-    orig = load(EC / spec['source'])
+    orig = load(src(spec['source']), (941, 1672))
     h, w = orig.shape[:2]
     size = (w, h)
+    yy, xx = np.mgrid[0:h, 0:w]
     ells = [fit_head(orig, s['head_box']) for s in spec['seats']]
-    heads = [(e[0], (e[1][0] + e[1][1]) / 4) for e in ells]          # centre and mean radius
+    Ds = [(e[1][0] + e[1][1]) / 2 for e in ells]
     for s, e in zip(spec['seats'], ells):
-        print(f"    {s['name']}: head centre ({e[0][0]:.1f},{e[0][1]:.1f}) size {e[1][0]:.0f}x{e[1][1]:.0f} angle {e[2]:.0f}")
+        print(f"    {s['name']}: head centre ({e[0][0]:.1f},{e[0][1]:.1f}) size {e[1][0]:.0f}x{e[1][1]:.0f}")
 
-    # 1. Where the arms, hands and props were: the FLUX plate differs strongly from the original there.
     roi = np.asarray(shape_mask(size, [('polygon', spec['edit_roi'])])) > 0
     head_disc = np.zeros((h, w), bool)
-    yy, xx = np.mgrid[0:h, 0:w]
     for s_, e in zip(spec['seats'], ells):
-        # the painted head up to the outer edge of its outline (less where a scarf sits right under it)
         head_disc |= ellipse_mask(orig.shape, e, s_.get('head_grow', 12))
+    t = spec['table']
+    table_m = np.asarray(shape_mask(size, [('ellipse', t['top']), ('polygon', t['stem']), ('ellipse', t['foot'])])) > 0
+
+    # 1. Where the arms, hands and lifted cups were: the FLUX plate differs strongly from the original there.
     arms = register(orig, load(FLUX / spec['arms']), ~(roi | head_disc))
     diff = cv2.GaussianBlur(np.abs(orig.astype(np.float32) - arms.astype(np.float32)).mean(-1), (0, 0), 2.5)
     edit = (diff > 34) & roi & ~head_disc
-    edit = cv2.morphologyEx(edit.astype(np.uint8), cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))) > 0
+    edit = cv2.morphologyEx(edit.astype(np.uint8), cv2.MORPH_CLOSE, disk(7)) > 0
     n, lab, stats, _ = cv2.connectedComponentsWithStats(edit.astype(np.uint8))
-    for i in range(1, n):                       # drop specks of re-painted texture
+    for i in range(1, n):
         if stats[i, cv2.CC_STAT_AREA] < 400:
             edit[lab == i] = False
-    keep = np.asarray(shape_mask(size, spec['keep'])) > 0
+    # cups that stay painted: their own pixels come from the original (tight matte, no table around them)
+    front_cups = [cup_matte(orig, b) for b in spec.get('front_cups', [])]
+    keep = np.zeros((h, w), bool)
+    for m in front_cups:
+        keep |= m
     edit &= ~keep
     a = feather(edit, 7, 3.0)[..., None]
     plate = orig.astype(np.float32) * (1 - a) + arms.astype(np.float32) * a
+    plate = plate.astype(np.uint8)
 
-    # 2. The heads: the empty café behind, then a neck continuing the torso up under the head.
-    empty = register(orig, load(FLUX / spec['empty']), ~(roi | head_disc))
-    hm = feather(head_disc, 1, 1.2)[..., None]
-    plate = plate * (1 - hm) + empty.astype(np.float32) * hm
-    plate_im = Image.fromarray(np.clip(plate, 0, 255).astype(np.uint8))
-    navy = (24, 26, 50)
-    for s, e, (c, r) in zip(spec['seats'], ells, heads):
-        neck = Image.new('RGBA', size, (0, 0, 0, 0))
-        d = ImageDraw.Draw(neck)
-        lw = max(4, round(0.024 * 2 * r))
-        if 'scarf_neck' in s:
-            # The scarf wraps the neck: under the head it continues in the scarf's own colours.
-            poly, at = s['scarf_neck']['poly'], s['scarf_neck']['colour_at']
-            teal = tuple(int(v) for v in np.median(orig[at[1] - 4:at[1] + 5, at[0] - 6:at[0] + 7].reshape(-1, 3), 0))
-            d.polygon(poly, fill=teal)
-            dark = tuple(int(v * 0.7) for v in teal)
-            d.line([poly[0], poly[1]], fill=dark, width=lw)
-            d.line([poly[3], poly[2]], fill=dark, width=lw)
-            s['neck_fit'] = dict(scarf=poly)
-        else:
-            # The torso's outer edges just below the head, extended up under it as a neck.
-            ff = arms.copy()
-            m = np.zeros((h + 2, w + 2), np.uint8)
-            cv2.floodFill(ff, m, s['torso_seed'], (255, 0, 255), (58, 58, 58), (16, 16, 16), cv2.FLOODFILL_MASK_ONLY | cv2.FLOODFILL_FIXED_RANGE | (255 << 8) | 4)
-            clear = (m[1:-1, 1:-1] > 0) & ~ellipse_mask(orig.shape, e, 14)
-            rows = []
-            for y in range(int(c[1]), h):
-                xs_ = np.nonzero(clear[y])[0]
-                if len(xs_) and xs_.max() - xs_.min() > 0.25 * 2 * r and xs_.max() - xs_.min() + 1 - len(xs_) < 6:
-                    rows.append((y, xs_.min(), xs_.max()))     # a full torso row, clear of the head
-                if len(rows) >= 40:
-                    break
-            edges = np.array(rows, float)
-            y_j = edges[:, 0].min()
-            kl = np.polyfit(edges[:, 0], edges[:, 1], 1)
-            kr = np.polyfit(edges[:, 0], edges[:, 2], 1)
-            top, yb = c[1] + 0.15 * 2 * r, y_j + 6
-            L = [(np.polyval(kl, yb) - lw / 2, yb), (np.polyval(kl, top) - lw / 2, top)]
-            R = [(np.polyval(kr, yb) + lw / 2, yb), (np.polyval(kr, top) + lw / 2, top)]
-            white = tuple(int(v) for v in np.median(arms[int(y_j) + 4:int(y_j) + 16, int(np.polyval(kl, y_j)) + 14:int(np.polyval(kr, y_j)) - 14].reshape(-1, 3), 0))
-            d.polygon([L[0], L[1], R[1], R[0]], fill=white)
-            d.line(L, fill=navy, width=lw)
-            d.line(R, fill=navy, width=lw)
-            s['neck_fit'] = dict(join_y=round(y_j, 1), left=[[round(v, 1) for v in p] for p in L], right=[[round(v, 1) for v in p] for p in R])
-        clip = Image.fromarray((feather(ellipse_mask(orig.shape, e, s.get('head_grow', 12) + 2), 0, 1.0) * 255).astype(np.uint8))
-        neck.putalpha(Image.fromarray(np.minimum(np.asarray(neck.getchannel('A')), np.asarray(clip))))
-        plate_im = Image.alpha_composite(plate_im.convert('RGBA'), neck).convert('RGB')
-    plate = np.asarray(plate_im)
-
-    # 3. Layers cut from the plate: the table, the cups in front, the torso at the shoulders.
-    t = spec['table']
-    table_m = shape_mask(size, [('ellipse', t['top']), ('polygon', t['stem']), ('ellipse', t['foot'])])
-    table = Image.fromarray(plate).convert('RGBA')
-    table.putalpha(table_m.filter(ImageFilter.GaussianBlur(1.2)))
-    front_m = shape_mask(size, spec['front'])
-    front = Image.fromarray(plate).convert('RGBA')
-    front.putalpha(front_m.filter(ImageFilter.GaussianBlur(1.0)))
-
-    occ = np.zeros((h, w), np.float32)
-    lum = plate.astype(np.float32).mean(-1)
-    navyish = (lum < 120) & (plate[..., 2].astype(int) >= plate[..., 0].astype(int) - 6)
-    for s, (c, r) in zip(spec['seats'], heads):
-        ff = arms.copy()                      # the head is still there, so its outline closes the torso off
-        mask = np.zeros((h + 2, w + 2), np.uint8)
-        cv2.floodFill(ff, mask, s['torso_seed'], (255, 0, 255), (58, 58, 58), (16, 16, 16), cv2.FLOODFILL_MASK_ONLY | cv2.FLOODFILL_FIXED_RANGE | (255 << 8) | 4)
-        torso = mask[1:-1, 1:-1] > 0
-        torso = cv2.dilate(torso.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (17, 17))) > 0
-        torso &= ((lum > 165) | navyish) & ~head_disc
-        for side in ('l', 'r'):
-            sx, sy = s['shoulders'][side]
-            disc = np.hypot(xx - sx, yy - sy) < 0.15 * 2 * r
-            occ = np.maximum(occ, (torso & disc).astype(np.float32))
-    occ = cv2.GaussianBlur(occ, (0, 0), 0.8)
-    occluder = Image.fromarray(plate).convert('RGBA')
-    occluder.putalpha(Image.fromarray((occ * 255).astype(np.uint8)))
-
+    # 2. Liftable cups: cut from the original and split from their saucers by shape (the saucer is the wide
+    #    flat part). The saucer goes back into the plate with its hidden centre filled from its own rim,
+    #    whatever FLUX did to it; the cup becomes a sprite that can be picked up.
+    cups_meta = []
     out = OUT / name
     out.mkdir(parents=True, exist_ok=True)
+    for k, g in enumerate(spec.get('lift_cups', [])):
+        cup, saucer = cup_shapes(size, g)
+        # the plate: no cup (the FLUX pixels where it stood) and the original painted saucer, its hidden
+        # centre filled from the saucer's own colours
+        a = feather(cv2.dilate(cup.astype(np.uint8), disk(4)) > 0, 0, 1.0)[..., None]
+        plate = (plate.astype(np.float32) * (1 - a) + arms.astype(np.float32) * a).astype(np.uint8)
+        visible = saucer & ~cup
+        hidden = saucer & cup
+        work = orig.copy()
+        work[~saucer] = np.median(orig[visible].reshape(-1, 3), 0).astype(np.uint8)
+        filled = cv2.inpaint(work, (hidden * 255).astype(np.uint8), 6, cv2.INPAINT_TELEA)
+        filled[~saucer] = orig[~saucer]
+        # the original table around the saucer too, so a saucer FLUX left a few pixels off can't show twice
+        ring = cv2.dilate(saucer.astype(np.uint8), disk(6)) > 0
+        region = ring & ~(cup & ~saucer)
+        a = feather(region, 0, 1.2)[..., None]
+        plate = (plate.astype(np.float32) * (1 - a) + filled.astype(np.float32) * a).astype(np.uint8)
+        sprite, xy = cut(orig, cup, 0.8)
+        sprite.save(out / f'cup-{k}.png', optimize=True)
+        cups_meta.append(dict(sprite=f'cup-{k}.png', xy=xy, size=list(sprite.size), saucer=list(g['saucer'][:2])))
+
+    # 3. Heads out (the empty café behind them); 4. seated torsos out, into their own layers.
+    empty = register(orig, load(FLUX / spec['empty']), ~(roi | head_disc))
+    seats_meta, bodies = [], []
+    for s, e, D in zip(spec['seats'], ells, Ds):
+        body = torso_mask(arms, s['torso_seed'], s.get('accessory') == 'scarf')
+        body &= ~ellipse_mask(orig.shape, e, s.get('head_grow', 12))
+        shoulders = s.get('shoulders') or shoulders_from(body, arms, e, D)
+        meta = dict(name=s['name'], head=[round(e[0][0], 1), round(e[0][1], 1)], D=round(D, 1), facing=s['facing'],
+                    accessory=s.get('accessory', ''), shoulders=shoulders, rest=s['rest'], hip=s['hip'])
+        bodies.append((s, e, D, body, meta))
+        seats_meta.append(meta)
+    cup_zone = np.zeros((h, w), bool)        # the empty-café plate keeps its cups: never take pixels from there
+    for b in spec.get('front_cups', []):
+        cup_zone |= cv2.dilate(cup_matte(orig, b).astype(np.uint8), disk(8)) > 0
+    for g in spec.get('lift_cups', []):
+        c_, s_ = cup_shapes(size, g)
+        cup_zone |= cv2.dilate((c_ | s_).astype(np.uint8), disk(8)) > 0
+    hm = feather(head_disc, 1, 1.2)[..., None]
+    plate = (plate.astype(np.float32) * (1 - hm) + empty.astype(np.float32) * hm).astype(np.uint8)
+    for s, e, D, body, meta in bodies:
+        plate = clean_torso(plate, body, s.get('accessory') == 'scarf')
+    for s, e, D, body, meta in bodies:
+        moving = s['hip'] is not None
+        # the torso itself (from the arms-free plate), extended under the tabletop where the table hides it,
+        # so it can rise a little without opening a gap at the table edge
+        if moving:
+            ext = np.zeros((h, w, 4), np.uint8)
+            for x in np.nonzero(body.any(0))[0]:
+                y = np.nonzero(body[:, x])[0].max()
+                if y + 2 < h and table_m[y + 2, x]:
+                    ys_ = np.arange(y, min(h, y + 60))
+                    ys_ = ys_[table_m[ys_, x]]                   # only where the table layer will cover it
+                    ext[ys_, x, :3] = plate[y - 2, x]
+                    ext[ys_, x, 3] = 255
+        torso_rgba = np.dstack([plate, (body * 255).astype(np.uint8)])
+        layer = Image.fromarray(torso_rgba, 'RGBA')
+        if moving:
+            layer.alpha_composite(Image.fromarray(ext, 'RGBA'))
+        # the neck, continuing the torso's outline under the head (or the scarf's colours, for the friend)
+        if 'scarf_neck' in s:
+            nk = Image.new('RGBA', size, (0, 0, 0, 0))
+            dn = ImageDraw.Draw(nk)
+            poly, at = s['scarf_neck']['poly'], s['scarf_neck']['colour_at']
+            teal = tuple(int(v) for v in np.median(orig[at[1] - 4:at[1] + 5, at[0] - 6:at[0] + 7].reshape(-1, 3), 0))
+            dn.polygon(poly, fill=teal + (255,))
+            lw = max(4, round(0.024 * D))
+            dark = tuple(int(v * 0.7) for v in teal) + (255,)
+            dn.line([poly[0], poly[1]], fill=dark, width=lw)
+            dn.line([poly[3], poly[2]], fill=dark, width=lw)
+            meta['neck'] = dict(scarf=poly)
+        else:
+            nk, meta['neck'] = neck_layer(plate, body, e, D, size)
+            # outline strokes along the curves, at the torso outline's own weight
+            dn = ImageDraw.Draw(nk)
+            (cx, cy), _, _ = e
+            nf = meta['neck']
+            y_j = nf['join_y']
+            na = np.asarray(nk.getchannel('A')) > 0
+            for k, wdt in ((0, nf['stroke'][0]), (1, nf['stroke'][1])):
+                pts = []
+                for y in range(int(cy + 0.08 * D), int(y_j + 12), 2):
+                    xs_ = np.nonzero(na[y])[0]
+                    if len(xs_):
+                        pts.append((float(xs_.min() + wdt / 2) if k == 0 else float(xs_.max() - wdt / 2), y))
+                if len(pts) > 1:
+                    dn.line(pts, fill=NAVY + (255,), width=int(wdt), joint='curve')
+        clip = (feather(ellipse_mask(orig.shape, e, s.get('head_grow', 12) + 2), 0, 1.0) * 255).astype(np.uint8)
+        nk.putalpha(Image.fromarray(np.minimum(np.asarray(nk.getchannel('A')), clip)))
+        layer.alpha_composite(nk)
+        full_alpha = np.asarray(layer.getchannel('A')) > 0
+        if moving:
+            # the body moves, so the café behind it comes from the empty plate (never over the table)
+            fa = arms.astype(np.int32)
+            legs = (fa.mean(-1) < 120) & (fa[..., 2] >= fa[..., 0] - 6) & ~(cv2.dilate(body.astype(np.uint8), disk(2)) > 0)
+            behind = (cv2.dilate(full_alpha.astype(np.uint8), disk(16)) > 0) & ~table_m & ~cup_zone & ~legs
+            bm = feather(behind, 0, 1.5)[..., None]
+            plate = (plate.astype(np.float32) * (1 - bm) + empty.astype(np.float32) * bm).astype(np.uint8)
+        else:
+            # a standing body stays painted in the plate; the neck goes into the plate under the head
+            pl = Image.fromarray(plate).convert('RGBA')
+            pl.alpha_composite(nk)
+            plate = np.asarray(pl.convert('RGB'))
+        sprite, xy = cut(np.asarray(layer.convert('RGB')), np.asarray(layer.getchannel('A')) / 255.0, 0)
+        if moving:
+            sprite.save(out / f"body-{s['name']}.png", optimize=True)
+            meta['body'] = dict(sprite=f"body-{s['name']}.png", xy=xy)
+        # the torso around each shoulder, laid back over the arm roots (soft-edged, so no hard cut)
+        occ = np.zeros((h, w), np.float32)
+        for side in ('l', 'r'):
+            sx, sy = meta['shoulders'][side]
+            disc = np.hypot(xx - sx, yy - sy) < 0.15 * D
+            occ = np.maximum(occ, (body & disc).astype(np.float32))
+        occ = cv2.GaussianBlur(occ, (0, 0), 2.0) * body
+        src_img = np.asarray(layer.convert('RGB')) if moving else plate
+        osprite, oxy = cut(src_img, occ, 0)
+        osprite.save(out / f"occluder-{s['name']}.png", optimize=True)
+        meta['occluder'] = dict(sprite=f"occluder-{s['name']}.png", xy=oxy)
+
+    # 5. Layers cut from the final plate: the table (never any torso: the drawn ellipse is only roughly the
+    #    tabletop, the torso's own lower edge is the true one), cups that stay painted in front of the arms.
+    table_layer = table_m.copy()
+    for s, e, D, body, meta in bodies:
+        table_layer &= ~(cv2.dilate(body.astype(np.uint8), disk(1)) > 0)
+    table_layer = cv2.erode(table_layer.astype(np.uint8), disk(1)) > 0
+    table = Image.fromarray(plate).convert('RGBA')
+    table.putalpha(Image.fromarray(table_layer.astype(np.uint8) * 255).filter(ImageFilter.GaussianBlur(0.7)))
+    front = np.zeros((h, w), bool)
+    for m in front_cups:
+        front |= m
     Image.fromarray(plate).save(out / 'plate.png', optimize=True)
-    for n_, layer in (('table', table), ('front', front), ('occluder', occluder)):
-        bbox = layer.getchannel('A').getbbox()
-        layer.crop(bbox).save(out / f'{n_}.png', optimize=True)
-        spec.setdefault('layers', {})[n_] = list(bbox[:2])
-    heads_meta = []
-    for s, e in zip(spec['seats'], ells):
+    # the café with nobody in it, aligned to the plate: for inserts that show only the table and props
+    if spec.get('inserts'):
+        ea = Image.fromarray(empty).convert('RGBA')
+        ea.putalpha(Image.fromarray((~table_m).astype(np.uint8) * 255))
+        em = Image.fromarray(plate).convert('RGBA')
+        em.alpha_composite(ea)
+        em.convert('RGB').save(out / 'empty.png', optimize=True)
+    layers = {}
+    tb_sprite, txy = cut(np.asarray(table.convert('RGB')), np.asarray(table.getchannel('A')) / 255.0, 0)
+    tb_sprite.save(out / 'table.png', optimize=True)
+    layers['table'] = txy
+    if front.any():
+        fs, fxy = cut(plate, front, 0.7)
+        fs.save(out / 'front.png', optimize=True)
+        layers['front'] = fxy
+    elif (out / 'front.png').exists():
+        (out / 'front.png').unlink()
+    for old in ('occluder.png',):
+        if (out / old).exists():
+            (out / old).unlink()
+    for s, e, meta in zip(spec['seats'], ells, seats_meta):
         sprite, centre = head_sprite(orig, e)
         sprite.save(out / f"head-{s['name']}.png", optimize=True)
-        heads_meta.append(dict(sprite=f"head-{s['name']}.png", centre=centre, size=[round(e[1][0], 1), round(e[1][1], 1)],
-                               angle=round(e[2], 1)))
-    meta = dict(name=name, source=f'legacy/bespoke/the-empty-chair-source/assets/{spec["source"]}', size=[w, h],
+        meta['head_art'] = dict(sprite=f"head-{s['name']}.png", centre=centre, size=[round(e[1][0], 1), round(e[1][1], 1)],
+                                angle=round(e[2], 1))
+    meta = dict(name=name, source=str(src(spec['source']).relative_to(ROOT)), size=[w, h],
                 flux=dict(arms=spec['arms'], empty=spec['empty']), light=spec['light'], wall=spec['wall'],
-                table=dict(top=t['top'], surface_y=round((t['top'][1] + t['top'][3]) / 2)), layers=spec['layers'],
-                seats=[dict(name=s['name'], head=[round(c[0], 1), round(c[1], 1)], D=round(2 * r, 1), head_art=hm_,
-                            facing=s['facing'], shade=s['shade'], accessory=s.get('accessory', ''), shoulders=s['shoulders'],
-                            rest=s['rest'], neck=s['neck_fit'])
-                       for s, (c, r), hm_ in zip(spec['seats'], heads, heads_meta)])
+                table=dict(top=t['top']), layers=layers, cups=cups_meta, seats=seats_meta)
     (out / 'base.json').write_text(json.dumps(meta, indent=1) + '\n')
 
-    # Debug overlay: masks and anchors on a grid.
+    # Debug overlay: the edit mask, anchors and the body layers' outlines, on a grid.
     dbg = Image.fromarray(plate).convert('RGBA')
+    for s, e, D, body, m in bodies:
+        if 'body' in m:
+            bl = Image.open(out / m['body']['sprite'])
+            dbg.alpha_composite(bl, tuple(m['body']['xy']))
+        hs = Image.open(out / m['head_art']['sprite'])
+        c = m['head_art']['centre']
+        dbg.alpha_composite(hs, (round(m['head'][0] - c[0]), round(m['head'][1] - c[1])))
+    for c in cups_meta:
+        dbg.alpha_composite(Image.open(out / c['sprite']), tuple(c['xy']))
     tint = Image.new('RGBA', size, (255, 0, 80, 0))
-    tint.putalpha(Image.fromarray((edit * 90).astype(np.uint8)))
-    dbg.alpha_composite(tint)
-    tint = Image.new('RGBA', size, (0, 120, 255, 0))
-    tint.putalpha(Image.fromarray((occ * 140).astype(np.uint8)))
+    tint.putalpha(Image.fromarray((edit * 70).astype(np.uint8)))
     dbg.alpha_composite(tint)
     dd = ImageDraw.Draw(dbg)
     for x in range(0, w, 50):
-        dd.line([(x, 0), (x, h)], fill=(255, 255, 255, 50))
+        dd.line([(x, 0), (x, h)], fill=(255, 255, 255, 40))
         dd.text((x + 2, 2), str(x), fill='red')
     for y in range(0, h, 50):
-        dd.line([(0, y), (w, y)], fill=(255, 255, 255, 50))
+        dd.line([(0, y), (w, y)], fill=(255, 255, 255, 40))
         dd.text((2, y + 2), str(y), fill='red')
-    dd.ellipse(t['top'], outline=(0, 255, 0), width=2)
-    dd.polygon(t['stem'], outline=(0, 255, 0))
-    dd.ellipse(t['foot'], outline=(0, 255, 0), width=2)
-    for kind, geo in spec['front']:
-        dd.ellipse(geo, outline=(255, 255, 0), width=2)
-    if spec['wall']:
-        dd.rectangle(spec['wall'], outline=(255, 128, 0), width=3)
-    for s, (c, r) in zip(spec['seats'], heads):
-        dd.ellipse((c[0] - r, c[1] - r, c[0] + r, c[1] + r), outline=(0, 255, 255), width=1)
+    for m in seats_meta:
         for side, col in (('l', (255, 0, 0)), ('r', (0, 0, 255))):
             for key in ('shoulders', 'rest'):
-                x, y = s[key][side]
-                dd.ellipse((x - 6, y - 6, x + 6, y + 6), fill=col)
+                x, y = m[key][side]
+                dd.ellipse((x - 5, y - 5, x + 5, y + 5), fill=col)
+        if m['hip']:
+            x, y = m['hip']
+            dd.rectangle((x - 6, y - 6, x + 6, y + 6), outline=(0, 255, 0), width=3)
+    if spec['wall']:
+        dd.rectangle(spec['wall'], outline=(255, 128, 0), width=3)
     DEBUG.mkdir(parents=True, exist_ok=True)
     dbg.convert('RGB').save(DEBUG / f'debug-{name}.jpg', quality=90)
-    print('   ', out.relative_to(ROOT))
+    print('   ', out.relative_to(ROOT), [m['shoulders'] for m in seats_meta])
 
 
 if __name__ == '__main__':

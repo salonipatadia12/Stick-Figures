@@ -380,6 +380,21 @@ the character reference) will point at `legacy/bespoke/…`.
    - New base poses (standing, other facings) are made with FLUX.2 klein and need the user's approval.
    - On-screen text stays out of the bottom quarter and the right edge; the counter goes upper-middle.
 
+10. **Look approved; full sample (2026-11-06).**
+    - The user approved the painted-base look, the calendar, the text placement and the palette.
+    - New bases approved: `friend-at-table` (FLUX `s52`, extra cup painted out) and `lead-standing`
+      (FLUX `s62`). Rejected: `s51` (a realistic person in the window) and `s61`. The
+      seated-facing-the-other-way pose was skipped.
+    - Clean-up done:
+      - torso edges where the old arms were
+      - neck joins (heads cut at their own outline; necks follow the torso outline)
+      - cup halos (cups cut with measured shapes)
+      - painted arm finish
+      - hands on the table edge instead of the W pose
+      - the seated body leans and squashes about the hip
+    - Next stop: the full ~45 s sample (michael), with captions, SFX, the QA report and the contact
+      sheet.
+
 ## Appendix: how this was verified
 
 - Tests: `.venv/bin/python -m unittest discover -s tests -v`, run in both environments.

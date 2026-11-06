@@ -6,34 +6,62 @@
   1672
  ],
  "flux": {
-  "arms": "plate-03-arms-b-s6.png",
+  "arms": "plate-03-nocups2-s95.png",
   "empty": "plate-03-empty-s7.png"
  },
  "light": "right",
- "wall": null,
+ "wall": [
+  546,
+  330,
+  690,
+  486
+ ],
  "table": {
   "top": [
    88,
    880,
    800,
    1080
-  ],
-  "surface_y": 980
+  ]
  },
  "layers": {
   "table": [
-   85,
-   877
-  ],
-  "front": [
-   163,
-   863
-  ],
-  "occluder": [
-   145,
-   707
+   87,
+   879
   ]
  },
+ "cups": [
+  {
+   "sprite": "cup-0.png",
+   "xy": [
+    168,
+    868
+   ],
+   "size": [
+    123,
+    87
+   ],
+   "saucer": [
+    239,
+    944
+   ]
+  },
+  {
+   "sprite": "cup-1.png",
+   "xy": [
+    614,
+    865
+   ],
+   "size": [
+    119,
+    81
+   ],
+   "saucer": [
+    666.7,
+    938
+   ]
+  }
+ ],
  "seats": [
   {
    "name": "lead",
@@ -42,63 +70,74 @@
     582.6
    ],
    "D": 270.9,
-   "head_art": {
-    "sprite": "head-lead.png",
-    "centre": [
-     151.88,
-     151.57
-    ],
-    "size": [
-     264.1,
-     277.8
-    ],
-    "angle": 64.2
-   },
    "facing": 1,
-   "shade": "left",
    "accessory": "",
    "shoulders": {
     "l": [
-     178,
-     750
+     167.0,
+     736
     ],
     "r": [
-     292,
-     752
+     295.5,
+     736
     ]
    },
    "rest": {
     "l": [
-     318,
-     912
+     245,
+     905
     ],
     "r": [
      468,
      900
     ]
    },
+   "hip": [
+    185,
+    1085
+   ],
    "neck": {
-    "join_y": 734.0,
+    "join_y": 731.0,
+    "stroke": [
+     8,
+     6
+    ],
     "left": [
-     [
-      169.8,
-      740.0
-     ],
-     [
-      227.8,
-      623.2
-     ]
+     0.0,
+     -0.5108,
+     165.7224
     ],
     "right": [
-     [
-      295.8,
-      740.0
-     ],
-     [
-      271.6,
-      623.2
-     ]
+     0.0,
+     0.5025,
+     296.2298
     ]
+   },
+   "body": {
+    "sprite": "body-lead.png",
+    "xy": [
+     96,
+     604
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     144,
+     717
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     153.88,
+     153.57
+    ],
+    "size": [
+     264.1,
+     277.8
+    ],
+    "angle": 64.2
    }
   },
   {
@@ -108,29 +147,16 @@
     543.9
    ],
    "D": 291.3,
-   "head_art": {
-    "sprite": "head-friend.png",
-    "centre": [
-     161.88,
-     161.94
-    ],
-    "size": [
-     284.3,
-     298.3
-    ],
-    "angle": 66.8
-   },
    "facing": -1,
-   "shade": "left",
    "accessory": "scarf",
    "shoulders": {
     "l": [
-     598,
-     752
+     599.0,
+     708
     ],
     "r": [
-     790,
-     754
+     785.5,
+     708
     ]
    },
    "rest": {
@@ -143,6 +169,10 @@
      918
     ]
    },
+   "hip": [
+    760,
+    1090
+   ],
    "neck": {
     "scarf": [
      [
@@ -162,6 +192,32 @@
       716
      ]
     ]
+   },
+   "body": {
+    "sprite": "body-friend.png",
+    "xy": [
+     559,
+     612
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     586,
+     671
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     163.88,
+     163.94
+    ],
+    "size": [
+     284.3,
+     298.3
+    ],
+    "angle": 66.8
    }
   }
  ]

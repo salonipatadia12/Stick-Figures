@@ -111,6 +111,10 @@ motion edition. See `docs/RIG.md`.
   (too big for 16 GB).
 - **Proof stop:** a 10–15 s animated test of beats 1–2 (`scripts/motion_test/beats_1_2.py`).
 
+**Status (2026-11-06):** the full sample is built with these. Beats 1–9 are on four painted bases
+(`styles/cozy/bases/`), choreographed in `scripts/motion_test/scene_salary.py` (beats 1–2) and
+`salary_beats.py` (beats 3–9), and rendered by `scripts/motion_test/episode_salary.py`.
+
 ### 3. Voice and captions
 
 - **`pipeline/voice.py`:** Kokoro-82M (Apache-2.0), local. One voice per episode, cached by text
@@ -122,6 +126,12 @@ motion edition. See `docs/RIG.md`.
   - one line at a time, grouped by meaning
   - the current word highlighted
   - burned into the video, plus an `.srt` file
+
+**Status (2026-11-06):**
+- Kokoro clips are trimmed to their speech and laid end to end with a 0.25 s breath.
+- `pipeline/captions.py` aligns the script's own spelling to the word timings, groups lines by
+  meaning (whole clauses, split where a phrase starts, no one-word orphans), highlights the current
+  word, burns them in above the bottom quarter and writes the `.srt`.
 
 ### 4. Compositor (Python: Pillow + FFmpeg)
 
@@ -135,6 +145,14 @@ motion edition. See `docs/RIG.md`.
 - **SFX:** a small CC0 library in `assets/sfx/`, placed on the anchor words.
 - **Audio master:** an optional music bed ducked under the voice, then two-pass `loudnorm`
   to −14 LUFS with true peak ≤ −1 dB.
+
+**Status (2026-11-06):**
+- Shots render in parallel and are cached by a digest of their timing and code.
+- On-screen graphics are in `pipeline/overlays.py`: slams, the checklist card, ink arrows and circles,
+  a speech bubble, tags, receipts.
+- SFX are synthesized in `pipeline/sfx.py`, so there is no sample library and no licences. A quiet
+  plucked bed is ducked under the voice, and a two-pass loudnorm masters the mix to −14 LUFS with
+  true peak at most −1.5 dB.
 
 ### 5. QA and the first end-to-end Short
 

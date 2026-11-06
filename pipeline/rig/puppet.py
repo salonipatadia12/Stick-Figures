@@ -35,8 +35,9 @@ SS = 2
 UPPER, FORE = 0.52, 0.46          # arm bones in D: seated at the table, the hands reach the tabletop (as in the art)
 ARM_W = (0.072, 0.128, 0.118)     # root (tucked behind the torso side), elbow, wrist
 HAND_LEN = 0.29
-ARM_NAVY = (27, 29, 56)           # the painted limbs' navy
-LIMB_LIGHT = (70, 72, 116)
+ARM_NAVY = (24, 27, 51)           # the painted limbs' navy (sampled from the Empty Chair arms and legs)
+LIMB_LIGHT = (40, 43, 74)         # their slightly lighter side toward the light
+LIMB_RIM = (11, 14, 34)           # and their darker rim
 NECK = 0.42                       # head centre to the neck pivot, in D
 DROOP = 2.5                       # how strongly the elbow solver prefers elbows down
 
@@ -47,8 +48,11 @@ class Base:
     name: str
     meta: dict
     plate: Image.Image
-    layers: dict                     # 'table' / 'front' / 'occluder' -> (RGBA sprite, (x, y) in plate px)
+    layers: dict                     # 'table' / 'front' -> (RGBA sprite, (x, y) in plate px)
     heads: dict                      # seat name -> (featureless head sprite, its centre in sprite px)
+    bodies: dict = field(default_factory=dict)      # seat name -> (painted torso sprite, (x, y)), seated bases
+    occluders: dict = field(default_factory=dict)   # seat name -> (torso around the shoulders, (x, y))
+    cups: list = field(default_factory=list)        # [(cup sprite, (x, y))] cups that can be picked up
 
     @property
     def size(self):
@@ -58,16 +62,49 @@ class Base:
         return next(s for s in self.meta['seats'] if s['name'] == name)
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=6)
 def load_base(name: str) -> Base:
     d = BASE_DIR / name
     meta = json.loads((d / 'base.json').read_text())
     layers = {k: (Image.open(d / f'{k}.png').convert('RGBA'), tuple(xy)) for k, xy in meta['layers'].items()}
-    heads = {}
+    heads, bodies, occluders = {}, {}, {}
     for s in meta['seats']:
         art = s['head_art']
         heads[s['name']] = (Image.open(d / art['sprite']).convert('RGBA'), tuple(art['centre']))
-    return Base(name, meta, Image.open(d / 'plate.png').convert('RGB'), layers, heads)
+        if s.get('body'):
+            bodies[s['name']] = (Image.open(d / s['body']['sprite']).convert('RGBA'), tuple(s['body']['xy']))
+        occluders[s['name']] = (Image.open(d / s['occluder']['sprite']).convert('RGBA'), tuple(s['occluder']['xy']))
+    cups = [(Image.open(d / c['sprite']).convert('RGBA'), tuple(c['xy'])) for c in meta.get('cups', [])]
+    return Base(name, meta, Image.open(d / 'plate.png').convert('RGB'), layers, heads, bodies, occluders, cups)
+
+
+def body_matrix(pose: Pose) -> np.ndarray:
+    """How the painted body leans and squashes about its hip: a few degrees and a few percent at most,
+    so the painting never warps. lean + = the top toward screen-right; lift stretches, crouch squashes."""
+    th = math.radians(max(-4.0, min(4.0, pose.lean)))
+    sy = 1 + max(-0.045, min(0.045, 0.45 * (pose.lift - pose.crouch) + 0.5 * pose.stretch + 0.006 * pose.breath))
+    sx = 1 - 0.4 * (sy - 1)
+    c, s_ = math.cos(th), math.sin(th)
+    return np.array([[c * sx, -s_ * sy], [s_ * sx, c * sy]])
+
+
+def affine_layer(sprite: Image.Image, xy, pivot, M: np.ndarray, cam):
+    """A plate-space sprite moved by M about pivot (plate px), then through the camera. Returns (image, xy)."""
+    x0c, y0c, sc = cam
+    w, h = sprite.size
+    corners = np.array([[0, 0], [w, 0], [0, h], [w, h]], float) + np.array(xy, float)
+    P = np.array(pivot, float)
+    moved = (corners - P) @ M.T + P
+    scr = (moved - np.array([x0c, y0c])) * sc
+    bx0, by0 = np.floor(scr.min(0)).astype(int) - 1
+    bx1, by1 = np.ceil(scr.max(0)).astype(int) + 1
+    # output pixel (u, v) -> plate point -> sprite point
+    Mi = np.linalg.inv(M)
+    A = Mi / sc                                   # d(sprite)/d(screen)
+    off = Mi @ (np.array([bx0, by0], float) / sc + np.array([x0c, y0c]) - P) + P - np.array(xy, float)
+    coeffs = (A[0, 0], A[0, 1], off[0], A[1, 0], A[1, 1], off[1])
+    out = sprite.transform((int(bx1 - bx0), int(by1 - by0)), Image.AFFINE, coeffs, Image.BICUBIC)
+    return out, (int(bx0), int(by0))
 
 
 # ---- the face ---------------------------------------------------------------------------------------
@@ -134,18 +171,27 @@ def draw_face(d: ImageDraw.ImageDraw, c, u: float, pose: Pose, span: float = 0.3
         d.line(curve, fill=NAVY, width=line, joint='curve')
 
 
-def limb_light(layer: Image.Image, lit: int):
-    """A lit band on the light side of each navy limb, inside its silhouette (painted modelling)."""
-    a = layer.getchannel('A')
-    shift = max(2, round(layer.width / 260))
-    moved = a.transform(a.size, Image.AFFINE, (1, 0, lit * shift * 2.0, 0, 1, 0))
-    band = np.clip(np.asarray(a, np.float32) - np.asarray(moved, np.float32), 0, 255) / 255
-    band = np.asarray(Image.fromarray((band * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(shift * 0.8)), np.float32) / 255
-    arr = np.asarray(layer).astype(np.float32)
-    mask = (arr[..., :3].mean(-1) < 80)[..., None]
-    col = np.array(LIMB_LIGHT, np.float32)
-    arr[..., :3] = np.where(mask, arr[..., :3] * (1 - 0.6 * band[..., None]) + col * 0.6 * band[..., None], arr[..., :3])
-    layer.paste(Image.fromarray(arr.astype(np.uint8), 'RGBA'))
+def paint_limb(mask: Image.Image, lit: int, width: float) -> Image.Image:
+    """Colour a limb silhouette like the painted arms: near-flat navy, a slightly lighter side toward the
+    light, a darker rim of a few pixels and soft edges (sampled from the Empty Chair limbs)."""
+    width = float(width)
+    a = np.asarray(mask, np.float32) / 255
+    rim_px = max(3, int(round(width * 0.09)))
+    eroded = np.asarray(mask.filter(ImageFilter.MinFilter(2 * rim_px + 1)), np.float32) / 255
+    rim = np.asarray(Image.fromarray(((a - eroded).clip(0, 1) * 255).astype(np.uint8)).filter(
+        ImageFilter.GaussianBlur(rim_px * 0.45)), np.float32) / 255
+    shift = int(round(width * 0.28)) * lit
+    moved = np.roll(a, shift, axis=1)
+    lit_band = np.asarray(Image.fromarray(((a - moved).clip(0, 1) * 255).astype(np.uint8)).filter(
+        ImageFilter.GaussianBlur(width * 0.18)), np.float32) / 255
+    base = np.array(ARM_NAVY, np.float32)
+    rgb = np.broadcast_to(base, a.shape + (3,)).copy()
+    rgb += (np.array(LIMB_LIGHT, np.float32) - base) * (0.42 * lit_band * (1 - rim))[..., None]
+    rgb = rgb * (1 - 0.55 * rim[..., None]) + np.array(LIMB_RIM, np.float32) * (0.55 * rim[..., None])
+    rng = np.random.default_rng(int(a.sum()) % 9973)
+    rgb += rng.normal(0, 1.2, a.shape)[..., None]
+    alpha = np.asarray(mask.filter(ImageFilter.GaussianBlur(max(0.8, width * 0.012))), np.float32)
+    return Image.fromarray(np.dstack([rgb.clip(0, 255), alpha]).astype(np.uint8), 'RGBA')
 
 
 # ---- a character on a base --------------------------------------------------------------------------
@@ -179,24 +225,43 @@ class Puppet:
     def rest(self, side: str) -> tuple:
         return self.body(self.s['rest'][side])
 
+    @property
+    def moves(self) -> bool:
+        """Seated bases have the torso as its own layer, so the body can lean and squash about the hip."""
+        return self.seat_name in self.base.bodies and bool(self.s.get('hip'))
+
+    def body_transform(self, pose: Pose):
+        """(matrix, pivot) for the painted body, or the identity when this base's body is fixed."""
+        if not self.moves:
+            return np.eye(2), (0.0, 0.0)
+        return body_matrix(pose), tuple(self.s['hip'])
+
+    def on_body(self, p, M, pivot):
+        """A plate point carried by the body's lean/squash."""
+        q = M @ (np.array(p, float) - np.array(pivot, float)) + np.array(pivot, float)
+        return (float(q[0]), float(q[1]))
+
     def joints(self, pose: Pose, scale: float = 1.0, origin=(0.0, 0.0)) -> dict:
         D = self.D * scale
 
         def S(p):
             return ((p[0] - origin[0]) * scale, (p[1] - origin[1]) * scale)
 
+        M, P = self.body_transform(pose)
+        lean_deg = math.degrees(math.atan2(M[1, 0], M[0, 0])) if self.moves else 0.0
         hx, hy = self.s['head']
-        pivot = (hx, hy + NECK * self.D)
-        # The painted body stays put: lean, breath and bounces show in the head and shoulders.
-        dx = pose.head_dx + 0.006 * pose.lean
-        dy = pose.head_dy - 0.014 * pose.breath + 0.45 * (pose.crouch - pose.lift) - 0.25 * pose.stretch
-        hc = rot((0.0, -NECK * self.D), pose.head_tilt)
-        head = (pivot[0] + hc[0] + dx * self.D, pivot[1] + hc[1] + dy * self.D)
-        j = dict(D=D, scale=scale, origin=origin, head=S(head), head_angle=pose.head_tilt, neck=S(pivot))
-        centre_x = S(self.mid)[0]
-        lift = (0.010 * pose.breath + 0.25 * (pose.lift - pose.crouch)) * self.D
+        neck = self.on_body((hx, hy + NECK * self.D), M, P)
+        # A fixed (standing) body shows lean and bounce in the head and shoulders only.
+        dx = pose.head_dx + (0.0 if self.moves else 0.006 * pose.lean)
+        dy = pose.head_dy - 0.014 * pose.breath + (0.0 if self.moves else 0.45 * (pose.crouch - pose.lift) - 0.25 * pose.stretch)
+        hc = rot((0.0, -NECK * self.D), pose.head_tilt + lean_deg)
+        head = (neck[0] + hc[0] + dx * self.D, neck[1] + hc[1] + dy * self.D)
+        j = dict(D=D, scale=scale, origin=origin, head=S(head), head_angle=pose.head_tilt + lean_deg, neck=S(neck),
+                 body_M=M, body_pivot=P)
+        centre_x = S(self.on_body(self.mid, M, P))[0]
+        lift = 0.0 if self.moves else (0.010 * pose.breath + 0.25 * (pose.lift - pose.crouch)) * self.D
         for side, sign, hand, bend in (('l', -1, pose.lh, pose.l_bend), ('r', 1, pose.rh, pose.r_bend)):
-            sx, sy = self.shoulders[side]
+            sx, sy = self.on_body(self.shoulders[side], M, P)
             shp = S((sx, sy - lift))
             target = S(self.world(hand))
             # Elbows hang down by default (the art's arms hug the torso); an action can lift one out to the side.
@@ -248,12 +313,11 @@ class Puppet:
 
         Ds = D * SS
         sign = -1 if side == 'l' else 1
-        arm = Image.new('RGBA', layer.size, (0, 0, 0, 0))
-        da = ImageDraw.Draw(arm)
-        tube(da, segment_path(L(sh), L(el), 0.03 * sign), ARM_W[0] * Ds, ARM_W[1] * Ds, fill=ARM_NAVY)
-        tube(da, segment_path(L(el), L(wr), 0.02 * sign), ARM_W[1] * Ds, ARM_W[2] * Ds, fill=ARM_NAVY)
-        limb_light(arm, self.light)
-        layer.alpha_composite(arm)
+        sil = Image.new('L', layer.size, 0)
+        da = ImageDraw.Draw(sil)
+        tube(da, segment_path(L(sh), L(el), 0.03 * sign), ARM_W[0] * Ds, ARM_W[1] * Ds, fill=255)
+        tube(da, segment_path(L(el), L(wr), 0.02 * sign), ARM_W[1] * Ds, ARM_W[2] * Ds, fill=255)
+        layer.alpha_composite(paint_limb(sil, self.light, ARM_W[1] * Ds))
         drawing, angle, hs = hp['drawing'], hp['angle'], hp['scale'] * SS
         if drawing.back.getbbox():
             paste_rotated(layer, drawing.back, drawing.wrist, L(wr), angle, hs)
@@ -318,31 +382,46 @@ class Stage:
         y0 = min(max(cy - ch / 2, 0), bh - ch)
         return (x0, y0, self.W / cw)
 
-    def layer(self, name: str, cam):
-        """A base layer (table / front / occluder) cropped and scaled to the camera, as (image, xy)."""
-        sprite, (lx, ly) = self.base.layers[name]
+    @staticmethod
+    def place(sprite: Image.Image, xy, cam):
+        """A plate-space sprite cropped and scaled to the camera, as (image, screen xy)."""
         x0, y0, s = cam
         w, h = max(1, round(sprite.width * s)), max(1, round(sprite.height * s))
-        return sprite.resize((w, h), Image.BICUBIC), (round((lx - x0) * s), round((ly - y0) * s))
+        return sprite.resize((w, h), Image.BICUBIC), (round((xy[0] - x0) * s), round((xy[1] - y0) * s))
+
+    def layer(self, name: str, cam):
+        """A base layer (table / front) through the camera, as (image, xy)."""
+        sprite, xy = self.base.layers[name]
+        return self.place(sprite, xy, cam)
 
     def plate(self, cam) -> Image.Image:
         x0, y0, s = cam
         box = (x0, y0, x0 + self.W / s, y0 + self.H / s)
         return self.base.plate.resize((self.W, self.H), Image.LANCZOS, box=box).convert('RGBA')
 
+    def body_layer(self, p: 'Puppet', which: dict, cam):
+        sprite, xy = which[p.seat_name]
+        M, P = p.last_joints['body_M'], p.last_joints['body_pivot']
+        if np.allclose(M, np.eye(2), atol=1e-5):
+            return self.place(sprite, xy, cam)
+        return affine_layer(sprite, xy, P, M, cam)
+
     def compose(self, cam, puppets: list, poses: list, held: list | None = None, wall=None, on_table=None,
-                flying=None) -> Image.Image:
-        """wall / on_table / flying: callables(frame, cam) for the scene's props at their depth."""
+                flying=None, cups_away=()) -> Image.Image:
+        """wall / on_table / flying: callables(frame, cam) for the scene's props at their depth.
+        cups_away: indices of the base's liftable cups that are not on the table this frame (held, moved)."""
         held = held or [{} for _ in puppets]
         frame = self.plate(cam)
         if wall:
             wall(frame, cam)
         outs = [p.render(pose, cam[2], cam[:2], h) for p, pose, h in zip(puppets, poses, held)]
+        for p in puppets:                          # the painted torsos, leaning or squashing about the hip
+            if p.moves:
+                frame.alpha_composite(*self.body_layer(p, self.base.bodies, cam))
         for o in outs:
             for im, xy in o['under']:
                 frame.alpha_composite(im, xy)
-        if any(o['under'] for o in outs):
-            frame.alpha_composite(*self.layer('table', cam))
+        frame.alpha_composite(*self.layer('table', cam))
         if on_table:
             on_table(frame, cam)
         for key in ('far', 'head', 'near'):
@@ -350,18 +429,23 @@ class Stage:
                 for im, xy in o[key]:
                     frame.alpha_composite(im, xy)
         # The torso around the shoulders goes back over the arm roots (never over a head).
-        occ, oxy = self.layer('occluder', cam)
-        occ = occ.copy()
-        cut = Image.new('L', occ.size, 0)
-        dc = ImageDraw.Draw(cut)
         for p in puppets:
-            hx, hy = p.last_joints['head']
-            r = 0.52 * p.D * cam[2]
-            dc.ellipse((hx - oxy[0] - r, hy - oxy[1] - r, hx - oxy[0] + r, hy - oxy[1] + r), fill=255)
-        a = np.asarray(occ.getchannel('A'), np.float32) * (1 - np.asarray(cut, np.float32) / 255)
-        occ.putalpha(Image.fromarray(a.astype(np.uint8)))
-        frame.alpha_composite(occ, oxy)
-        frame.alpha_composite(*self.layer('front', cam))
+            occ, oxy = self.body_layer(p, self.base.occluders, cam)
+            occ = occ.copy()
+            cut = Image.new('L', occ.size, 0)
+            dc = ImageDraw.Draw(cut)
+            for q in puppets:
+                hx, hy = q.last_joints['head']
+                r = 0.52 * q.D * cam[2]
+                dc.ellipse((hx - oxy[0] - r, hy - oxy[1] - r, hx - oxy[0] + r, hy - oxy[1] + r), fill=255)
+            a = np.asarray(occ.getchannel('A'), np.float32) * (1 - np.asarray(cut, np.float32) / 255)
+            occ.putalpha(Image.fromarray(a.astype(np.uint8)))
+            frame.alpha_composite(occ, oxy)
+        if 'front' in self.base.layers:
+            frame.alpha_composite(*self.layer('front', cam))
+        for k, (cup, xy) in enumerate(self.base.cups):
+            if k not in cups_away:
+                frame.alpha_composite(*self.place(cup, xy, cam))
         if flying:
             flying(frame, cam)
         return frame
