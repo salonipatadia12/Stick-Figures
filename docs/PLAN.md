@@ -93,16 +93,22 @@ motion edition. See `docs/RIG.md`.
   - Props (wallet, coin, ...) on a plain background, cut out automatically.
   - Props whose insides animate (calendar marks, a filling jar, cash, a moth) are drawn in code
     in the same cel style.
-- **Characters are jointed rigs** (`pipeline/rig/`) built from The Empty Chair artwork: the head
-  plate is cut from the approved art (shading kept, features animated), with torso, two-bone arms
-  and legs, hands with grip anchors, and feet. Held props move with the hand.
+- **Characters sit on painted base poses** (changed 2026-11-06), as in The Empty Chair motion edition.
+  - The seated body, legs, chair and table are an Empty Chair painting (`styles/cozy/bases/`).
+  - Only the head, arms, hands and props are animated on top: the frame's own head with a live face,
+    thick navy arms coming out from behind the torso, and the anatomical hand library. Held props
+    move with the hand.
+  - The base's café is the Empty Chair café itself. Other places or poses (standing, other facings)
+    are new bases made with FLUX.2 klein from the Empty Chair frames, and only approved ones are used.
+- **On-screen text** stays out of the bottom quarter and the right edge (the Shorts title and
+  buttons); the $ counter sits in the upper-middle.
 - **Every beat needs a real body action** that matches the narration, plus idle life (breathing,
   blinks, weight shift). Camera moves alone never count as movement.
 - **Actions are keyed to narration words** (Kokoro word timings), so the same choreography
   re-times itself to the voice.
-- **Optional:** FLUX.2 klein 4B (Apache-2.0) only if it helps make clean part artwork or new
-  poses; a Z-Image LoRA only as a free side experiment. Qwen-Image-Edit stays parked (too big
-  for 16 GB).
+- **FLUX.2 klein 4B** (Apache-2.0, 8-bit, local) makes the clean plates and new base poses from the
+  Empty Chair frames. A Z-Image LoRA only as a free side experiment. Qwen-Image-Edit stays parked
+  (too big for 16 GB).
 - **Proof stop:** a 10–15 s animated test of beats 1–2 (`scripts/motion_test/beats_1_2.py`).
 
 ### 3. Voice and captions

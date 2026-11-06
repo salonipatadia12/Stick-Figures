@@ -373,6 +373,12 @@ the character reference) will point at `legacy/bespoke/…`.
      weights in the shared model cache belong to Faceless Reels and stay (the user's choice).
    - The unused full-precision Z-Image download (31 GB) was deleted with the user's OK.
    - The two folders were merged: Stick_Figures is the only checkout, on `pipeline-v2`.
+9. **Painted base poses (2026-11-06).** This replaces the procedural seated body from decision 8.
+   - The seated body, legs and chair are an Empty Chair painting, cut from its frames with FLUX.2 klein
+     clean plates. Only the head, arms, hands and props animate on top (`docs/RIG.md`).
+   - Arms are thicker and shorter, as in the art: the hands reach the tabletop, not the floor.
+   - New base poses (standing, other facings) are made with FLUX.2 klein and need the user's approval.
+   - On-screen text stays out of the bottom quarter and the right edge; the counter goes upper-middle.
 
 ## Appendix: how this was verified
 

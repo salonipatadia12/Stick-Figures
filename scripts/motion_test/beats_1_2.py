@@ -81,19 +81,30 @@ def text_layer(text, size, fill=(255, 255, 255), stroke=(22, 22, 46)):
     return im
 
 
-def slam(frame, im, t, t0, y):
+def slam(frame, im, t, t0, centre):
     if t < t0:
         return
     u = t - t0
     s = 1.0 + 0.45 * (1 - back_out(u / 0.2, 2.2))
     shake = 10 * math.sin(u * 70) * math.exp(-u * 12)
     sized = im.resize((max(1, int(im.width * s)), max(1, int(im.height * s))), Image.BICUBIC)
-    frame.alpha_composite(sized, (int(W / 2 - sized.width / 2 + shake), int(y - sized.height / 2)))
+    frame.alpha_composite(sized, (int(centre[0] - sized.width / 2 + shake), int(centre[1] - sized.height / 2)))
 
 
-BROKE = text_layer('Broke a week later', 92)
-EXAMPLE = text_layer('Example', 54, fill=(255, 236, 190))
-TEXT_Y = 1505   # lower third, above the bottom eighth that stays clear for captions
+def two_lines(top, bottom, size_top, size_bottom, fill=(255, 255, 255)):
+    a, b = text_layer(top, size_top, fill), text_layer(bottom, size_bottom, fill)
+    im = Image.new('RGBA', (max(a.width, b.width), a.height + b.height - 18), (0, 0, 0, 0))
+    im.alpha_composite(a, ((im.width - a.width) // 2, 0))
+    im.alpha_composite(b, ((im.width - b.width) // 2, a.height - 18))
+    return im
+
+
+# On-screen text stays in the upper-middle: clear of the bottom quarter and the right edge, where the
+# Shorts title and buttons sit, and clear of the calendar on the wall and the lead's head.
+SAFE = dict(bottom=int(H * 0.75), right=W - 150)
+TEXT_C = (318, 350)
+BROKE = two_lines('Broke', 'a week later', 118, 70)
+EXAMPLE = text_layer('Example', 50, fill=(255, 236, 190))
 
 
 def counter(frame, t):
@@ -101,15 +112,15 @@ def counter(frame, t):
         return
     value = 1500 * scene.jar_level(t)
     pop = math.exp(-max(0.0, t - T['lands']) * 9) if t >= T['lands'] else 0
-    im = text_layer(f'${int(round(value / 10) * 10):,}', int(140 * (1 + 0.18 * pop)), fill=(255, 226, 120))
-    frame.alpha_composite(EXAMPLE, (int(W / 2 - EXAMPLE.width / 2), TEXT_Y - 150))
-    frame.alpha_composite(im, (int(W / 2 - im.width / 2), TEXT_Y - 90 - int(10 * pop)))
+    im = text_layer(f'${int(round(value / 10) * 10):,}', int(128 * (1 + 0.16 * pop)), fill=(255, 226, 120))
+    frame.alpha_composite(EXAMPLE, (int(TEXT_C[0] - EXAMPLE.width / 2), TEXT_C[1] - 128))
+    frame.alpha_composite(im, (int(TEXT_C[0] - im.width / 2), TEXT_C[1] - 66 - int(8 * pop)))
 
 
-def frame_at(t):
-    frame = scene.frame(t)
+def frame_at(t, cam=None):
+    frame = scene.frame(t, cam)
     if t < CUT:
-        slam(frame, BROKE, t, T['week'], TEXT_Y)
+        slam(frame, BROKE, t, T['week'], TEXT_C)
     else:
         counter(frame, t)
     return frame.convert('RGB')
@@ -172,19 +183,30 @@ def mix_audio(path):
 
 
 # ---- review sheets -----------------------------------------------------------------------------------
-def compare_sheet(path, t):
-    """One beat-1 frame next to The Empty Chair at the same framing (character size and table height)."""
-    ref = Image.open(ROOT / 'legacy/bespoke/the-empty-chair-source/assets/03-together.png').convert('RGB').resize((W, H), Image.LANCZOS)
-    ours = frame_at(t)
+EC = ROOT / 'legacy/bespoke/the-empty-chair-source/assets'
+
+
+def side_by_side(path, left, right, left_label, right_label):
     font = ImageFont.truetype(S.FONT, 40)
     sheet = Image.new('RGB', (W * 2 + 30, H + 90), (246, 238, 222))
-    sheet.paste(ref, (0, 90))
-    sheet.paste(ours, (W + 30, 90))
+    sheet.paste(left, (0, 90))
+    sheet.paste(right, (W + 30, 90))
     d = ImageDraw.Draw(sheet)
-    d.text((20, 25), 'The Empty Chair (03-together)', font=font, fill=(30, 30, 50))
-    d.text((W + 50, 25), f'Rig, beat 1 at {t:.2f} s', font=font, fill=(30, 30, 50))
+    d.text((20, 25), left_label, font=font, fill=(30, 30, 50))
+    d.text((W + 50, 25), right_label, font=font, fill=(30, 30, 50))
     sheet.save(path, quality=90)
     print(path)
+
+
+def compare_sheets():
+    """Beat 1 on its painted base next to the Empty Chair frame it was cut from, at the same (full) framing,
+    and the two-shot base next to 03-together."""
+    full = scene.stage.camera(470, 836, 941)
+    t = T['rich'] + 0.1
+    side_by_side(OUT_DIR / 'compare-empty-chair.jpg', Image.open(EC / '04-waiting.png').convert('RGB').resize((W, H), Image.LANCZOS),
+                 frame_at(t, full), 'The Empty Chair (04-waiting)', f'Base pose + rig, beat 1 at {t:.2f} s')
+    side_by_side(OUT_DIR / 'compare-two-shot.jpg', Image.open(EC / '03-together.png').convert('RGB').resize((W, H), Image.LANCZOS),
+                 S.two_shot(), 'The Empty Chair (03-together)', 'Base pose + rigs: the lead and the friend')
 
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -196,18 +218,7 @@ if args.hands:
         ('06-return-final.png', (630, 650, 720, 740)), ('06-return-final.png', (750, 720, 860, 800)), ('03-together.png', (400, 720, 500, 790))]]
     print(hands.contact_sheet(OUT_DIR / 'hand-library.jpg', refs))
 if args.compare:
-    compare_sheet(OUT_DIR / 'compare-empty-chair.jpg', T['rich'] + 0.1)
-    ref = Image.open(ROOT / 'legacy/bespoke/the-empty-chair-source/assets/03-together.png').convert('RGB').resize((W, H), Image.LANCZOS)
-    two = S.two_shot(scene)
-    font = ImageFont.truetype(S.FONT, 40)
-    sheet = Image.new('RGB', (W * 2 + 30, H + 90), (246, 238, 222))
-    sheet.paste(ref, (0, 90))
-    sheet.paste(two, (W + 30, 90))
-    d = ImageDraw.Draw(sheet)
-    d.text((20, 25), 'The Empty Chair (03-together)', font=font, fill=(30, 30, 50))
-    d.text((W + 50, 25), 'Rigs: the lead and the scarf friend', font=font, fill=(30, 30, 50))
-    sheet.save(OUT_DIR / 'compare-two-shot.jpg', quality=90)
-    print(OUT_DIR / 'compare-two-shot.jpg')
+    compare_sheets()
 if args.still is not None:
     for s in args.still:
         p = OUT_DIR / f'still-{args.voice}-{s:05.2f}.jpg'

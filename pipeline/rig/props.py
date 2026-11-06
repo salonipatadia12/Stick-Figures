@@ -494,3 +494,85 @@ def keep_centre(sprite: Image.Image, cut: int = 5) -> Image.Image:
     out = sprite.copy()
     out.putalpha(alpha)
     return out.crop(alpha.getbbox())
+
+
+class WallCalendar:
+    """A story-sized wall calendar that reads on a phone: three week rows with day numbers, payday (a Friday)
+    circled in green, and the seven days after it crossed off with bold red X marks, one by one.
+    The paper is drawn once with a painted finish; only the ink is drawn per frame."""
+
+    FONT = '/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf'
+
+    def __init__(self, width: int = 420, payday_col: int = 4, crossed: int = 7, seed: int = 9):
+        from PIL import ImageFont
+        self.w = w = width
+        self.h = h = int(width * 0.88)
+        self.payday = (0, payday_col)
+        self.crossed = crossed
+        im = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        r = int(w * 0.035)
+        d.rounded_rectangle((0, 0, w - 1, h - 1), radius=r, fill=PAPER, outline=(150, 120, 92), width=max(2, w // 120))
+        head = int(h * 0.19)
+        d.rounded_rectangle((0, 0, w - 1, head), radius=r, fill=INK_RED)
+        d.rectangle((0, head // 2, w - 1, head), fill=INK_RED)
+        for x in (w * 0.26, w * 0.74):                     # binding rings
+            d.ellipse((x - w * 0.03, -w * 0.035, x + w * 0.03, w * 0.045), fill=(84, 82, 90))
+            d.ellipse((x - w * 0.015, -w * 0.02, x + w * 0.015, w * 0.03), fill=(150, 150, 158))
+        d.rounded_rectangle((w * 0.30, head * 0.40, w * 0.70, head * 0.70), radius=int(w * 0.02), fill=(244, 200, 184))
+        self.grid = gx0, gy0, gx1, gy1 = w * 0.05, head + h * 0.11, w * 0.95, h * 0.95
+        cw, ch = (gx1 - gx0) / 7, (gy1 - gy0) / 3
+        self.cw, self.ch = cw, ch
+        small = ImageFont.truetype(self.FONT, max(8, int(cw * 0.42)))
+        for i, letter in enumerate('MTWTFSS'):           # weekday initials
+            x = gx0 + (i + 0.5) * cw
+            d.text((x, head + h * 0.055), letter, font=small, fill=(120, 96, 80), anchor='mm')
+        line = max(1, w // 160)
+        for i in range(8):
+            d.line([(gx0 + i * cw, gy0), (gx0 + i * cw, gy1)], fill=(206, 190, 166), width=line)
+        for j in range(4):
+            d.line([(gx0, gy0 + j * ch), (gx1, gy0 + j * ch)], fill=(206, 190, 166), width=line)
+        num = ImageFont.truetype(self.FONT, max(8, int(cw * 0.36)))
+        for j in range(3):
+            for i in range(7):
+                d.text((gx0 + i * cw + cw * 0.10, gy0 + j * ch + ch * 0.08), str(1 + j * 7 + i), font=num, fill=(110, 92, 80))
+        self.paper = painterly(im, seed, 0.8)
+
+    def cell(self, r, c):
+        gx0, gy0, _, _ = self.grid
+        return gx0 + (c + 0.5) * self.cw, gy0 + (r + 0.55) * self.ch
+
+    def cells(self):
+        r, c = self.payday
+        out = []
+        for _ in range(self.crossed):
+            c += 1
+            if c > 6:
+                r, c = r + 1, 0
+            out.append((r, c))
+        return out
+
+    def render(self, marks: float, circle: float = 1.0) -> Image.Image:
+        im = self.paper.copy()
+        ink = Image.new('RGBA', im.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(ink)
+        s = min(self.cw, self.ch)
+        x, y = self.cell(*self.payday)
+        if circle > 0:
+            rr = self.cw * 0.50
+            d.arc((x - rr, y - rr, x + rr, y + rr), -90, -90 + 370 * min(1, circle),
+                  fill=(36, 128, 78, 245), width=max(3, int(s * 0.13)))
+        width = max(3, int(s * 0.16))
+        for k, (r, c) in enumerate(self.cells()):
+            p = marks - k
+            if p <= 0:
+                break
+            x, y = self.cell(r, c)
+            a = s * 0.36
+            first = min(1, p * 2)
+            _wobble_line(d, (x - a, y - a), (x - a + 2 * a * first, y - a + 2 * a * first), width, (196, 44, 38, 245), k * 2)
+            if p > 0.5:
+                second = min(1, (p - 0.5) * 2)
+                _wobble_line(d, (x + a, y - a), (x + a - 2 * a * second, y - a + 2 * a * second), width, (196, 44, 38, 245), k * 2 + 1)
+        im.alpha_composite(ink.filter(ImageFilter.GaussianBlur(0.7)))
+        return im

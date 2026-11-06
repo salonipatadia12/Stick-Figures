@@ -1,0 +1,168 @@
+{
+ "name": "together",
+ "source": "legacy/bespoke/the-empty-chair-source/assets/03-together.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-03-arms-b-s6.png",
+  "empty": "plate-03-empty-s7.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": {
+  "top": [
+   88,
+   880,
+   800,
+   1080
+  ],
+  "surface_y": 980
+ },
+ "layers": {
+  "table": [
+   85,
+   877
+  ],
+  "front": [
+   163,
+   863
+  ],
+  "occluder": [
+   145,
+   707
+  ]
+ },
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    243.9,
+    582.6
+   ],
+   "D": 270.9,
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     151.88,
+     151.57
+    ],
+    "size": [
+     264.1,
+     277.8
+    ],
+    "angle": 64.2
+   },
+   "facing": 1,
+   "shade": "left",
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     178,
+     750
+    ],
+    "r": [
+     292,
+     752
+    ]
+   },
+   "rest": {
+    "l": [
+     318,
+     912
+    ],
+    "r": [
+     468,
+     900
+    ]
+   },
+   "neck": {
+    "join_y": 734.0,
+    "left": [
+     [
+      169.8,
+      740.0
+     ],
+     [
+      227.8,
+      623.2
+     ]
+    ],
+    "right": [
+     [
+      295.8,
+      740.0
+     ],
+     [
+      271.6,
+      623.2
+     ]
+    ]
+   }
+  },
+  {
+   "name": "friend",
+   "head": [
+    660.9,
+    543.9
+   ],
+   "D": 291.3,
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     161.88,
+     161.94
+    ],
+    "size": [
+     284.3,
+     298.3
+    ],
+    "angle": 66.8
+   },
+   "facing": -1,
+   "shade": "left",
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     598,
+     752
+    ],
+    "r": [
+     790,
+     754
+    ]
+   },
+   "rest": {
+    "l": [
+     556,
+     904
+    ],
+    "r": [
+     772,
+     918
+    ]
+   },
+   "neck": {
+    "scarf": [
+     [
+      632,
+      716
+     ],
+     [
+      644,
+      612
+     ],
+     [
+      722,
+      612
+     ],
+     [
+      738,
+      716
+     ]
+    ]
+   }
+  }
+ ]
+}

@@ -7,8 +7,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from pipeline.rig import hands, parts
+from pipeline.rig import hands, parts, puppet
 from pipeline.rig.actions import Action, Idle, Performance
+from pipeline.rig.puppet import Puppet, Stage, load_base
 from pipeline.rig.skeleton import FORE, GRIPPING, UPPER, Character, Held, Pose, limb, two_bone
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/motion_test'))
@@ -122,14 +123,14 @@ class ChoreographyTest(unittest.TestCase):
         for i in range(int(end * 30)):
             t = i / 30
             pose = scene.perf.pose(t)
-            j = char.joints(pose, (scene_salary.LEAD_X, scene_salary.SEAT), 1.0, (0.0, 0.0))
+            j = char.joints(pose)
             for side in ('l', 'r'):
                 char.hand_placement(pose, j, side)
             yield t, scene, pose, j
 
     def check(self, T, cut, end):
-        face_r = 0.30 * scene_salary.D
         for t, scene, pose, j in self.frames(T, cut, end):
+            face_r = 0.30 * scene.lead.D
             for side in ('l', 'r'):
                 requested = pose.l_rot if side == 'l' else pose.r_rot
                 self.assertLessEqual(abs(requested), hands.WRIST_LIMIT, f'{t:.2f}s {side}: wrist asked to bend {requested:.0f} deg')
@@ -148,6 +149,68 @@ class ChoreographyTest(unittest.TestCase):
 
     def test_heart_take(self):
         self.check(HEART, 4.93 * 0.86, 12.38 * 0.86)
+
+
+class PaintedBaseTest(unittest.TestCase):
+    """Characters on a painted Empty Chair base: only the head, arms, hands and props are drawn."""
+
+    def setUp(self):
+        self.base = load_base('lead-at-table')
+        self.lead = Puppet(self.base, 'lead')
+
+    def test_arms_match_the_art_hands_reach_the_tabletop_not_the_floor(self):
+        reach = (puppet.UPPER + puppet.FORE) * self.lead.D
+        for side in ('l', 'r'):
+            sx, sy = self.lead.shoulders[side]
+            rx, ry = self.lead.s['rest'][side]
+            self.assertLess(math.dist((sx, sy), (rx, ry)), reach, f'{side} hand cannot reach its place on the table')
+            floor = 1380   # the painted feet stand at about y 1380-1500 in 04-waiting
+            self.assertLess(sy + reach, floor, 'arms long enough to reach the floor')
+        self.assertGreater(puppet.ARM_W[1], 0.11)   # thick navy segments, like the painted sleeves
+
+    def test_arm_roots_are_hidden_behind_the_torso_side(self):
+        occ, (ox, oy) = self.base.layers['occluder']
+        a = np.asarray(occ.getchannel('A'))
+        for side in ('l', 'r'):
+            sx, sy = self.lead.shoulders[side]
+            self.assertGreater(a[round(sy) - oy, round(sx) - ox], 200, f'{side} shoulder is not covered by the torso')
+
+    def test_held_prop_sits_in_the_grip_on_the_painted_base(self):
+        sprite = Image.new('RGBA', (40, 20), (200, 100, 50, 255))
+        grips = []
+        for target in ((120, 640), (110, 560)):
+            pose = replace(Pose(), lh=self.lead.body(target), l_shape='grip')
+            self.lead.render(pose, 1.0, (0, 0), held={'l': Held(sprite, (20, 18), 0.4)})
+            j = self.lead.last_joints
+            self.assertEqual(j['l_held_anchor'], j['l_grip'])
+            grips.append(j['l_grip'])
+        self.assertGreater(math.dist(*grips), 50)
+        with self.assertRaises(ValueError):
+            self.lead.render(replace(Pose(), l_shape='open_palm'), held={'l': Held(sprite, (20, 18), 0.4)})
+
+    def test_painted_heads_are_gone_from_the_plates_and_the_head_art_has_no_face(self):
+        for name in ('lead-at-table', 'together'):
+            base = load_base(name)
+            plate = np.asarray(base.plate).astype(int)
+            for seat in base.meta['seats']:
+                cx, cy = seat['head']
+                r = seat['D'] * 0.30
+                inner = plate[int(cy - r):int(cy + r), int(cx - r):int(cx + r)]
+                self.assertLess((inner.mean(-1) > 235).mean(), 0.5, f'{name}: {seat["name"]} head still painted in the plate')
+                sprite, (hx, hy) = base.heads[seat['name']]
+                face = np.asarray(sprite).astype(int)[int(hy - r):int(hy + r), int(hx - r):int(hx + r)]
+                self.assertEqual(int(((face[..., :3].mean(-1) < 120) & (face[..., 3] > 200)).sum()), 0,
+                                 f'{name}: {seat["name"]} head art still has painted features')
+
+    def test_far_arm_goes_behind_the_head_unless_the_action_needs_it(self):
+        self.assertEqual(self.lead.arm_group(Pose(), self.lead.far), 'far')
+        self.assertEqual(self.lead.arm_group(replace(Pose(), extra={self.lead.far + '_front': 1.0}), self.lead.far), 'near')
+        self.assertEqual(self.lead.arm_group(replace(Pose(), extra={'l_under': 1.0}), 'l'), 'under')
+
+    def test_two_shot_hands_stay_on_their_own_side(self):
+        base = load_base('together')
+        lead, friend = Puppet(base, 'lead'), Puppet(base, 'friend')
+        self.assertLess(max(lead.s['rest']['l'][0], lead.s['rest']['r'][0]), min(friend.s['rest']['l'][0], friend.s['rest']['r'][0]))
 
 
 class PerformanceTest(unittest.TestCase):

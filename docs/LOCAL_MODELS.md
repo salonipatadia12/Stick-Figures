@@ -23,6 +23,7 @@ Engines run one at a time, never in parallel.
 | Z-Image Turbo, 8-bit, mflux/MLX | text-to-image | **Yes**, in low-RAM mode with pre-quantized weights | 60–73 s per 768×1344 image, peak 7.5 GB |
 | SDXL base 1.0 + cozy LoRA, diffusers/MPS | text-to-image locked to the Empty Chair style | **Yes** | see the bake-off results below |
 | SDXL LoRA training, diffusers + peft/MPS | one-off per style | **Yes, slowly** | about 12 s per step at 768×1344, so about 2 h for 600 steps |
+| FLUX.2 klein 4B, 8-bit (`mflux-community/flux2-klein-4b-mflux-q8`), mflux/MLX | image edits with Empty Chair frames as references: clean plates and new base poses | **Yes**, in low-RAM mode | about 55 s per 944×1680 edit (4 steps), peak 11.1 GB; 8.6 GB download |
 | Qwen-Image-Edit-2511, mflux/MLX | reference consistency, pose variants | **No** | see the note below |
 | Kokoro-82M, PyTorch/CPU | narration | **Yes**, faster than real time | 1.3–2.0 s per 3.7–4.3 s clip; loads in 3 s |
 | Chatterbox 0.1.7, PyTorch/MPS | expressive narration and voice cloning | **Dropped 2026-11-05** | 9–16 s per 3 s clip in the bake-off; slower than real time |
@@ -46,6 +47,7 @@ Each licence was checked on the model's Hugging Face card or the package metadat
 |---|---|---|
 | [Tongyi-MAI/Z-Image-Turbo](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo), plus the [mflux-community 8-bit conversion](https://huggingface.co/mflux-community/z-image-turbo-mflux-q8) | Apache-2.0 | Yes |
 | [stabilityai/stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/LICENSE.md) | CreativeML Open RAIL++-M | Yes. See the note after this table. |
+| [black-forest-labs/FLUX.2-klein-4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B), plus the [mflux-community 8-bit conversion](https://huggingface.co/mflux-community/flux2-klein-4b-mflux-q8) | Apache-2.0 | Yes |
 | [Qwen/Qwen-Image-Edit-2511](https://huggingface.co/Qwen/Qwen-Image-Edit-2511) | Apache-2.0 | Yes (but it doesn't run here) |
 | [hexgrad/Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) | Apache-2.0 | Yes |
 | [ResembleAI/chatterbox](https://huggingface.co/ResembleAI/chatterbox) | MIT | Yes (dropped; bake-off only) |
@@ -134,8 +136,8 @@ backgrounds and props (`scripts/motion_test/gen_assets.py`); characters are rigs
   "nobody" in the prompt and people in the negative prompt). No figures appeared.
 - **Props:** the wallet came out in the cel style (navy outline, painted leather) at LoRA 0.6 on a
   plain white background, and is cut out by flood-filling the background.
-- **Not used:** FLUX.2 klein 4B (the rig parts did not need it) and the Z-Image LoRA side experiment
-  (not run yet).
+- **Not used then:** FLUX.2 klein 4B (the rig parts did not need it; it is used from round 3 on, below) and
+  the Z-Image LoRA side experiment (not run yet).
 
 ### Second round (after the review of the first clip)
 
@@ -153,3 +155,25 @@ generation was checked, and these are the results:
 | Glass jar | `prop-jar2-s17` | The first jar was painted inside a kitchen. The retry is a clean jar; its glass is made see-through so the coin pile shows |
 | Moth | `prop-moth-s8` | Usable; SDXL added corner ornaments, removed by keeping the centre shape |
 | Wall calendar | none | Rejected: SDXL drew a dense yearly planner full of fake lettering. The calendar stays code-drawn, with a painted finish, so the X marks land exactly on the grid |
+
+### Third round: painted base poses (FLUX.2 klein 4B)
+
+The procedural seated body was off-model, so characters now sit on painted base poses cut from The
+Empty Chair frames (`docs/RIG.md`). FLUX.2 klein edits the frames
+(`scripts/motion_test/flux_bases.py`, prompts in `styles/cozy/bases/flux-prompts.json`). Only the
+pixels where a moving part used to be are used, after aligning each edit to the original.
+
+| Edit | Seed used | Result |
+|---|---|---|
+| 04-waiting without arms, hands, pen and sketchbook | `plate-04-arms-s11` | Clean on the first try: the torso side and its navy outline rebuilt, bare tabletop, cup kept |
+| 04-waiting with nobody in it (the café behind the head) | `plate-04-empty-s6` | Clean |
+| 03-together without arms and the sketchbook | `plate-03-arms-b-s6` | The first prompt (seeds 3, 4) repainted the arms as white sleeves, leaving navy lines inside the torsos. Describing the torso as "one smooth white bulb with a single outline on each side" fixed it |
+| 03-together with nobody in it | `plate-03-empty-s7` | Clean |
+
+**New base-pose candidates, for review (not in the library):**
+
+| Candidate | Result |
+|---|---|
+| The friend seated alone (03-together with the lead removed) | `cand-friend-seated-s51` and `-s52` are both usable |
+| The lead standing (b06) | FLUX kept the seated pose from the reference (`cand-lead-standing-s31`–`s33`). The retry starts from 02-question, where the friend stands by the table: it removes the seated character and the scarf (`cand-lead-standing-b`) |
+| The lead seated, facing the other way | Not usable: one seed drew both characters, the other gave the lead a scarf |

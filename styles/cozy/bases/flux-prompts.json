@@ -1,0 +1,159 @@
+{
+  "plate-04-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png"
+    ],
+    "seeds": [
+      11,
+      22
+    ],
+    "prompt": "Edit this illustration. Remove ONLY the character's two navy arms and both navy mitten hands, the green pen and the open sketchbook. Where the arms were, show the plain white torso with its dark navy outline, the wooden chair back behind it and the bare wooden tabletop. Keep the round white head and its face, the white torso, the navy legs, the chairs, the round table, the green cup and saucer, the cafe, the ivy and the light exactly the same. Same painterly style, same framing."
+  },
+  "plate-04-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png"
+    ],
+    "seeds": [
+      5,
+      6
+    ],
+    "prompt": "Edit this illustration. Remove the white round-headed character completely: head, torso, arms, hands and legs. Show what is behind them: the empty wooden chair at the round table, the tall window with trees and ivy, the cafe wall and the tiled floor. Also remove the open sketchbook and the pen; the tabletop is bare wood with only the green cup and saucer. Keep the round table, both wooden chairs, the cafe, the plants and the light exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-03-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      3,
+      4
+    ],
+    "prompt": "Edit this illustration. Remove ONLY both characters' navy arms and navy mitten hands and the open sketchbook. Where the arms were, show each character's plain white torso with its dark navy outline, the wooden chairs behind and the bare wooden tabletop. Keep both round white heads and their faces, the teal scarf, both white torsos, the navy legs, both green cups and saucers, the orange bag, the round table, the chairs and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-03-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      7,
+      8
+    ],
+    "prompt": "Edit this illustration. Remove both white round-headed characters completely, including the teal scarf, and the open sketchbook. Show what is behind them: two empty wooden chairs at the round table, the tall windows with trees and ivy, the cafe wall and the tiled floor. Keep the round table with the two green cups and saucers, the orange bag on the floor, the plants and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "cand-lead-standing": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "02-question.png"
+    ],
+    "seeds": [
+      31,
+      32,
+      33
+    ],
+    "prompt": "Using the character from the first image and the cafe from both images: the same white round-headed character with a dark navy outline, white bulb-shaped torso and dark navy limbs and mitten hands, now STANDING on the tiled floor beside the round wooden cafe table, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, same proportions as the reference (very large round head, short torso, long thin navy legs). Cafe with ivy, tall windows, golden afternoon light and dappled shadows, portrait framing like the references. No text."
+  },
+  "cand-lead-seated-left": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      41,
+      42
+    ],
+    "prompt": "Using the character and cafe from the first image: the same white round-headed character with a dark navy outline, white bulb-shaped torso and dark navy limbs, seated on the wooden chair on the RIGHT side of the round cafe table, three-quarter view facing LEFT toward the table, hands resting on the tabletop, legs under the table, same proportions and painterly style. Golden light, ivy, tall windows, dappled shadows, portrait framing like the reference. No text."
+  },
+  "cand-friend-seated": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      51,
+      52
+    ],
+    "prompt": "Edit this illustration. Remove the white round-headed character on the LEFT completely (head, torso, arms, hands and legs) and the open sketchbook; show the empty wooden chair and the cafe behind where they sat. Keep the character on the RIGHT with the teal scarf exactly as they are, seated at the round table, and keep both green cups, the orange bag, the table and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "plate-03-arms-b": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      5,
+      6,
+      9
+    ],
+    "prompt": "Edit this illustration. Delete both characters' navy arms and navy mitten hands entirely, and the open sketchbook. Each character's torso becomes one smooth white bulb shape, like a bowling pin, with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torsos. Show the wooden chairs behind them and the bare wooden tabletop. Keep both round heads and their faces, the teal scarf, the navy legs, both green cups and saucers, the orange bag, the round table and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  },
+  "cand-lead-standing-b": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "02-question.png"
+    ],
+    "seeds": [
+      61,
+      62
+    ],
+    "prompt": "Edit this illustration. Remove the seated white character on the left completely (head, torso, arms, hands, legs and pen) and the open sketchbook, and show the empty wooden chair and the cafe behind them. Remove the teal scarf from the standing character on the right, so their white torso is plain with the same navy outline and their neck shows. Keep the standing character's pose, head, face, arms, legs and feet exactly the same, and keep the table, the cup, the orange bag, the chairs and the cafe exactly the same. Same painterly illustration style, same camera and framing, same golden light and dappled shadows. Do not redraw or move anything else."
+  }
+}

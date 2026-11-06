@@ -1,0 +1,110 @@
+{
+ "name": "lead-at-table",
+ "source": "legacy/bespoke/the-empty-chair-source/assets/04-waiting.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-04-arms-s11.png",
+  "empty": "plate-04-empty-s6.png"
+ },
+ "light": "right",
+ "wall": [
+  458,
+  196,
+  668,
+  470
+ ],
+ "table": {
+  "top": [
+   52,
+   840,
+   690,
+   1062
+  ],
+  "surface_y": 951
+ },
+ "layers": {
+  "table": [
+   49,
+   837
+  ],
+  "front": [
+   63,
+   859
+  ],
+  "occluder": [
+   177,
+   703
+  ]
+ },
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    297.4,
+    569.2
+   ],
+   "D": 288.5,
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     161.44,
+     161.2
+    ],
+    "size": [
+     279.9,
+     297.2
+    ],
+    "angle": 64.5
+   },
+   "facing": 1,
+   "shade": "left",
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     212,
+     734
+    ],
+    "r": [
+     296,
+     736
+    ]
+   },
+   "rest": {
+    "l": [
+     236,
+     902
+    ],
+    "r": [
+     392,
+     878
+    ]
+   },
+   "neck": {
+    "join_y": 726.0,
+    "left": [
+     [
+      199.5,
+      732.0
+     ],
+     [
+      267.2,
+      612.5
+     ]
+    ],
+    "right": [
+     [
+      310.5,
+      732.0
+     ],
+     [
+      323.7,
+      612.5
+     ]
+    ]
+   }
+  }
+ ]
+}
