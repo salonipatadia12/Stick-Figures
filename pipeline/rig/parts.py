@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'legacy/bespoke/character-motion-source/assets/character.png'
@@ -240,3 +240,129 @@ def foot_sprite() -> Image.Image:
     d.rounded_rectangle((int(0.02 * U), int(0.03 * U), int(0.38 * U), int(0.18 * U)), radius=int(0.075 * U), fill=NAVY)
     d.arc((int(0.20 * U), int(0.05 * U), int(0.36 * U), int(0.16 * U)), -70, 40, fill=NAVY_EDGE, width=int(0.008 * U))
     return im
+
+
+# ---- torso and scarf cut from the Empty Chair art ------------------------------------------------------
+BODY_SOURCE = ROOT / 'legacy/bespoke/character-motion-source/assets/body-base.png'   # same framing as SOURCE
+FRIEND_SOURCE = ROOT / 'legacy/bespoke/the-empty-chair-source/assets/02-question.png'
+ART_D = 2 * HEAD_R
+TORSO_LEN = 1.45   # head diameters from the torso's top edge to its rounded bottom
+
+
+def build_torso():
+    """The lead's torso from the Empty Chair art (body-base.png), head and arm removed, extended to full length.
+
+    The art shows the upper torso (it was drawn behind a table); the lower part is extended by stretching its
+    lowest rows, then given a rounded bottom with the same navy outline. Returns (sprite, anchors in art px)."""
+    art = np.asarray(Image.open(BODY_SOURCE).convert('RGBA')).astype(np.float32)
+    a, rgb = art[..., 3], art[..., :3]
+    lum = rgb.mean(-1)
+    y_top, y_art = 838, 1286
+    hx, hy = HEAD_CENTER
+    rows = {}
+    for y in range(905, y_art + 1):
+        cols = np.nonzero(a[y] > 128)[0]
+        left = int(cols.min())
+        x = left + 4
+        while x < art.shape[1] - 1 and lum[y, x] < 140:  # through the heavy left outline
+            x += 1
+        while x < art.shape[1] - 3 and not (lum[y, x] < 90 and lum[y, x + 1] < 90 and lum[y, x + 2] < 90):
+            x += 1
+        rows[y] = (left, x + 9)  # include the thin right outline
+    ys = np.arange(905, 965)
+    fit = np.polyfit(ys, [rows[y][1] for y in ys], 1)
+    lfit = np.polyfit(ys, [rows[y][0] for y in ys], 1)
+    for y in range(y_top, 905):
+        cols = np.nonzero(a[y] > 128)[0]
+        left = int(cols.min()) if len(cols) and cols.min() < np.polyval(lfit, y) + 30 else int(np.polyval(lfit, y))
+        rows[y] = (left, int(round(np.polyval(fit, y))))
+    x0 = min(v[0] for v in rows.values()) - 6
+    x1 = max(v[1] for v in rows.values()) + 6
+    W = x1 - x0
+    piece = np.zeros((y_art - y_top + 1, W, 4), np.float32)
+    for y in range(y_top, y_art + 1):
+        l, r = rows[y]
+        piece[y - y_top, l - x0:r - x0 + 1] = art[y, l:r + 1]
+        piece[y - y_top, l - x0:r - x0 + 1, 3] = 255
+    # Under the head: continue each column upward from the first row below the head circle.
+    yy, xx = np.mgrid[y_top:y_art + 1, x0:x1]
+    inside = np.hypot(xx - hx, yy - hy) < HEAD_R + 10
+    for c in range(W):
+        col = inside[:, c]
+        if col.any():
+            first_clear = np.argmax(~col) if (~col).any() else 0
+            src = min(first_clear + 6, piece.shape[0] - 1)
+            alpha = piece[col, c, 3].copy()
+            piece[col, c, :3] = piece[src, c, :3]
+            piece[col, c, 3] = alpha
+    # Extend: stretch the lowest rows to reach the full torso length.
+    total = int(TORSO_LEN * ART_D)
+    keep = 1080 - y_top
+    stretch_src = piece[keep:]
+    stretch_h = total - keep
+    lower = np.asarray(Image.fromarray(stretch_src.astype(np.uint8), 'RGBA').resize((W, stretch_h), Image.BICUBIC)).astype(np.float32)
+    body = np.concatenate([piece[:keep], lower], axis=0)
+    # Rounded bottom and top-right corner (the top-right sits under the head; rounding hides it when the head tilts).
+    mask = Image.new('L', (W, total), 0)
+    md = ImageDraw.Draw(mask)
+    md.rounded_rectangle((-60, -40, W + 60, total - 1), radius=int(0.30 * ART_D), fill=255)
+    m = np.asarray(mask.filter(ImageFilter.GaussianBlur(1.0))).astype(np.float32) / 255
+    body[..., 3] = body[..., 3] * m
+    sprite = Image.fromarray(np.clip(body, 0, 255).astype(np.uint8), 'RGBA')
+    # Navy outline along the new rounded bottom, matching the art's outline weight.
+    edge = mask.filter(ImageFilter.MinFilter(13))
+    ring = ImageChops.subtract(mask, edge)
+    ring = Image.fromarray((np.asarray(ring) * (np.arange(total)[:, None] > total - int(0.42 * ART_D))).astype(np.uint8))
+    sprite.paste(Image.new('RGBA', sprite.size, NAVY + (255,)), (0, 0), ring)
+    a2 = np.asarray(sprite.getchannel('A'))
+    bottom_l = np.nonzero(a2[total - int(0.35 * ART_D)] > 128)[0]
+    hip = (float((bottom_l.min() + bottom_l.max()) / 2) + x0, y_top + total - 0.16 * ART_D)
+    anchors = dict(origin=(x0, y_top), hip=hip, head=HEAD_CENTER, neck=(HEAD_CENTER[0], HEAD_CENTER[1] + 0.82 * HEAD_R),
+                   shoulder_l=(rows[905][0] + 34.0, 912.0), shoulder_r=(rows[905][1] - 18.0, 916.0), art_d=ART_D)
+    return sprite, anchors
+
+
+def build_scarf():
+    """The friend's teal scarf from 02-question: wrap and fringed tail, cut by colour (with its dark edges)."""
+    src = np.asarray(Image.open(FRIEND_SOURCE).convert('RGB')).astype(np.int32)
+    r, g, b = src[..., 0], src[..., 1], src[..., 2]
+    box = (540, 560, 730, 790)
+    teal = (b > r + 12) & (g > r + 18) & (b > 70) & (r < 150)
+    region = np.zeros_like(teal)
+    region[box[1]:box[3], box[0]:box[2]] = True
+    core = Image.fromarray(((teal & region) * 255).astype(np.uint8))
+    grown = np.asarray(core.filter(ImageFilter.MaxFilter(5))) > 0
+    dark = src.mean(-1) < 110
+    mask = (np.asarray(core) > 0) | (grown & dark & region)
+    m = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
+    out = Image.fromarray(src.astype(np.uint8)).convert('RGBA')
+    out.putalpha(m)
+    bb = m.getbbox()
+    # Friend's head in this frame: the white disc above the scarf.
+    white = (src.mean(-1) > 205)
+    sub = white[380:600, 470:820]
+    ys, xs = np.nonzero(sub)
+    head_c = ((xs.min() + xs.max()) / 2 + 470, (ys.min() + 380 + (ys.min() + 380 + (xs.max() - xs.min()))) / 2)
+    head_d = float(xs.max() - xs.min())
+    return out.crop(bb), dict(origin=bb[:2], head=head_c, head_d=head_d)
+
+
+def _cached(name, builder):
+    import json
+    img, meta = CACHE / f'{name}.png', CACHE / f'{name}.json'
+    if not img.exists() or not meta.exists():
+        CACHE.mkdir(parents=True, exist_ok=True)
+        sprite, anchors = builder()
+        sprite.save(img)
+        meta.write_text(json.dumps({k: (list(v) if isinstance(v, tuple) else v) for k, v in anchors.items()}, indent=1))
+    return Image.open(img).convert('RGBA'), {k: (tuple(v) if isinstance(v, list) else v) for k, v in json.loads(meta.read_text()).items()}
+
+
+@lru_cache(maxsize=2)
+def torso_art():
+    return _cached('torso', build_torso)
+
+
+@lru_cache(maxsize=2)
+def scarf_art():
+    return _cached('scarf', build_scarf)

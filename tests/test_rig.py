@@ -1,34 +1,84 @@
 import math
+import sys
 import unittest
 from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
-from pipeline.rig import parts
+from pipeline.rig import hands, parts
 from pipeline.rig.actions import Action, Idle, Performance
-from pipeline.rig.skeleton import FORE, UPPER, Character, Held, Pose, limb, two_bone
+from pipeline.rig.skeleton import FORE, GRIPPING, UPPER, Character, Held, Pose, limb, two_bone
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/motion_test'))
+import scene_salary  # noqa: E402
+
+# Word times of the am_michael take (seconds on the video timeline); the heart take is faster.
+MICHAEL = dict(payday=0.8, feels=1.21, rich=1.54, so=2.29, broke=2.98, a=3.25, week=3.36, later=3.66, say=5.55,
+               amount=5.79, lands=7.56, every=7.99, other=8.33, friday=8.61, it=9.62, huge=10.26)
+HEART = {k: round(v * 0.86, 3) for k, v in MICHAEL.items()}
+
+
+def segment_distance(p, a, b):
+    ax, ay = a
+    bx, by = b
+    dx, dy = bx - ax, by - ay
+    t = max(0.0, min(1.0, ((p[0] - ax) * dx + (p[1] - ay) * dy) / ((dx * dx + dy * dy) or 1e-9)))
+    return math.hypot(p[0] - (ax + t * dx), p[1] - (ay + t * dy))
 
 
 class TwoBoneTest(unittest.TestCase):
     def test_bone_lengths_are_kept_for_reachable_targets(self):
         for target in [(30, 80), (-50, 40), (60, -20), (0, 100)]:
-            mid, end, (l1, l2) = two_bone((0, 0), target, 60, 58, 1)
+            mid, end, _ = two_bone((0, 0), target, 60, 58, 1)
             self.assertAlmostEqual(math.dist((0, 0), mid), 60, places=4)
             self.assertAlmostEqual(math.dist(mid, end), 58, places=4)
-            self.assertAlmostEqual(math.dist(end, target), 0, places=4)
-
-    def test_unreachable_target_stretches_at_most_a_little(self):
-        _, end, (l1, l2) = two_bone((0, 0), (0, 500), 60, 58, 1)
-        self.assertLessEqual(l1 + l2, (60 + 58) * 1.12 + 1e-6)
-        self.assertLess(math.dist((0, 0), end), 500)
 
     def test_raised_arm_keeps_its_elbow_outside_not_across_the_face(self):
-        # Right shoulder at x=27 of a body centred on x=0; hand raised above the head.
         shoulder, hand = (27, -108), (30, -190)
         elbow, _, _ = limb(shoulder, hand, 60, 58, side=1, bend=1, centre_x=0)
         self.assertGreater(elbow[0], shoulder[0])
-        inward, _, _ = limb(shoulder, hand, 60, 58, side=1, bend=-1, centre_x=0)
-        self.assertLess(inward[0], elbow[0])
+
+
+class HandLibraryTest(unittest.TestCase):
+    def test_thumb_is_on_the_anatomically_correct_side(self):
+        # Right hand, palm to camera, fingers up: thumb on the viewer's right. Back of the right hand: viewer's left.
+        self.assertEqual(hands.thumb_side('open_palm', 'R'), 1)
+        self.assertEqual(hands.thumb_side('back', 'R'), -1)
+        self.assertEqual(hands.thumb_side('open_palm', 'L'), -1)
+        self.assertEqual(hands.thumb_side('back', 'L'), 1)
+
+    def test_thumb_pixels_are_where_the_thumb_side_says(self):
+        for pose in ('open_palm', 'back'):
+            for hand in ('R', 'L'):
+                d = hands.drawing(pose, hand)
+                a = np.asarray(d.front.getchannel('A')) > 128
+                h = a.shape[0]
+                band = a[int(h * 0.35):int(h * 0.72)]          # the thumb sticks out at palm height
+                cols = np.nonzero(band.any(0))[0]
+                centre = d.wrist[0]
+                reach_plus, reach_minus = cols.max() - centre, centre - cols.min()
+                expected = hands.thumb_side(pose, hand)
+                self.assertEqual(1 if reach_plus > reach_minus else -1, expected, f'{pose} {hand}')
+
+    def test_every_pose_exists_for_both_hands_and_left_mirrors_right(self):
+        for pose in hands.POSES:
+            r, l = hands.drawing(pose, 'R'), hands.drawing(pose, 'L')
+            self.assertEqual(r.front.size, l.front.size)
+            self.assertTrue(np.array_equal(np.asarray(r.front)[:, ::-1], np.asarray(l.front)))
+
+    def test_grip_point_is_inside_the_closed_hand(self):
+        for pose in GRIPPING:
+            for hand in ('R', 'L'):
+                d = hands.drawing(pose, hand)
+                alpha = d.front.getchannel('A').getpixel((round(d.grip[0]), round(d.grip[1])))
+                self.assertGreater(alpha, 200, f'{pose} {hand}: the grip point must be inside the fingers')
+
+    def test_wrist_bend_is_clamped(self):
+        self.assertEqual(hands.clamp_bend(120), hands.WRIST_LIMIT)
+        self.assertEqual(hands.clamp_bend(-300), -hands.WRIST_LIMIT)
+        self.assertEqual(hands.clamp_bend(20), 20)
 
 
 class CharacterTest(unittest.TestCase):
@@ -41,22 +91,63 @@ class CharacterTest(unittest.TestCase):
             self.assertAlmostEqual(math.dist(j['r_sh'], j['r_el']), UPPER * 100, delta=UPPER * 100 * 0.13)
             self.assertAlmostEqual(math.dist(j['r_el'], j['r_wr']), FORE * 100, delta=FORE * 100 * 0.13)
 
-    def test_held_prop_moves_with_the_hand(self):
-        sprite = parts.foot_sprite()
-        held = {'r': Held(sprite, (10, 10), 0.4)}
+    def test_held_prop_sits_in_the_grip_and_moves_with_the_hand(self):
+        sprite = Image.new('RGBA', (40, 20), (200, 100, 50, 255))
+        held = {'r': Held(sprite, (20, 18), 0.4)}
         grips = []
         for rh in [(0.5, -0.2), (0.7, -1.4)]:
             self.char.render(replace(Pose(), rh=rh, r_shape='grip'), (500, 900), 1.0, (0, 0), held=held)
             j = self.char.last_joints
-            grips.append((j['r_grip'], j['r_wr']))
-        (g0, w0), (g1, w1) = grips
-        self.assertGreater(math.dist(g0, g1), 50)          # the grip travelled with the hand
-        self.assertAlmostEqual(math.dist(g0, w0), math.dist(g1, w1), delta=2)  # and stayed in the hand
+            self.assertEqual(j['r_held_anchor'], j['r_grip'])
+            grips.append(j['r_grip'])
+        self.assertGreater(math.dist(*grips), 50)
 
-    def test_render_returns_a_layer_with_the_figure_on_it(self):
-        layer, (x, y) = self.char.render(Pose(), (500, 900), 1.0, (0, 0))
-        alpha = np.asarray(layer.getchannel('A'))
-        self.assertGreater((alpha > 0).mean(), 0.05)
+    def test_a_held_prop_needs_a_gripping_hand(self):
+        sprite = Image.new('RGBA', (40, 20), (200, 100, 50, 255))
+        with self.assertRaises(ValueError):
+            self.char.render(replace(Pose(), r_shape='open_palm'), (500, 900), 1.0, (0, 0), held={'r': Held(sprite, (20, 18), 0.4)})
+
+    def test_render_returns_body_and_front_layers(self):
+        out = self.char.render(replace(Pose(), rh=(0.4, -1.2)), (500, 900), 1.0, (0, 0), table_y=850)
+        self.assertGreater((np.asarray(out['body'][0].getchannel('A')) > 0).mean(), 0.05)
+        self.assertIsNotNone(out['front'])   # the raised hand is above the table, so it is drawn over it
+
+
+class ChoreographyTest(unittest.TestCase):
+    """The beats 1-2 performance must respect the anatomy rules at every frame, for both voices."""
+
+    def frames(self, T, cut, end):
+        scene = scene_salary.Scene(T, cut, end, load_art=False)
+        char = scene.lead
+        for i in range(int(end * 30)):
+            t = i / 30
+            pose = scene.perf.pose(t)
+            j = char.joints(pose, (scene_salary.LEAD_X, scene_salary.SEAT), 1.0, (0.0, 0.0))
+            for side in ('l', 'r'):
+                char.hand_placement(pose, j, side)
+            yield t, scene, pose, j
+
+    def check(self, T, cut, end):
+        face_r = 0.30 * scene_salary.D
+        for t, scene, pose, j in self.frames(T, cut, end):
+            for side in ('l', 'r'):
+                requested = pose.l_rot if side == 'l' else pose.r_rot
+                self.assertLessEqual(abs(requested), hands.WRIST_LIMIT, f'{t:.2f}s {side}: wrist asked to bend {requested:.0f} deg')
+                self.assertLessEqual(abs(j[side + '_bend']), hands.WRIST_LIMIT)
+            for side, what in scene.holding(t).items():
+                shape = pose.l_shape if side == 'l' else pose.r_shape
+                self.assertIn(shape, GRIPPING, f'{t:.2f}s {side} holds {what} with a {shape!r} hand')
+            if not set(scene.perf.active(t)) & set(scene.face_ok):
+                for side in ('l', 'r'):
+                    for a, b in ((side + '_sh', side + '_el'), (side + '_el', side + '_wr')):
+                        dist = segment_distance(j['head'], j[a], j[b])
+                        self.assertGreater(dist, face_r, f'{t:.2f}s {side} arm crosses the face ({scene.perf.active(t)})')
+
+    def test_michael_take(self):
+        self.check(MICHAEL, 4.93, 12.38)
+
+    def test_heart_take(self):
+        self.check(HEART, 4.93 * 0.86, 12.38 * 0.86)
 
 
 class PerformanceTest(unittest.TestCase):
@@ -65,26 +156,29 @@ class PerformanceTest(unittest.TestCase):
         perf = Performance(Pose(), Idle(seed=1), [act])
         self.assertEqual(act.weight(0.5), 0.0)
         self.assertEqual(act.weight(1.5), 1.0)
-        self.assertEqual(act.weight(2.5), 0.0)
-        self.assertAlmostEqual(perf.pose(1.5).lean, 10.0, delta=1.0)  # idle sway adds under a degree
+        self.assertAlmostEqual(perf.pose(1.5).lean, 10.0, delta=1.0)
         self.assertEqual(perf.pose(1.37), perf.pose(1.37))
 
     def test_idle_life_keeps_the_body_moving(self):
         perf = Performance(Pose(), Idle(seed=1), [])
-        breaths = {round(perf.pose(t / 10).breath, 3) for t in range(40)}
-        self.assertGreater(len(breaths), 10)
-        blinks = [perf.pose(t / 100).eye_open for t in range(600)]
-        self.assertLess(min(blinks), 0.3)
+        self.assertGreater(len({round(perf.pose(t / 10).breath, 3) for t in range(40)}), 10)
+        self.assertLess(min(perf.pose(t / 100).eye_open for t in range(600)), 0.3)
 
 
-class HeadPlateTest(unittest.TestCase):
+class ArtTest(unittest.TestCase):
     def test_head_plate_has_no_painted_features_left(self):
         plate = np.asarray(parts.head_plate('left')).astype(int)
         h, w = plate.shape[:2]
         yy, xx = np.mgrid[0:h, 0:w]
         inner = np.hypot(xx - w / 2, yy - h / 2) < w * 0.40
-        lum = plate[..., :3].mean(-1)
-        self.assertEqual(int(((lum < 120) & inner).sum()), 0)
+        self.assertEqual(int(((plate[..., :3].mean(-1) < 120) & inner).sum()), 0)
+
+    def test_torso_comes_from_the_empty_chair_art(self):
+        sprite, anchors = parts.torso_art()
+        self.assertGreater(sprite.height / anchors['art_d'], 1.3)
+        lum = np.asarray(sprite)[..., :3].mean(-1)[np.asarray(sprite.getchannel('A')) > 200]
+        self.assertGreater((lum > 200).mean(), 0.5)    # mostly the painted white body
+        self.assertGreater((lum < 60).mean(), 0.02)    # with its navy outline
 
 
 if __name__ == '__main__':

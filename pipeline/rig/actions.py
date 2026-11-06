@@ -11,7 +11,7 @@ import random
 from dataclasses import dataclass, replace
 from typing import Callable
 
-from .skeleton import Pose, blend
+from .skeleton import DISCRETE, Pose, blend
 
 
 def clamp01(x: float) -> float:
@@ -110,10 +110,18 @@ class Performance:
 
     def pose(self, t: float) -> Pose:
         p = self.base
+        contrib = []
         for a in self.actions:
             w = a.weight(t)
             if w > 0:
-                p = blend(p, a.fn(t, p), w)
+                target = a.fn(t, p)
+                p = blend(p, target, w)
+                contrib.append((w, target))
+        # Hand shapes are drawings, not numbers: during a hand-over between two actions the strongest one
+        # decides, so a hand never drops back to the resting drawing in the middle of a move.
+        if contrib and sum(w for w, _ in contrib) >= 0.5:
+            top = max(contrib, key=lambda c: c[0])[1]
+            p = replace(p, **{n: getattr(top, n) for n in DISCRETE})
         return self.idle(t, p)
 
     def active(self, t: float) -> list:

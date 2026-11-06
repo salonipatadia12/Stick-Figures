@@ -14,9 +14,23 @@
     ]
   },
   "cast": [
-    {"id": "lead", "description": "the main character: large white round head, no accessories"},
-    {"id": "friend", "description": "a second character with the same body, wearing a teal scarf"}
+    {
+      "id": "lead",
+      "description": "the main character: large white round head, no accessories"
+    },
+    {
+      "id": "friend",
+      "description": "a second character with the same body, wearing a teal scarf"
+    }
   ],
+  "voice": {
+    "provider": "kokoro",
+    "default": "am_michael",
+    "alternates": [
+      "af_heart"
+    ],
+    "note": "Kokoro-82M (Apache-2.0). am_michael is the default narrator; af_heart is the alternate (user's choice, 2026-11-05)."
+  },
   "pacing": {
     "words_per_second": 2.7,
     "mean_shot_seconds": 1.9,

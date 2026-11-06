@@ -251,3 +251,246 @@ class Falling:
         if u < 0 or t > self.landed_at():
             return None
         return self.x, self.y0 + 0.5 * self.g * u * u, self.spin * u
+
+
+# ---- painted (AI) props made animatable -------------------------------------------------------------
+def fan_of(bill: Image.Image, n: int, spread: float = 13.0) -> tuple[Image.Image, tuple]:
+    """n copies of a painted banknote fanned from their bottom edge. Returns (sprite, pivot) - the pivot is
+    where the hand grips the stack. Every bill keeps the size of `bill`."""
+    upright = bill.rotate(90, Image.BICUBIC, expand=True)           # long side vertical
+    w, h = upright.size
+    size = int(h * 2.4)
+    canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    pivot = (size / 2, size * 0.78)
+    for i in range(n):
+        ang = -spread * (n - 1) / 2 + spread * i                     # clockwise degrees from vertical
+        tint = 1.0 - 0.05 * (n - 1 - i)
+        b = upright.copy()
+        arr = np.asarray(b).astype(np.float32)
+        arr[..., :3] *= tint
+        b = Image.fromarray(arr.clip(0, 255).astype(np.uint8), 'RGBA')
+        r = b.rotate(-ang, Image.BICUBIC, expand=True)
+        # bill's bottom-centre sits at the pivot (a little above it, inside the fist)
+        off = (0, -h / 2 + h * 0.10)
+        a = math.radians(ang)
+        cx = pivot[0] + (off[0] * math.cos(a) - off[1] * math.sin(a))
+        cy = pivot[1] + (off[0] * math.sin(a) + off[1] * math.cos(a))
+        canvas.alpha_composite(r, (int(cx - r.width / 2), int(cy - r.height / 2)))
+    box = canvas.getbbox()
+    return canvas.crop(box), (pivot[0] - box[0], pivot[1] - box[1])
+
+
+def _interior(alpha: np.ndarray) -> np.ndarray:
+    """Pixels enclosed by an object's silhouette (holes filled)."""
+    solid = Image.fromarray(((alpha > 20) * 255).astype(np.uint8))
+    filled = solid.copy()
+    ImageDraw.floodfill(filled, (0, 0), 128, thresh=0)
+    return np.asarray(filled) != 128
+
+
+def glass(jar: Image.Image) -> Image.Image:
+    """Make a painted jar's body see-through: pale, unsaturated glass areas become mostly transparent,
+    highlights stay; the painted rim and outline stay opaque."""
+    arr = np.asarray(jar).astype(np.float32)
+    rgb = arr[..., :3]
+    lum, sat = rgb.mean(-1), rgb.max(-1) - rgb.min(-1)
+    pale = (lum > 200) & (sat < 40)
+    highlight = lum > 246
+    a = arr[..., 3]
+    a = np.where(pale, a * np.where(highlight, 0.55, 0.16), a)
+    arr[..., 3] = a
+    return Image.fromarray(arr.clip(0, 255).astype(np.uint8), 'RGBA')
+
+
+def coin_pile(coin: Image.Image, jar: Image.Image, level: float, seed: int = 3) -> Image.Image:
+    """Coins lying flat inside the jar up to `level` (0..1), clipped to the jar's inside. Same size as the jar sprite."""
+    w, h = jar.size
+    inside = _interior(np.asarray(jar.getchannel('A')))
+    ys, xs = np.nonzero(inside)
+    if len(ys) == 0 or level <= 0:
+        return Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    top, bottom = ys.min() + 0.10 * (ys.max() - ys.min()), ys.max() - 0.02 * h
+    left, right = xs.min(), xs.max()
+    mask = Image.fromarray((inside * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(int(0.09 * w) | 1))
+    pile = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    cs = int(0.27 * (right - left))
+    c = coin.resize((cs, max(1, int(cs * 0.5))), Image.LANCZOS)
+    rng = random.Random(seed)
+    surface = bottom - (bottom - top) * max(0.0, min(1.0, level))
+    y = bottom
+    while y > surface:
+        for i in range(5):
+            x = left + (right - left) * (i + rng.uniform(-0.25, 0.25)) / 4.4
+            pile.alpha_composite(c, (int(x), int(y - c.height + rng.uniform(-3, 3))))
+        y -= c.height * 0.45
+    pile.putalpha(Image.fromarray(np.minimum(np.asarray(pile.getchannel('A')), np.asarray(mask))))
+    return pile
+
+
+class PaintedCalendar:
+    """An AI-painted wall calendar with hand-drawn ink marks: a circled payday and X marks drawn on one by one.
+    The grid is measured from the painting (header band, then the day boxes); if the painted lines are too
+    irregular to measure, the grid area is divided evenly."""
+
+    def __init__(self, sprite: Image.Image, payday=(1, 2), crossed=7):
+        self.sprite = sprite
+        self.payday, self.crossed = payday, crossed
+        a = np.asarray(sprite).astype(np.float32)
+        rgb, alpha = a[..., :3], a[..., 3]
+        red = (rgb[..., 0] > rgb[..., 1] + 45) & (rgb[..., 0] > rgb[..., 2] + 45) & (alpha > 128)
+        rows = red.mean(1)
+        head_rows = np.nonzero(rows > 0.25)[0]
+        ys, xs = np.nonzero(alpha > 128)
+        x0, x1, y1 = xs.min(), xs.max(), ys.max()
+        head_bottom = head_rows.max() if len(head_rows) else ys.min() + 0.22 * (y1 - ys.min())
+        self.grid = (x0 + 0.07 * (x1 - x0), head_bottom + 0.06 * (y1 - head_bottom), x1 - 0.07 * (x1 - x0), y1 - 0.05 * (y1 - head_bottom))
+        self.rows, self.cols = 5, 7
+
+    def cell(self, r, c):
+        gx0, gy0, gx1, gy1 = self.grid
+        cw, ch = (gx1 - gx0) / self.cols, (gy1 - gy0) / self.rows
+        return gx0 + (c + 0.5) * cw, gy0 + (r + 0.5) * ch, min(cw, ch)
+
+    def cells(self):
+        r, c = self.payday
+        out = []
+        for _ in range(self.crossed):
+            c += 1
+            if c >= self.cols:
+                r, c = r + 1, 0
+            out.append((r, c))
+        return out
+
+    def render(self, marks: float, circle: float = 1.0) -> Image.Image:
+        im = self.sprite.copy()
+        ink = Image.new('RGBA', im.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(ink)
+        width = max(3, im.width // 60)
+        x, y, s = self.cell(*self.payday)
+        if circle > 0:
+            d.arc((x - s * 0.55, y - s * 0.55, x + s * 0.55, y + s * 0.55), -90, -90 + 370 * min(1, circle), fill=(40, 120, 80, 235), width=width)
+        for k, (r, c) in enumerate(self.cells()):
+            p = marks - k
+            if p <= 0:
+                break
+            x, y, s = self.cell(r, c)
+            s *= 0.34
+            first = min(1, p * 2)
+            _wobble_line(d, (x - s, y - s), (x - s + 2 * s * first, y - s + 2 * s * first), width, (190, 52, 44, 235), k * 2)
+            if p > 0.5:
+                second = min(1, (p - 0.5) * 2)
+                _wobble_line(d, (x + s, y - s), (x + s - 2 * s * second, y - s + 2 * s * second), width, (190, 52, 44, 235), k * 2 + 1)
+        im.alpha_composite(ink.filter(ImageFilter.GaussianBlur(0.6)))
+        return im
+
+
+@lru_cache(maxsize=16)
+def key_neutral(path: str, sat_max: int = 34, lum_min: int = 95, holes: bool = True) -> Image.Image:
+    """Cut a painted object from a grey/white backdrop that has a gradient or a painted floor shadow: removes
+    low-saturation light pixels connected to the border (the object's own colours are warmer)."""
+    im = Image.open(path).convert('RGB')
+    a = np.asarray(im).astype(int)
+    sat = a.max(-1) - a.min(-1)
+    lum = a.mean(-1)
+    bgish = ((sat < sat_max) & (lum > lum_min)).astype(np.uint8) * 255
+    m = Image.fromarray(bgish).copy()  # writable (fromarray can share a read-only buffer)
+    for xy in ((0, 0), (im.width - 1, 0), (0, im.height - 1), (im.width - 1, im.height - 1),
+               (im.width // 2, im.height - 1), (0, im.height // 2), (im.width - 1, im.height // 2)):
+        if m.getpixel(xy) == 255:
+            ImageDraw.floodfill(m, xy, 128, thresh=0)
+    # Enclosed patches of backdrop (between chair spindles, under a handle) are backdrop too, if large enough.
+    arr = np.asarray(m)
+    for y in (range(0, im.height, 12) if holes else ()):
+        for x in range(0, im.width, 12):
+            if arr[y, x] == 255:
+                before = np.asarray(m).copy()
+                ImageDraw.floodfill(m, (x, y), 200, thresh=0)
+                now = np.asarray(m)
+                grown = (now == 200) & (before == 255)
+                if grown.sum() > 0.0012 * im.width * im.height:
+                    m.paste(128, mask=Image.fromarray((grown * 255).astype(np.uint8)))
+                else:
+                    m.paste(0, mask=Image.fromarray((grown * 255).astype(np.uint8)))
+                arr = np.asarray(m)
+    bg = np.asarray(m) == 128
+    alpha = Image.fromarray(((~bg) * 255).astype(np.uint8)).filter(ImageFilter.MedianFilter(5)).filter(ImageFilter.GaussianBlur(1.2))
+    out = im.convert('RGBA')
+    out.putalpha(alpha)
+    box = alpha.point(lambda v: 255 if v > 30 else 0).getbbox()
+    return out.crop(box) if box else out
+
+
+def empty_out(sprite: Image.Image, min_blob: int = 11) -> Image.Image:
+    """Paint out cards, notes and paper inside a painted wallet: large blue/grey/pale blobs (not the thin pale
+    stitching) are refilled from the surrounding leather and darkened like the inside of an empty pocket."""
+    arr = np.asarray(sprite).astype(np.float32)
+    rgb, a = arr[..., :3], arr[..., 3]
+    lum, sat = rgb.mean(-1), rgb.max(-1) - rgb.min(-1)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    paper = (lum > 165) & (r - b < 70) & (r > b)                     # cream pages and white cards
+    foreign = ((b > r + 8) | paper | ((sat < 22) & (lum > 70))) & (a > 120)
+    m = Image.fromarray((foreign * 255).astype(np.uint8))
+    m = m.filter(ImageFilter.MinFilter(min_blob)).filter(ImageFilter.MaxFilter(min_blob + 8))   # drop thin lines, keep blobs
+    hole = (np.asarray(m) > 0) & (a > 120)
+    valid = (a > 200) & ~hole & ~foreign
+    out = rgb.copy()
+    w = Image.fromarray((valid * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(18))
+    wv = np.asarray(w).astype(np.float32) / 255
+    for c in range(3):
+        ch = Image.fromarray((rgb[..., c] * valid).astype(np.uint8)).filter(ImageFilter.GaussianBlur(18))
+        fill = np.asarray(ch).astype(np.float32) / np.maximum(wv, 1e-3)
+        out[..., c] = np.where(hole, fill * 0.62, rgb[..., c])
+    res = np.concatenate([np.clip(out, 0, 255), arr[..., 3:]], axis=-1).astype(np.uint8)
+    return Image.fromarray(res, 'RGBA')
+
+
+def stand_in_jar(width: int = 300) -> Image.Image:
+    """A plain glass jar used only until the painted jar exists."""
+    back, front = Jar(width).render(0.0, coin_sprite(None, 60))
+    back.alpha_composite(front)
+    return back
+
+
+@lru_cache(maxsize=8)
+def key_colours(path: str, dark_max: int = 115, sat_min: int = 70) -> Image.Image:
+    """Keep only an object's own colours (dark iron, saturated wood); drops a pale painted floor shadow."""
+    im = Image.open(path).convert('RGB')
+    a = np.asarray(im).astype(int)
+    keep = (a.mean(-1) < dark_max) | ((a.max(-1) - a.min(-1)) > sat_min)
+    m = Image.fromarray((keep * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
+    m = m.filter(ImageFilter.MedianFilter(5)).filter(ImageFilter.GaussianBlur(1.0))
+    out = im.convert('RGBA')
+    out.putalpha(m)
+    box = m.point(lambda v: 255 if v > 30 else 0).getbbox()
+    return out.crop(box) if box else out
+
+
+def painterly(im: Image.Image, seed: int = 1, strength: float = 1.0) -> Image.Image:
+    """Give a code-drawn prop a painted finish: soft uneven tint, paper grain, softened edges, light from the top."""
+    rng = np.random.default_rng(seed)
+    w, h = im.size
+    low = Image.fromarray((rng.random((max(2, h // 40), max(2, w // 40))) * 255).astype(np.uint8)).resize((w, h), Image.BICUBIC)
+    grain = rng.normal(0, 1, (h, w))
+    arr = np.asarray(im).astype(np.float32)
+    tint = 1 + strength * (0.07 * (np.asarray(low, np.float32) / 255 - 0.5) + 0.025 * grain)
+    light = np.linspace(1.06, 0.92, h)[:, None]
+    arr[..., :3] = np.clip(arr[..., :3] * (tint * light)[..., None], 0, 255)
+    out = Image.fromarray(arr.astype(np.uint8), 'RGBA').filter(ImageFilter.GaussianBlur(0.9))
+    out.putalpha(im.getchannel('A').filter(ImageFilter.GaussianBlur(0.7)))
+    return out
+
+
+def keep_centre(sprite: Image.Image, cut: int = 5) -> Image.Image:
+    """Keep only the object connected to the sprite's centre (drops decorative corners, frames, stray marks).
+    Thin links (a frame line touching a wing tip) are cut first with a small erosion."""
+    a = sprite.getchannel('A').point(lambda v: 255 if v > 100 else 0)
+    thin = a.filter(ImageFilter.MinFilter(cut))
+    seed = (sprite.width // 2, sprite.height // 2)
+    m = thin.copy()
+    ImageDraw.floodfill(m, seed, 128, thresh=0)
+    core = Image.fromarray(((np.asarray(m) == 128) * 255).astype(np.uint8))
+    grown = core.filter(ImageFilter.MaxFilter(cut + 4))
+    alpha = Image.fromarray(np.minimum(np.asarray(grown), np.asarray(sprite.getchannel('A'))))
+    out = sprite.copy()
+    out.putalpha(alpha)
+    return out.crop(alpha.getbbox())

@@ -136,3 +136,20 @@ backgrounds and props (`scripts/motion_test/gen_assets.py`); characters are rigs
   plain white background, and is cut out by flood-filling the background.
 - **Not used:** FLUX.2 klein 4B (the rig parts did not need it) and the Z-Image LoRA side experiment
   (not run yet).
+
+### Second round (after the review of the first clip)
+
+The room was regenerated without furniture so the table and chair can be separate layers (the
+character sits behind the table). SDXL often ignores "isolated on white" and "empty"; every
+generation was checked, and these are the results:
+
+| Prop | Seed used | Result |
+|---|---|---|
+| Room, no furniture in the middle | `bg-room-s47` | Usable; SDXL still painted a small table and chair at the side, kept as background |
+| Café table | `prop-table-s2` | Usable; its painted floor shadow is removed by keeping only wood and iron colours |
+| Chair | `prop-chair-s4` | Usable on a grey backdrop; `prop-chair-s12` was painted inside a room |
+| Empty wallet | `prop-wallet-empty-s21` | SDXL drew cards inside both seeds; the cards and paper are painted out (`props.empty_out`) |
+| Banknote | `prop-bill2-s19` | The first note (`prop-bill-s7`) copied real currency, with a portrait, and was rejected. The retry has a leaf ornament, and its one strip of fake lettering is blurred away |
+| Glass jar | `prop-jar2-s17` | The first jar was painted inside a kitchen. The retry is a clean jar; its glass is made see-through so the coin pile shows |
+| Moth | `prop-moth-s8` | Usable; SDXL added corner ornaments, removed by keeping the centre shape |
+| Wall calendar | none | Rejected: SDXL drew a dense yearly planner full of fake lettering. The calendar stays code-drawn, with a painted finish, so the X marks land exactly on the grid |

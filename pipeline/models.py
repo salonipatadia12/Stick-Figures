@@ -136,7 +136,7 @@ class Source(Strict):
 class Voice(Strict):
     """Narration runs locally on Kokoro-82M (Apache-2.0)."""
     provider: Literal['kokoro'] = 'kokoro'
-    voice_id: str = ''  # Kokoro voice: am_michael or af_heart (the user's shortlist); empty = the style default
+    voice_id: str = ''  # Kokoro voice; empty = the style default (cozy: am_michael, alternate af_heart)
 
 
 class Episode(Strict):

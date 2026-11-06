@@ -108,8 +108,8 @@ motion edition. See `docs/RIG.md`.
 ### 3. Voice and captions
 
 - **`pipeline/voice.py`:** Kokoro-82M (Apache-2.0), local. One voice per episode, cached by text
-  and voice. The narrator is `am_michael` or `af_heart` (the user's shortlist). Chatterbox was
-  dropped on 2026-11-05.
+  and voice. `am_michael` is the default narrator (`styles/cozy/style.json`); `af_heart` is the
+  alternate. Chatterbox was dropped on 2026-11-05.
 - **Word timings** come from Kokoro itself; faster-whisper (MIT) checks that every word was spoken.
   Beat durations come from the real audio; speech is never stretched to fit.
 - **Captions:**
