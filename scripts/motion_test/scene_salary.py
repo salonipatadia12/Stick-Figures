@@ -131,18 +131,20 @@ def build_performance(T: dict, cut: float, end: float, lead: Puppet, jar_top: fl
                        l_rot=-15, turn=0.95, gaze_x=0.6, gaze_y=0.7, head_dy=nod, smile=0.85, brow_raise=0.3)
 
     def feels_huge(t, p):
-        """'It feels huge': a wind-up on 'It', then both arms flung up and wide with a bounce on 'huge'."""
+        """'It feels huge': both hands on the table edge, leaning in toward the jar on 'It', then both arms
+        flung up and wide with a bounce on 'huge'."""
         u = t - T['huge']
-        pre = ease((t - T['it']) / 0.2) * (1 - ease((u + 0.12) / 0.1))
+        lean_in = ease((t - T['it']) / 0.25) * (1 - ease((u + 0.14) / 0.12))
         up = back_out((u + 0.14) / 0.28)
         bounce = keys(u, [(-0.14, 0.0), (0.0, 0.10), (0.16, 0.0), (0.24, 0.0)])
-        lo_l, lo_r = B((300, 790)), B((360, 782))
+        lo_l, lo_r = B((300, 905)), B((432, 900))          # on the table edge, as in the coin rain
         hi_l, hi_r = B((84, 508)), B((492, 548))
-        return replace(p, lh=mix(lo_l, hi_l, up), rh=mix(lo_r, hi_r, up), l_shape='open_palm' if up > 0.3 else 'fist',
-                       r_shape='open_palm' if up > 0.3 else 'fist', l_rot=-15 * up, r_rot=15 * up, l_bend=1, r_bend=1,
+        return replace(p, lh=mix(lo_l, hi_l, up), rh=mix(lo_r, hi_r, up), l_shape='open_palm' if up > 0.3 else 'resting',
+                       r_shape='open_palm' if up > 0.3 else 'resting', l_rot=-20 + 5 * up, r_rot=25 - 10 * up, l_bend=1, r_bend=1,
                        extra={'l_droop': 2.5 - 1.6 * up, 'r_droop': 2.5 - 1.6 * up},
-                       crouch=0.05 * pre, lift=max(0.0, bounce), turn=0.55, gaze_x=0.1, gaze_y=-0.2,
-                       smile=1.0, mouth_open=0.3 * pre + 0.9 * ease((u + 0.1) / 0.12), eye_wide=0.7, brow_raise=0.9)
+                       lean=3.0 * lean_in, head_dx=0.03 * lean_in, lift=max(0.0, bounce), turn=0.55 + 0.4 * lean_in,
+                       gaze_x=0.1 + 0.7 * lean_in, gaze_y=-0.2 + 0.6 * lean_in,
+                       smile=1.0, mouth_open=0.3 * lean_in + 0.9 * ease((u + 0.1) / 0.12), eye_wide=0.7, brow_raise=0.9)
 
     acts = [
         Action(0.0, T['so'] - 0.05, cash_fan, 0.0, 0.2, 'fan self with cash'),
@@ -154,7 +156,7 @@ def build_performance(T: dict, cut: float, end: float, lead: Puppet, jar_top: fl
         Action(T['amount'], T['lands'] - 0.02, coin_rain, 0.2, 0.08, 'watch the coins, bouncing'),
         Action(T['lands'], T['every'] - 0.1, fist_pump, 0.06, 0.15, 'fist pump'),
         Action(T['every'] - 0.25, T['it'] - 0.05, jar_pats, 0.2, 0.2, 'pat the jar twice, nod'),
-        Action(T['it'], end, feels_huge, 0.12, 0.3, 'arms wide, bounce'),
+        Action(T['it'], end, feels_huge, 0.12, 0.3, 'lean in on the table edge, then arms wide'),
     ]
     return Performance(base, Idle(seed=11), acts), ['hand to forehead']
 

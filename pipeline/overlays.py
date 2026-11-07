@@ -23,6 +23,35 @@ INK = (196, 44, 38)
 CREAM = (252, 246, 232)
 GOLD = (255, 222, 112)
 TEXT_C = (318, 350)                       # upper-middle, clear of the calendar and the right edge
+TEXT_MIN_PX = 40                          # the smallest on-screen type that reads on a phone (QA fails below it)
+
+# Every on-screen text records the size it was finally drawn at (font em in frame pixels), so QA can
+# fail a render whose type is too small. Sprites made here carry their type size in .info['em'].
+_text_log: list = []
+
+
+def note_text(label: str, em_px: float):
+    _text_log.append(dict(label=label, em=round(float(em_px), 1)))
+
+
+def take_text_log() -> list:
+    out = list(_text_log)
+    _text_log.clear()
+    return out
+
+
+def mark(im: Image.Image, label: str, em: float) -> Image.Image:
+    im.info['label'], im.info['em'] = label, float(em)
+    return im
+
+
+def place_text(frame: Image.Image, im: Image.Image, centre, scale: float = 1.0, dy: int = 0, settled: bool = True):
+    """Composite a text sprite centred at `centre`, scaled, and log the size its type ends up at.
+    settled=False while it is still popping in (those frames are briefly small by design, not unreadable)."""
+    sized = im if scale == 1.0 else im.resize((max(1, int(im.width * scale)), max(1, int(im.height * scale))), Image.BICUBIC)
+    frame.alpha_composite(sized, (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2) + dy))
+    if settled and 'em' in im.info:
+        note_text(im.info.get('label', '?'), im.info['em'] * scale)
 
 
 @lru_cache(maxsize=32)
@@ -39,7 +68,7 @@ def text_layer(text: str, size: int, fill=(255, 255, 255), stroke=NAVY, path: st
     d = ImageDraw.Draw(im)
     d.text((12 - l + 4, 12 - t + 6), text, font=f, fill=NAVY + (110,), stroke_width=sw, stroke_fill=NAVY + (110,))
     d.text((12 - l, 12 - t), text, font=f, fill=fill, stroke_width=sw, stroke_fill=stroke)
-    return im
+    return mark(im, text, size)
 
 
 @lru_cache(maxsize=16)
@@ -50,7 +79,7 @@ def stacked(lines: tuple, sizes: tuple, fill=(255, 255, 255)) -> Image.Image:
     for p in parts:
         im.alpha_composite(p, ((im.width - p.width) // 2, y))
         y += p.height - 18
-    return im
+    return mark(im, ' / '.join(lines), min(sizes))
 
 
 def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C, until: float | None = None):
@@ -65,20 +94,26 @@ def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C
         a = 1 - ease((t - until) / 0.25)
         sized.putalpha(sized.getchannel('A').point(lambda v: int(v * a)))
     frame.alpha_composite(sized, (int(centre[0] - sized.width / 2 + shake), int(centre[1] - sized.height / 2)))
+    if 'em' in im.info:
+        note_text(im.info.get('label', '?'), im.info['em'] * s)
 
 
 def checklist(frame: Image.Image, t: float, rows: list, t_in: float, centre=TEXT_C, width: int = 470):
+    """Rows with prices need room: the card widens so the longest label never meets its price."""
     """A paper card with rows that tick on their words: rows = [(label, price or '', tick time)]."""
     if t < t_in:
         return
     q = back_out((t - t_in) / 0.3, 1.4)
-    row_h, pad = 74, 26
+    row_h, pad = 78, 26
     h = pad * 2 + row_h * len(rows)
+    lab_px, num_px = 44, 40
+    lab, num = font(FONT, lab_px), font(FONT, num_px)
+    need = max(lab.getlength(r[0]) + (num.getlength(r[1]) + 30 if r[1] else 0) for r in rows) + pad * 2 + 74
+    width = max(width, int(need))
     card = Image.new('RGBA', (width + 20, h + 20), (0, 0, 0, 0))
     d = ImageDraw.Draw(card)
     d.rounded_rectangle((14, 16, width + 14, h + 16), radius=26, fill=(40, 26, 20, 90))
     d.rounded_rectangle((6, 6, width + 6, h + 6), radius=26, fill=CREAM + (255,), outline=(150, 120, 92), width=3)
-    lab, num = font(FONT, 40), font(FONT, 36)
     for i, (label, price, tt) in enumerate(rows):
         y = pad + 6 + i * row_h
         box = (pad + 6, y + 10, pad + 54, y + 58)
@@ -100,6 +135,8 @@ def checklist(frame: Image.Image, t: float, rows: list, t_in: float, centre=TEXT
     s = 0.6 + 0.4 * min(1.0, q)
     sized = card.resize((max(1, int(card.width * s)), max(1, int(card.height * s))), Image.BICUBIC)
     frame.alpha_composite(sized, (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2)))
+    if q >= 1.0:                                  # settled; while it pops in it is briefly smaller
+        note_text('checklist: ' + ', '.join(r[0] for r in rows), (num_px if any(r[1] for r in rows) else lab_px) * s)
 
 
 def _ink(d: ImageDraw.ImageDraw, pts: list, width: int, fill=INK):
@@ -172,19 +209,24 @@ def bubble(frame: Image.Image, t: float, t0: float, text: str, tail, offset=(60,
     x = tail[0] + offset[0] - sized.width * 0.12
     y = tail[1] + offset[1] - sized.height + 60 * s
     frame.alpha_composite(sized, (int(x), int(y)))
+    if q >= 1.0:
+        note_text('bubble: ' + text, 46 * s)
 
 
 @lru_cache(maxsize=16)
 def tag(text: str, width: int = 150, seed: int = 1) -> Image.Image:
     """A small paper label (painted finish), for jars."""
-    f = font(FONT, int(width * 0.2))
-    l, t, r, b = f.getbbox(text)
+    em = int(width * 0.26)
+    f = font(FONT, em)
+    while f.getlength(text) > width - 14 and em > 8:          # long labels shrink to fit the paper
+        em -= 1
+        f = font(FONT, em)
     h = int(width * 0.42)
     im = Image.new('RGBA', (width, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.rounded_rectangle((0, 0, width - 1, h - 1), radius=h // 4, fill=CREAM + (255,), outline=(150, 120, 92), width=3)
     d.text((width / 2, h / 2), text, font=f, fill=NAVY, anchor='mm')
-    return painterly(im, seed, 0.5)
+    return mark(painterly(im, seed, 0.5), 'tag: ' + text, em)
 
 
 @lru_cache(maxsize=4)
@@ -206,7 +248,7 @@ def receipt_paper(lines: tuple, width: int = 260, line_h: int = 46, seed: int = 
         y += line_h
     for yy in range(36, h, line_h):                   # faint perforation dots
         d.line([(10, yy - 8), (width - 10, yy - 8)], fill=(225, 220, 208), width=1)
-    return painterly(im, seed, 0.6)
+    return mark(painterly(im, seed, 0.6), 'receipt: ' + ', '.join(l for l, _ in lines), int(line_h * 0.52))
 
 
 @lru_cache(maxsize=2)
@@ -253,26 +295,30 @@ def takeout_box(width: int = 300) -> Image.Image:
 
 
 @lru_cache(maxsize=8)
-def receipt_strip(entries: tuple, entry_w: int = 150, height: int = 64, seed: int = 3) -> Image.Image:
+def receipt_strip(entries: tuple, entry_w=150, height: int = 64, seed: int = 3) -> Image.Image:
     """A long receipt seen lying flat and read left to right: one entry per panel (label over amount),
-    upright text, dashed tear lines between entries (world px)."""
+    upright text, dashed tear lines between entries (world px). entry_w is one width or one per entry.
+    Type: label 0.36 and amount 0.35 of the height, so a strip's readability is set by its height."""
     n = len(entries)
-    w = entry_w * n + 24
+    widths = tuple(entry_w) if isinstance(entry_w, (tuple, list)) else (entry_w,) * n
+    w = sum(widths) + 24
     im = Image.new('RGBA', (w, height), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.rectangle((0, 0, w - 1, height - 1), fill=(250, 247, 238, 255))
-    f_label, f_amt = font(MONO, int(height * 0.34)), font(MONO, int(height * 0.32))
-    for i, (label, amount) in enumerate(entries):
-        x0 = 12 + i * entry_w
+    lab_px, amt_px = int(height * 0.36), int(height * 0.35)
+    f_label, f_amt = font(MONO, lab_px), font(MONO, amt_px)
+    x0 = 12
+    for i, ((label, amount), ew) in enumerate(zip(entries, widths)):
         red = label.upper().startswith('NEXT') or label.upper() == 'PAYDAY' or amount == 'next'
         col = INK if red else (54, 50, 60)
-        d.text((x0 + entry_w / 2, height * 0.30), label, font=f_label, fill=col, anchor='mm')
+        d.text((x0 + ew / 2, height * 0.30), label, font=f_label, fill=col, anchor='mm')
         if amount:
-            d.text((x0 + entry_w / 2, height * 0.72), amount, font=f_amt, fill=INK if amount.startswith('-') or red else (36, 120, 70), anchor='mm')
+            d.text((x0 + ew / 2, height * 0.72), amount, font=f_amt, fill=INK if amount.startswith('-') or red else (36, 120, 70), anchor='mm')
         if i:
             for y in range(4, height - 4, 8):
                 d.line([(x0, y), (x0, y + 4)], fill=(205, 198, 186), width=2)
+        x0 += ew
     for y in range(0, height, 10):                    # torn ends
         d.polygon([(0, y), (5, y + 5), (0, y + 10)], fill=(0, 0, 0, 0))
         d.polygon([(w - 1, y), (w - 6, y + 5), (w - 1, y + 10)], fill=(0, 0, 0, 0))
-    return painterly(im, seed, 0.6)
+    return mark(painterly(im, seed, 0.6), 'receipt: ' + ', '.join(l for l, _ in entries), min(lab_px, amt_px))

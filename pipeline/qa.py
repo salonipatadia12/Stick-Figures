@@ -7,6 +7,8 @@ Checks (all local, no paid calls):
 - loudness -14 LUFS (+-1) and true peak <= -1 dBTP
 - duration within +-15% of the target
 - characters come only from the approved base library (their head and body art, by hash)
+- every piece of on-screen text (captions, slams, checklists, tags, receipts, bubbles, the counter) is drawn
+  at 40 px or more (font em in frame pixels); prop lettering such as the calendar's day numbers is not text
 """
 from __future__ import annotations
 
@@ -109,6 +111,18 @@ def captions_check(boxes: list) -> dict:
                 safe=C.SAFE, pass_=not bad)
 
 
+def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0) -> dict:
+    """Every on-screen text must read on a phone: its type at least `min_px` tall (font em, frame pixels).
+    text_sizes: per frame, the smallest text drawn (from overlays' log); captions bring their font size."""
+    small = [d for d in text_sizes if d['em'] < min_px]
+    small_caps = [b for b in caption_boxes if b['font_size'] < min_px]
+    offenders = sorted({d['label']: d['em'] for d in small}.items(), key=lambda kv: kv[1])
+    return dict(min_px=min_px, frames_with_text=len(text_sizes),
+                smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
+                too_small=[dict(label=l, em=e) for l, e in offenders][:12], caption_frames_too_small=len(small_caps),
+                pass_=not small and not small_caps)
+
+
 def characters_check() -> dict:
     """The character art in use, by base and seat, with hashes; all of it must come from approved bases."""
     used = {}
@@ -145,21 +159,24 @@ def contact_sheet(video: Path, plan: list, out: Path, cols: int = 5):
     sheet.save(out, quality=90)
 
 
-def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, plan: list, voice: str) -> dict:
+def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, plan: list, voice: str,
+        text_sizes: list | None = None, ledger: Path | None = None) -> dict:
     duration = probe_duration(video)
     target = float(tl.get('target', 45))
     loud = sfx.loudness(video)
     heard = heard_words(video)
     script = [w for b in tl['beats'] for w, _ in b['words']]
-    ledger = json.loads((ROOT / 'episodes' / 'why-your-salary-disappears-by-the-20th' / 'ledger.json').read_text())
-    spent = round(sum(e.get('actual_usd', e.get('cost_usd', 0)) or 0 for e in ledger.get('entries', [])), 4) \
-        if isinstance(ledger, dict) else None
+    spent = None
+    if ledger and ledger.exists():
+        book = json.loads(ledger.read_text())
+        spent = round(sum(e.get('actual_usd', e.get('cost_usd', 0)) or 0 for e in book.get('entries', [])), 4)
     report = dict(
         video=str(video.relative_to(ROOT)), voice=voice,
         duration=dict(seconds=round(duration, 2), target=target, pass_=abs(duration - target) <= 0.15 * target),
         freeze=freezes(video),
         captions=captions_check(caption_boxes) | dict(lines=len(lines), srt=str((out_dir / (video.stem + '.srt')).relative_to(ROOT))),
         words=words_check(script, heard),
+        text=text_check(text_sizes or [], caption_boxes),
         loudness=dict(**loud, target_lufs=-14.0, max_true_peak=-1.0,
                       pass_=abs(loud['integrated_lufs'] + 14.0) <= 1.0 and loud['true_peak_dbtp'] <= -1.0),
         characters=characters_check(),

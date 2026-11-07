@@ -115,6 +115,13 @@ motion edition. See `docs/RIG.md`.
 (`styles/cozy/bases/`), choreographed in `scripts/motion_test/scene_salary.py` (beats 1–2) and
 `salary_beats.py` (beats 3–9), and rendered by `scripts/motion_test/episode_salary.py`.
 
+**Round 5 (2026-11-07, user review of the full sample):** the beat-2 "W" pose replaced (hands on the table
+edge, leaning in); head sprites cut at their own outline with no backing ring (the ellipse is re-fitted
+to the stroke; all four bases rebuilt, round-4 bases archived in `renders/bases/archive/round4/`); the
+receipts read RENT → BILLS → LEFT and MON … FRI → PAYDAY and are at least as big as the checklist; the
+jars read BILLS → WEEK 1 → WEEK 2; the crossed-off calendar week stays visible in beats 8–9 at the beat-1
+size; the clink uses each character's inner arm; a QA check fails any on-screen text under 40 px.
+
 ### 3. Voice and captions
 
 - **`pipeline/voice.py`:** Kokoro-82M (Apache-2.0), local. One voice per episode, cached by text
@@ -162,6 +169,7 @@ motion edition. See `docs/RIG.md`.
 - captions: one line, inside safe areas, every narrated word present
 - loudness and true peak
 - duration within ±15% of the target
+- on-screen text at least 40 px tall (type size on the 1080×1920 frame), captions included
 - character consistency, checked locally. A Claude vision check of the contact sheet is optional
   and off by default, because it would be a second paid call.
 

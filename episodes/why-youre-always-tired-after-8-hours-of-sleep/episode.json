@@ -1,0 +1,476 @@
+{
+ "schema_version": 1,
+ "slug": "why-youre-always-tired-after-8-hours-of-sleep",
+ "topic": "Why you're always tired even after 8 hours of sleep",
+ "niche": "health and sleep",
+ "audience": "US adults",
+ "style": "cozy",
+ "aspect": "9:16",
+ "target_length": 45,
+ "voice": {
+  "provider": "kokoro",
+  "voice_id": ""
+ },
+ "title": "Why 8 Hours Of Sleep Still Leaves You Tired",
+ "hook_promise": "Why you can sleep eight hours and still wake up exhausted: broken sleep, a slow brain reboot, and a body that never switched off.",
+ "beats": [
+  {
+   "id": "b01",
+   "role": "hook",
+   "narration": "Eight hours in bed. Still exhausted?",
+   "on_screen_text": "Eight hours. Still tired.",
+   "visual_intent": "The lead sits slumped on the edge of a rumpled bed in golden morning light, hand on forehead, while the tidy alarm clock beside the bed shows the night is over.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "Cozy bedroom in warm golden morning sun with dappled window shadows. The lead sits slumped on the edge of a rumpled bed with a quilt tumbled behind. One mitten hand rests on the forehead, eyes heavy and tired. A small round alarm clock and a green coffee cup sit on a wooden nightstand.",
+    "pose_variants": [
+     "The lead slumps further forward with both hands covering the face, shoulders drooping.",
+     "The lead sits upright with eyes wide open in weary disbelief, one hand lifted palm up."
+    ],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "Eight hours",
+      "detail": ""
+     },
+     {
+      "recipe": "pose_swap",
+      "anchor": "exhausted",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "exhausted"
+    }
+   ],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b02",
+   "role": "setup",
+   "narration": "Sleep isn't just time. Quality can break without you ever waking up.",
+   "on_screen_text": "Time isn't quality",
+   "visual_intent": "Top-down view of the lead asleep under a patchwork quilt full of small torn holes, with beams of light poking through, a metaphor for sleep that is fragmented but unnoticed.",
+   "shot": {
+    "framing": "top_down",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "Top-down view of the lead lying peacefully asleep in a wooden bed under a patchwork quilt. The quilt has several small ragged holes with soft golden light streaming through them onto the sheets. Warm cozy bedroom light, a pillow under the white round head, eyes closed and calm.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "Quality",
+      "detail": ""
+     },
+     {
+      "recipe": "punch_in",
+      "anchor": "break",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "paper",
+     "anchor": "break"
+    }
+   ],
+   "source_ids": [
+    "s1"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b03",
+   "role": "setup",
+   "narration": "Your airway muscles relax and block airflow. Your brain jolts you half-awake, again and again.",
+   "on_screen_text": "",
+   "visual_intent": "Close-up of the sleeping lead with a soft ribbon of pale air pinched shut in a kinked line near the face, then the eyes pop half-open for a moment.",
+   "shot": {
+    "framing": "close",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "Close-up of the lead's large white round head on a pillow in a dim warm bedroom lit by a soft lamp glow. Eyes gently closed. A ribbon of pale blue air wisps near the face is pinched and kinked like a bent garden hose, no letters or numbers anywhere.",
+    "pose_variants": [
+     "The lead's eyes snap half-open, brows lifted in a startled, groggy look, head slightly raised from the pillow."
+    ],
+    "motion": [
+     {
+      "recipe": "pose_swap",
+      "anchor": "jolts",
+      "detail": ""
+     },
+     {
+      "recipe": "impact_shake",
+      "anchor": "again",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "jolts"
+    }
+   ],
+   "source_ids": [
+    "s2"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b04",
+   "role": "reveal",
+   "narration": "That's sleep apnea. Roughly 80 to 83 million Americans are estimated to have it.",
+   "on_screen_text": "80-83 million",
+   "visual_intent": "Wide shot through the café window of a sunlit street filled with many white round-headed figures yawning and trudging, showing how common it is, with the lead and friend watching from inside.",
+   "shot": {
+    "framing": "wide",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "image_prompt": "Warm sunlit café interior with a wooden round table and green coffee cups. The lead and the friend in the teal scarf sit at the window looking out. Through the tall window a busy golden street is full of many small white round-headed figures, some yawning, some slumped, walking sleepily. Ivy and plants frame the window.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "number_counter",
+      "anchor": "80 to 83 million",
+      "detail": "0 -> 83"
+     },
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "apnea"
+    }
+   ],
+   "source_ids": [
+    "s3"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b05",
+   "role": "tension",
+   "narration": "But maybe your night was fine. Then the trouble starts at the alarm.",
+   "on_screen_text": "",
+   "visual_intent": "A jump to morning: an arm reaches out from under the quilt toward a ringing alarm clock on the nightstand.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "Bedroom in bright early morning sun with long shadows. The lead is half under a tumbled quilt, one slim navy arm stretched out with a mitten hand toward a small round alarm clock on a wooden nightstand, face squinting and reluctant. Green plant on the windowsill.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "icon_pop",
+      "anchor": "alarm",
+      "detail": "round alarm clock"
+     },
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "whip",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "alarm"
+    }
+   ],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b06",
+   "role": "tension",
+   "narration": "It's called sleep inertia. After seven or eight hours, you wake up groggy.",
+   "on_screen_text": "Sleep inertia",
+   "visual_intent": "The lead sits on the bed edge with heavy-lidded eyes and a hand on the forehead, swaying slightly, the picture of grogginess.",
+   "shot": {
+    "framing": "close",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "Close-up of the lead sitting on the edge of the bed, half-lidded sleepy eyes, thin brows drooping, one mitten hand on the forehead. Warm golden morning light with soft dappled shadow across the white round head, a blurred quilt behind.",
+    "pose_variants": [
+     "The lead's head tilts heavily to one side, eyes nearly closed, both hands hanging limp."
+    ],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "sleep inertia",
+      "detail": ""
+     },
+     {
+      "recipe": "pose_swap",
+      "anchor": "groggy",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b07",
+   "role": "reveal",
+   "narration": "Parts of your brain wake faster than others. Some are up. Some are still snoozing.",
+   "on_screen_text": "",
+   "visual_intent": "Above the lead's head hangs a row of small lamps, some glowing and some dark, to show parts of the brain waking at different speeds.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "The lead stands blinking in the sunlit café under a row of small hanging lamps floating above the head. Some lamps glow warmly, others are dark and dim. Terracotta tiles, wooden chairs and a green door in the background, golden light.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "split_compare",
+      "anchor": "Some are up",
+      "detail": "awake | asleep"
+     },
+     {
+      "recipe": "punch_in",
+      "anchor": "snoozing",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "up"
+    }
+   ],
+   "source_ids": [
+    "s5"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b08",
+   "role": "tension",
+   "narration": "And stress? It keeps your nervous system alert, even while you sleep.",
+   "on_screen_text": "Stress keeps you alert",
+   "visual_intent": "The lead lies in bed at night with eyes wide open, a tight tangled knot of red thread floating above like a worry that won't loosen.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "image_prompt": "Dim bedroom at night with a soft warm lamp glow. The lead lies on the back in bed, quilt pulled to the chest, eyes wide open staring upward. A tight tangled knot of red thread floats above the face. Moonlight through the window.",
+    "pose_variants": [
+     "The lead turns to one side, eyes still wide open and brows tense, mitten hands gripping the quilt."
+    ],
+    "motion": [
+     {
+      "recipe": "icon_pop",
+      "anchor": "stress",
+      "detail": "tangled knot of red thread"
+     },
+     {
+      "recipe": "pose_swap",
+      "anchor": "alert",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "stress"
+    }
+   ],
+   "source_ids": [
+    "s6"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b09",
+   "role": "payoff",
+   "narration": "So eight hours can still be broken sleep, a slow brain reboot, or a body that never powered down.",
+   "on_screen_text": "",
+   "visual_intent": "Top-down of the café table with three painted objects, a torn quilt scrap, a dim lamp and a tight coiled spring, each ticked off one by one as the three reasons.",
+   "shot": {
+    "framing": "top_down",
+    "cast": [],
+    "image_prompt": "Top-down view of a round wooden café table in warm golden light. Three objects are laid out in a row: a torn scrap of patchwork quilt, a small dim lamp, and a tightly wound metal spring. A green coffee cup sits at the edge of the table.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "checklist_tick",
+      "anchor": "broken sleep",
+      "detail": "Broken sleep | Slow brain reboot | Never powered down"
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "broken"
+    }
+   ],
+   "source_ids": [
+    "s1",
+    "s4",
+    "s6"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b10",
+   "role": "ending",
+   "narration": "Next time you're wiped out, ask: was that eight hours, or eight good ones?",
+   "on_screen_text": "Eight good ones?",
+   "visual_intent": "The lead and friend sit at the café table with two green cups side by side, one full and steaming and one drained, to contrast quantity with quality.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "image_prompt": "Sunlit café, round wooden table. The lead and the friend in the teal scarf sit facing each other. Two green cups sit side by side on the table, one brimming and steaming, one nearly empty. The friend leans in with a thoughtful tilt of the head, the lead smiles gently. Hanging lamp, ivy, tall windows with a golden street.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "split_compare",
+      "anchor": "eight hours",
+      "detail": "eight hours | eight good ones"
+     },
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "good"
+    }
+   ],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  }
+ ],
+ "sources": [
+  {
+   "id": "s1",
+   "claim": "conditions such as sleep apnea, snoring, restless movements, or frequent micro-awakenings can fragment sleep without fully waking you up.",
+   "url": "https://www.mountcarmelhealth.com/blog-articles/still-tired-after-8-hours-sleep-what-it-could-mean-your-health",
+   "title": "Still Tired After 8 Hours of Sleep? What It Could Mean for Your Health",
+   "quote": "Conditions such as sleep apnea, snoring, restless movements, or frequent micro-awakenings can fragment sleep without fully waking you up."
+  },
+  {
+   "id": "s2",
+   "claim": "muscles in your airway relax and either partially or completely block airflow, and the sleeper often doesn't remember the repeated brief awakenings that follow.",
+   "url": "https://www.sleepapnea.org/diagnosis/how-common-is-sleep-apnea/",
+   "title": "How Common Is Sleep Apnea? Prevalence and Who's Most at Risk",
+   "quote": "Obstructive sleep apnea happens when muscles in your airway relax and either partially or completely block airflow."
+  },
+  {
+   "id": "s3",
+   "claim": "80 to 83 million people in the United States are estimated to have obstructive sleep apnea, according to the American Sleep Apnea Association.",
+   "url": "https://www.sleepapnea.org/diagnosis/how-common-is-sleep-apnea/",
+   "title": "How Common Is Sleep Apnea? Prevalence and Who's Most at Risk",
+   "quote": "## Prevalence of Sleep Apnea\nIn the United States, about 80 to 83 million people are estimated to have obstructive sleep apnea (OSA) — the most common..."
+  },
+  {
+   "id": "s4",
+   "claim": "after a long sleep episode of 7 to 8 hours, people tend to feel groggy from sleep inertia, a temporary decline in performance and mood after waking.",
+   "url": "https://www.cdc.gov/niosh/work-hour-training-for-nurses/longhours/mod7/03.html",
+   "title": "Module 7. Napping, an Important Fatigue Countermeasure, Sleep Inertia",
+   "quote": "After awakening from a nap or a long sleep episode (for example, 7 to 8 hours of sleep at night), people tend to feel groggy from sleep inertia."
+  },
+  {
+   "id": "s5",
+   "claim": "different parts of the brain reactivate at different speeds, especially when waking from deep sleep or during a circadian low point.",
+   "url": "https://ubiehealth.com/doctors-note/sleep-inertia-zombie-feeling-after-waking-why-57-q32e4",
+   "title": "Stop Sleep Inertia Now: Why You Wake Up Like a Zombie",
+   "quote": "It happens because different parts of the brain reactivate at different speeds, especially when waking from deep sleep or during a circadian low point..."
+  },
+  {
+   "id": "s6",
+   "claim": "ongoing mental or emotional stress keeps the nervous system activated, signaling your body to remain alert even during sleep.",
+   "url": "https://www.mountcarmelhealth.com/blog-articles/still-tired-after-8-hours-sleep-what-it-could-mean-your-health",
+   "title": "Still Tired After 8 Hours of Sleep? What It Could Mean for Your Health",
+   "quote": "Ongoing mental or emotional stress keeps the nervous system activated, signaling your body to remain alert even during sleep."
+  }
+ ],
+ "approvals": {},
+ "meta": {
+  "script": {
+   "model": "claude-sonnet-5-5",
+   "prompt_version": "script-v2",
+   "research": true,
+   "generated": "2026-11-07T18:17:09"
+  },
+  "edits": [
+   {
+    "at": "2026-11-07T18:17:42",
+    "by": "claude (validation fix, pending user review)",
+    "beats": [
+     "b01"
+    ],
+    "note": "on-screen text \"8 hours\" -> \"Eight hours\": the digit tripped the no-unsourced-numbers check; it is the topic, not a statistic"
+   }
+  ]
+ }
+}

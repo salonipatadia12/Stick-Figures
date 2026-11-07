@@ -40,7 +40,7 @@ aligned to the original. Its pixels are used only where a moving part used to be
 |---|---|
 | `plate.png` | The painting with everything that moves taken out: arms, hands, heads, liftable cups, and (seated) the torso. The café behind a seated torso comes from an empty-café plate. |
 | `body-<seat>.png` | The painted torso (with the friend's scarf), and a neck that continues the torso's own curved outline and shading under the head. It extends a little under the tabletop, so a lean or a squash never opens a gap at the table edge. |
-| `head-<seat>.png` | The frame's own head, cut exactly at the outer edge of its outline, so no ring of the old background comes with it. The eyes, brows and mouth are painted out. |
+| `head-<seat>.png` | The frame's own head, cut exactly at the outer edge of its painted outline (the ellipse is re-fitted to the stroke itself, so a dark door frame or shadow beside the head can't pull it off), with no backing ring: the only outline is the painting's. Where the stroke is missing (the old torso join) that angle alone is filled at the stroke's width, inside the cut. The eyes, brows and mouth are painted out. |
 | `occluder-<seat>.png` | The torso around each shoulder, laid back over the arm roots so the arms come out from behind the torso side. It moves with the body. |
 | `table.png` | The tabletop and pedestal, never any torso. It is laid over the body and over a hand that reaches under the table. |
 | `front.png` | Cups that stay painted and sit in front of the arms. |
@@ -150,20 +150,20 @@ full sample:
 - shaking the upturned empty wallet, with a moth flying out ("a week later")
 - the back of the hand to the forehead ("…later?")
 - rubbing hands beside the jar
-- fists under the chin while coins rain into the jar ("Say $1,500 lands")
+- both hands on the table edge, leaning in toward the jar, bouncing as the coins rain in ("Say $1,500 lands")
 - a fist pump ("lands")
 - two pats on the jar lid and a nod ("every other Friday")
-- a wind-up, then both arms flung up and wide with a bounce of the head ("It feels huge")
+- hands on the table edge leaning in ("It"), then both arms flung up and wide with a bounce ("huge"). The fists-under-the-chin "W" pose is gone (user, 2026-11-07)
 
 **Gestures in beats 3–9** (`scripts/motion_test/salary_beats.py`):
-- worried watching as coins hop out of the jar and a receipt unrolls across the table, with a flinch on "bite" (b03)
+- worried watching as coins hop out of the jar and a receipt prints across the table from the lead's side toward the jar, read left to right RENT, BILLS, LEFT, with a flinch on "bite" (b03)
 - the phone at the chest and a tap per subscription; lifting the painted coffee cup for a sip; an easy palms-out shrug (b04)
 - an insert with nobody in it: cracks spread over the jar, coins pour out, a jolt on "empty" (b05)
 - the friend leans in with one finger up ("Here's the catch") (b06)
-- the standing lead throws both hands up on "total", then a hand to the forehead while a receipt unrolls day by day (b06)
+- the standing lead throws both hands up on "total", then a hand to the forehead while a receipt unrolls day by day, MON to FRI then PAYDAY, the camera panning the length of the table (b06)
 - a glance at the full jar, then leaning back and waving "go ahead" as the jar whispers (b07)
-- scooping coins from the bills jar into two week jars, then pointing at the one that runs out (b08)
-- both characters lift their cups and clink on "last", then sip (b09)
+- grabbing a fistful from the big jar on "split"; the big jar slides off and three small jars slide in, BILLS, WEEK 1, WEEK 2 left to right; the hand deals coins into each on its word; week one empties and is circled; a point on "early" (b08). The calendar keeps the crossed-off week from beat 1
+- each character lifts their own cup with the arm on the inner side (nobody reaches across), the cups meet in the middle and touch once on "last", then both sip; the calendar (same size as beat 1, week crossed off) rings the next payday on "next" (b09)
 
 **Props:**
 - Held props move with the hand.
@@ -176,6 +176,12 @@ full sample:
 - the bottom quarter and the right edge, where the Shorts title and buttons sit
 - the calendar
 - the head
+
+**On-screen text reads on a phone.** Every text the overlay library draws (slams, the checklist, tags,
+receipts, bubbles, the $ counter) logs the size its type ends up at on the 1080×1920 frame, and the QA
+text check fails a render with anything under 40 px (`pipeline/qa.text_check`, `overlays.TEXT_MIN_PX`).
+Captions are 64 px (never shrunk below 40). Prop lettering such as the calendar's day numbers is not text
+and is not checked.
 
 ## Not yet
 

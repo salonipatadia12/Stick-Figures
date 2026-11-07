@@ -552,14 +552,19 @@ class WallCalendar:
             out.append((r, c))
         return out
 
-    def render(self, marks: float, circle: float = 1.0) -> Image.Image:
+    def render(self, marks: float, circle: float = 1.0, also: tuple = (), circle_at=None) -> Image.Image:
+        """marks: how many X marks have landed; circle: how much of the ring at circle_at (default the payday)
+        is drawn; also: further (row, col) cells already ringed in full (an earlier payday that stays)."""
         im = self.paper.copy()
         ink = Image.new('RGBA', im.size, (0, 0, 0, 0))
         d = ImageDraw.Draw(ink)
         s = min(self.cw, self.ch)
-        x, y = self.cell(*self.payday)
+        rr = self.cw * 0.50
+        for cell in also:
+            x, y = self.cell(*cell)
+            d.arc((x - rr, y - rr, x + rr, y + rr), -90, 280, fill=(36, 128, 78, 245), width=max(3, int(s * 0.13)))
+        x, y = self.cell(*(circle_at or self.payday))
         if circle > 0:
-            rr = self.cw * 0.50
             d.arc((x - rr, y - rr, x + rr, y + rr), -90, -90 + 370 * min(1, circle),
                   fill=(36, 128, 78, 245), width=max(3, int(s * 0.13)))
         width = max(3, int(s * 0.16))

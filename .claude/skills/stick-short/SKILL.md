@@ -8,9 +8,10 @@ description: Make a narrated, captioned stick-figure Short (vertical explainer v
 The `stick` CLI in this repository does the work. Your job is to drive it, show the user
 each approval gate in the chat, apply the edits they ask for, and report the cost.
 
-**Current status:** Phase 1. `stick make` produces a researched, approved script in
-`episodes/<slug>/episode.json`. The images, voice, captions and video stages arrive in
-Phases 2–4. Say so if the user asks for the finished video.
+**Current status:** `stick make` produces a researched, approved script in
+`episodes/<slug>/episode.json`. Rendering (painted base poses, Kokoro voice, captions, SFX, QA) is
+done per episode by a render script modelled on `scripts/motion_test/episode_salary.py`
+(see `docs/RIG.md`); it is not yet wired into the `stick` CLI.
 
 ## Setup check (once per session)
 

@@ -123,6 +123,8 @@ class Beat:
             im.putalpha(im.getchannel('A').point(lambda v: int(v * alpha)))
         x, y = self.to_screen(cam, xy)
         frame.alpha_composite(im, (round(x - im.width * anchor[0]), round(y - im.height * anchor[1])))
+        if 'em' in sprite.info:                       # a prop that carries type: log the size it reads at
+            O.note_text(sprite.info.get('label', '?'), sprite.info['em'] * s)
 
     def shadow(self, frame, cam, xy, w, h, strength=0.5):
         x, y = self.to_screen(cam, xy)
@@ -179,9 +181,11 @@ class Beat:
 
 # ---- b03 ----------------------------------------------------------------------------------------------
 class B03(Beat):
-    """'Then rent and bills take their bite in the first few days.' Coins hop out of the jar while a receipt
-    prints over the table edge (RENT, BILLS); an arrow lands on 'bite'; the lead watches, worried."""
-    LINES = (('LEFT', '$450'), ('BILLS', '-$250'), ('RENT', '-$800'))       # right to left: RENT prints first
+    """'Then rent and bills take their bite in the first few days.' A receipt prints across the tabletop from
+    the lead's side toward the jar, read left to right: RENT, BILLS, LEFT. Coins hop out of the jar as it
+    prints; an arrow lands on 'bite'; the lead watches, worried."""
+    LINES = (('RENT', '-$800'), ('BILLS', '-$250'), ('LEFT', '$450'))
+    STRIP_X, STRIP_Y, ENTRY, FLAT = 70.0, 1000.0, 120.0, 0.9       # world px; the strip ends at the jar
 
     def build(self):
         T, lead = self.T, self.p['lead']
@@ -216,12 +220,14 @@ class B03(Beat):
         def draw(frame, cam):
             D = self.p['lead'].D
             self.jar(frame, cam, JAR_X, JAR_FLOOR, 0.56 * D, self.level(t))
-            # the receipt unrolls from the jar across the tabletop, toward the lead: RENT, BILLS, LEFT
-            strip = O.receipt_strip(self.LINES, 150, 64)
+            # the receipt lies on the tabletop and prints from the left toward the jar: RENT, then BILLS, then LEFT
+            strip = O.receipt_strip(self.LINES, 150, 120)
+            k = self.ENTRY / 150
             L = max(6, int(strip.width * self.receipt_len(t)))
-            part = strip.crop((strip.width - L, 0, strip.width, strip.height))
-            flat = part.resize((part.width, int(part.height * 0.62)), Image.BICUBIC)
-            self.place(frame, flat, cam, (JAR_X - 40, 1000), L * 0.9, anchor=(1.0, 0.5), lit=True)
+            part = strip.crop((0, 0, L, strip.height))
+            flat = O.mark(part.resize((part.width, int(part.height * self.FLAT)), Image.BICUBIC), strip.info['label'],
+                          strip.info['em'] * self.FLAT)
+            self.place(frame, flat, cam, (self.STRIP_X, self.STRIP_Y), L * k, anchor=(0.0, 0.5), lit=True)
             for t0, vx, vy in self.hops:
                 self.hop(frame, cam, t, t0, (JAR_X, JAR_FLOOR - 0.56 * D * JAR_ASPECT + 20), vx, vy, 1000, 0.12 * D)
         return draw
@@ -229,7 +235,7 @@ class B03(Beat):
     def overlay(self, frame, t):
         cam = self.camera(t)
         a = self.to_screen(cam, (JAR_X - 30, 790))
-        b = self.to_screen(cam, (JAR_X - 260, 985))
+        b = self.to_screen(cam, (self.STRIP_X + (24 + 2.5 * 150) * self.ENTRY / 150, self.STRIP_Y - 30))
         O.arrow(frame, t, self.T['bite'] - 0.05, a, b, bend=-0.35)
 
 
@@ -448,8 +454,8 @@ class B06Lead(Beat):
     to the forehead; the camera pans along the paper to the circled NEXT PAYDAY."""
     base_name = 'lead-standing'
     face_ok = ['hand to forehead']
-    DAYS = (('MON', '-$12'), ('TUE', '-$9'), ('WED', '-$14'), ('THU', '-$7'), ('FRI', '-$18'), ('SAT', '-$25'),
-            ('PAYDAY', 'next'))
+    DAYS = (('MON', '-$12'), ('TUE', '-$9'), ('WED', '-$14'), ('THU', '-$7'), ('FRI', '-$18'), ('PAYDAY', 'next'))
+    WIDTHS = (128, 128, 128, 128, 128, 168)           # texture px; the strip is placed at 0.8 of this in the world
 
     def build(self):
         T, lead = self.T, self.p['lead']
@@ -480,26 +486,26 @@ class B06Lead(Beat):
     def camera(self, t):
         T = self.T
         q = ease((t - T['spread']) / (T['payday'] + 0.4 - T['spread']))
-        return self.stage.camera(450 + 100 * q, 880, 780)
+        return self.stage.camera(380 + 181 * q, 880, 760)          # pans the whole table as the receipt unrolls
 
-    STRIP_X, STRIP_Y, ENTRY = 34.0, 968.0, 92.0       # where the strip starts on the tabletop, one entry's width
+    STRIP_X, STRIP_Y, K, FLAT = 10.0, 968.0, 0.8, 0.9    # where the strip starts on the tabletop; texture -> world
 
     def on_table(self, t):
         def draw(frame, cam):
-            # The receipt lies on the tabletop, unrolling to the right one day at a time.
-            strip = O.receipt_strip(self.DAYS, 150, 96)
+            # The receipt lies on the tabletop, unrolling to the right one day at a time, big enough to read.
+            strip = O.receipt_strip(self.DAYS, self.WIDTHS, 120)
             L = max(6, int(strip.width * self.length(t)))
             part = strip.crop((0, 0, L, strip.height))
-            flat = part.resize((part.width, int(part.height * 0.80)), Image.BICUBIC)
-            k = self.ENTRY / 150
-            self.place(frame, flat, cam, (self.STRIP_X, self.STRIP_Y), L * k, anchor=(0.0, 0.5), lit=True)
+            flat = O.mark(part.resize((part.width, int(part.height * self.FLAT)), Image.BICUBIC), strip.info['label'],
+                          strip.info['em'] * self.FLAT)
+            self.place(frame, flat, cam, (self.STRIP_X, self.STRIP_Y), L * self.K, anchor=(0.0, 0.5), lit=True)
         return draw
 
     def overlay(self, frame, t):
         cam = self.camera(t)
-        k = self.ENTRY / 150
-        x = self.STRIP_X + (12 + 150 * (len(self.DAYS) - 0.5)) * k
-        O.circle(frame, t, self.T['payday'] - 0.05, self.to_screen(cam, (x, self.STRIP_Y)), 0.55 * self.ENTRY * cam[2], 34 * cam[2])
+        x = self.STRIP_X + (12 + sum(self.WIDTHS[:-1]) + self.WIDTHS[-1] / 2) * self.K
+        O.circle(frame, t, self.T['payday'] - 0.05, self.to_screen(cam, (x, self.STRIP_Y)),
+                 0.55 * self.WIDTHS[-1] * self.K * cam[2], (0.5 * 120 * self.K * self.FLAT + 8) * cam[2])
 
 
 # ---- b07 ----------------------------------------------------------------------------------------------
@@ -561,105 +567,128 @@ class B07(Beat):
 # ---- b08 ----------------------------------------------------------------------------------------------
 class B08(Beat):
     """'So split it on payday. Bills in one jar, then one spending jar for each week. When a jar's empty,
-    you see it early.' Two small jars slide in; the lead scoops coins from the big jar into each; tags and
-    ticks land on the words; week one empties and gets circled; the lead points: early."""
-    SMALL = 0.38
-    J1, J2 = 404.0, 296.0                      # the two small jars' x
+    you see it early.' On 'split' the lead grabs a fistful from the big jar; the big jar slides off and three
+    small jars slide in, read left to right: BILLS, WEEK 1, WEEK 2. The hand deals coins into each on its
+    word, tags and ticks land; week one empties and gets circled; the lead points: early. The calendar keeps
+    the crossed-off week from beat 1."""
+    SMALL = 0.34
+    JX = (360.0, 462.0, 565.0)                 # BILLS, WEEK 1, WEEK 2 (all within the far hand's reach)
+    TAGS = ('BILLS', 'WEEK 1', 'WEEK 2')
+    TAG_W = 1.15                               # tag width in jar widths (the type must read on a phone)
 
     def build(self):
         T, lead = self.T, self.p['lead']
         B = lead.body
         base = self.rest_pose('lead', turn=0.95, gaze_x=0.6, gaze_y=0.5, smile=0.6)
         D = lead.D
-        big_top = JAR_FLOOR - 0.56 * D * JAR_ASPECT
-        small_top = JAR_FLOOR + 8 - self.SMALL * D * JAR_ASPECT
+        self.big_top = JAR_FLOOR - 0.56 * D * JAR_ASPECT
+        self.jar_w = self.SMALL * D
+        self.jar_h = self.jar_w * JAR_ASPECT
+        self.small_top = JAR_FLOOR + 8 - self.jar_h
+        self.words = (T['bills'], T['spending'], T['week'])        # when each jar gets its coins and its tag
+        self.big_out = T['split'] + 0.45                           # the big jar leaves, the small ones arrive
+        grab_hi, grab_lo = (JAR_X - 10, self.big_top - 70), (JAR_X - 10, self.big_top + 10)
 
-        def bills(t, p):
-            return replace(p, rh=B((JAR_X - 70, big_top + 60)), r_shape='point', r_rot=-10, turn=1.0, gaze_x=0.8, gaze_y=0.4,
-                           smile=0.7, brow_raise=0.3)
+        def grab(t, p):
+            u = t - T['split']
+            dip = keys(u, [(-0.15, 0.0), (0.0, 1.0), (0.22, 1.0), (0.42, 0.0)])
+            return replace(p, rh=B(lerp(grab_hi, grab_lo, dip)), r_shape='fist', r_rot=0, extra={'r_droop': 1.4},
+                           turn=1.0, gaze_x=0.8, gaze_y=0.6, smile=0.7)
 
-        def scoop(t, p):
-            # big jar -> week one (on 'spending'), big jar -> week two (on 'week')
-            path = [(T['then'] - 0.15, (JAR_X, big_top - 20)), (T['spending'] - 0.05, (self.J1 + 10, small_top - 50)),
-                    (T['spending'] + 0.25, (self.J1 + 10, small_top - 50)), (T['for'], (JAR_X, big_top - 20)),
-                    (T['week'] - 0.1, (self.J2 + 10, small_top - 50)), (T['week'] + 0.4, (self.J2 + 10, small_top - 50))]
-            xy = keys(t, path)
-            open_ = any(abs(t - x) < 0.2 for x in (T['spending'] + 0.1, T['week'] + 0.2))
-            return replace(p, rh=B(xy), r_shape='open_palm' if open_ else 'fist', r_rot=10, extra={'r_droop': 1.6},
-                           turn=1.0, gaze_x=0.4, gaze_y=0.7, smile=0.75)
+        def deal(t, p):
+            path = [(self.big_out, grab_hi)]
+            for x, tw in zip(self.JX, self.words):
+                path += [(tw - 0.12, (x + 8, self.small_top - 60)), (tw + 0.3, (x + 8, self.small_top - 60))]
+            open_ = any(0 <= t - tw < 0.35 for tw in self.words)
+            return replace(p, rh=B(keys(t, path)), r_shape='open_palm' if open_ else 'fist', r_rot=10 if open_ else 0,
+                           extra={'r_droop': 1.4}, turn=1.0, gaze_x=0.5, gaze_y=0.7, smile=0.75, brow_raise=0.3)
 
         def early(t, p):
             q = ease((t - T['you'] + 0.1) / 0.25)
             nod = math.exp(-((t - T['early'] - 0.1) / 0.12) ** 2) * 0.06
-            return replace(p, rh=B((self.J1 + 30, small_top - 30)), r_shape='point', r_rot=-15, extra={'r_droop': 1.2},
+            return replace(p, rh=B((self.JX[1] + 30, self.small_top - 30)), r_shape='point', r_rot=-15, extra={'r_droop': 1.2},
                            turn=0.8, gaze_x=0.2, gaze_y=0.2, brow_raise=0.8 * q, smile=0.9, head_dy=nod, eye_wide=0.3)
-        acts = [Action(T['bills'] - 0.1, T['then'] - 0.15, bills, 0.15, 0.12, 'point at the bills jar'),
-                Action(T['then'] - 0.15, T['week'] + 0.6, scoop, 0.12, 0.25, 'scoop coins into the week jars'),
+        acts = [Action(T['split'] - 0.15, self.big_out, grab, 0.15, 0.01, 'grab a fistful from the jar'),
+                Action(self.big_out, T['week'] + 0.6, deal, 0.01, 0.25, 'deal coins into the three jars'),
                 Action(T['you'] - 0.2, self.t1, early, 0.2, 0.1, 'point: you see it early')]
-        self.small_level = lambda t, j: (0.0 if t < (T['spending'] if j == 1 else T['week']) + 0.15 else
-                                         0.65 * ease((t - ((T['spending'] if j == 1 else T['week']) + 0.15)) / 0.4))
+        # coins from the hand into each jar on its word
+        rng = random.Random(8)
+        self.drops = []
+        for x, tw in zip(self.JX, self.words):
+            for k in range(4):
+                self.drops.append(props.Falling(t0=tw + 0.04 * k, x=x + rng.uniform(-14, 14), y0=self.small_top - 50,
+                                                y1=self.small_top + 30 + 12 * k, spin=rng.uniform(-400, 400), g=2600.0))
         self.spent = [T['when'] + 0.1 * k for k in range(7)]
-        self.events += [(T['split'] - 0.1, 'slide', 0.9), (T['so'], 'pop', 0.5), (T['bills'], 'tick', 0.7),
-                        (T['spending'] + 0.12, 'trickle', 0.6), (T['jar#2'], 'tick', 0.7), (T['week'] + 0.2, 'trickle', 0.6),
-                        (T['week'], 'tick', 0.7), (T['empty'], 'pop', 0.4), (T['early'], 'sparkle', 0.7)]
+        self.events += [(T['so'], 'pop', 0.5), (self.big_out, 'slide', 0.9), (self.big_out + 0.15, 'slide', 0.7),
+                        (T['bills'], 'tick', 0.7), (T['spending'], 'tick', 0.7), (T['week'], 'tick', 0.7),
+                        (T['empty'], 'pop', 0.4), (T['early'], 'sparkle', 0.7)]
+        self.events += [(tw + 0.1, 'trickle', 0.5) for tw in self.words]
         self.events += [(x, 'coin', 0.35) for x in self.spent]
         return {'lead': Performance(base, Idle(seed=15), acts)}
 
     def camera(self, t):
-        return self.stage.camera(440, 0, 820)
+        return self.stage.camera(440, 772, 700)        # the table sits above the caption line
 
     def wall(self, t):
         def draw(frame, cam):
-            cal = props.WallCalendar(420, crossed=0).render(0, 1.0)
+            cal = props.WallCalendar(420).render(7, 1.0)                 # as beat 1 left it: payday ringed, the week crossed
             pulse = 1 + 0.06 * math.exp(-((t - self.T['payday']) / 0.15) ** 2)
             self.place(frame, cal, cam, (S.CAL_XY[0] + S.CAL_W / 2, S.CAL_XY[1] + S.CAL_W * 0.44), S.CAL_W * pulse)
         return draw
+
+    def level(self, t, j):
+        tw = self.words[j]
+        lv = 0.6 * ease((t - tw) / 0.4) if t >= tw else 0.0
+        if j == 1:
+            lv -= 0.6 * ease((t - self.T['when']) / (self.T['empty'] + 0.1 - self.T['when']))
+        return max(0.0, lv)
 
     def on_table(self, t):
         T = self.T
 
         def draw(frame, cam):
             D = self.p['lead'].D
-            self.jar(frame, cam, JAR_X, JAR_FLOOR, 0.56 * D, 0.85 - 0.25 * ease((t - T['then']) / (T['week'] + 0.6 - T['then'])))
-            slide = ease_out((t - T['split'] + 0.1) / 0.5)
-            for j, x in ((1, self.J1), (2, self.J2)):
-                xx = x - 260 * (1 - slide)
-                level = self.small_level(t, j)
-                if j == 1:
-                    level -= 0.65 * ease((t - T['when']) / (T['empty'] + 0.1 - T['when']))
-                self.jar(frame, cam, xx, JAR_FLOOR + 8, self.SMALL * D, max(0.0, level))
+            out = ease((t - self.big_out) / 0.5)
+            if out < 1:
+                self.jar(frame, cam, JAR_X + 560 * out, JAR_FLOOR, 0.56 * D, 0.85)
+            slide = ease_out((t - self.big_out - 0.1) / 0.5)
+            if slide > 0:
+                for j, x in enumerate(self.JX):
+                    self.jar(frame, cam, x - 520 * (1 - slide), JAR_FLOOR + 8, self.jar_w, self.level(t, j))
+            for c in self.drops:
+                at = c.at(t)
+                if at:
+                    self.place(frame, art().coin, cam, (at[0], at[1]), 0.10 * D, angle=at[2])
             for k, t0 in enumerate(self.spent):          # week one's coins get spent, one by one
-                self.hop(frame, cam, t, t0, (self.J1, JAR_FLOOR - 70), 120 + 40 * (k % 3), -650, 1100, 0.10 * D)
+                self.hop(frame, cam, t, t0, (self.JX[1], self.small_top + 20), 120 + 40 * (k % 3), -650, 1100, 0.10 * D)
         return draw
 
     def overlay(self, frame, t):
         T = self.T
         cam = self.camera(t)
-        D = self.p['lead'].D
-        for txt, x, floor, w, t0 in (('BILLS', JAR_X, JAR_FLOOR, 0.56 * D, T['bills']),
-                                     ('WEEK 1', self.J1, JAR_FLOOR + 8, self.SMALL * D, T['jar#2']),
-                                     ('WEEK 2', self.J2, JAR_FLOOR + 8, self.SMALL * D, T['week'])):
-            if t >= t0:
-                q = back_out((t - t0) / 0.25)
+        for j, (txt, x, tw) in enumerate(zip(self.TAGS, self.JX, self.words)):
+            if t >= tw:
+                q = back_out((t - tw) / 0.25)
                 tg = O.tag(txt, 150)
-                s = (w * 0.86 * cam[2] / tg.width) * max(0.05, q)
-                im = tg.resize((max(1, int(tg.width * s)), max(1, int(tg.height * s))), Image.BICUBIC)
-                cx, cy = self.to_screen(cam, (x, floor - w * JAR_ASPECT * 0.38))
-                frame.alpha_composite(im, (int(cx - im.width / 2), int(cy - im.height / 2)))
+                s = (self.jar_w * self.TAG_W * cam[2] / tg.width) * max(0.05, min(1.0, q) if q < 1 else q)
+                cy = self.small_top + self.jar_h * (0.62 if j == 1 else 0.25)      # staggered, so the tags never overlap
+                O.place_text(frame, tg, self.to_screen(cam, (x, cy)), s, settled=q >= 1.0)
         O.slam(frame, O.stacked(('Split it', 'on payday'), (96, 96)), t, T['so'], until=T['bills'] - 0.35)
-        O.checklist(frame, t, [('Bills', '', T['bills']), ('Week one', '', T['jar#2']), ('Week two', '', T['week'])],
-                    T['bills'] - 0.15)
-        x, y = self.to_screen(cam, (self.J1, JAR_FLOOR - 0.38 * D * JAR_ASPECT * 0.45))
-        O.circle(frame, t, T['empty'] - 0.05, (x, y), 0.30 * D * cam[2], 0.42 * D * cam[2])
+        O.checklist(frame, t, [('Bills', '', T['bills']), ('Week one', '', T['spending']), ('Week two', '', T['week'])],
+                    T['bills'] - 0.15, centre=(270, 350))
+        x, y = self.to_screen(cam, (self.JX[1], self.small_top + 0.5 * self.jar_h))
+        O.circle(frame, t, T['empty'] - 0.05, (x, y), 0.62 * self.jar_w * cam[2], 0.62 * self.jar_h * cam[2])
 
 
 # ---- b09 ----------------------------------------------------------------------------------------------
 class B09(Beat):
-    """'Payday feels rich. Make it last till the next one.' The lead and the friend lift their cups and
-    clink on 'last'; three jars with coins on the table; the calendar behind them circles the next payday."""
+    """'Payday feels rich. Make it last till the next one.' Each character lifts their own cup with the arm on
+    the inner side (nobody reaches across), the cups meet in the middle and touch once on 'last', then both
+    sip. Three jars with coins stand on the table; the calendar behind keeps the crossed-off week and rings
+    the next payday on 'next'."""
     base_name = 'together'
     cast = ('lead', 'friend')
-    CLINK = (452, 742)
+    CLINK = (452.0, 742.0)                      # where the rims meet, between the two heads
 
     def build(self):
         T = self.T
@@ -668,27 +697,30 @@ class B09(Beat):
         fr_base = self.rest_pose('friend', turn=-0.8, gaze_x=-0.6, smile=0.8)
         cups = self.base.meta['cups']
 
-        def cup_hold(c):                         # a hand's target holding a cup by its body, near where it stands
+        def cup_centre(c):                      # the hand's target holding a cup by its body, where it stands
             x, y = c['xy']
             w, h = c['size']
             return (x + w * 0.5, y + h * 0.45)
+        self.cup_of = {'lead': 0, 'friend': 1}
+        self.clink = {who: (self.CLINK[0] + (cups[k]['size'][0] * 0.5 - 4) * (-1 if who == 'lead' else 1), self.CLINK[1])
+                      for who, k in self.cup_of.items()}
 
         def toast(p, who, t):
             pup = self.p[who]
             B = pup.body
-            side = 'l' if who == 'lead' else 'r'
-            home = cup_hold(cups[0 if who == 'lead' else 1])
+            side = pup.far                      # the arm on the inner side, toward the other character
+            home = cup_centre(cups[self.cup_of[who]])
             sh = pup.shoulders[side]
-            raised = (sh[0] + 0.12 * pup.D * pup.facing, sh[1] - 0.05 * pup.D)       # up beside the chest, own side
-            clink = (self.CLINK[0] - (26 if who == 'lead' else -26), self.CLINK[1])
-            sip = (pup.s['head'][0] + 0.30 * pup.D * pup.facing, pup.s['head'][1] + 0.40 * pup.D)
-            path = [(T['payday'] - 0.3, home), (T['payday'] + 0.25, home), (T['rich'], raised), (T['make'], raised),
-                    (T['last'] - 0.03, clink), (T['last'] + 0.25, clink), (T['next'], sip), (self.t1, sip)]
+            raised = (sh[0] + 0.22 * pup.D * pup.facing, sh[1] - 0.02 * pup.D)
+            clink = self.clink[who]
+            back = (clink[0] - 0.08 * pup.D * pup.facing, clink[1] + 0.03 * pup.D)
+            sip = (pup.s['head'][0] + 0.26 * pup.D * pup.facing, pup.s['head'][1] + 0.42 * pup.D)
+            path = [(T['payday'] - 0.3, home), (T['payday'] + 0.25, home), (T['rich'], raised), (T['make'] - 0.05, raised),
+                    (T['last'], clink), (T['last'] + 0.18, clink), (T['last'] + 0.4, back), (T['next'], sip), (self.t1, sip)]
             xy = keys(t, path)
             sipping = ease((t - T['till']) / 0.3)
-            reach = ease((t - T['make']) / 0.25) * (1 - ease((t - T['last'] - 0.25) / 0.3))
             kw = {side + 'h': B(xy), side + '_shape': 'grip', side + '_rot': 0.0,
-                  'extra': {side + '_droop': 0.5 + 0.4 * (1 - reach), side + '_front': 1.0}}
+                  'extra': {side + '_droop': 1.2, side + '_front': 1.0}}
             return replace(p, smile=0.95, eye_open=1 - 0.7 * sipping, gaze_x=0.6 * pup.facing, mouth_open=0.25 * (1 - sipping),
                            brow_raise=0.4, lean=1.5 * pup.facing * ease((t - T['make']) / 0.3) * (1 - sipping), **kw)
         perf = {'lead': Performance(lead_base, Idle(seed=16), [Action(self.t0 - 0.1, self.t1, lambda t, p: toast(p, 'lead', t), 0.01, 0.1, 'lift the cup, clink')]),
@@ -698,15 +730,13 @@ class B09(Beat):
         return perf
 
     def holds(self, name, t):
-        return set() if t < self.lift_from else {'l' if name == 'lead' else 'r'}
+        return set() if t < self.lift_from else {self.p[name].far}
 
     def held(self, name, t):
         if t < self.lift_from:
             return {}
-        k = 0 if name == 'lead' else 1
-        cup = self.base.cups[k][0]
-        side = 'l' if name == 'lead' else 'r'
-        return {side: Held(cup, (cup.width * 0.5, cup.height * 0.45), cup.width / self.p[name].D)}
+        cup = self.base.cups[self.cup_of[name]][0]
+        return {self.p[name].far: Held(cup, (cup.width * 0.5, cup.height * 0.45), cup.width / self.p[name].D)}
 
     def cups_away(self, t):
         return {0, 1} if t >= self.lift_from else set()
@@ -717,8 +747,10 @@ class B09(Beat):
 
     def wall(self, t):
         def draw(frame, cam):
-            cal = props.WallCalendar(420, crossed=0, payday_row=2).render(0, ease((t - self.T['next']) / 0.4))
-            self.place(frame, cal, cam, (580, 316), 160)
+            # the same calendar as beat 1 (the first payday ringed, the week after it crossed off), the same
+            # size; the next payday gets its ring on 'next'
+            cal = props.WallCalendar(420).render(7, ease((t - self.T['next']) / 0.4), also=((0, 4),), circle_at=(2, 4))
+            self.place(frame, cal, cam, (546, 188), S.CAL_W, anchor=(0, 0))
         return draw
 
     def on_table(self, t):

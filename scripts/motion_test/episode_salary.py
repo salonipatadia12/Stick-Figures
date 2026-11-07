@@ -124,9 +124,12 @@ class B12:
         elif t >= self.T['amount'] - 0.05:
             value = 1500 * self.scene.jar_level(t)
             pop = math.exp(-max(0.0, t - self.T['lands']) * 9) if t >= self.T['lands'] else 0
-            im = O.text_layer(f'${int(round(value / 10) * 10):,}', int(128 * (1 + 0.16 * pop)), fill=(255, 226, 120))
+            size = int(128 * (1 + 0.16 * pop))
+            im = O.text_layer(f'${int(round(value / 10) * 10):,}', size, fill=(255, 226, 120))
             f.alpha_composite(self.example, (int(O.TEXT_C[0] - self.example.width / 2), O.TEXT_C[1] - 128))
             f.alpha_composite(im, (int(O.TEXT_C[0] - im.width / 2), O.TEXT_C[1] - 66 - int(8 * pop)))
+            O.note_text('Example', 50)
+            O.note_text('$ counter', size)
         return f
 
     def sfx(self):
@@ -183,19 +186,25 @@ def render_shot(args):
     cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
            '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', str(tmp)]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    boxes = []
+    boxes, texts = [], []
+    O.take_text_log()
     for i in range(f0, f1):
         t = i / FPS
         frame = scene.frame(t)
         line = C.at(lines, t)
         if line:
             boxes.append(dict(t=round(t, 3), **C.draw(frame, line, t)))
+        drawn = O.take_text_log()
+        if drawn:                                 # the smallest type on this frame, for the readability check
+            small = min(drawn, key=lambda d: d['em'])
+            texts.append(dict(t=round(t, 3), **small))
         proc.stdin.write(frame.convert('RGB').tobytes())
     proc.stdin.close()
     if proc.wait():
         raise RuntimeError(f'ffmpeg failed for {name}')
     tmp.replace(path)
     path.with_suffix('.captions.json').write_text(json.dumps(boxes))
+    path.with_suffix('.text.json').write_text(json.dumps(texts))
     return name, f1 - f0
 
 
@@ -251,7 +260,9 @@ def main():
                 C.draw(frame, line, s)
             path = OUT / f'still-{s:05.2f}.jpg'
             frame.convert('RGB').save(path, quality=90)
-            print(path, name)
+            drawn = O.take_text_log()
+            small = min(drawn, key=lambda d: d['em']) if drawn else None
+            print(path, name, f"smallest text: {small['em']}px ({small['label']})" if small else '')
         return
     clip_dir = OUT / 'shots'
     clip_dir.mkdir(exist_ok=True)
@@ -280,9 +291,10 @@ def main():
                     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-t', f"{tl['duration']:.3f}",
                     '-movflags', '+faststart', str(final)], check=True)
     (OUT / f'{SLUG}.srt').write_text(C.srt(lines))
-    caption_boxes = []
+    caption_boxes, text_sizes = [], []
     for p in clips:
         caption_boxes += json.loads(p.with_suffix('.captions.json').read_text())
+        text_sizes += json.loads(p.with_suffix('.text.json').read_text())
     (OUT / 'timeline.json').write_text(json.dumps(dict(
         title=tl['title'], voice=args.voice, duration=round(tl['duration'], 2), shots=[dict(name=n, start=a, end=b) for n, a, b in plan],
         beats=[dict(id=b['id'], start=round(b['start'], 3), end=round(b['end'], 3), words=b['words']) for b in tl['beats']],
@@ -290,7 +302,8 @@ def main():
     print(final, f"{tl['duration']:.2f}s", f'{time.perf_counter() - t_start:.0f}s', flush=True)
     if not args.no_qa:
         from pipeline import qa
-        report = qa.run(final, tl, lines, caption_boxes, OUT, plan, args.voice)
+        report = qa.run(final, tl, lines, caption_boxes, OUT, plan, args.voice, text_sizes=text_sizes,
+                        ledger=ROOT / 'episodes' / SLUG / 'ledger.json')
         print(json.dumps(report['summary'], indent=1))
 
 

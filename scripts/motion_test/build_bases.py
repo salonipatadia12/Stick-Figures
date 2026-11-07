@@ -135,6 +135,71 @@ def fit_head(im: np.ndarray, box) -> tuple:
     return ((float(ex + x0), float(ey + y0)), (float(ew), float(eh)), float(ang))
 
 
+def outline_ring(im: np.ndarray, ell, inner: float = -12, outer: float = 14, min_area: int = 300) -> np.ndarray:
+    """The head's own dark outline: the dark runs in a band around the ellipse, specks and short spurs
+    of the torso outline dropped. Thin, light spots can split the ring, so every sizeable piece is kept."""
+    lum = im.astype(np.float32).mean(-1)
+    band = ellipse_mask(im.shape, ell, outer) & ~ellipse_mask(im.shape, ell, inner)
+    stroke = band & (lum < 135)
+    stroke = cv2.morphologyEx(stroke.astype(np.uint8), cv2.MORPH_OPEN, disk(1)) > 0
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(stroke.astype(np.uint8))
+    keep = np.zeros_like(stroke)
+    for i in range(1, n):
+        if stats[i, cv2.CC_STAT_AREA] >= min_area:
+            keep |= lab == i
+    return keep if keep.any() else stroke
+
+
+def refine_head(im: np.ndarray, ell) -> tuple:
+    """Re-fit the ellipse to the OUTER edge of the outline stroke. The first fit uses every dark pixel near
+    the head, so a dark door frame or a shadow beside it can pull the ellipse a few pixels off the painted
+    outline, and the backing ring then showed outside the head (seen on the standing lead).
+    Along rays from the centre, the dark run nearest the first ellipse is the stroke; runs much thicker than
+    the stroke (a window frame, the torso outline merging in) are skipped. The ellipse is fitted to the
+    stroke's outer ends with outliers dropped, and kept only if it stays close to the first fit."""
+    h, w = im.shape[:2]
+    lum = im.astype(np.float32).mean(-1)
+    (cx, cy), (ew, eh), ang = ell
+    A, Bx, th = ew / 2, eh / 2, np.radians(ang)
+    runs = []
+    for k in range(0, 360, 2):
+        a = np.radians(k)
+        phi = a - th
+        R = A * Bx / np.hypot(Bx * np.cos(phi), A * np.sin(phi))
+        r = np.arange(R - 16, R + 16, 0.5)
+        xs = np.clip((cx + np.cos(a) * r).astype(int), 0, w - 1)
+        ys = np.clip((cy + np.sin(a) * r).astype(int), 0, h - 1)
+        dark = lum[ys, xs] < 90
+        if not dark.any():
+            continue
+        idx = np.nonzero(dark)[0]
+        pieces = np.split(idx, np.nonzero(np.diff(idx) > 1)[0] + 1)
+        best = min(pieces, key=lambda p: abs(r[p].mean() - R))
+        runs.append((a, r[best[-1]] + 0.5, r[best[-1]] - r[best[0]]))
+    if len(runs) < 20:
+        return ell
+    thick = np.median([t for _, _, t in runs])
+    pts = np.array([(cx + np.cos(a) * ro, cy + np.sin(a) * ro) for a, ro, t in runs if t <= 1.8 * thick + 1], np.float32)
+    for _ in range(4):
+        if len(pts) < 12:
+            return ell
+        (ex, ey), (ew2, eh2), ang2 = cv2.fitEllipse(pts)
+        t2 = np.radians(ang2)
+        dx, dy = pts[:, 0] - ex, pts[:, 1] - ey
+        xr = dx * np.cos(t2) + dy * np.sin(t2)
+        yr = -dx * np.sin(t2) + dy * np.cos(t2)
+        res = (np.sqrt((xr / (ew2 / 2)) ** 2 + (yr / (eh2 / 2)) ** 2) - 1) * (ew2 + eh2) / 4
+        good = np.abs(res) < 3
+        if good.all():
+            break
+        pts = pts[good]
+    moved = np.hypot(ex - cx, ey - cy)
+    if moved > 14 or abs(ew2 - ew) > 0.08 * ew or abs(eh2 - eh) > 0.08 * eh:
+        print(f'    head refit rejected (moved {moved:.1f}px, axes {ew:.0f}x{eh:.0f} -> {ew2:.0f}x{eh2:.0f})')
+        return ell
+    return ((float(ex), float(ey)), (float(ew2), float(eh2)), float(ang2))
+
+
 def ellipse_mask(shape, ell, grow: float = 0.0) -> np.ndarray:
     (cx, cy), (ew, eh), ang = ell
     m = np.zeros(shape[:2], np.uint8)
@@ -163,15 +228,12 @@ def head_sprite(orig: np.ndarray, ell) -> tuple[Image.Image, list]:
     lum = f.mean(-1)
     sat = f.max(-1) - f.min(-1)
     inner = ellipse_mask(orig.shape, ell, -3.8)
-    band = ellipse_mask(orig.shape, ell, 9) & ~ellipse_mask(orig.shape, ell, -7)
-    stroke = band & (lum < 135)
-    stroke = cv2.morphologyEx(stroke.astype(np.uint8), cv2.MORPH_OPEN, disk(1)) > 0   # drop specks
-    # keep only the stroke ring connected around the head (not spurs of the torso outline joining it)
-    n, lab, stats, _ = cv2.connectedComponentsWithStats(stroke.astype(np.uint8))
-    if n > 1:
-        stroke = lab == (1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA])))
-    region = ellipse_mask(orig.shape, ell, -2) | stroke
-    region = fill_holes(region) & ellipse_mask(orig.shape, ell, 9)
+    # the stroke ring (every sizeable piece of it: light spots can split it), not specks or short spurs
+    stroke = outline_ring(orig, ell, -7, 9)
+    region = ellipse_mask(orig.shape, ell, -4) | stroke
+    # the ellipse is fitted to the stroke's outer edge, so the cut can hug it: dark background touching the
+    # outline (foliage, a shadow) stays out
+    region = fill_holes(region) & ellipse_mask(orig.shape, ell, 2.5)
     # spurs: anything sticking out more than the stroke's own width is the torso outline, not the head
     region = cv2.morphologyEx(region.astype(np.uint8), cv2.MORPH_OPEN, disk(3)) > 0
     marks = inner & ((lum < 175) | (sat > 48))
@@ -189,24 +251,39 @@ def head_sprite(orig: np.ndarray, ell) -> tuple[Image.Image, list]:
     stroke_col = np.median(orig[core].reshape(-1, 3), 0) if core.any() else np.array(NAVY)
     clean[edge] = stroke_col.astype(np.uint8)
     alpha = cv2.GaussianBlur((region * 1.0 + edge * 0.55).astype(np.float32), (0, 0), 0.6)
-    # an unbroken outline at the painting's own stroke weight, behind the head (shows where the old torso
-    # outline used to join and the stroke was thin)
-    widths = []
-    for k in range(0, 360, 6):
+    # an unbroken outline at the painting's own stroke weight: along rays from the centre, the stroke is the
+    # dark run nearest the ellipse; where a ray finds none (the old torso outline used to join there), that
+    # angle is painted at the median stroke width, just inside the cut, so nothing shows outside the head.
+    hh, ww = orig.shape[:2]
+    A, Bx, th = ew / 2, eh / 2, np.radians(ang)
+    thick, missing = [], []
+    for k in range(0, 360, 2):
         a = np.radians(k)
-        xs = (cx + np.cos(a) * np.linspace(min(ew, eh) / 2 - 10, max(ew, eh) / 2 + 10, 40)).astype(int)
-        ys = (cy + np.sin(a) * np.linspace(min(ew, eh) / 2 - 10, max(ew, eh) / 2 + 10, 40)).astype(int)
-        ok = (xs >= 0) & (ys >= 0) & (xs < orig.shape[1]) & (ys < orig.shape[0])
-        widths.append(int(stroke[ys[ok], xs[ok]].sum()))
-    sw = max(4, int(np.median([v for v in widths if v > 0] or [5])))
-    ring = np.zeros(orig.shape[:2], np.uint8)
-    cv2.ellipse(ring, ((cx, cy), (ew + sw * 0.4, eh + sw * 0.4), ang), 255, sw, cv2.LINE_AA)
-    ring_a = ring.astype(np.float32) / 255
-    a_s, a_r = np.clip(alpha, 0, 1), ring_a * (1 - np.clip(alpha, 0, 1))          # the head over the ring
-    a_out = a_s + a_r
-    num = clean.astype(np.float32) * a_s[..., None] + np.array(stroke_col, np.float32) * a_r[..., None]
-    clean = np.clip(num / np.maximum(a_out, 1e-6)[..., None], 0, 255).astype(np.uint8)
-    alpha = a_out
+        phi = a - th
+        R = A * Bx / np.hypot(Bx * np.cos(phi), A * np.sin(phi))
+        r = np.arange(R - 14, R + 4, 0.5)
+        xs = np.clip((cx + np.cos(a) * r).astype(int), 0, ww - 1)
+        ys = np.clip((cy + np.sin(a) * r).astype(int), 0, hh - 1)
+        dark = lum[ys, xs] < 120
+        if dark.any():
+            idx = np.nonzero(dark)[0]
+            pieces = np.split(idx, np.nonzero(np.diff(idx) > 1)[0] + 1)
+            best = max(pieces, key=len)
+            thick.append(r[best[-1]] - r[best[0]] + 0.5)
+        else:
+            missing.append(k)
+    sw = int(round(np.median(thick))) if thick else 5
+    sw = max(4, min(sw, 12))
+    if missing:
+        wedge = np.zeros((hh, ww), np.uint8)
+        for k in missing:
+            a = np.radians(k)
+            cv2.line(wedge, (int(cx), int(cy)), (int(cx + np.cos(a) * (max(ew, eh) / 2 + 8)), int(cy + np.sin(a) * (max(ew, eh) / 2 + 8))),
+                     255, max(3, int(0.04 * max(ew, eh))))
+        fill = (wedge > 0) & ellipse_mask(orig.shape, ell, 0) & ~ellipse_mask(orig.shape, ell, -sw)
+        fill_a = cv2.GaussianBlur(fill.astype(np.float32), (0, 0), 0.8)[..., None]
+        clean = np.clip(clean.astype(np.float32) * (1 - fill_a) + np.array(stroke_col, np.float32) * fill_a, 0, 255).astype(np.uint8)
+    alpha = np.clip(alpha, 0, 1)
     r = max(ew, eh) / 2
     x0, y0, x1, y1 = int(cx - r - 14), int(cy - r - 14), int(cx + r + 15), int(cy + r + 15)
     rgba = np.dstack([clean, (np.clip(alpha, 0, 1) * 255).astype(np.uint8)])[y0:y1, x0:x1]
@@ -400,7 +477,7 @@ def build(name: str, spec: dict):
     h, w = orig.shape[:2]
     size = (w, h)
     yy, xx = np.mgrid[0:h, 0:w]
-    ells = [fit_head(orig, s['head_box']) for s in spec['seats']]
+    ells = [refine_head(orig, fit_head(orig, s['head_box'])) for s in spec['seats']]
     Ds = [(e[1][0] + e[1][1]) / 2 for e in ells]
     for s, e in zip(spec['seats'], ells):
         print(f"    {s['name']}: head centre ({e[0][0]:.1f},{e[0][1]:.1f}) size {e[1][0]:.0f}x{e[1][1]:.0f}")
