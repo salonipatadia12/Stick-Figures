@@ -160,6 +160,7 @@ def approve(state: dict, picks: dict, rejects: dict, by: str, want: dict) -> lis
         d = want[name]
         entry = B.approve(lib, name, str(path.relative_to(ROOT)), d, by)
         entry['pack'] = state['pack']
+        entry['inserts'] = True            # every pack base is built with an empty plate, so it serves object-only inserts
         if d['pose'] == 'mixed':
             entry['poses'] = d['poses']
         state.setdefault('picks', {})[name] = str(path.relative_to(ROOT))

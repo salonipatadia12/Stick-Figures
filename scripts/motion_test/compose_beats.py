@@ -108,6 +108,16 @@ class Composed(Beat):
         self.cam_moves = []               # (kind, anchor time)
         self.text_items = []              # (kind, t, payload)
         super().__init__(T, t0, t1, load_art)
+        if not self.cast:                 # an object-only insert: the setting without its painted character
+            from dataclasses import replace as dc_replace
+            from PIL import ImageFilter
+            from pipeline.rig.puppet import Stage
+            empty = ROOT / 'styles/cozy/bases' / self.base_name / 'empty.png'
+            if empty.exists():
+                soft = Image.open(empty).convert('RGB').filter(ImageFilter.GaussianBlur(1.2))
+                self.stage = Stage(dc_replace(self.base, plate=soft, bodies={}, occluders={}), (self.stage.W, self.stage.H))
+            else:
+                self.notes.append(f'insert on {self.base_name}: no empty plate, the painted character stays in frame')
 
     # -- helpers -----------------------------------------------------------------------------------
     def lead(self):
