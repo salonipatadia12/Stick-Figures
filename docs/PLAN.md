@@ -241,8 +241,14 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   sheet only for props that fail both seeds.
 - D: `stick pack starter --candidates` (`pipeline/basepack.py`): 24 bases, one sheet per setting under
   `renders/bases/candidates/pack-starter-<setting>-candidates.jpg`; `--pick/--reject/--direction` as at the
-  bases gate. Building approved pack bases still needs a spec per base (`build_bases.py`); the plate-derived
-  spec helper is the next piece.
+  bases gate. Rendered 2026-11-08 (48 candidates), waiting for the user's picks. The per-episode bases gate
+  reuses the pack's places, poses and two-character prompts (`bases.candidate_jobs`), skips bases the pack has
+  candidates for (`basepack.covers`), and inserts need no render. Building approved pack bases needs the two
+  FLUX plates (arms removed, character removed) and `scripts/motion_test/spec_from_plates.py` (arms at the
+  sides derive cleanly; crossed arms need hand rests written by hand).
+- C ran on the three proof scripts: 17 of 20 props passed QA into `styles/cozy/props/`; the sunset's
+  sunbeam, dust specks and photo failed both seeds (thin or translucent things FLUX does not render as one
+  object) and have drawn stand-ins (`drawn.sunbeam`, `drawn.specks`, `drawn.photo`) proposed to the user.
 - G: `qa.json['library']` on every render (`library_pct`, hand-written beats, per-beat detail); the runner
   prints it. Video 2 scored 0 % (all beats hand-written), the salary episode composes at 100 % (untested on
   screen).

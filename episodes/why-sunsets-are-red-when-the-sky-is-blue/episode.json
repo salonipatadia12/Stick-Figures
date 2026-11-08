@@ -749,6 +749,69 @@
       "prompt_version": "script-v3",
       "research": true,
       "generated": "2026-11-08T14:22:43"
+    },
+    "bases": {
+      "plan": [
+        {
+          "beat": "b01",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        },
+        {
+          "beat": "b02",
+          "base": "lead-at-table",
+          "wanted": "cafe-insert"
+        },
+        {
+          "beat": "b03",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        },
+        {
+          "beat": "b04",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        },
+        {
+          "beat": "b05",
+          "base": null,
+          "wanted": "friend-lead-standing-street"
+        },
+        {
+          "beat": "b06",
+          "base": null,
+          "wanted": "lead-standing-street"
+        },
+        {
+          "beat": "b07",
+          "base": null,
+          "wanted": "friend-lead-seated-bench-street"
+        },
+        {
+          "beat": "b08",
+          "base": null,
+          "wanted": "friend-standing-street"
+        },
+        {
+          "beat": "b09",
+          "base": null,
+          "wanted": "friend-lead-standing-street"
+        },
+        {
+          "beat": "b10",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        }
+      ],
+      "candidates": {
+        "friend-lead-seated-bench-street": [
+          "renders/bases/flux/cand-together-seated-bench-street-p6f51-s657.png",
+          "renders/bases/flux/cand-together-seated-bench-street-p6f51-s658.png"
+        ]
+      },
+      "sheet": "renders/bases/candidates/why-sunsets-are-red-when-the-sky-is-blue-candidates.jpg",
+      "made": "2026-11-08T16:33:34",
+      "round": 1
     }
   }
 }

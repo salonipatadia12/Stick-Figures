@@ -194,6 +194,26 @@ def cmd_bases(args):
     if unknown:
         print(f'--direction names bases that are not missing: {unknown}; missing: {sorted(miss)}')
         return EXIT_ERROR
+    from . import basepack
+    pack_state = basepack.load_state('starter')
+    lib = bases.library()
+    covered = {}
+    for w, d in list(miss.items()):
+        name = basepack.covers(d)
+        if name and (name in pack_state.get('candidates', {}) or lib.get(name)) and w not in direction:
+            covered[w] = name
+            del miss[w]
+    if covered:
+        print('\nIn the starter pack (pick there, not here):')
+        for w, name in covered.items():
+            st = lib.get(name, {}).get('status') or 'candidates ready: stick pack starter --pick'
+            print(f'  {w:40} <- {name} ({st})')
+    inserts = [w for w, d in miss.items() if d['pose'] == 'insert']
+    for w in inserts:
+        print(f'  {w}: an empty plate of an approved {miss[w]["setting"]} base serves it; nothing to render')
+        del miss[w]
+    if not miss:
+        return EXIT_GATE
     jobs = bases.candidate_jobs(miss, rejected=meta.get('rejected'), direction=direction)
     rnd = max(j['round'] for j in jobs.values())
     print(f'\nRendering {sum(len(j["seeds"]) for j in jobs.values())} candidates with FLUX.2 klein (local, free), round {rnd}...')

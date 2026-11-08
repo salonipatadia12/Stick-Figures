@@ -51,12 +51,17 @@ DRAWN = {
     'quilt': (lambda: drawn.scrap_holed(200), 0.55), 'scrap': (lambda: drawn.scrap(200), 0.55), 'steam': (lambda: drawn.steam(80, 140), 0.3),
     'figure': (lambda: drawn.figure(180), 0.5), 'person': (lambda: drawn.figure(180), 0.5), 'hole': (lambda: drawn.hole(70), 0.25),
     'receipt': (lambda: O.receipt_paper(('item', 'item', 'item')), 0.5), 'phone': (lambda: O.phone(300), 0.35), 'box': (lambda: O.takeout_box(300), 0.5),
+    'sunbeam': (lambda: drawn.sunbeam(260, 420), 0.0), 'specks': (lambda: drawn.specks(220, 160), 0.0),
+    'photo': (lambda: drawn.photo(240, 300), 0.4),
     'cup': (None, 0.0),                                  # the bases carry their own cups
 }
 SYNONYMS = {'alarm clock': 'clock', 'alarm': 'clock', 'coffee': 'cup', 'coffee cup': 'cup', 'mug': 'cup', 'tea': 'cup',
             'bedside lamp': 'lamp', 'desk lamp': 'lamp', 'light': 'lamp', 'bulb': 'lamp', 'blanket': 'quilt', 'duvet': 'quilt',
             'coil': 'spring', 'tangle': 'knot', 'yarn': 'knot', 'string': 'knot', 'bill': 'receipt', 'invoice': 'receipt',
-            'mobile': 'phone', 'smartphone': 'phone', 'parcel': 'box', 'package': 'box', 'takeout': 'box'}
+            'mobile': 'phone', 'smartphone': 'phone', 'parcel': 'box', 'package': 'box', 'takeout': 'box',
+            'beam': 'sunbeam', 'sun beam': 'sunbeam', 'ray of light': 'sunbeam', 'shaft of light': 'sunbeam', 'sunlight': 'sunbeam',
+            'dust': 'specks', 'dust specks': 'specks', 'dust motes': 'specks', 'motes': 'specks',
+            'photograph': 'photo', 'picture': 'photo', 'snapshot': 'photo', 'polaroid': 'photo'}
 
 
 def prop_key(name: str) -> str:

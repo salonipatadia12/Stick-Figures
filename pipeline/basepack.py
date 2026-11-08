@@ -103,6 +103,20 @@ def wanted(settings: list | None = None) -> dict:
     return out
 
 
+def covers(desc: dict, want: dict | None = None) -> str | None:
+    """The pack base (name) that serves this base description once picked: same setting, pose and cast, or an
+    insert of a pack setting (every pack base is built with an empty plate)."""
+    want = want or wanted()
+    for name, d in want.items():
+        if d['setting'] != desc['setting']:
+            continue
+        if desc['pose'] == 'insert':
+            return name
+        if d['pose'] == desc['pose'] and sorted(d['cast']) == sorted(desc['cast']):
+            return name
+    return None
+
+
 def jobs(want: dict, state: dict, direction: dict | None = None) -> dict:
     """FLUX edit jobs (flux_bases.py format) for every wanted base, with redo rounds for rejected ones."""
     direction = direction or {}

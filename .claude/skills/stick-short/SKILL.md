@@ -54,6 +54,9 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
    it stops at the `bases` gate (exit code 3). Then:
    - run `.venv/bin/stick bases <slug> --candidates` (local FLUX.2 klein, free, about 80 s per image). It
      renders two candidates per missing base and writes a review sheet under `renders/bases/candidates/`.
+     Bases the starter pack already has candidates for are listed as "pick there, not here" instead of being
+     rendered again; an insert (no characters) is served by any approved base of that setting. Two-character
+     bases are prompted as one picture of both characters, in the pack's description of the setting.
    - Show the user the sheet and **stop**. Never pick a candidate yourself.
    - When the user picks: `.venv/bin/stick approve <slug> --gate bases --by user --pick <base>=<file.png> ...`.
      Picks may come over several calls. The pick enters `styles/cozy/bases/library.json` for every later

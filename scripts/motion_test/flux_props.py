@@ -42,7 +42,7 @@ def main(jobs_file: Path, names: list):
             image = model.generate_image(seed=seed, prompt=job['prompt'], num_inference_steps=4, width=size, height=size)
             image.save(str(dst))
             print(f'{dst.name}: {time.time() - t1:.0f}s', flush=True)
-        log[name] = dict(model=MODEL, licence='apache-2.0', steps=4, size=[size, size], **job)
+        log[name] = {**job, 'model': MODEL, 'licence': 'apache-2.0', 'steps': 4, 'size': [size, size]}
         log_path.write_text(json.dumps(log, indent=2) + '\n')
 
 

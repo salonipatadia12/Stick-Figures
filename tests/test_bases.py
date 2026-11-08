@@ -111,3 +111,40 @@ class RedoRoundTest(unittest.TestCase):
         self.assertIn('LYING ON THEIR BACK looking up at the ceiling.', j['prompt'])
         self.assertIn('same bed, headboard, quilt pattern', j['prompt'])
         self.assertIn('No text', j['prompt'])
+
+
+class PackPromptTest(unittest.TestCase):
+    """Per-episode candidates reuse the starter pack's places and two-character prompts (docs/PLAN.md §7 D)."""
+
+    def test_two_characters_are_prompted_together_in_the_pack_setting(self):
+        from pipeline import basepack
+        miss = {'friend-lead-seated-bench-street': dict(setting='street', pose='seated-bench', view='eye-level', cast=['friend', 'lead'], beats=['b07'])}
+        j = bases.candidate_jobs(miss, lib={})['friend-lead-seated-bench-street']
+        self.assertEqual(j['images'], ['03-together.png'])
+        self.assertIn('two characters', j['prompt'])
+        self.assertIn('both now SITTING ON THE BENCH', j['prompt'])
+        self.assertIn(basepack.PLACES['street'][:40], j['prompt'])
+        self.assertTrue(j['job'].startswith('cand-together-seated-bench-street-p'))
+
+    def test_one_character_in_a_pack_setting_gets_the_pack_pose_and_place(self):
+        from pipeline import basepack
+        miss = {'lead-seated-sofa-living-room': dict(setting='living-room', pose='seated-sofa', view='eye-level', cast=['lead'], beats=['b01'])}
+        j = bases.candidate_jobs(miss, lib={})['lead-seated-sofa-living-room']
+        self.assertEqual(j['images'], ['04-waiting.png', '01-alone.png'])
+        self.assertIn('SITTING ON THE SOFA', j['prompt'])
+        self.assertIn(basepack.PLACES['living-room'][:30], j['prompt'])
+
+    def test_a_changed_prompt_changes_the_job_name(self):
+        miss = {'lead-standing-kitchen': dict(setting='kitchen', pose='standing', view='eye-level', cast=['lead'], beats=['b04'])}
+        a = bases.candidate_jobs(miss, lib={})['lead-standing-kitchen']['job']
+        b = bases.candidate_jobs(miss, lib={}, direction={'lead-standing-kitchen': 'now STANDING at the sink'})['lead-standing-kitchen']['job']
+        self.assertNotEqual(a, b)
+        self.assertTrue(a.startswith('cand-standing-kitchen-p') and b.startswith('cand-standing-kitchen-p'))
+
+    def test_the_pack_covers_matching_descriptions_and_inserts(self):
+        from pipeline import basepack
+        self.assertEqual(basepack.covers(dict(setting='kitchen', pose='standing', cast=['friend', 'lead'])), 'together-kitchen')
+        self.assertEqual(basepack.covers(dict(setting='street', pose='standing', cast=['friend'])), 'friend-standing-street')
+        self.assertEqual(basepack.covers(dict(setting='living-room', pose='insert', cast=[])), 'lead-seated-sofa-living-room')
+        self.assertIsNone(basepack.covers(dict(setting='living-room', pose='standing', cast=['lead'])))
+        self.assertIsNone(basepack.covers(dict(setting='bedroom', pose='bed-edge', cast=['lead'])))

@@ -187,6 +187,7 @@ def plan_view(rows: list) -> str:
 CHARACTER = {
     'lead': 'the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands',
     'friend': 'the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands',
+    'together': 'the same two white round-headed characters (the one with the teal scarf and the one without) with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands',
 }
 STYLE = ('Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly '
          'illustration style, portrait framing. No text.')
@@ -207,10 +208,41 @@ SEEDS = {'bed-edge': [101, 102], 'bed-asleep-top': [111, 112], 'bed-awake': [121
 
 def references_for(desc: dict, lib: dict, who: str) -> list:
     """Reference images for a candidate: the approved bases of the same setting (so a new pose keeps the same
-    room, bed and props), else the character references from The Empty Chair."""
+    room, bed and props), else the character references from The Empty Chair. `who` is 'lead', 'friend' or
+    'together' (both characters)."""
+    from . import basepack
+    cast = ['friend', 'lead'] if who == 'together' else [who]
     same = [e['source'] for e in lib.values() if e.get('status') in ('approved', 'built') and e.get('setting') == desc['setting']
-            and who in e.get('cast', []) and e.get('source')]
-    return [Path(src).name for src in same[:2]] or REFERENCES.get(who, REFERENCES['lead'])
+            and all(c in e.get('cast', []) for c in cast) and e.get('source')]
+    return [Path(src).name for src in same[:2]] or list(basepack.CHARACTERS[who][1])
+
+
+def place_text(setting: str) -> str:
+    """The painted description of a setting: the eight pack settings from basepack (so an episode's extra base
+    matches the pack's room), the bedroom and the cafe from here."""
+    from . import basepack
+    return basepack.PLACES.get(setting) or SETTINGS.get(setting) or setting.replace('-', ' ')
+
+
+def pose_text(desc: dict, who: str) -> str:
+    """The pose sentence for a candidate prompt: both characters for 'together', else one. Bed poses and the
+    cafe table live here; the pack poses (desk, sofa, bench, standing, driving) in basepack."""
+    from . import basepack
+    place = place_text(desc['setting'])
+    pose = desc['pose']
+    if who == 'together':
+        text = TOGETHER.get(pose) or basepack.TOGETHER.get(pose) or 'both in new poses that fit the scene'
+        return f'{text}, in {place}.'
+    if pose in POSES:
+        return POSES[pose].format(setting=place)
+    if pose in basepack.POSE_TEXT:
+        return f'{basepack.POSE_TEXT[pose]}, in {place}.'
+    return f'in a new pose that fits the scene, in {place}.'
+
+
+TOGETHER = {
+    'seated-at-table': 'both now SEATED AT A WOODEN TABLE across from each other, turned a little toward each other, hands resting on the tabletop',
+}
 
 
 def candidate_jobs(miss: dict, lib: dict | None = None, rejected: dict | None = None, direction: dict | None = None) -> dict:
@@ -218,34 +250,43 @@ def candidate_jobs(miss: dict, lib: dict | None = None, rejected: dict | None = 
 
     Two seeds on the first round. When a base's candidates were rejected (`rejected[wanted]` lists them), the job
     gets a round suffix, three new seeds and, if given, the user's `direction[wanted]` in place of the pose template.
+    A two-character base is prompted as one picture of both (the 'together' lead-in and reference), not as the lead
+    alone. Job names carry a short digest of the prompt, so a changed prompt renders afresh and an unchanged one is
+    served from renders/bases/flux/ (the bed poses keep their original names).
     """
+    from . import basepack
     lib = library() if lib is None else lib
     rejected, direction = rejected or {}, direction or {}
     jobs = {}
     for wanted, d in miss.items():
         if d['pose'] == 'insert':
             continue                       # an insert is an empty plate of an existing setting: no character to design
-        who = d['cast'][0] if len(d['cast']) == 1 else 'lead'
-        job = 'cand-' + d['pose'] if who == 'lead' else f'cand-{who}-{d["pose"]}'
-        if d['setting'] != 'cafe' and d['pose'] in ('standing', 'seated-at-table'):
+        who = d['cast'][0] if len(d['cast']) == 1 else 'together'
+        legacy = d['pose'] in SEEDS
+        job = 'cand-' + ('' if who == 'lead' else f'{who}-') + d['pose']
+        if d['setting'] != 'cafe' and not legacy:
             job += f'-{d["setting"]}'
         rnd = 1 + len({Path(f).name.rsplit('-s', 1)[0] for f in rejected.get(wanted, [])})
         base_seed = sum(ord(c) for c in job) % 900 + 100
         seeds = SEEDS.get(d['pose'], [base_seed, base_seed + 1])
+        images = references_for(d, lib, who)
+        fresh = images == list(basepack.CHARACTERS[who][1])
+        if wanted in direction:                                   # the user's words replace the pose template
+            pose = direction[wanted].strip().rstrip('.') + '.'
+            if fresh:
+                prompt = f'{basepack.CHARACTERS[who][0]}, {pose} {STYLE}'
+            else:                                                 # approved bases of the room as references: keep it
+                keep = ('the same bed, headboard, quilt pattern, pillow, nightstand and lamp' if d['setting'] == 'bedroom'
+                        else 'the same room, furniture and light')
+                subject = 'the two characters' if who == 'together' else 'the character'
+                prompt = f'Using {subject}, the room and the furniture from these images (keep {keep}): {CHARACTER[who]}, {pose} {STYLE}'
+        else:
+            prompt = f'{basepack.CHARACTERS[who][0]}, {pose_text(d, who)} {STYLE}'
+        if not legacy:
+            job += '-p' + hashlib.sha256(prompt.encode()).hexdigest()[:4]
         if rnd > 1:
             job += f'-r{rnd}'
             seeds = [seeds[0] + 100 * (rnd - 1) + i for i in range(3)]
-        images = references_for(d, lib, who)
-        setting = SETTINGS.get(d['setting'], d['setting'])
-        if wanted in direction:
-            pose = direction[wanted].strip().rstrip('.') + '.'
-            lead_in = ('Using the character, the room, the bed and the furniture from these images (keep the same bed, '
-                       'headboard, quilt pattern, pillow, nightstand and lamp): ' if images != REFERENCES.get(who, REFERENCES['lead'])
-                       else 'Using the character from these images: ')
-        else:
-            pose = POSES.get(d['pose'], 'in a new pose that fits the scene, in {setting}.').format(setting=setting)
-            lead_in = 'Using the character from these images: '
-        prompt = f'{lead_in}{CHARACTER.get(who, CHARACTER["lead"])}, {pose} {STYLE}'
         jobs[wanted] = dict(job=job, images=images, seeds=seeds, prompt=prompt, round=rnd)
     return jobs
 

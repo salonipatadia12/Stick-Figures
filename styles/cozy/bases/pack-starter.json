@@ -1,0 +1,115 @@
+{
+ "pack": "starter",
+ "candidates": {
+  "lead-seated-desk-office": [
+   "renders/bases/flux/pack-office-lead-s614.png",
+   "renders/bases/flux/pack-office-lead-s615.png"
+  ],
+  "friend-seated-desk-office": [
+   "renders/bases/flux/pack-office-friend-s840.png",
+   "renders/bases/flux/pack-office-friend-s841.png"
+  ],
+  "together-office": [
+   "renders/bases/flux/pack-office-together-s431.png",
+   "renders/bases/flux/pack-office-together-s432.png"
+  ],
+  "lead-standing-kitchen": [
+   "renders/bases/flux/pack-kitchen-lead-s494.png",
+   "renders/bases/flux/pack-kitchen-lead-s495.png"
+  ],
+  "friend-standing-kitchen": [
+   "renders/bases/flux/pack-kitchen-friend-s720.png",
+   "renders/bases/flux/pack-kitchen-friend-s721.png"
+  ],
+  "together-kitchen": [
+   "renders/bases/flux/pack-kitchen-together-s553.png",
+   "renders/bases/flux/pack-kitchen-together-s554.png"
+  ],
+  "lead-seated-sofa-living-room": [
+   "renders/bases/flux/pack-living-room-lead-s635.png",
+   "renders/bases/flux/pack-living-room-lead-s636.png"
+  ],
+  "friend-seated-sofa-living-room": [
+   "renders/bases/flux/pack-living-room-friend-s861.png",
+   "renders/bases/flux/pack-living-room-friend-s862.png"
+  ],
+  "together-living-room": [
+   "renders/bases/flux/pack-living-room-together-s450.png",
+   "renders/bases/flux/pack-living-room-together-s451.png"
+  ],
+  "lead-standing-street": [
+   "renders/bases/flux/pack-street-lead-s415.png",
+   "renders/bases/flux/pack-street-lead-s416.png"
+  ],
+  "friend-standing-street": [
+   "renders/bases/flux/pack-street-friend-s641.png",
+   "renders/bases/flux/pack-street-friend-s642.png"
+  ],
+  "together-street": [
+   "renders/bases/flux/pack-street-together-s474.png",
+   "renders/bases/flux/pack-street-together-s475.png"
+  ],
+  "lead-seated-bench-park": [
+   "renders/bases/flux/pack-park-lead-s513.png",
+   "renders/bases/flux/pack-park-lead-s514.png"
+  ],
+  "friend-seated-bench-park": [
+   "renders/bases/flux/pack-park-friend-s739.png",
+   "renders/bases/flux/pack-park-friend-s740.png"
+  ],
+  "together-park": [
+   "renders/bases/flux/pack-park-together-s741.png",
+   "renders/bases/flux/pack-park-together-s742.png"
+  ],
+  "lead-seated-desk-classroom": [
+   "renders/bases/flux/pack-classroom-lead-s473.png",
+   "renders/bases/flux/pack-classroom-lead-s474.png"
+  ],
+  "friend-standing-classroom": [
+   "renders/bases/flux/pack-classroom-friend-s457.png",
+   "renders/bases/flux/pack-classroom-friend-s458.png"
+  ],
+  "together-classroom": [
+   "renders/bases/flux/pack-classroom-together-s790.png",
+   "renders/bases/flux/pack-classroom-together-s791.png"
+  ],
+  "lead-seated-bench-gym": [
+   "renders/bases/flux/pack-gym-lead-s416.png",
+   "renders/bases/flux/pack-gym-lead-s417.png"
+  ],
+  "friend-standing-gym": [
+   "renders/bases/flux/pack-gym-friend-s811.png",
+   "renders/bases/flux/pack-gym-friend-s812.png"
+  ],
+  "together-gym": [
+   "renders/bases/flux/pack-gym-together-s644.png",
+   "renders/bases/flux/pack-gym-together-s645.png"
+  ],
+  "lead-driving-car": [
+   "renders/bases/flux/pack-car-lead-s461.png",
+   "renders/bases/flux/pack-car-lead-s462.png"
+  ],
+  "friend-driving-car": [
+   "renders/bases/flux/pack-car-friend-s687.png",
+   "renders/bases/flux/pack-car-friend-s688.png"
+  ],
+  "together-car": [
+   "renders/bases/flux/pack-car-together-s621.png",
+   "renders/bases/flux/pack-car-together-s622.png"
+  ]
+ },
+ "rejected": {},
+ "rejections": [],
+ "picks": {},
+ "sheets": {
+  "office": "renders/bases/candidates/pack-starter-office-candidates.jpg",
+  "kitchen": "renders/bases/candidates/pack-starter-kitchen-candidates.jpg",
+  "living-room": "renders/bases/candidates/pack-starter-living-room-candidates.jpg",
+  "street": "renders/bases/candidates/pack-starter-street-candidates.jpg",
+  "park": "renders/bases/candidates/pack-starter-park-candidates.jpg",
+  "classroom": "renders/bases/candidates/pack-starter-classroom-candidates.jpg",
+  "gym": "renders/bases/candidates/pack-starter-gym-candidates.jpg",
+  "car": "renders/bases/candidates/pack-starter-car-candidates.jpg"
+ },
+ "made": "2026-11-08T15:51:08"
+}

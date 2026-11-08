@@ -163,6 +163,71 @@ def light_shaft(w: int = 90, h: int = 260, seed: int = 4) -> Image.Image:
     return im.reduce(SS)
 
 
+def sunbeam(w: int = 260, h: int = 420, specks: int = 40, seed: int = 11) -> Image.Image:
+    """A wide, soft diagonal beam of golden light with dust specks floating in it, for 'sunlight hits the air'.
+    Anchor: top-left of the sprite (the beam enters at the top left and widens toward the bottom right)."""
+    rng = random.Random(seed)
+    im = _canvas(w, h)
+    d = ImageDraw.Draw(im)
+    x0, x1 = w * SS * 0.18, w * SS * 0.42
+    for k in range(6, 0, -1):
+        a = int(20 * (7 - k) / 3)
+        grow = w * SS * 0.32 * k / 6
+        d.polygon([(x0 - grow * 0.3, 0), (x1 + grow * 0.3, 0), (w * SS - 0.0 + grow * 0.0, h * SS), (w * SS * 0.45 - grow * 0.4, h * SS)], fill=WARM + (a,))
+    im = im.filter(ImageFilter.GaussianBlur(6 * SS))
+    d = ImageDraw.Draw(im)
+    for _ in range(specks):                                     # dust in the beam: small cream dots, a few brighter
+        fy = rng.random()
+        left = x0 + (w * SS * 0.45 - x0) * fy
+        right = x1 + (w * SS - x1) * fy
+        x, y = rng.uniform(left, right), fy * h * SS
+        r = rng.uniform(1.2, 3.2) * SS
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(255, 248, 225, rng.randint(150, 240)))
+    return im.reduce(SS)
+
+
+def specks(w: int = 220, h: int = 160, n: int = 36, seed: int = 12) -> Image.Image:
+    """Floating dust specks on their own (no beam), for air with motes in it."""
+    rng = random.Random(seed)
+    im = _canvas(w, h)
+    d = ImageDraw.Draw(im)
+    for _ in range(n):
+        x, y = rng.uniform(0.05, 0.95) * w * SS, rng.uniform(0.05, 0.95) * h * SS
+        r = rng.uniform(1.4, 3.4) * SS
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(255, 246, 220, rng.randint(140, 235)))
+    return im.reduce(SS)
+
+
+def photo(w: int = 240, h: int = 300, sky=(214, 150, 120), ground=(170, 110, 80), sun=(150, 170, 190), seed: int = 13) -> Image.Image:
+    """A photo print with a cream border: a sky, a horizon with low hills, and a sun (a Martian sunset by default:
+    a dusty pink sky, a blue-grey sun). Anchor: centre. Pass other colours for an Earth sky."""
+    im = _canvas(w, h)
+    d = ImageDraw.Draw(im)
+    W, H = w * SS, h * SS
+    d.rounded_rectangle((0, 0, W - 1, H - 1), radius=6 * SS, fill=CREAM + (255,), outline=NAVY + (255,), width=3 * SS)
+    m = int(0.07 * W)
+    box = (m, m, W - m, H - int(0.14 * H))
+    d.rectangle(box, fill=sky + (255,))
+    hy = box[1] + (box[3] - box[1]) * 0.66
+    sr = (box[2] - box[0]) * 0.11
+    sx = (box[0] + box[2]) / 2
+    haze = Image.new('RGBA', im.size, (0, 0, 0, 0))             # the sun's soft blue-grey halo
+    dh = ImageDraw.Draw(haze)
+    for k in range(3, 0, -1):
+        r = sr * (1 + 0.5 * k)
+        dh.ellipse((sx - r, hy - 0.1 * (box[3] - box[1]) - r, sx + r, hy - 0.1 * (box[3] - box[1]) + r), fill=sun + (int(34 / k),))
+    im.alpha_composite(haze.filter(ImageFilter.GaussianBlur(4 * SS)))
+    d = ImageDraw.Draw(im)
+    d.ellipse((sx - sr, hy - 0.1 * (box[3] - box[1]) - sr, sx + sr, hy - 0.1 * (box[3] - box[1]) + sr), fill=sun + (255,))
+    hills = [(box[0], box[3]), (box[0], hy + 6 * SS)]
+    for i in range(1, 8):
+        hills.append((box[0] + (box[2] - box[0]) * i / 8, hy + (6 if i % 2 else -4) * SS))
+    hills += [(box[2], hy + 4 * SS), (box[2], box[3])]
+    d.polygon(hills, fill=ground + (255,))
+    d.rectangle(box, outline=NAVY + (160,), width=2 * SS)
+    return _done(im, seed, 0.45)
+
+
 def hole(size: int = 70, seed: int = 5) -> Image.Image:
     """A ragged hole in cloth with bright light showing through."""
     rng = random.Random(seed)

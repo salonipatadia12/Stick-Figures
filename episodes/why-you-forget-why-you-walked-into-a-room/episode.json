@@ -729,6 +729,81 @@
       "prompt_version": "script-v3",
       "research": true,
       "generated": "2026-11-08T14:22:37"
+    },
+    "bases": {
+      "plan": [
+        {
+          "beat": "b01",
+          "base": null,
+          "wanted": "lead-standing-living-room"
+        },
+        {
+          "beat": "b02",
+          "base": null,
+          "wanted": "friend-lead-standing-living-room"
+        },
+        {
+          "beat": "b03",
+          "base": null,
+          "wanted": "living-room-insert"
+        },
+        {
+          "beat": "b04",
+          "base": null,
+          "wanted": "lead-standing-kitchen"
+        },
+        {
+          "beat": "b05",
+          "base": null,
+          "wanted": "friend-lead-standing-kitchen"
+        },
+        {
+          "beat": "b06",
+          "base": null,
+          "wanted": "friend-lead-seated-sofa-living-room"
+        },
+        {
+          "beat": "b07",
+          "base": null,
+          "wanted": "friend-lead-seated-at-table-kitchen"
+        },
+        {
+          "beat": "b08",
+          "base": null,
+          "wanted": "lead-seated-at-table-kitchen"
+        },
+        {
+          "beat": "b09",
+          "base": null,
+          "wanted": "lead-standing-kitchen"
+        },
+        {
+          "beat": "b10",
+          "base": null,
+          "wanted": "friend-lead-standing-living-room"
+        }
+      ],
+      "candidates": {
+        "lead-standing-living-room": [
+          "renders/bases/flux/cand-standing-living-room-pfd23-s791.png",
+          "renders/bases/flux/cand-standing-living-room-pfd23-s792.png"
+        ],
+        "friend-lead-standing-living-room": [
+          "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
+          "renders/bases/flux/cand-together-standing-living-room-p6d83-s803.png"
+        ],
+        "friend-lead-seated-at-table-kitchen": [
+          "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s102.png",
+          "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s103.png"
+        ],
+        "lead-seated-at-table-kitchen": [
+          "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s991.png",
+          "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s992.png"
+        ]
+      },
+      "sheet": "renders/bases/candidates/why-you-forget-why-you-walked-into-a-room-candidates.jpg",
+      "made": "2026-11-08T16:31:26",
+      "round": 1
     }
   }
 }

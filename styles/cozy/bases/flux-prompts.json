@@ -571,5 +571,641 @@
       174
     ],
     "prompt": "Edit this illustration. Remove the white round-headed character completely (head, torso, arms, hands, legs and feet) and the round brass alarm clock on the nightstand. Show what is behind them: the made bed with its squares quilt and white pillow, the headboard, the wall, the bare wooden nightstand top and the wooden floor. Keep the bed, the quilt, the nightstand, the lamp, the plant, the window and the floor exactly the same. Same painterly style, same framing."
+  },
+  "pack-office-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      614,
+      615
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT THE DESK in three-quarter view facing right, both hands resting on the desktop, full upper body and the chair visible, in a small home office: a wooden desk with a closed laptop and a mug, a desk lamp, a window with soft daylight, a shelf with books and a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-office-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      840,
+      841
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT THE DESK in three-quarter view facing right, both hands resting on the desktop, full upper body and the chair visible, in a small home office: a wooden desk with a closed laptop and a mug, a desk lamp, a window with soft daylight, a shelf with books and a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-office-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      431,
+      432
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SEATED SIDE BY SIDE AT THE DESK, facing each other a little, hands on the desktop, in a small home office: a wooden desk with a closed laptop and a mug, a desk lamp, a window with soft daylight, a shelf with books and a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-kitchen-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      494,
+      495
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a cozy kitchen: a wooden counter with a kettle and a bowl of fruit, open shelves with jars, a window over the sink with morning light, a plant on the sill. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-kitchen-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      720,
+      721
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a cozy kitchen: a wooden counter with a kettle and a bowl of fruit, open shelves with jars, a window over the sink with morning light, a plant on the sill. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-kitchen-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      553,
+      554
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now STANDING side by side, full bodies visible from head to feet, turned a little toward each other, arms relaxed, in a cozy kitchen: a wooden counter with a kettle and a bowl of fruit, open shelves with jars, a window over the sink with morning light, a plant on the sill. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-living-room-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      635,
+      636
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING ON THE SOFA in three-quarter view facing right, relaxed, both hands resting in the lap, full body visible, in a warm living room: a soft rust-coloured sofa with a knitted cushion, a low wooden coffee table with a mug, a floor lamp, a window with dappled light, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-living-room-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      861,
+      862
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING ON THE SOFA in three-quarter view facing right, relaxed, both hands resting in the lap, full body visible, in a warm living room: a soft rust-coloured sofa with a knitted cushion, a low wooden coffee table with a mug, a floor lamp, a window with dappled light, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-living-room-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      450,
+      451
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SITTING ON THE SOFA side by side, turned a little toward each other, hands in their laps, in a warm living room: a soft rust-coloured sofa with a knitted cushion, a low wooden coffee table with a mug, a floor lamp, a window with dappled light, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-street-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      415,
+      416
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a quiet painted street corner: a brick shopfront, a lamp post, a bench, a tree, long golden light and dappled shadows on the pavement. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-street-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      641,
+      642
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a quiet painted street corner: a brick shopfront, a lamp post, a bench, a tree, long golden light and dappled shadows on the pavement. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-street-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      474,
+      475
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now STANDING side by side, full bodies visible from head to feet, turned a little toward each other, arms relaxed, in a quiet painted street corner: a brick shopfront, a lamp post, a bench, a tree, long golden light and dappled shadows on the pavement. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-park-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      513,
+      514
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING ON THE BENCH seen from the side in three-quarter view facing right, both hands resting on the knees, feet on the ground, in a park: a wooden bench on a path, trees with dappled light, a lamp post, a distant pond, warm late light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-park-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      739,
+      740
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING ON THE BENCH seen from the side in three-quarter view facing right, both hands resting on the knees, feet on the ground, in a park: a wooden bench on a path, trees with dappled light, a lamp post, a distant pond, warm late light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-park-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      741,
+      742
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SITTING ON THE BENCH side by side, turned a little toward each other, hands on their knees, in a park: a wooden bench on a path, trees with dappled light, a lamp post, a distant pond, warm late light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-classroom-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      473,
+      474
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT THE DESK in three-quarter view facing right, both hands resting on the desktop, full upper body and the chair visible, in a classroom: a wooden school desk and chair, a green chalkboard with nothing written on it, a window with daylight, a shelf with books and a globe. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-classroom-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      457,
+      458
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a classroom: a wooden school desk and chair, a green chalkboard with nothing written on it, a window with daylight, a shelf with books and a globe. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-classroom-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      790,
+      791
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, one now SEATED AT THE SCHOOL DESK facing right, the other STANDING at the chalkboard beside it, full bodies visible, in a classroom: a wooden school desk and chair, a green chalkboard with nothing written on it, a window with daylight, a shelf with books and a globe. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-gym-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      416,
+      417
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING ON THE BENCH seen from the side in three-quarter view facing right, both hands resting on the knees, feet on the ground, in a small gym: a wooden bench, a rack of dumbbells, a yoga mat rolled on the floor, a big window with daylight, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-gym-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      811,
+      812
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a small gym: a wooden bench, a rack of dumbbells, a yoga mat rolled on the floor, a big window with daylight, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-gym-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      644,
+      645
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, one now SITTING ON THE BENCH, the other STANDING beside it holding nothing, full bodies visible, in a small gym: a wooden bench, a rack of dumbbells, a yoga mat rolled on the floor, a big window with daylight, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-car-lead": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      461,
+      462
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING IN THE DRIVER'S SEAT seen from the passenger side in three-quarter view, both navy mitten hands on the steering wheel, head turned a little toward the viewer, in the inside of a small car seen from the passenger side: the driver's seat, the steering wheel, the dashboard, the windscreen with a sunny road and trees outside, soft light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-car-friend": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      687,
+      688
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now SITTING IN THE DRIVER'S SEAT seen from the passenger side in three-quarter view, both navy mitten hands on the steering wheel, head turned a little toward the viewer, in the inside of a small car seen from the passenger side: the driver's seat, the steering wheel, the dashboard, the windscreen with a sunny road and trees outside, soft light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-car-together": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      621,
+      622
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, now in the car: one in the DRIVER'S SEAT with both hands on the steering wheel, the other in the PASSENGER SEAT beside, seen from the side, both visible, in the inside of a small car seen from the passenger side: the driver's seat, the steering wheel, the dashboard, the windscreen with a sunny road and trees outside, soft light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-standing-kitchen": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      394,
+      395
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in kitchen. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-standing-living-room": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      791,
+      792
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in living-room. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-seated-sofa": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      751,
+      752
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, in a new pose that fits the scene, in living-room. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-seated-at-table-kitchen": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      991,
+      992
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now seated at a wooden table in three-quarter view, hands resting on the tabletop, in kitchen. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-standing-street": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      315,
+      316
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a warm painted street corner in golden light with dappled shadows. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-seated-bench": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      838,
+      839
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, in a new pose that fits the scene, in a warm painted street corner in golden light with dappled shadows. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-friend-standing-street": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      992,
+      993
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a warm painted street corner in golden light with dappled shadows. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-standing-living-room-pfd23": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      791,
+      792
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in a warm living room: a soft rust-coloured sofa with a knitted cushion, a low wooden coffee table with a mug, a floor lamp, a window with dappled light, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-together-standing-living-room-p6d83": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      802,
+      803
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now STANDING side by side, full bodies visible from head to feet, turned a little toward each other, arms relaxed, in a warm living room: a soft rust-coloured sofa with a knitted cushion, a low wooden coffee table with a mug, a floor lamp, a window with dappled light, a plant. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-together-seated-at-table-kitchen-p3086": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      102,
+      103
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SEATED AT A WOODEN TABLE across from each other, turned a little toward each other, hands resting on the tabletop, in a cozy kitchen: a wooden counter with a kettle and a bowl of fruit, open shelves with jars, a window over the sink with morning light, a plant on the sill. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-seated-at-table-kitchen-p80ed": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      991,
+      992
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now seated at a wooden table in three-quarter view, hands resting on the tabletop, in a cozy kitchen: a wooden counter with a kettle and a bowl of fruit, open shelves with jars, a window over the sink with morning light, a plant on the sill. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-together-seated-bench-street-p6f51": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      657,
+      658
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SITTING ON THE BENCH side by side, turned a little toward each other, hands on their knees, in a quiet painted street corner: a brick shopfront, a lamp post, a bench, a tree, long golden light and dappled shadows on the pavement. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
   }
 }
