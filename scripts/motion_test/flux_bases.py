@@ -175,6 +175,37 @@ JOBS = {
         "was, the patchwork quilt where the arms were and the bare wooden nightstand top where the clock stood. Keep "
         "the pillow, the quilt, the bed, the headboard, the lamp, the nightstand, the window with the night sky and "
         "the wooden floor exactly the same. Same painterly style, same framing.")),
+    # ---- bed-edge base: the approved continuity edit s132, minus the extra cushion (user, 2026-11-08); the painted
+    #      clocks come out of every bedroom plate because one brass clock sprite (cut from s322) is used in all three ----
+    'edit-bed-edge-clean': dict(images=['edit-bed-edge-continuity-s132.png'], seeds=[161, 162], prompt=(
+        "Edit this illustration. Remove ONLY the small square patchwork cushion that leans against the white pillow at "
+        "the head of the bed, left of the character, and show the white pillow and the quilt behind it. Keep everything "
+        "else exactly the same: the character, the bed, the headboard, the quilt, the nightstand, the clock, the lamp, "
+        "the plant, the window and the floor. Same painterly style, same framing.")),
+    'plate-bed-edge-arms': dict(images=['edit-bed-edge-clean-s161.png'], seeds=[171, 172], prompt=(
+        "Edit this illustration. Delete the seated character's two dark navy arms and both navy mitten hands entirely, "
+        "and the round brass alarm clock on the nightstand. The torso becomes one smooth white bulb shape with a single dark navy outline along each side: no "
+        "arms, no sleeves and no lines inside the white torso. Show the quilt and the headboard behind where the arms "
+        "were and the bare wooden nightstand top where the clock stood. Keep "
+        "the round head and its face, the white torso, the navy legs and feet, the bed, the quilt, the nightstand, the "
+        "lamp, the plant, the window and the floor exactly the same. Same painterly style, same framing.")),
+    'plate-bed-edge-empty': dict(images=['edit-bed-edge-clean-s161.png'], seeds=[173, 174], prompt=(
+        "Edit this illustration. Remove the white round-headed character completely (head, torso, arms, hands, legs "
+        "and feet) and the round brass alarm clock on the nightstand. Show what is behind them: the made bed with its squares quilt and white pillow, the headboard, "
+        "the wall, the bare wooden nightstand top and the wooden floor. Keep the bed, the quilt, the nightstand, the "
+        "lamp, the plant, the window and the floor exactly the same. Same painterly style, same framing.")),
+    'plate-bed-top-hand-noclock': dict(images=['cand-bed-asleep-top-s112.png'], seeds=[145, 146], prompt=(
+        "Edit this illustration. Remove ONLY the small dark navy mitten hand that rests on top of the quilt near the "
+        "pillow, and the silver alarm clock on the nightstand. Show the patchwork quilt and the white sheet where the "
+        "hand was and the bare wooden nightstand top where the clock stood. Keep the round white head on the pillow "
+        "with its closed eyes, the pillow, the quilt with its squares, the bed, the headboard, the nightstand and the "
+        "wooden floor exactly the same. Same painterly style, same framing.")),
+    'plate-bed-top-empty-noclock': dict(images=['cand-bed-asleep-top-s112.png'], seeds=[147, 148], prompt=(
+        "Edit this illustration. Remove the white round head, the dark navy mitten hand and the silver alarm clock on "
+        "the nightstand completely, so the bed looks empty: show the plain pale pillow where the head was, the quilt "
+        "where the hand was and the bare wooden nightstand top where the clock stood. Keep the pillow, the quilt with "
+        "its squares, the white sheet, the bed, the headboard, the nightstand and the wooden floor exactly the same. "
+        "Same painterly style, same framing.")),
     'cand-lead-seated-left': dict(images=['04-waiting.png', '03-together.png'], seeds=[41, 42], prompt=(
         "Using the character and cafe from the first image: the same white round-headed character with a dark navy "
         "outline, white bulb-shaped torso and dark navy limbs, seated on the wooden chair on the RIGHT side of the round "

@@ -418,5 +418,158 @@
       133
     ],
     "prompt": "Edit the first illustration. Make exactly three changes. One: replace the patchwork quilt on the bed with the quilt from the second image, large plain squares in rust, cream, teal and grey with thin dark seams and no floral prints. Two: make the headboard a plain flat wooden plank with a straight top edge, like the headboard in the second image, with no arch. Three: remove the brass twin-bell alarm clock and the small dish that stand behind and to the left of the lamp at the pillow end, and show the bed and the wall behind them. Keep the round brass alarm clock in front of the lamp, the lamp, the wooden nightstand with its drawer, the character sitting on the edge of the bed with the same pose, face, arms, hands and legs, the plant, the window, the golden light and the wooden floor exactly the same. Same painterly style, same framing. No text."
+  },
+  "plate-bed-top-hand": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-asleep-top-s112.png"
+    ],
+    "seeds": [
+      141,
+      142
+    ],
+    "prompt": "Edit this illustration. Remove ONLY the small dark navy mitten hand that rests on top of the quilt near the pillow, and show the patchwork quilt and the white sheet where it was. Keep the round white head on the pillow with its closed eyes, the pillow, the quilt with its squares, the bed, the headboard, the nightstand with the clock and the wooden floor exactly the same. Same painterly style, same framing."
+  },
+  "plate-bed-top-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-asleep-top-s112.png"
+    ],
+    "seeds": [
+      143,
+      144
+    ],
+    "prompt": "Edit this illustration. Remove the white round head and the dark navy mitten hand completely, so the bed looks empty: show the plain pale pillow where the head was and the quilt where the hand was. Keep the pillow, the quilt with its squares, the white sheet, the bed, the headboard, the nightstand with the clock and the wooden floor exactly the same. Same painterly style, same framing."
+  },
+  "plate-bed-awake-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-awake-r3-s322.png"
+    ],
+    "seeds": [
+      151,
+      152
+    ],
+    "prompt": "Edit this illustration. Remove ONLY the two dark navy arms and mitten hands that lie on top of the quilt, and the brass alarm clock on the nightstand. Show the patchwork quilt where the arms were and the bare wooden nightstand top where the clock stood. Keep the round white head on the pillow with its open eyes, the pillow, the quilt, the bed, the headboard, the lamp, the nightstand, the window with the night sky and the wooden floor exactly the same. Same painterly style, same framing."
+  },
+  "plate-bed-awake-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-awake-r3-s322.png"
+    ],
+    "seeds": [
+      153,
+      154
+    ],
+    "prompt": "Edit this illustration. Remove the white round head, the two dark navy arms and mitten hands, and the brass alarm clock on the nightstand completely, so the bed looks empty: show the plain pale pillow where the head was, the patchwork quilt where the arms were and the bare wooden nightstand top where the clock stood. Keep the pillow, the quilt, the bed, the headboard, the lamp, the nightstand, the window with the night sky and the wooden floor exactly the same. Same painterly style, same framing."
+  },
+  "edit-bed-edge-clean": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "edit-bed-edge-continuity-s132.png"
+    ],
+    "seeds": [
+      161,
+      162
+    ],
+    "prompt": "Edit this illustration. Remove ONLY the small square patchwork cushion that leans against the white pillow at the head of the bed, left of the character, and show the white pillow and the quilt behind it. Keep everything else exactly the same: the character, the bed, the headboard, the quilt, the nightstand, the clock, the lamp, the plant, the window and the floor. Same painterly style, same framing."
+  },
+  "plate-bed-top-hand-noclock": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-asleep-top-s112.png"
+    ],
+    "seeds": [
+      145,
+      146
+    ],
+    "prompt": "Edit this illustration. Remove ONLY the small dark navy mitten hand that rests on top of the quilt near the pillow, and the silver alarm clock on the nightstand. Show the patchwork quilt and the white sheet where the hand was and the bare wooden nightstand top where the clock stood. Keep the round white head on the pillow with its closed eyes, the pillow, the quilt with its squares, the bed, the headboard, the nightstand and the wooden floor exactly the same. Same painterly style, same framing."
+  },
+  "plate-bed-top-empty-noclock": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-asleep-top-s112.png"
+    ],
+    "seeds": [
+      147,
+      148
+    ],
+    "prompt": "Edit this illustration. Remove the white round head, the dark navy mitten hand and the silver alarm clock on the nightstand completely, so the bed looks empty: show the plain pale pillow where the head was, the quilt where the hand was and the bare wooden nightstand top where the clock stood. Keep the pillow, the quilt with its squares, the white sheet, the bed, the headboard, the nightstand and the wooden floor exactly the same. Same painterly style, same framing."
+  },
+  "plate-bed-edge-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "edit-bed-edge-clean-s161.png"
+    ],
+    "seeds": [
+      171,
+      172
+    ],
+    "prompt": "Edit this illustration. Delete the seated character's two dark navy arms and both navy mitten hands entirely, and the round brass alarm clock on the nightstand. The torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves and no lines inside the white torso. Show the quilt and the headboard behind where the arms were and the bare wooden nightstand top where the clock stood. Keep the round head and its face, the white torso, the navy legs and feet, the bed, the quilt, the nightstand, the lamp, the plant, the window and the floor exactly the same. Same painterly style, same framing."
+  },
+  "plate-bed-edge-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "edit-bed-edge-clean-s161.png"
+    ],
+    "seeds": [
+      173,
+      174
+    ],
+    "prompt": "Edit this illustration. Remove the white round-headed character completely (head, torso, arms, hands, legs and feet) and the round brass alarm clock on the nightstand. Show what is behind them: the made bed with its squares quilt and white pillow, the headboard, the wall, the bare wooden nightstand top and the wooden floor. Keep the bed, the quilt, the nightstand, the lamp, the plant, the window and the floor exactly the same. Same painterly style, same framing."
   }
 }

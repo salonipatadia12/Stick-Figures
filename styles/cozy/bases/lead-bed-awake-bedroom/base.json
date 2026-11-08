@@ -1,0 +1,155 @@
+{
+ "name": "lead-bed-awake-bedroom",
+ "source": "renders/bases/flux/cand-bed-awake-r3-s322.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-bed-awake-arms-s151.png",
+  "empty": "plate-bed-awake-empty-s153.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": [
+  [
+   0,
+   935
+  ],
+  [
+   130,
+   892
+  ],
+  [
+   250,
+   860
+  ],
+  [
+   330,
+   832
+  ],
+  [
+   450,
+   792
+  ],
+  [
+   560,
+   770
+  ],
+  [
+   650,
+   760
+  ],
+  [
+   720,
+   770
+  ],
+  [
+   800,
+   800
+  ],
+  [
+   860,
+   840
+  ],
+  [
+   941,
+   900
+  ],
+  [
+   941,
+   1672
+  ],
+  [
+   0,
+   1672
+  ]
+ ],
+ "layers": {
+  "table": [
+   0,
+   759
+  ]
+ },
+ "cups": [],
+ "props": {
+  "clock": {
+   "sprite": "prop-clock.png",
+   "xy": [
+    660,
+    572
+   ],
+   "size": [
+    88,
+    116
+   ],
+   "foot": [
+    708,
+    686
+   ]
+  }
+ },
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    302,
+    655
+   ],
+   "D": 360.5,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     268,
+     862
+    ],
+    "r": [
+     548,
+     782
+    ]
+   },
+   "rest": {
+    "l": [
+     430,
+     915
+    ],
+    "r": [
+     592,
+     800
+    ]
+   },
+   "hip": null,
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     204,
+     765
+    ]
+   },
+   "neck": null,
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     196,
+     196
+    ],
+    "size": [
+     363,
+     358
+    ],
+    "angle": 0.0
+   }
+  }
+ ],
+ "places": {
+  "clock": {
+   "xy": [
+    690,
+    650
+   ],
+   "width": 0.33
+  }
+ }
+}

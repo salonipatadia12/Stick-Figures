@@ -88,6 +88,37 @@ BASES = {
         seats=[dict(name='lead', head_box=(470, 300, 820, 640), facing=-1, torso_seed=(620, 720), hip=None,
                     rest=dict(l=(528, 862), r=(744, 866)))],
         light='right'),
+    # ---- bedroom bases approved on 2026-11-08 (video 2). The character lies under the quilt: the quilt is the
+    #      'cover' layer (drawn where a table would be), the torso is covered, only head, arms and hands animate.
+    #      Clocks come out of every plate; one brass clock sprite (cut from s322) stands in all three. ----
+    'lead-bed-edge-bedroom': dict(
+        source='edit-bed-edge-clean-s161.png', arms='plate-bed-edge-arms-s171.png', empty='plate-bed-edge-empty-s173.png',
+        edit_roi=[(215, 720), (620, 720), (620, 830), (760, 830), (760, 930), (640, 930), (640, 1090), (215, 1100)],
+        props=[dict(name='clock', box=(660, 830, 760, 925))],
+        seats=[dict(name='lead', head_box=(225, 370, 615, 735), facing=1, torso_seed=(350, 850), hip=(350, 1045),
+                    rest=dict(l=(395, 1045), r=(590, 1035)))],
+        places=dict(clock=dict(xy=(712, 916), width=0.33)),
+        light='right'),
+    'lead-bed-asleep-top-bedroom': dict(
+        source='cand-bed-asleep-top-s112.png', arms='plate-bed-top-hand-noclock-s145.png', empty='plate-bed-top-empty-noclock-s147.png',
+        edit_roi=[(540, 500), (850, 200), (941, 200), (941, 420), (720, 660), (540, 660)],
+        cover=[(10, 700), (30, 640), (150, 590), (330, 565), (500, 555), (650, 575), (800, 600), (880, 650), (930, 760),
+               (930, 1672), (10, 1672)],
+        seats=[dict(name='lead', head_box=(230, 190, 620, 585), facing=1, torso='covered',
+                    shoulders=dict(l=(270, 612), r=(580, 612)), hip=None, rest=dict(l=(300, 665), r=(622, 592)))],
+        places=dict(clock=dict(xy=(885, 335), width=0.33)),
+        light='right'),
+    'lead-bed-awake-bedroom': dict(
+        source='cand-bed-awake-r3-s322.png', arms='plate-bed-awake-arms-s151.png', empty='plate-bed-awake-empty-s153.png',
+        edit_roi=[(200, 740), (640, 700), (650, 540), (790, 540), (790, 700), (620, 830), (480, 980), (200, 980)],
+        cover=[(0, 935), (130, 892), (250, 860), (330, 832), (450, 792), (560, 770), (650, 760), (720, 770), (800, 800),
+               (860, 840), (941, 900), (941, 1672), (0, 1672)],
+        props=[dict(name='clock', box=(658, 560, 748, 688))],
+        seats=[dict(name='lead', head=dict(centre=(302, 655), size=(363, 358), refine=False), face_lum=100, face_sat=130,
+                    facing=1, torso='covered',
+                    shoulders=dict(l=(268, 862), r=(548, 782)), hip=None, rest=dict(l=(430, 915), r=(592, 800)))],
+        places=dict(clock=dict(xy=(690, 650), width=0.33)),
+        light='right'),
 }
 
 
@@ -220,7 +251,7 @@ def fill_holes(m: np.ndarray) -> np.ndarray:
     return m | (flood == 0)
 
 
-def head_sprite(orig: np.ndarray, ell) -> tuple[Image.Image, list]:
+def head_sprite(orig: np.ndarray, ell, face_lum: float = 175, face_sat: float = 48) -> tuple[Image.Image, list]:
     """The painted head, cut exactly at the outer edge of its own dark outline (so no ring of the old
     background or torso comes with it), with the eyes, brows and mouth painted out."""
     (cx, cy), (ew, eh), ang = ell
@@ -236,7 +267,8 @@ def head_sprite(orig: np.ndarray, ell) -> tuple[Image.Image, list]:
     region = fill_holes(region) & ellipse_mask(orig.shape, ell, 2.5)
     # spurs: anything sticking out more than the stroke's own width is the torso outline, not the head
     region = cv2.morphologyEx(region.astype(np.uint8), cv2.MORPH_OPEN, disk(3)) > 0
-    marks = inner & ((lum < 175) | (sat > 48))
+    marks = inner & ((lum < face_lum) | (sat > face_sat))
+    marks &= ellipse_mask(orig.shape, ell, -16)        # the face only: never the inner half of the outline stroke
     marks = cv2.dilate(marks.astype(np.uint8) * 255, disk(4))
     marks[~inner] = 0
     work = orig.copy()
@@ -477,7 +509,10 @@ def build(name: str, spec: dict):
     h, w = orig.shape[:2]
     size = (w, h)
     yy, xx = np.mgrid[0:h, 0:w]
-    ells = [refine_head(orig, fit_head(orig, s['head_box'])) for s in spec['seats']]
+    def given(hd):
+        e = (tuple(hd['centre']), tuple(hd['size']), hd.get('angle', 0.0))
+        return refine_head(orig, e) if hd.get('refine', True) else e
+    ells = [given(s['head']) if s.get('head') else refine_head(orig, fit_head(orig, s['head_box'])) for s in spec['seats']]
     Ds = [(e[1][0] + e[1][1]) / 2 for e in ells]
     for s, e in zip(spec['seats'], ells):
         print(f"    {s['name']}: head centre ({e[0][0]:.1f},{e[0][1]:.1f}) size {e[1][0]:.0f}x{e[1][1]:.0f}")
@@ -486,8 +521,15 @@ def build(name: str, spec: dict):
     head_disc = np.zeros((h, w), bool)
     for s_, e in zip(spec['seats'], ells):
         head_disc |= ellipse_mask(orig.shape, e, s_.get('head_grow', 12))
-    t = spec['table']
-    table_m = np.asarray(shape_mask(size, [('ellipse', t['top']), ('polygon', t['stem']), ('ellipse', t['foot'])])) > 0
+    t = spec.get('table')
+    if t:
+        table_m = np.asarray(shape_mask(size, [('ellipse', t['top']), ('polygon', t['stem']), ('ellipse', t['foot'])])) > 0
+    elif spec.get('cover'):
+        # a quilt (or anything the character lies under): drawn where the table would be, so arms sent
+        # 'under' disappear beneath it and the others lie on top of it
+        table_m = np.asarray(shape_mask(size, [('polygon', spec['cover'])])) > 0
+    else:
+        table_m = np.zeros((h, w), bool)
 
     # 1. Where the arms, hands and lifted cups were: the FLUX plate differs strongly from the original there.
     arms = register(orig, load(FLUX / spec['arms']), ~(roi | head_disc))
@@ -535,12 +577,38 @@ def build(name: str, spec: dict):
         sprite.save(out / f'cup-{k}.png', optimize=True)
         cups_meta.append(dict(sprite=f'cup-{k}.png', xy=xy, size=list(sprite.size), saucer=list(g['saucer'][:2])))
 
+    # 2b. Props the rig will move (a clock that rings): their pixels come from the original where the arms
+    #     plate painted them out; the plate keeps the FLUX pixels (already blended in through `edit`).
+    props_meta = {}
+    for pr in spec.get('props', []):
+        bx0, by0, bx1, by1 = pr['box']
+        box = np.zeros((h, w), bool)
+        box[by0:by1, bx0:bx1] = True
+        m = (diff > 28) & box
+        m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, disk(5)) > 0
+        n_, lab_, st_, _ = cv2.connectedComponentsWithStats(m.astype(np.uint8))
+        if n_ > 1:
+            m = lab_ == (1 + int(np.argmax(st_[1:, cv2.CC_STAT_AREA])))
+        m = fill_holes(m)
+        m = cv2.erode(m.astype(np.uint8), disk(1)) > 0 if pr.get('tight', True) else m
+        sprite, xy = cut(orig, m, 0.7)
+        sprite.save(out / f"prop-{pr['name']}.png", optimize=True)
+        ys_, xs_ = np.nonzero(m)
+        props_meta[pr['name']] = dict(sprite=f"prop-{pr['name']}.png", xy=xy, size=list(sprite.size),
+                                      foot=[int(xs_.mean()), int(ys_.max())])
+        # the plate under the prop is the arms plate's
+        a = feather(cv2.dilate(m.astype(np.uint8), disk(3)) > 0, 0, 1.0)[..., None]
+        plate = (plate.astype(np.float32) * (1 - a) + arms.astype(np.float32) * a).astype(np.uint8)
+
     # 3. Heads out (the empty café behind them); 4. seated torsos out, into their own layers.
     empty = register(orig, load(FLUX / spec['empty']), ~(roi | head_disc))
     seats_meta, bodies = [], []
     for s, e, D in zip(spec['seats'], ells, Ds):
-        body = torso_mask(arms, s['torso_seed'], s.get('accessory') == 'scarf')
-        body &= ~ellipse_mask(orig.shape, e, s.get('head_grow', 12))
+        if s.get('torso') == 'covered':
+            body = np.zeros((h, w), bool)
+        else:
+            body = torso_mask(arms, s['torso_seed'], s.get('accessory') == 'scarf')
+            body &= ~ellipse_mask(orig.shape, e, s.get('head_grow', 12))
         shoulders = s.get('shoulders') or shoulders_from(body, arms, e, D)
         meta = dict(name=s['name'], head=[round(e[0][0], 1), round(e[0][1], 1)], D=round(D, 1), facing=s['facing'],
                     accessory=s.get('accessory', ''), shoulders=shoulders, rest=s['rest'], hip=s['hip'])
@@ -555,8 +623,23 @@ def build(name: str, spec: dict):
     hm = feather(head_disc, 1, 1.2)[..., None]
     plate = (plate.astype(np.float32) * (1 - hm) + empty.astype(np.float32) * hm).astype(np.uint8)
     for s, e, D, body, meta in bodies:
-        plate = clean_torso(plate, body, s.get('accessory') == 'scarf')
+        if body.any():
+            plate = clean_torso(plate, body, s.get('accessory') == 'scarf')
     for s, e, D, body, meta in bodies:
+        if s.get('torso') == 'covered':
+            # the body is under the cover: the only painted part that stays is the cover itself, laid back
+            # over the arm roots at the shoulders so an arm comes out from under it
+            occ = np.zeros((h, w), np.float32)
+            for side in ('l', 'r'):
+                sx, sy = meta['shoulders'][side]
+                disc_ = np.hypot(xx - sx, yy - sy) < 0.17 * D
+                occ = np.maximum(occ, (table_m & disc_).astype(np.float32))
+            occ = cv2.GaussianBlur(occ, (0, 0), 2.0) * table_m
+            osprite, oxy = cut(plate, occ, 0)
+            osprite.save(out / f"occluder-{s['name']}.png", optimize=True)
+            meta['occluder'] = dict(sprite=f"occluder-{s['name']}.png", xy=oxy)
+            meta['neck'] = None
+            continue
         moving = s['hip'] is not None
         # the torso itself (from the arms-free plate), extended under the tabletop where the table hides it,
         # so it can rise a little without opening a gap at the table edge
@@ -648,14 +731,17 @@ def build(name: str, spec: dict):
     # the café with nobody in it, aligned to the plate: for inserts that show only the table and props
     if spec.get('inserts'):
         ea = Image.fromarray(empty).convert('RGBA')
-        ea.putalpha(Image.fromarray((~table_m).astype(np.uint8) * 255))
+        ea.putalpha(Image.fromarray((~table_m).astype(np.uint8) * 255))   # the table itself stays painted
         em = Image.fromarray(plate).convert('RGBA')
         em.alpha_composite(ea)
         em.convert('RGB').save(out / 'empty.png', optimize=True)
     layers = {}
-    tb_sprite, txy = cut(np.asarray(table.convert('RGB')), np.asarray(table.getchannel('A')) / 255.0, 0)
-    tb_sprite.save(out / 'table.png', optimize=True)
-    layers['table'] = txy
+    if table_layer.any():
+        tb_sprite, txy = cut(np.asarray(table.convert('RGB')), np.asarray(table.getchannel('A')) / 255.0, 0)
+        tb_sprite.save(out / 'table.png', optimize=True)
+        layers['table'] = txy
+    elif (out / 'table.png').exists():
+        (out / 'table.png').unlink()
     if front.any():
         fs, fxy = cut(plate, front, 0.7)
         fs.save(out / 'front.png', optimize=True)
@@ -666,13 +752,14 @@ def build(name: str, spec: dict):
         if (out / old).exists():
             (out / old).unlink()
     for s, e, meta in zip(spec['seats'], ells, seats_meta):
-        sprite, centre = head_sprite(orig, e)
+        sprite, centre = head_sprite(orig, e, s.get('face_lum', 175), s.get('face_sat', 48))
         sprite.save(out / f"head-{s['name']}.png", optimize=True)
         meta['head_art'] = dict(sprite=f"head-{s['name']}.png", centre=centre, size=[round(e[1][0], 1), round(e[1][1], 1)],
                                 angle=round(e[2], 1))
     meta = dict(name=name, source=str(src(spec['source']).relative_to(ROOT)), size=[w, h],
-                flux=dict(arms=spec['arms'], empty=spec['empty']), light=spec['light'], wall=spec['wall'],
-                table=dict(top=t['top']), layers=layers, cups=cups_meta, seats=seats_meta)
+                flux=dict(arms=spec['arms'], empty=spec['empty']), light=spec['light'], wall=spec.get('wall'),
+                table=dict(top=t['top']) if t else None, cover=spec.get('cover'), layers=layers, cups=cups_meta,
+                props=props_meta, seats=seats_meta, places=spec.get('places', {}))
     (out / 'base.json').write_text(json.dumps(meta, indent=1) + '\n')
 
     # Debug overlay: the edit mask, anchors and the body layers' outlines, on a grid.
@@ -704,8 +791,10 @@ def build(name: str, spec: dict):
         if m['hip']:
             x, y = m['hip']
             dd.rectangle((x - 6, y - 6, x + 6, y + 6), outline=(0, 255, 0), width=3)
-    if spec['wall']:
+    if spec.get('wall'):
         dd.rectangle(spec['wall'], outline=(255, 128, 0), width=3)
+    for pm in props_meta.values():
+        dbg.alpha_composite(Image.open(out / pm['sprite']), tuple(pm['xy']))
     DEBUG.mkdir(parents=True, exist_ok=True)
     dbg.convert('RGB').save(DEBUG / f'debug-{name}.jpg', quality=90)
     print('   ', out.relative_to(ROOT), [m['shoulders'] for m in seats_meta])

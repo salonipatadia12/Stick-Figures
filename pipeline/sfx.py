@@ -115,7 +115,35 @@ def sparkle(rng):
     return 0.07 * out
 
 
-SFX = dict(thud=thud, coin=coin, coin_big=lambda r: coin(r, True), trickle=trickle, whoosh=whoosh, pop=pop, tick=tick,
+def alarm(rng, seconds=1.1):
+    """A small twin-bell alarm clock: a fast hammer on two bells, fading."""
+    t = _t(seconds)
+    hammer = (np.sin(2 * np.pi * 26 * t) > 0.2).astype(float)
+    bells = 0.6 * np.sin(2 * np.pi * 3150 * t) + 0.4 * np.sin(2 * np.pi * 4420 * t) + 0.2 * np.sin(2 * np.pi * 6100 * t)
+    ring = hammer * bells * np.exp(-((t * 26) % 1.0) * 2.2)
+    return 0.22 * ring * np.minimum(1, t / 0.005) * np.exp(-t * 1.2)
+
+
+def click(rng):
+    """A lamp switch."""
+    t = _t(0.08)
+    return 0.35 * _noise(rng, len(t), lo=1200, hi=6000) * np.exp(-t * 90)
+
+
+def snore(rng, seconds=0.9):
+    """A soft in-breath snore: low noise with a slow swell."""
+    t = _t(seconds)
+    env = np.sin(np.pi * t / seconds) ** 2
+    return 0.10 * _noise(rng, len(t), lo=90, hi=600) * env * (1 + 0.6 * np.sin(2 * np.pi * 24 * t))
+
+
+def rumble(rng, seconds=0.5):
+    """A low jolt for an impact shake."""
+    t = _t(seconds)
+    return 0.3 * np.sin(2 * np.pi * (48 - 20 * t) * t) * np.exp(-t * 7) + 0.1 * _noise(rng, len(t), hi=300) * np.exp(-t * 9)
+
+
+SFX = dict(thud=thud, alarm=alarm, click=click, snore=snore, rumble=rumble, coin=coin, coin_big=lambda r: coin(r, True), trickle=trickle, whoosh=whoosh, pop=pop, tick=tick,
            tap=tap, paper=paper, crack=crack, clink=clink, slide=slide, sparkle=sparkle)
 
 

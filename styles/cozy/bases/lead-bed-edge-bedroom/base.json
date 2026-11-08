@@ -1,0 +1,123 @@
+{
+ "name": "lead-bed-edge-bedroom",
+ "source": "renders/bases/flux/edit-bed-edge-clean-s161.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-bed-edge-arms-s171.png",
+  "empty": "plate-bed-edge-empty-s173.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {
+  "clock": {
+   "sprite": "prop-clock.png",
+   "xy": [
+    660,
+    830
+   ],
+   "size": [
+    100,
+    95
+   ],
+   "foot": [
+    717,
+    923
+   ]
+  }
+ },
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    418.1,
+    553.5
+   ],
+   "D": 348.5,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     282.5,
+     747
+    ],
+    "r": [
+     425.0,
+     747
+    ]
+   },
+   "rest": {
+    "l": [
+     395,
+     1045
+    ],
+    "r": [
+     590,
+     1035
+    ]
+   },
+   "hip": [
+    350,
+    1045
+   ],
+   "neck": {
+    "join_y": 730.0,
+    "stroke": [
+     4,
+     4
+    ],
+    "left": [
+     0.0,
+     -0.7131,
+     289.6812
+    ],
+    "right": [
+     0.0,
+     1.2342,
+     412.8217
+    ]
+   },
+   "body": {
+    "sprite": "body-lead.png",
+    "xy": [
+     216,
+     581
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     256,
+     707
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     198.07,
+     198.54
+    ],
+    "size": [
+     329.5,
+     367.4
+    ],
+    "angle": 87.2
+   }
+  }
+ ],
+ "places": {
+  "clock": {
+   "xy": [
+    712,
+    916
+   ],
+   "width": 0.33
+  }
+ }
+}

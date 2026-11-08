@@ -1,0 +1,131 @@
+{
+ "name": "lead-bed-asleep-top-bedroom",
+ "source": "renders/bases/flux/cand-bed-asleep-top-s112.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-bed-top-hand-noclock-s145.png",
+  "empty": "plate-bed-top-empty-noclock-s147.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": [
+  [
+   10,
+   700
+  ],
+  [
+   30,
+   640
+  ],
+  [
+   150,
+   590
+  ],
+  [
+   330,
+   565
+  ],
+  [
+   500,
+   555
+  ],
+  [
+   650,
+   575
+  ],
+  [
+   800,
+   600
+  ],
+  [
+   880,
+   650
+  ],
+  [
+   930,
+   760
+  ],
+  [
+   930,
+   1672
+  ],
+  [
+   10,
+   1672
+  ]
+ ],
+ "layers": {
+  "table": [
+   9,
+   554
+  ]
+ },
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    425.1,
+    401.9
+   ],
+   "D": 366.7,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     270,
+     612
+    ],
+    "r": [
+     580,
+     612
+    ]
+   },
+   "rest": {
+    "l": [
+     300,
+     665
+    ],
+    "r": [
+     622,
+     592
+    ]
+   },
+   "hip": null,
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     203,
+     561
+    ]
+   },
+   "neck": null,
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     200.06,
+     199.87
+    ],
+    "size": [
+     362.2,
+     371.1
+    ],
+    "angle": 167.6
+   }
+  }
+ ],
+ "places": {
+  "clock": {
+   "xy": [
+    885,
+    335
+   ],
+   "width": 0.33
+  }
+ }
+}

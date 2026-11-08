@@ -322,3 +322,26 @@ def receipt_strip(entries: tuple, entry_w=150, height: int = 64, seed: int = 3) 
         d.polygon([(0, y), (5, y + 5), (0, y + 10)], fill=(0, 0, 0, 0))
         d.polygon([(w - 1, y), (w - 6, y + 5), (w - 1, y + 10)], fill=(0, 0, 0, 0))
     return mark(painterly(im, seed, 0.6), 'receipt: ' + ', '.join(l for l, _ in entries), min(lab_px, amt_px))
+
+
+def split_compare(frame: Image.Image, t: float, left: str, right: str, t_left: float, t_right: float, centre=(540, 330),
+                  size: int = 72, gap: int = 44):
+    """Two labels side by side with a divider: the left one slides in from the left at t_left, the right one from
+    the right at t_right; the divider grows between them."""
+    if t < t_left:
+        return
+    li, ri = text_layer(left, size), text_layer(right, size, fill=(255, 236, 190))
+    total = li.width + ri.width + gap
+    x0 = centre[0] - total / 2
+    ql = back_out((t - t_left) / 0.35, 1.5)
+    frame.alpha_composite(li, (int(x0 - (1 - ql) * 500), int(centre[1] - li.height / 2)))
+    note_text(left, size)
+    if t >= t_right:
+        qr = back_out((t - t_right) / 0.35, 1.5)
+        frame.alpha_composite(ri, (int(x0 + li.width + gap + (1 - qr) * 500), int(centre[1] - ri.height / 2)))
+        note_text(right, size)
+        grow = ease((t - t_right) / 0.3)
+        h = int((max(li.height, ri.height) - 30) * grow)
+        d = ImageDraw.Draw(frame)
+        xm = int(x0 + li.width + gap / 2)
+        d.line([(xm, centre[1] - h / 2), (xm, centre[1] + h / 2)], fill=NAVY + (220,), width=6)

@@ -53,6 +53,7 @@ class Base:
     bodies: dict = field(default_factory=dict)      # seat name -> (painted torso sprite, (x, y)), seated bases
     occluders: dict = field(default_factory=dict)   # seat name -> (torso around the shoulders, (x, y))
     cups: list = field(default_factory=list)        # [(cup sprite, (x, y))] cups that can be picked up
+    props: dict = field(default_factory=dict)       # name -> (sprite, (x, y)) props cut from the plate (a clock)
 
     @property
     def size(self):
@@ -75,7 +76,9 @@ def load_base(name: str) -> Base:
             bodies[s['name']] = (Image.open(d / s['body']['sprite']).convert('RGBA'), tuple(s['body']['xy']))
         occluders[s['name']] = (Image.open(d / s['occluder']['sprite']).convert('RGBA'), tuple(s['occluder']['xy']))
     cups = [(Image.open(d / c['sprite']).convert('RGBA'), tuple(c['xy'])) for c in meta.get('cups', [])]
-    return Base(name, meta, Image.open(d / 'plate.png').convert('RGB'), layers, heads, bodies, occluders, cups)
+    base = Base(name, meta, Image.open(d / 'plate.png').convert('RGB'), layers, heads, bodies, occluders, cups)
+    base.props = {k: (Image.open(d / v['sprite']).convert('RGBA'), tuple(v['xy'])) for k, v in meta.get('props', {}).items()}
+    return base
 
 
 def body_matrix(pose: Pose) -> np.ndarray:
@@ -421,7 +424,8 @@ class Stage:
         for o in outs:
             for im, xy in o['under']:
                 frame.alpha_composite(im, xy)
-        frame.alpha_composite(*self.layer('table', cam))
+        if 'table' in self.base.layers:            # a table, or the quilt a lying character is under
+            frame.alpha_composite(*self.layer('table', cam))
         if on_table:
             on_table(frame, cam)
         for key in ('far', 'head', 'near'):

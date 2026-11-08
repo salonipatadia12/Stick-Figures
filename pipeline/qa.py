@@ -25,7 +25,8 @@ from . import captions as C
 from . import sfx
 
 ROOT = Path(__file__).resolve().parents[1]
-APPROVED_BASES = ('lead-at-table', 'together', 'friend-at-table', 'lead-standing')   # approved by the user, 2026-11-06
+APPROVED_BASES = ('lead-at-table', 'together', 'friend-at-table', 'lead-standing',           # approved by the user, 2026-11-06
+                  'lead-bed-edge-bedroom', 'lead-bed-asleep-top-bedroom', 'lead-bed-awake-bedroom')   # 2026-11-08
 FONT = '/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf'
 
 
