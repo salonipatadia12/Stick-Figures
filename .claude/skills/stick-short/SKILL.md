@@ -9,9 +9,10 @@ The `stick` CLI in this repository does the work. Your job is to drive it, show 
 each approval gate in the chat, apply the edits they ask for, and report the cost.
 
 **Current status:** `stick make` produces a researched, approved script in
-`episodes/<slug>/episode.json`. Rendering (painted base poses, Kokoro voice, captions, SFX, QA) is
-done per episode by a render script modelled on `scripts/motion_test/episode_salary.py`
-(see `docs/RIG.md`); it is not yet wired into the `stick` CLI.
+`episodes/<slug>/episode.json` and stops at the bases gate when a base pose is missing. Rendering
+(painted base poses, Kokoro voice, captions, SFX, QA) is done per episode by a beats module on the
+generic runner (`scripts/motion_test/episode_runner.py`; video 2 is `episode_sleep.py` + `sleep_beats.py`,
+see `docs/PLAN.md` §2c); it is not yet wired into the `stick` CLI.
 
 ## Setup check (once per session)
 

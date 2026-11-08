@@ -146,6 +146,23 @@ step, not a one-off (user, 2026-11-07):
 The description step is keyword-based for now; the next script prompt version should ask Claude for
 explicit `setting` and `pose` fields per beat (a paid-prompt change, so not done mid-episode).
 
+**First use (video 2, 2026-11-08):** three bedroom bases. The lying-awake base took three rounds (the
+user rejected round 1 with a written brief; round 2 kept the reference's legs out of bed and was redone
+by the pipeline before being shown). Continuity between bases is a FLUX edit on an approved candidate
+(quilt, headboard and clock made to match), shown next to the other bases before use; small props that
+appear in several bases (the alarm clock) are one sprite cut from one base and placed by `places` in
+each. The user's standing rule: new bases and their edits are always shown on a sheet before anything
+is built.
+
+### 2c. Rendering an episode (`scripts/motion_test/episode_runner.py`)
+
+`Runner(slug, beats_module)` does what `episode_salary.py` did for the sample, for any episode: Kokoro
+narration per beat (`renders/voice/<slug>/`), the timeline, one cached H.264 clip per shot, captions,
+SFX, master, QA. A beats module gives `BEATS` (shot name → `beat_base.Beat` subclass) and optionally
+`shots(tl)`. Video 2 is `episode_sleep.py` + `sleep_beats.py`; props no base has are code-drawn in
+`pipeline/rig/drawn.py`. The salary sample still runs on its own script; moving it onto the runner is
+a cleanup for later.
+
 ### 3. Voice and captions
 
 - **`pipeline/voice.py`:** Kokoro-82M (Apache-2.0), local. One voice per episode, cached by text

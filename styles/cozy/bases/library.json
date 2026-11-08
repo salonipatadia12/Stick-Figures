@@ -51,20 +51,25 @@
   "by": "user"
  },
  "lead-bed-edge-bedroom": {
-  "status": "approved",
+  "status": "built",
   "setting": "bedroom",
   "pose": "bed-edge",
   "view": "eye-level",
   "cast": [
    "lead"
   ],
-  "source": "renders/bases/flux/cand-bed-edge-s101.png",
+  "source": "renders/bases/flux/edit-bed-edge-clean-s161.png",
   "approved": "2026-11-08",
   "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+  "note": "user pick s101 (2026-11-08); continuity edit s132 approved by the user (squares quilt, flat headboard, twin-bell clock removed); cushion removed (s161). Painted clock removed from the plates; the shared brass clock sprite stands at places.clock.",
+  "edited_from": [
+   "renders/bases/flux/cand-bed-edge-s101.png",
+   "renders/bases/flux/edit-bed-edge-continuity-s132.png"
+  ],
+  "built": "2026-11-08"
  },
  "lead-bed-asleep-top-bedroom": {
-  "status": "approved",
+  "status": "built",
   "setting": "bedroom",
   "pose": "bed-asleep-top",
   "view": "top-down",
@@ -74,10 +79,11 @@
   "source": "renders/bases/flux/cand-bed-asleep-top-s112.png",
   "approved": "2026-11-08",
   "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+  "note": "user pick s112 (2026-11-08). Silver clock removed from the plates; the shared brass clock sprite stands at places.clock.",
+  "built": "2026-11-08"
  },
  "lead-bed-awake-bedroom": {
-  "status": "approved",
+  "status": "built",
   "setting": "bedroom",
   "pose": "bed-awake",
   "view": "eye-level",
@@ -87,6 +93,7 @@
   "source": "renders/bases/flux/cand-bed-awake-r3-s322.png",
   "approved": "2026-11-08",
   "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+  "note": "user pick r3-s322 (2026-11-08) after rejecting s121/s122 (round 1) and r2 (legs out of bed). Its brass clock is cut as prop-clock.png and used in every bedroom base.",
+  "built": "2026-11-08"
  }
 }

@@ -27,6 +27,16 @@ The base library is in `styles/cozy/bases/<name>/`. It's built by `scripts/motio
 | `together` | Empty Chair `03-together` | the lead and the scarf friend, each in their own chair | both lean |
 | `friend-at-table` | FLUX candidate `s52` (03-together with the lead removed; the extra small cup painted out). Approved 2026-11-06 | the friend | leans |
 | `lead-standing` | FLUX candidate `s62` (02-question with the seated character and the scarf removed). Approved 2026-11-06 | the lead, standing behind the table | fixed (the hips are in view) |
+| `lead-bed-edge-bedroom` | FLUX candidate `s101` → continuity edit `s132` (squares quilt, flat headboard, one clock) → cushion removed `s161`. Approved 2026-11-08 | the lead on the edge of the bed, morning | leans about the hip |
+| `lead-bed-asleep-top-bedroom` | FLUX candidate `s112`, top-down. Approved 2026-11-08 | the lead asleep under the quilt | covered: only the head and hands animate; the quilt is the cover layer |
+| `lead-bed-awake-bedroom` | FLUX candidate `r3-s322` (third round, user direction). Approved 2026-11-08 | the lead lying awake at night | covered; its brass clock is cut as `prop-clock.png` and shared by all three bedroom bases |
+
+Bedroom bases (2026-11-08) added three spec options to the builder: `cover` (a polygon, the quilt, which takes
+the table layer's place so arms sent 'under' vanish beneath it), `torso='covered'` (no torso or neck layer;
+shoulders given by hand; the occluder is the cover around each shoulder) and `props` (a box where the arms plate
+removed something the rig moves, cut from the original as `prop-<name>.png`; `places` says where it stands in
+each base). A seat may also give its head ellipse by hand (`head=dict(centre, size, refine=False)`) and stricter
+face paint-out thresholds (`face_lum`, `face_sat`) when the head sits on a pale pillow with night shading.
 
 New bases are made with FLUX.2 klein from the Empty Chair frames and shown to the user first. Only
 approved ones go into the library: `styles/cozy/bases/library.json` records each base's setting, pose,

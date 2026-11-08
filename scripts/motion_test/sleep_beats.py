@@ -57,7 +57,7 @@ class B01(Beat):
             q = back_out((t - T['exhausted']) / 0.3)
             return replace(p, lh=lead.rest('l'), l_shape='resting', l_rot=-15, rh=lerp(lead.rest('r'), B((600, 830)), q),
                            r_shape='open_palm', r_rot=40, extra={'r_droop': 0.6}, head_tilt=-4 * q, head_dy=-0.03 * q, lean=-1.5 * q,
-                           eye_open=1.0, eye_wide=0.8 * q, brow_raise=0.9 * q, brow_worry=0.3, smile=-0.2, mouth_open=0.25 * q,
+                           eye_open=1.0, eye_wide=0.8 * q, brow_raise=0.9 * q, brow_worry=0.5, smile=-0.6, mouth_open=0.0,
                            turn=0.6, gaze_x=0.0, gaze_y=0.0)
         acts = [Action(self.t0 - 0.1, T['exhausted'] - 0.05, slump, 0.01, 0.2, 'hand on forehead, slumped'),
                 Action(T['exhausted'] - 0.05, self.t1, disbelief, 0.25, 0.2, 'sit up: palm up, eyes wide')]
@@ -144,7 +144,7 @@ class B03(Beat):
         def jolt(t, p):
             k = min(1.0, sum(math.exp(-(t - x) * 4.5) for x in self.jolts if t >= x))
             return replace(p, eye_open=0.08 + 0.6 * k, eye_wide=0.7 * k, brow_raise=0.9 * k, brow_worry=0.3,
-                           head_dy=-0.06 * k, head_tilt=-6 * k, mouth_open=0.3 * k, smile=-0.3, gaze_y=-0.4)
+                           head_dy=-0.06 * k, head_tilt=-6 * k, mouth_open=0.0, smile=-0.8, gaze_y=-0.4)
         acts = [Action(self.t0 - 0.1, T['jolts'] - 0.05, relax, 0.01, 0.08, 'asleep, breathing'),
                 Action(T['jolts'] - 0.05, self.t1, jolt, 0.06, 0.3, 'jolted half-awake')]
         self.events += [(self.t0 + 0.2, 'snore', 0.5), (T['block'], 'pop', 0.4)]
@@ -264,7 +264,7 @@ class B05(Beat):
             hand = (hand[0], hand[1] + 0.10 * down)
             return replace(p, rh=hand, r_shape='open_palm' if reach < 0.9 else 'back', r_rot=-20, r_bend=1,
                            extra={'r_droop': 0.3, 'r_front': 1.0}, eye_open=0.35 - 0.3 * down, brow_worry=1.0, smile=-0.5,
-                           turn=0.8, gaze_x=0.8, head_tilt=4 * reach, mouth_open=0.15 * (1 - down))
+                           turn=0.8, gaze_x=0.8, head_tilt=4 * reach, mouth_open=0.0)
         acts = [Action(self.t0 - 0.1, T['trouble'] - 0.1, calm, 0.01, 0.2, 'asleep, calm'),
                 Action(T['trouble'] - 0.1, self.ring_at, squint, 0.25, 0.1, 'squint'),
                 Action(self.ring_at, self.t1, slap, 0.1, 0.3, 'reach over and slap the clock')]
@@ -299,7 +299,7 @@ class B06(Beat):
         def groggy(t, p):
             sway = math.sin(2 * math.pi * (t - self.t0) * 0.45)
             blink = 1 - 0.8 * math.exp(-((t - T['groggy'] - 0.2) / 0.25) ** 2)
-            return replace(p, lh=B((425, 1130)), rh=B((520, 1120)), l_shape='resting', r_shape='resting', l_rot=-5, r_rot=5,
+            return replace(p, lh=B((400, 1072)), rh=B((565, 1062)), l_shape='resting', r_shape='resting', l_rot=-5, r_rot=5,
                            extra={'l_droop': 2.5, 'r_droop': 2.5}, lean=2.5 * sway, head_tilt=14 + 4 * sway, eye_open=0.25 * blink,
                            brow_worry=0.5, smile=-0.2, head_dy=0.02)
         acts = [Action(self.t0 - 0.1, self.t1, groggy, 0.01, 0.1, 'heavy head, limp hands, swaying')]
@@ -374,7 +374,7 @@ class B07(Beat):
             tangle = min(1.0, 0.4 + u / 0.6)
             knot = drawn.knot(220, 3, tangle)
             bob = 0.03 * D * math.sin(u * 2.4)
-            self.place(frame, knot, cam, (head[0] + 0.1 * D, head[1] - 0.72 * D + bob), 0.62 * D * q, angle=10 * math.sin(u * 1.3), lit=False)
+            self.place(frame, knot, cam, (head[0] + 0.1 * D, head[1] - 0.80 * D + bob), 0.9 * D * q, angle=10 * math.sin(u * 1.3), lit=False)
         return draw
 
     def on_table(self, t):
@@ -478,7 +478,7 @@ class B09(Beat):
                            l_shape='grip', r_shape='grip', l_rot=-20, r_rot=20, head_dy=nod, smile=0.6 + 0.3 * ease((t - T['good']) / 0.3),
                            gaze_x=-0.6, turn=-0.75)
         perf = {'lead': Performance(lead_base, Idle(seed=29), [Action(T['wiped'] - 0.1, T['ask'] + 0.2, wiped, 0.2, 0.3, 'wiped out'),
-                                                                 Action(self.lift_from, self.t1, toast, 0.15, 0.1, 'lift the cup to the friend')]),
+                                                                 Action(self.lift_from - 0.2, self.t1, toast, 0.15, 0.1, 'lift the cup to the friend')]),
                 'friend': Performance(fr_base, Idle(seed=30), [Action(self.t0 - 0.1, self.t1, hands_on_cup, 0.01, 0.1, 'hands around the cup, nod')])}
         self.events += [(T['eight'], 'pop', 0.5), (tk(T, 'eight#2', default=T['good'] - 0.3), 'pop', 0.5), (T['good'], 'sparkle', 0.7)]
         return perf

@@ -116,7 +116,7 @@ BASES = {
         props=[dict(name='clock', box=(658, 560, 748, 688))],
         seats=[dict(name='lead', head=dict(centre=(302, 655), size=(363, 358), refine=False), face_lum=100, face_sat=130,
                     facing=1, torso='covered',
-                    shoulders=dict(l=(268, 862), r=(548, 782)), hip=None, rest=dict(l=(430, 915), r=(592, 800)))],
+                    shoulders=dict(l=(268, 862), r=(548, 782)), hip=None, rest=dict(l=(430, 915), r=(655, 872)))],
         places=dict(clock=dict(xy=(690, 650), width=0.33)),
         light='right'),
 }
@@ -624,6 +624,8 @@ def build(name: str, spec: dict):
     plate = (plate.astype(np.float32) * (1 - hm) + empty.astype(np.float32) * hm).astype(np.uint8)
     for s, e, D, body, meta in bodies:
         if body.any():
+            tm = feather(cv2.erode(body.astype(np.uint8), disk(2)) > 0, 0, 1.5)[..., None]
+            plate = (plate.astype(np.float32) * (1 - tm) + arms.astype(np.float32) * tm).astype(np.uint8)
             plate = clean_torso(plate, body, s.get('accessory') == 'scarf')
     for s, e, D, body, meta in bodies:
         if s.get('torso') == 'covered':

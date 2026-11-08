@@ -81,15 +81,15 @@ def knot(size: int = 220, seed: int = 3, tangle: float = 1.0) -> Image.Image:
                 u = j / 6
                 sm.append((x0 + (x1 - x0) * u + 6 * SS * math.sin(u * math.pi) * rng.uniform(-1, 1),
                            y0 + (y1 - y0) * u + 6 * SS * math.sin(u * math.pi) * rng.uniform(-1, 1)))
-        d.line(sm, fill=RED + (255,), width=int(5 * SS), joint='curve')
-        d.line(sm, fill=(236, 110, 100, 120), width=int(2 * SS), joint='curve')
+        d.line(sm, fill=RED + (255,), width=int(8 * SS), joint='curve')
+        d.line(sm, fill=(236, 110, 100, 120), width=int(3 * SS), joint='curve')
     # two loose ends trailing out
     if tangle > 0.6:
         for ang in (rng.uniform(2.2, 2.9), rng.uniform(5.3, 5.9)):
             end = (c + size * SS * 0.48 * math.cos(ang), c + size * SS * 0.48 * math.sin(ang))
             start = path[-1] if ang > 4 else path[0]
             mid = ((start[0] + end[0]) / 2 + 20 * SS, (start[1] + end[1]) / 2 - 15 * SS)
-            d.line([start, mid, end], fill=RED + (255,), width=int(5 * SS), joint='curve')
+            d.line([start, mid, end], fill=RED + (255,), width=int(8 * SS), joint='curve')
     return _done(im, seed, 0.6)
 
 
