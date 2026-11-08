@@ -142,6 +142,39 @@ JOBS = {
         "a wooden nightstand with a round alarm clock and a small lamp glowing warm, a dark blue window with moonlight, "
         "cozy bedroom. Same proportions as the reference (very large round head), same painterly illustration style, "
         "portrait framing. No text.")),
+    # ---- continuity edit of the approved bed-edge base (user, 2026-11-08): quilt and headboard as in s112, one clock ----
+    'edit-bed-edge-continuity': dict(images=['cand-bed-edge-s101.png', 'cand-bed-asleep-top-s112.png'], seeds=[131, 132, 133], prompt=(
+        "Edit the first illustration. Make exactly three changes. One: replace the patchwork quilt on the bed with the "
+        "quilt from the second image, large plain squares in rust, cream, teal and grey with thin dark seams and no "
+        "floral prints. Two: make the headboard a plain flat wooden plank with a straight top edge, like the headboard "
+        "in the second image, with no arch. Three: remove the brass twin-bell alarm clock and the small dish that stand "
+        "behind and to the left of the lamp at the pillow end, and show the bed and the wall behind them. Keep the round "
+        "brass alarm clock in front of the lamp, the lamp, the wooden nightstand with its drawer, the character sitting "
+        "on the edge of the bed with the same pose, face, arms, hands and legs, the plant, the window, the golden light "
+        "and the wooden floor exactly the same. Same painterly style, same framing. No text.")),
+    # ---- plates for the approved bedroom bases (asleep-top s112, lying-awake s322) ----
+    'plate-bed-top-hand': dict(images=['cand-bed-asleep-top-s112.png'], seeds=[141, 142], prompt=(
+        "Edit this illustration. Remove ONLY the small dark navy mitten hand that rests on top of the quilt near the "
+        "pillow, and show the patchwork quilt and the white sheet where it was. Keep the round white head on the pillow "
+        "with its closed eyes, the pillow, the quilt with its squares, the bed, the headboard, the nightstand with the "
+        "clock and the wooden floor exactly the same. Same painterly style, same framing.")),
+    'plate-bed-top-empty': dict(images=['cand-bed-asleep-top-s112.png'], seeds=[143, 144], prompt=(
+        "Edit this illustration. Remove the white round head and the dark navy mitten hand completely, so the bed looks "
+        "empty: show the plain pale pillow where the head was and the quilt where the hand was. Keep the pillow, the "
+        "quilt with its squares, the white sheet, the bed, the headboard, the nightstand with the clock and the wooden "
+        "floor exactly the same. Same painterly style, same framing.")),
+    'plate-bed-awake-arms': dict(images=['cand-bed-awake-r3-s322.png'], seeds=[151, 152], prompt=(
+        "Edit this illustration. Remove ONLY the two dark navy arms and mitten hands that lie on top of the quilt, and "
+        "the brass alarm clock on the nightstand. Show the patchwork quilt where the arms were and the bare wooden "
+        "nightstand top where the clock stood. Keep the round white head on the pillow with its open eyes, the pillow, "
+        "the quilt, the bed, the headboard, the lamp, the nightstand, the window with the night sky and the wooden "
+        "floor exactly the same. Same painterly style, same framing.")),
+    'plate-bed-awake-empty': dict(images=['cand-bed-awake-r3-s322.png'], seeds=[153, 154], prompt=(
+        "Edit this illustration. Remove the white round head, the two dark navy arms and mitten hands, and the brass "
+        "alarm clock on the nightstand completely, so the bed looks empty: show the plain pale pillow where the head "
+        "was, the patchwork quilt where the arms were and the bare wooden nightstand top where the clock stood. Keep "
+        "the pillow, the quilt, the bed, the headboard, the lamp, the nightstand, the window with the night sky and "
+        "the wooden floor exactly the same. Same painterly style, same framing.")),
     'cand-lead-seated-left': dict(images=['04-waiting.png', '03-together.png'], seeds=[41, 42], prompt=(
         "Using the character and cafe from the first image: the same white round-headed character with a dark navy "
         "outline, white bulb-shaped torso and dark navy limbs, seated on the wooden chair on the RIGHT side of the round "

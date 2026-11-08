@@ -75,5 +75,18 @@
   "approved": "2026-11-08",
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+ },
+ "lead-bed-awake-bedroom": {
+  "status": "approved",
+  "setting": "bedroom",
+  "pose": "bed-awake",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-bed-awake-r3-s322.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
  }
 }

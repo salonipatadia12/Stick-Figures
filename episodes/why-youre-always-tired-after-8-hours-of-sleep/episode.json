@@ -423,7 +423,8 @@
     }
   ],
   "approvals": {
-    "script": "37e64ea8860a8d66d100ab60683f00263737a77515ca5845471902455c5c3ca2"
+    "script": "37e64ea8860a8d66d100ab60683f00263737a77515ca5845471902455c5c3ca2",
+    "bases": "932324c356e95cb091cc9aaaedd376e7226936f179565c19f2c2c17ecd0490d2"
   },
   "meta": {
     "script": {
@@ -476,6 +477,16 @@
         "rejects": [
           "lead-bed-awake-bedroom"
         ]
+      },
+      {
+        "gate": "bases",
+        "by": "user",
+        "at": "2026-11-08T02:42:47",
+        "picks": {
+          "lead-bed-awake-bedroom": "cand-bed-awake-r3-s322.png"
+        },
+        "rejects": [],
+        "digest": "932324c356e9"
       }
     ],
     "bases": {
