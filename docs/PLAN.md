@@ -226,6 +226,84 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
 - **Hero shots:** an optional image-to-video lane for at most 1–2 beats, within the budget.
 - **Studio:** reads and edits `episode.json`.
 
+### 7. Any topic (north star, user 2026-11-08; planned, not started)
+
+The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
+needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or
+prop). The next phase turns those one-offs into libraries, so a new script is composed from them and
+hand-written code is the exception. Target: 80 %+ of a video's beats built from libraries alone.
+
+Order below is by dependency. Steps A–C, E and G are code and tests only (free). Step D is local FLUX
+time plus the user's one approval round per setting. Step F is the only part that reopens the look.
+
+**A. Script v2: explicit staging fields (prompt change, paid on the next script call).**
+`DraftShot` gains `setting` (one noun phrase from a fixed list plus "other: …"), `poses` (cast id →
+pose from a fixed list: seated-at-table, standing, lying-on-back, bed-edge, walking…), `actions` (0–3 of
+`{who, verb, target, anchor}` with `verb` from the action library's vocabulary in step B) and `props`
+(`{name, held_by, where}`). `visual_intent` and `image_prompt` stay for the picture. Base planning
+(`pipeline/bases.py`) reads `setting` + `poses` + `cast` directly; the keyword path stays as a fallback
+for episodes written under schema v1, so nothing is regenerated. The validator adds **feasibility
+checks at the script gate** (user item 8): a verb outside the vocabulary, a posture change inside one
+beat (sit → stand), a walk longer than a few steps, a crowd above the street-figure count, animals, or
+fast physical action is printed as a warning with a staging suggestion ("cut to the arrival on 'then';
+use `lead-standing` + push_in"). Warnings don't block; the user decides at the gate.
+
+**B. Action library (`pipeline/rig/actions.py`, from videos 1 and 2).** Existing: idle, shrug,
+facepalm, arms_wide, rub_hands, look. Add parameterised verbs, each `verb(t0, who, target=None,
+dur=…, side='auto')` returning an `Action` that resolves hand shapes and reach from the base
+geometry: `reach`, `point`, `pick_up` / `put_down` (prop enters or leaves the held set with gripping
+shapes, as the b09 cup lift does), `throw`, `drink`, `type`, `write`, `wave`, `nod`, `shake_head`,
+`slump`, `jolt`, `gaze`. Posture verbs `lie_down`, `sit_up`, `stand_up` and `walk` cannot be done on
+a painted torso; they become **staging verbs** the composer resolves to a match cut between two bases
+of the same setting on the anchor word, or (walk) to a pan with the code-drawn distant figure. A
+generic beats module (`compose_beats.py`) builds each beat's `Performance` from the script's
+`actions` + word times, so an episode renders with no per-beat code when every verb resolves. The
+two existing beats modules are refactored onto the verbs where the result is unchanged on screen
+(checked with frame diffs against the current renders); they are not re-rendered.
+
+**C. Props step (`stick props <slug>`, automatic).** For each script prop not already in
+`styles/cozy/props/library.json`, base `props` or `pipeline/rig/drawn.py`: one FLUX.2 klein job, two
+seeds, 512 px, the prop alone on a plain neutral ground in the Empty Chair palette (about 25 s each),
+then cut with `key_neutral` + `clean_alpha`, and QA: one connected component, 15–70 % alpha
+coverage, no border contact, palette distance within the style's range, not a character. Pass →
+the sprite enters the prop library with provenance and is placed by the composer. Fail on both seeds
+→ the prop goes on a one-row sheet and the user is asked; this is the only time props prompt.
+
+**D. Starter base pack (one approval round per setting).** Proposed settings: office desk,
+kitchen counter, living-room sofa, street/sidewalk (standing), park bench, classroom (desk and
+board), gym (bench or mat), car interior (driver's seat). Per setting three bases: lead alone, friend
+alone, together. 24 bases × 2 candidates ≈ 48 FLUX images ≈ 65 min, plus two plates per approved base
+≈ 65 min, all local and free. One sheet per setting; the user picks once per base (the existing
+`bases` gate, no episode needed: `stick bases --pack starter`). Builder: a `spec_from_plates` helper
+derives head ellipse, shoulders, hands and the occluder from the plate diffs and prints a debug
+overlay, so a base no longer needs a hand-written spec; a spec override stays possible.
+
+**E. Info-graphics layer (`pipeline/infographics.py`).** One API for every component:
+`component(frame, t, spec, t_in, centre, size)` with reveal animation and the text log QA already
+reads. Components: counter, checklist, receipt, bar chart, line chart, arrow, comparison split,
+timeline. The script recipe `infographic` carries the spec in `detail` (JSON). The existing
+`text_slam`, `checklist_tick`, `split_compare`, `arrow_draw` and `number_counter` move onto it.
+
+**F. Formats and cast.** 16:9 long-form: `W, H` come from `episode.aspect`; captions and text
+positions from the safe area, not constants. Painted bases are portrait, so a landscape video needs
+landscape candidates (FLUX at 1680 × 944) for the settings it uses; the starter pack renders landscape
+only for settings a long-form topic needs. New cast (boss, kid, older person): FLUX candidates in the
+Empty Chair style with the lead as reference, approved on a sheet, built with the same head/arms rig;
+`style.cast_ids` grows and the script prompt may cast them.
+
+**G. Library report on every video.** The composer marks a beat `library` when no hand-written
+`Beat` subclass was needed; `qa.json` gains `library_pct` and the per-beat list, and the render
+report prints it. Target ≥ 80 %. Video 2 scored 0 % by this rule (every beat had bespoke code), so
+this is the baseline.
+
+**Proof.** Three topics far from each other, 9:16, each through the whole pipeline with
+`compose_beats` only: a history story, a psychology tip and a science explainer (candidates: the 1816
+"year without a summer"; why you forget why you walked into a room; why sunsets are red). Expected
+paid cost ≈ $0.19 each (research + script), well inside the $2.00 cap per video. Gates as usual:
+script (user), bases when a setting is missing (user, sheet), props only on QA failure. Where a beat
+can't be composed, it is written by hand and counted; the report gives each video's library %. If a
+video scores under 80 %, the missing verbs or components go into the libraries before the next one.
+
 ## Definition of done
 
 One request produces a 30–60 s vertical Short on an arbitrary topic, with:
