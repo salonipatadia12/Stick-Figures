@@ -95,8 +95,8 @@
     {
       "id": "b02",
       "role": "setup",
-      "narration": "It started in April 1815, when Tambora erupted. In about a day, it threw out an estimated 53 to 58 teragrams of sulfur dioxide.",
-      "on_screen_text": "53–58 teragrams of SO₂",
+      "narration": "It started in April 1815, when Tambora erupted. In about a day, it threw out an estimated 53 to 58 million tonnes of sulfur dioxide.",
+      "on_screen_text": "53–58 million tonnes of SO₂",
       "visual_intent": "A notebook sketch of a smoking volcano on the table, with the lead pointing at it as grey plumes are drawn rising from the peak.",
       "shot": {
         "framing": "medium",
@@ -143,7 +143,7 @@
           },
           {
             "recipe": "number_counter",
-            "anchor": "teragrams",
+            "anchor": "tonnes",
             "detail": "0 -> 58"
           }
         ],
@@ -361,8 +361,8 @@
     {
       "id": "b06",
       "role": "reveal",
-      "narration": "Global temperatures fell by roughly half a degree in 1816.",
-      "on_screen_text": "About half a degree",
+      "narration": "Global temperatures fell by roughly half a degree Celsius in 1816.",
+      "on_screen_text": "About 0.5 °C",
       "visual_intent": "Two green coffee cups side by side: one steaming for the year before, one barely warm for 1816.",
       "shot": {
         "framing": "close",
@@ -766,7 +766,9 @@
       "quote": "Globally, up to 105,000 deaths are estimated to have occurred as a result of the eruption^[6]^."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "script": "8556f4ae352c1dd6eeb2212cc441c1b73e73830c898d7eca689b9473975a3b14"
+  },
   "meta": {
     "script": {
       "model": "claude-sonnet-5-5",
@@ -836,6 +838,14 @@
       "sheet": "renders/bases/candidates/the-1816-year-without-a-summer-how-one-volcano-candidates.jpg",
       "made": "2026-11-08T15:54:28",
       "round": 1
-    }
+    },
+    "approval_log": [
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-08T17:16:58",
+        "digest": "8556f4ae352c"
+      }
+    ]
   }
 }

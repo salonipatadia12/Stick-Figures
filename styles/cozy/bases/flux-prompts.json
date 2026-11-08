@@ -1207,5 +1207,24 @@
       658
     ],
     "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SITTING ON THE BENCH side by side, turned a little toward each other, hands on their knees, in a quiet painted street corner: a brick shopfront, a lamp post, a bench, a tree, long golden light and dappled shadows on the pavement. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-office-lead-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      714,
+      715,
+      716
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
   }
 }

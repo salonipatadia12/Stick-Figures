@@ -243,9 +243,12 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   `renders/bases/candidates/pack-starter-<setting>-candidates.jpg`; `--pick/--reject/--direction` as at the
   bases gate. Rendered 2026-11-08 (48 candidates), waiting for the user's picks. The per-episode bases gate
   reuses the pack's places, poses and two-character prompts (`bases.candidate_jobs`), skips bases the pack has
-  candidates for (`basepack.covers`), and inserts need no render. Building approved pack bases needs the two
-  FLUX plates (arms removed, character removed) and `scripts/motion_test/spec_from_plates.py` (arms at the
-  sides derive cleanly; crossed arms need hand rests written by hand).
+  candidates for (`basepack.covers`), and inserts need no render. `stick build-bases` (`pipeline/basebuild.py`,
+  `scripts/motion_test/build_pack.py`) renders the two FLUX plates per approved base (arms removed, characters
+  removed; two seeds for the arms plate, the better one picked by how much navy it removed), derives the spec
+  with `spec_from_plates.py` (one or two characters; the scarf marks the friend) and builds the layers. Arms at
+  the sides derive cleanly; arms crossed in front still need hand-written rests. Seated-at-table and desk torsos
+  stay painted (no table layer to derive); sofa and bench torsos lean.
 - C ran on the three proof scripts: 17 of 20 props passed QA into `styles/cozy/props/`; the sunset's
   sunbeam, dust specks and photo failed both seeds (thin or translucent things FLUX does not render as one
   object) and have drawn stand-ins (`drawn.sunbeam`, `drawn.specks`, `drawn.photo`) proposed to the user.

@@ -38,9 +38,9 @@ MAX_ON_SCREEN_WORDS = 5
 
 # ---- staging vocabulary (script v3). The base library is keyed by setting + pose + cast; the action
 # library (pipeline/rig/actions.py) is keyed by verb. A script is composed from these, so the words are fixed.
-Setting = Literal['cafe', 'bedroom', 'office', 'kitchen', 'living-room', 'street', 'park', 'classroom', 'gym', 'car', 'other']
+Setting = Literal['cafe', 'bedroom', 'office', 'kitchen', 'living-room', 'doorway', 'street', 'park', 'classroom', 'gym', 'car', 'other']
 PoseName = Literal['seated-at-table', 'standing', 'bed-edge', 'bed-awake', 'bed-asleep-top', 'seated-sofa', 'seated-desk',
-                   'seated-bench', 'driving', 'walking']
+                   'seated-bench', 'driving', 'passenger', 'walking']
 Verb = Literal[
     # arm and head verbs the rig performs in place
     'reach', 'point', 'shrug', 'facepalm', 'pick_up', 'put_down', 'throw', 'drink', 'type', 'write', 'wave', 'nod',

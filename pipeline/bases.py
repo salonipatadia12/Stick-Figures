@@ -125,7 +125,8 @@ def match(desc: dict, lib: dict):
         parts = []
         for who in desc['cast']:
             one = find(desc['setting'], poses[who], 'eye-level', [who]) or next(
-                (n for n, e in live.items() if e.get('setting') == desc['setting'] and e.get('cast') == [who]), None)
+                (n for n, e in live.items() if e.get('setting') == desc['setting'] and e.get('cast') == [who]
+                 and poses[who] in e.get('serves_poses', [])), None)       # an approved stand-in (e.g. the friend stays seated)
             if one is None:
                 return None
             parts.append(one)
@@ -200,8 +201,12 @@ POSES = {
     'standing': 'now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in {setting}.',
     'seated-at-table': 'now seated at a wooden table in three-quarter view, hands resting on the tabletop, in {setting}.',
 }
+DOORWAY = ('an open doorway between a warm living room and a cozy kitchen, the wooden door frame clearly visible in the '
+           'middle of the picture, the living room (a rust-coloured sofa, a floor lamp, a plant) partly seen on one side and '
+           'the kitchen (a wooden counter with a kettle, open shelves with jars, a window) partly seen through the doorway on '
+           'the other, both rooms in soft daylight')
 SETTINGS = {'bedroom': BEDROOM, 'cafe': 'the sunlit cafe from the reference with ivy, tall windows and dappled shadows',
-            'street': 'a warm painted street corner in golden light with dappled shadows'}
+            'street': 'a warm painted street corner in golden light with dappled shadows', 'doorway': DOORWAY}
 REFERENCES = {'lead': ['04-waiting.png', '01-alone.png'], 'friend': ['03-together.png']}
 SEEDS = {'bed-edge': [101, 102], 'bed-asleep-top': [111, 112], 'bed-awake': [121, 122]}
 
@@ -322,7 +327,11 @@ def sheet(found: dict, slug: str, rnd: int = 1) -> Path:
             x = gap + c * (tw + gap)
             tile = Image.open(ROOT / f).convert('RGB').resize((tw, th))
             im.paste(tile, (x, y + pad))
-            d.text((x, y + pad + th + 10), Path(f).name, font=font, fill=(30, 30, 50))
+            label = Path(f).name
+            f_ = font
+            while d.textlength(label, font=f_) > tw and f_.size > 11:         # long candidate names: smaller type, no overlap
+                f_ = ImageFont.truetype(f_.path, f_.size - 1)
+            d.text((x, y + pad + th + 10), label, font=f_, fill=(30, 30, 50))
     CANDIDATES.mkdir(parents=True, exist_ok=True)
     out = CANDIDATES / (f'{slug}-candidates.jpg' if rnd == 1 else f'{slug}-candidates-r{rnd}.jpg')
     im.save(out, quality=90)

@@ -26,8 +26,8 @@
           "lead"
         ],
         "staging": {
-          "setting": "living-room",
-          "setting_detail": "",
+          "setting": "doorway",
+          "setting_detail": "standing in the open doorway between the living room and the kitchen",
           "poses": [
             {
               "who": "lead",
@@ -206,8 +206,8 @@
           "lead"
         ],
         "staging": {
-          "setting": "kitchen",
-          "setting_detail": "",
+          "setting": "doorway",
+          "setting_detail": "standing in the open doorway between the living room and the kitchen",
           "poses": [
             {
               "who": "lead",
@@ -551,8 +551,8 @@
           "lead"
         ],
         "staging": {
-          "setting": "kitchen",
-          "setting_detail": "",
+          "setting": "doorway",
+          "setting_detail": "standing in the open doorway between the living room and the kitchen",
           "poses": [
             {
               "who": "lead",
@@ -722,7 +722,9 @@
       "quote": "A well-designed 2021 study tried to reproduce the effect and found no overall doorway effect, except when people’s memory was already loaded down."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "script": "2fd0374cc98f40530a95caa23eebe0ee2035b09d206163a3c3bfc2da7b683930"
+  },
   "meta": {
     "script": {
       "model": "claude-sonnet-5-5",
@@ -803,7 +805,45 @@
       },
       "sheet": "renders/bases/candidates/why-you-forget-why-you-walked-into-a-room-candidates.jpg",
       "made": "2026-11-08T16:31:26",
-      "round": 1
-    }
+      "round": 1,
+      "rejected": {
+        "friend-lead-standing-living-room": [
+          "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
+          "renders/bases/flux/cand-together-standing-living-room-p6d83-s803.png"
+        ]
+      },
+      "rejections": [
+        {
+          "base": "friend-lead-standing-living-room",
+          "files": [
+            "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
+            "renders/bases/flux/cand-together-standing-living-room-p6d83-s803.png"
+          ],
+          "reason": "only the friend wears the scarf",
+          "by": "user",
+          "at": "2026-11-08T17:19:04"
+        }
+      ]
+    },
+    "approval_log": [
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-08T17:16:58",
+        "digest": "2fd0374cc98f"
+      },
+      {
+        "gate": "bases",
+        "by": "user",
+        "at": "2026-11-08T17:19:04",
+        "picks": {
+          "friend-lead-seated-at-table-kitchen": "cand-together-seated-at-table-kitchen-p3086-s102.png",
+          "lead-seated-at-table-kitchen": "cand-seated-at-table-kitchen-p80ed-s991.png"
+        },
+        "rejects": [
+          "friend-lead-standing-living-room"
+        ]
+      }
+    ]
   }
 }

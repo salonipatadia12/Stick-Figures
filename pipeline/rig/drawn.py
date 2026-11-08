@@ -198,27 +198,34 @@ def specks(w: int = 220, h: int = 160, n: int = 36, seed: int = 12) -> Image.Ima
     return im.reduce(SS)
 
 
-def photo(w: int = 240, h: int = 300, sky=(214, 150, 120), ground=(170, 110, 80), sun=(150, 170, 190), seed: int = 13) -> Image.Image:
-    """A photo print with a cream border: a sky, a horizon with low hills, and a sun (a Martian sunset by default:
-    a dusty pink sky, a blue-grey sun). Anchor: centre. Pass other colours for an Earth sky."""
+def photo(w: int = 240, h: int = 300, sky=(196, 146, 92), ground=(150, 96, 66), sun=(238, 232, 222), glow=(150, 178, 215),
+          seed: int = 13) -> Image.Image:
+    """A photo print with a cream border: a dusky sky, a horizon with low hills, and a small pale sun with a soft glow.
+    The defaults are a Martian sunset as the rovers photograph it: a dusky butterscotch sky, a small pale sun with a
+    blue glow around it. Pass other colours for an Earth sky. Anchor: centre."""
     im = _canvas(w, h)
     d = ImageDraw.Draw(im)
     W, H = w * SS, h * SS
     d.rounded_rectangle((0, 0, W - 1, H - 1), radius=6 * SS, fill=CREAM + (255,), outline=NAVY + (255,), width=3 * SS)
     m = int(0.07 * W)
     box = (m, m, W - m, H - int(0.14 * H))
-    d.rectangle(box, fill=sky + (255,))
-    hy = box[1] + (box[3] - box[1]) * 0.66
-    sr = (box[2] - box[0]) * 0.11
+    bh = box[3] - box[1]
+    for i in range(bh):                                            # the sky: darker and duskier toward the top
+        t = i / bh
+        dark = tuple(int(c * (0.62 + 0.38 * t)) for c in sky)
+        d.line([(box[0], box[1] + i), (box[2], box[1] + i)], fill=dark + (255,))
+    hy = box[1] + bh * 0.66
+    sy = hy - 0.08 * bh
     sx = (box[0] + box[2]) / 2
-    haze = Image.new('RGBA', im.size, (0, 0, 0, 0))             # the sun's soft blue-grey halo
-    dh = ImageDraw.Draw(haze)
-    for k in range(3, 0, -1):
-        r = sr * (1 + 0.5 * k)
-        dh.ellipse((sx - r, hy - 0.1 * (box[3] - box[1]) - r, sx + r, hy - 0.1 * (box[3] - box[1]) + r), fill=sun + (int(34 / k),))
-    im.alpha_composite(haze.filter(ImageFilter.GaussianBlur(4 * SS)))
+    sr = (box[2] - box[0]) * 0.045
+    halo = Image.new('RGBA', im.size, (0, 0, 0, 0))
+    dh = ImageDraw.Draw(halo)
+    for k in range(4, 0, -1):
+        r = sr * (1.6 + 1.1 * k)
+        dh.ellipse((sx - r, sy - r, sx + r, sy + r), fill=glow + (int(44 / k),))
+    im.alpha_composite(halo.filter(ImageFilter.GaussianBlur(5 * SS)))
     d = ImageDraw.Draw(im)
-    d.ellipse((sx - sr, hy - 0.1 * (box[3] - box[1]) - sr, sx + sr, hy - 0.1 * (box[3] - box[1]) + sr), fill=sun + (255,))
+    d.ellipse((sx - sr, sy - sr, sx + sr, sy + sr), fill=sun + (255,))
     hills = [(box[0], box[3]), (box[0], hy + 6 * SS)]
     for i in range(1, 8):
         hills.append((box[0] + (box[2] - box[0]) * i / 8, hy + (6 if i % 2 else -4) * SS))

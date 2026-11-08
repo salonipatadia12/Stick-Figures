@@ -36,7 +36,11 @@
   ],
   "source": "renders/bases/flux/cand-friend-seated-s52.png",
   "approved": "2026-11-06",
-  "by": "user"
+  "by": "user",
+  "serves_poses": [
+   "standing"
+  ],
+  "serves_note": "the friend stays seated when the lead stands at the cafe table (video 1, approved staging)"
  },
  "lead-standing": {
   "status": "built",
@@ -95,5 +99,360 @@
   "by": "user",
   "note": "user pick r3-s322 (2026-11-08) after rejecting s121/s122 (round 1) and r2 (legs out of bed). Its brass clock is cut as prop-clock.png and used in every bedroom base.",
   "built": "2026-11-08"
+ },
+ "lead-standing-kitchen": {
+  "status": "approved",
+  "setting": "kitchen",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-kitchen-lead-s494.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-standing-kitchen": {
+  "status": "approved",
+  "setting": "kitchen",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-kitchen-friend-s721.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-kitchen": {
+  "status": "approved",
+  "setting": "kitchen",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-kitchen-together-s554.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "lead-seated-sofa-living-room": {
+  "status": "approved",
+  "setting": "living-room",
+  "pose": "seated-sofa",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-living-room-lead-s635.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-seated-sofa-living-room": {
+  "status": "approved",
+  "setting": "living-room",
+  "pose": "seated-sofa",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-living-room-friend-s862.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-living-room": {
+  "status": "approved",
+  "setting": "living-room",
+  "pose": "seated-sofa",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-living-room-together-s450.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "lead-standing-street": {
+  "status": "approved",
+  "setting": "street",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-street-lead-s416.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-standing-street": {
+  "status": "approved",
+  "setting": "street",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-street-friend-s642.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-street": {
+  "status": "approved",
+  "setting": "street",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-street-together-s474.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "lead-seated-bench-park": {
+  "status": "approved",
+  "setting": "park",
+  "pose": "seated-bench",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-park-lead-s513.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-seated-bench-park": {
+  "status": "approved",
+  "setting": "park",
+  "pose": "seated-bench",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-park-friend-s740.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-park": {
+  "status": "approved",
+  "setting": "park",
+  "pose": "seated-bench",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-park-together-s741.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-standing-classroom": {
+  "status": "approved",
+  "setting": "classroom",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-classroom-friend-s457.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-classroom": {
+  "status": "approved",
+  "setting": "classroom",
+  "pose": "mixed",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-classroom-together-s790.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true,
+  "poses": {
+   "friend": "standing",
+   "lead": "seated-desk"
+  }
+ },
+ "lead-seated-bench-gym": {
+  "status": "approved",
+  "setting": "gym",
+  "pose": "seated-bench",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-gym-lead-s416.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-standing-gym": {
+  "status": "approved",
+  "setting": "gym",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-gym-friend-s812.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-gym": {
+  "status": "approved",
+  "setting": "gym",
+  "pose": "mixed",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-gym-together-s644.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true,
+  "poses": {
+   "friend": "standing",
+   "lead": "seated-bench"
+  }
+ },
+ "lead-driving-car": {
+  "status": "approved",
+  "setting": "car",
+  "pose": "driving",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-car-lead-s461.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-car": {
+  "status": "approved",
+  "setting": "car",
+  "pose": "driving",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-car-together-s621.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-lead-seated-bench-street": {
+  "status": "approved",
+  "setting": "street",
+  "pose": "seated-bench",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-together-seated-bench-street-p6f51-s658.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+ },
+ "friend-lead-seated-at-table-kitchen": {
+  "status": "approved",
+  "setting": "kitchen",
+  "pose": "seated-at-table",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s102.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+ },
+ "lead-seated-at-table-kitchen": {
+  "status": "approved",
+  "setting": "kitchen",
+  "pose": "seated-at-table",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s991.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+ },
+ "lead-standing-living-room": {
+  "status": "approved",
+  "setting": "living-room",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-standing-living-room-pfd23-s791.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "inserts": true
  }
 }

@@ -75,9 +75,9 @@ Rules:
    pose, expression, props, light and framing. No text, letters or numbers inside the picture.
    Keep recurring props and places consistent across beats. Do not restate the art style.
 11. STAGING. The video is built from libraries, so fill shot.staging exactly: setting from the list
-   (cafe, bedroom, office, kitchen, living-room, street, park, classroom, gym, car; "other" only if
+   (cafe, bedroom, office, kitchen, living-room, doorway (between living room and kitchen), street, park, classroom, gym, car; "other" only if
    none fits, with setting_detail); one pose per cast id (seated-at-table, standing, bed-edge,
-   bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, walking); 0-3
+   bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, passenger, walking); 0-3
    actions from reach, point, shrug, facepalm, pick_up, put_down, throw, drink, type, write, wave,
    nod, shake_head, slump, jolt, gaze, each on a word of this beat's narration; 0-4 props with
    where they sit and who holds them. Use at most 2 settings and 2 characters per video; characters

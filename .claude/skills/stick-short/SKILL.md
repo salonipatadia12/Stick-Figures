@@ -60,8 +60,10 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
    - Show the user the sheet and **stop**. Never pick a candidate yourself.
    - When the user picks: `.venv/bin/stick approve <slug> --gate bases --by user --pick <base>=<file.png> ...`.
      Picks may come over several calls. The pick enters `styles/cozy/bases/library.json` for every later
-     video; the base is then built into layers with `scripts/motion_test/build_bases.py` (a spec per base)
-     before rendering.
+     video. Build picked bases with `.venv/bin/stick build-bases [--episode <slug>]` (local FLUX plates, a
+     derived spec, layers; about 4 minutes per base). Look at `renders/bases/debug-<name>.jpg` for each built
+     base; a base with crossed or overlapping arms may need its `rest` points fixed by hand in
+     `scripts/motion_test/build_bases.py`.
    - When the user rejects a base's candidates: `--reject <base>="<their reason>"` on the same command, then
      `.venv/bin/stick bases <slug> --candidates --direction <base>="<what they asked for>"`. The redo round
      renders three new seeds with the user's words in place of the pose template, using the approved bases

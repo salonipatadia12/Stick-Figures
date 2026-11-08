@@ -34,7 +34,8 @@ PROMPT = ('A single {name}, alone, centred, seen from slightly above, on a plain
           'warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, '
           'no people, no hands, no table, no ground shadow.')
 # the code-drawn and shared props the composer already knows (keys after compose_beats.prop_key)
-BUILT_IN = {'lamp', 'clock', 'spring', 'knot', 'thread', 'quilt', 'scrap', 'steam', 'figure', 'person', 'hole', 'receipt', 'phone', 'box', 'cup'}
+BUILT_IN = {'lamp', 'clock', 'spring', 'knot', 'thread', 'quilt', 'scrap', 'steam', 'figure', 'person', 'hole', 'receipt', 'phone', 'box', 'cup',
+            'sunbeam', 'specks', 'photo'}
 
 
 def library() -> dict:

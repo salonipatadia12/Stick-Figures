@@ -98,9 +98,105 @@
    "renders/bases/flux/pack-car-together-s622.png"
   ]
  },
- "rejected": {},
- "rejections": [],
- "picks": {},
+ "rejected": {
+  "lead-seated-desk-office": [
+   "renders/bases/flux/pack-office-lead-s614.png",
+   "renders/bases/flux/pack-office-lead-s615.png"
+  ],
+  "friend-seated-desk-office": [
+   "renders/bases/flux/pack-office-friend-s840.png",
+   "renders/bases/flux/pack-office-friend-s841.png"
+  ],
+  "together-office": [
+   "renders/bases/flux/pack-office-together-s431.png",
+   "renders/bases/flux/pack-office-together-s432.png"
+  ],
+  "lead-seated-desk-classroom": [
+   "renders/bases/flux/pack-classroom-lead-s473.png",
+   "renders/bases/flux/pack-classroom-lead-s474.png"
+  ],
+  "friend-driving-car": [
+   "renders/bases/flux/pack-car-friend-s687.png",
+   "renders/bases/flux/pack-car-friend-s688.png"
+  ],
+  "friend-passenger-car": [
+   "renders/bases/flux/pack-car-friend-s687.png",
+   "renders/bases/flux/pack-car-friend-s688.png"
+  ]
+ },
+ "rejections": [
+  {
+   "base": "lead-seated-desk-office",
+   "files": [
+    "renders/bases/flux/pack-office-lead-s614.png",
+    "renders/bases/flux/pack-office-lead-s615.png"
+   ],
+   "reason": "Real office: a rectangular work desk with a monitor and keyboard, an office chair, shelves behind. No round café pedestal table.",
+   "by": "user",
+   "at": "2026-11-08T17:15:01"
+  },
+  {
+   "base": "friend-seated-desk-office",
+   "files": [
+    "renders/bases/flux/pack-office-friend-s840.png",
+    "renders/bases/flux/pack-office-friend-s841.png"
+   ],
+   "reason": "Real office: a rectangular work desk with a monitor and keyboard, an office chair, shelves behind. No round café pedestal table.",
+   "by": "user",
+   "at": "2026-11-08T17:15:01"
+  },
+  {
+   "base": "together-office",
+   "files": [
+    "renders/bases/flux/pack-office-together-s431.png",
+    "renders/bases/flux/pack-office-together-s432.png"
+   ],
+   "reason": "Real office: a rectangular work desk with a monitor and keyboard, an office chair, shelves behind. No round café pedestal table.",
+   "by": "user",
+   "at": "2026-11-08T17:15:01"
+  },
+  {
+   "base": "lead-seated-desk-classroom",
+   "files": [
+    "renders/bases/flux/pack-classroom-lead-s473.png",
+    "renders/bases/flux/pack-classroom-lead-s474.png"
+   ],
+   "reason": "Seated at a rectangular school desk like together s790, not a round café table.",
+   "by": "user",
+   "at": "2026-11-08T17:15:01"
+  },
+  {
+   "base": "friend-driving-car",
+   "files": [
+    "renders/bases/flux/pack-car-friend-s687.png",
+    "renders/bases/flux/pack-car-friend-s688.png"
+   ],
+   "reason": "Rename to friend-passenger-car: friend alone in the passenger seat, scarf on, nobody in the driver's seat.",
+   "by": "user",
+   "at": "2026-11-08T17:15:01"
+  }
+ ],
+ "picks": {
+  "lead-standing-kitchen": "renders/bases/flux/pack-kitchen-lead-s494.png",
+  "friend-standing-kitchen": "renders/bases/flux/pack-kitchen-friend-s721.png",
+  "together-kitchen": "renders/bases/flux/pack-kitchen-together-s554.png",
+  "lead-seated-sofa-living-room": "renders/bases/flux/pack-living-room-lead-s635.png",
+  "friend-seated-sofa-living-room": "renders/bases/flux/pack-living-room-friend-s862.png",
+  "together-living-room": "renders/bases/flux/pack-living-room-together-s450.png",
+  "lead-standing-street": "renders/bases/flux/pack-street-lead-s416.png",
+  "friend-standing-street": "renders/bases/flux/pack-street-friend-s642.png",
+  "together-street": "renders/bases/flux/pack-street-together-s474.png",
+  "lead-seated-bench-park": "renders/bases/flux/pack-park-lead-s513.png",
+  "friend-seated-bench-park": "renders/bases/flux/pack-park-friend-s740.png",
+  "together-park": "renders/bases/flux/pack-park-together-s741.png",
+  "friend-standing-classroom": "renders/bases/flux/pack-classroom-friend-s457.png",
+  "together-classroom": "renders/bases/flux/pack-classroom-together-s790.png",
+  "lead-seated-bench-gym": "renders/bases/flux/pack-gym-lead-s416.png",
+  "friend-standing-gym": "renders/bases/flux/pack-gym-friend-s812.png",
+  "together-gym": "renders/bases/flux/pack-gym-together-s644.png",
+  "lead-driving-car": "renders/bases/flux/pack-car-lead-s461.png",
+  "together-car": "renders/bases/flux/pack-car-together-s621.png"
+ },
  "sheets": {
   "office": "renders/bases/candidates/pack-starter-office-candidates.jpg",
   "kitchen": "renders/bases/candidates/pack-starter-kitchen-candidates.jpg",
@@ -111,5 +207,8 @@
   "gym": "renders/bases/candidates/pack-starter-gym-candidates.jpg",
   "car": "renders/bases/candidates/pack-starter-car-candidates.jpg"
  },
- "made": "2026-11-08T15:51:08"
+ "made": "2026-11-08T15:51:08",
+ "renamed": {
+  "friend-driving-car": "friend-passenger-car"
+ }
 }

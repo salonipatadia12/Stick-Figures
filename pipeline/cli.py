@@ -292,6 +292,31 @@ def cmd_pack(args):
     return 0
 
 
+def cmd_build_bases(args):
+    """Build every approved base (FLUX plates, derived spec, layers); with names, only those."""
+    from . import basebuild
+    lib = __import__('pipeline.bases', fromlist=['library']).library()
+    names = args.names or sorted(basebuild.to_build(lib))
+    if args.episode:
+        from . import bases
+        episode, _ = store.load(args.episode)
+        used = {r['base'] for r in bases.plan(episode, lib) if r['base']}
+        names = [n for n in names if any(n == u or n in u.split(' + ') for u in used)]
+    names = [n for n in names if lib.get(n, {}).get('status') == 'approved']
+    if not names:
+        print('Nothing to build: every base named is built already (or not approved).')
+        return 0
+    print(f'Building {len(names)} base(s): ' + ', '.join(names))
+    for line in basebuild.build(names, lib):
+        print(line)
+    lib = __import__('pipeline.bases', fromlist=['library']).library()
+    left = [n for n in names if lib.get(n, {}).get('status') != 'built']
+    if left:
+        print(f'Not built: {left}')
+        return EXIT_ERROR
+    return 0
+
+
 def cmd_show(args):
     episode, _ = store.load(args.episode)
     style, issues = check(episode)
@@ -452,6 +477,11 @@ def build_parser():
     pk.add_argument('--direction', action='append', help='<base>="<what the base should show>" for a redo round')
     pk.add_argument('--by', default='cli')
     pk.set_defaults(func=cmd_pack)
+
+    bb = sub.add_parser('build-bases', help='Build approved bases into layers (FLUX plates + derived spec)')
+    bb.add_argument('names', nargs='*')
+    bb.add_argument('--episode', help='only the bases this episode\'s plan uses')
+    bb.set_defaults(func=cmd_build_bases)
 
     s = sub.add_parser('schema', help='Write the episode.json JSON schema')
     s.add_argument('--output')

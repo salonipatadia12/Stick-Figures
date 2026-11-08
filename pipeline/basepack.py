@@ -44,7 +44,7 @@ POSES = {
     'park': dict(lead='seated-bench', friend='seated-bench', together='seated-bench'),
     'classroom': dict(lead='seated-desk', friend='standing', together='mixed'),
     'gym': dict(lead='seated-bench', friend='standing', together='mixed'),
-    'car': dict(lead='driving', friend='driving', together='driving'),
+    'car': dict(lead='driving', friend='passenger', together='driving'),
 }
 POSE_TEXT = {
     'seated-desk': 'now SEATED AT THE DESK in three-quarter view facing right, both hands resting on the desktop, full upper body and the chair visible',
@@ -52,6 +52,7 @@ POSE_TEXT = {
     'seated-bench': 'now SITTING ON THE BENCH seen from the side in three-quarter view facing right, both hands resting on the knees, feet on the ground',
     'standing': 'now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides',
     'driving': "now SITTING IN THE DRIVER'S SEAT seen from the passenger side in three-quarter view, both navy mitten hands on the steering wheel, head turned a little toward the viewer",
+    'passenger': "now ALONE IN THE PASSENGER SEAT of the car, seen from the side in three-quarter view, hands resting in the lap, the driver's seat beside them EMPTY with nobody at the steering wheel",
 }
 TOGETHER = {
     'seated-desk': 'both now SEATED SIDE BY SIDE AT THE DESK, facing each other a little, hands on the desktop',

@@ -213,7 +213,7 @@
     {
       "id": "b04",
       "role": "tension",
-      "narration": "So why not violet? The sun puts out much more blue, so blue wins.",
+      "narration": "So why not violet? The sun sends less violet, and our eyes are less sensitive to it, so we see blue.",
       "on_screen_text": "Blue wins",
       "visual_intent": "The friend shrugs at the violet question while the lead nods, with a blue ball sitting bigger than a violet ball between them.",
       "shot": {
@@ -246,7 +246,7 @@
               "who": "lead",
               "verb": "nod",
               "target": "",
-              "anchor": "wins"
+              "anchor": "see"
             }
           ],
           "props": [
@@ -285,7 +285,7 @@
       "sfx": [
         {
           "name": "ding",
-          "anchor": "wins"
+          "anchor": "blue"
         }
       ],
       "source_ids": [
@@ -742,7 +742,10 @@
       "quote": "Photos from NASA’s rovers and landers on Mars have shown us that at sunset there is actually the opposite of what you’d experience on Earth. During th..."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "script": "64faa33fbae202f07b6f63a43d32c76b388f6e4186ed3d81848ab04293994b25",
+    "bases": "876f2883da69417e40130ebdf9c418b7e324b4e60824db475c8d16513d2e73f5"
+  },
   "meta": {
     "script": {
       "model": "claude-sonnet-5-5",
@@ -812,6 +815,24 @@
       "sheet": "renders/bases/candidates/why-sunsets-are-red-when-the-sky-is-blue-candidates.jpg",
       "made": "2026-11-08T16:33:34",
       "round": 1
-    }
+    },
+    "approval_log": [
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-08T17:16:58",
+        "digest": "64faa33fbae2"
+      },
+      {
+        "gate": "bases",
+        "by": "user",
+        "at": "2026-11-08T17:18:37",
+        "picks": {
+          "friend-lead-seated-bench-street": "cand-together-seated-bench-street-p6f51-s658.png"
+        },
+        "rejects": [],
+        "digest": "876f2883da69"
+      }
+    ]
   }
 }
