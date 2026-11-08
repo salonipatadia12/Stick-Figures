@@ -207,15 +207,19 @@ def sheet(found: dict, slug: str) -> Path:
     """One row per wanted base, one labelled thumbnail per candidate, for the approval."""
     from PIL import Image, ImageDraw, ImageFont
     font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf', 22)
-    tw, th, pad = 360, 640, 40
+    tw, th, pad, gap = 360, 640, 44, 12
     cols = max(len(v) for v in found.values())
-    im = Image.new('RGB', (cols * tw, len(found) * (th + pad)), (246, 238, 222))
+    row_h = th + pad * 2
+    im = Image.new('RGB', (cols * (tw + gap) + gap, len(found) * row_h), (246, 238, 222))
     d = ImageDraw.Draw(im)
     for r, (wanted, files) in enumerate(found.items()):
+        y = r * row_h
+        d.text((gap, y + 10), f'{wanted}  (pick one)', font=font, fill=(30, 30, 50))
         for c, f in enumerate(files):
+            x = gap + c * (tw + gap)
             tile = Image.open(ROOT / f).convert('RGB').resize((tw, th))
-            im.paste(tile, (c * tw, r * (th + pad) + pad))
-            d.text((c * tw + 8, r * (th + pad) + 8), f'{wanted}  ·  {Path(f).stem}', font=font, fill=(30, 30, 50))
+            im.paste(tile, (x, y + pad))
+            d.text((x, y + pad + th + 10), Path(f).name, font=font, fill=(30, 30, 50))
     CANDIDATES.mkdir(parents=True, exist_ok=True)
     out = CANDIDATES / f'{slug}-candidates.jpg'
     im.save(out, quality=90)
