@@ -29,7 +29,9 @@ The base library is in `styles/cozy/bases/<name>/`. It's built by `scripts/motio
 | `lead-standing` | FLUX candidate `s62` (02-question with the seated character and the scarf removed). Approved 2026-11-06 | the lead, standing behind the table | fixed (the hips are in view) |
 
 New bases are made with FLUX.2 klein from the Empty Chair frames and shown to the user first. Only
-approved ones go into the library (`pipeline/qa.APPROVED_BASES`).
+approved ones go into the library: `styles/cozy/bases/library.json` records each base's setting, pose,
+view, cast, source candidate and approval (`pipeline/bases.py` plans a script against it and makes
+candidates for what is missing; `stick bases`). `pipeline/qa.APPROVED_BASES` lists the built ones.
 
 **Original art is kept.** FLUX redraws the whole frame a few pixels off, so each edit is first
 aligned to the original. Its pixels are used only where a moving part used to be.

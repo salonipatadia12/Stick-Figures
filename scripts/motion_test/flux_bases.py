@@ -121,6 +121,27 @@ JOBS = {
         "scarf from the standing character on the right, so their white torso is plain with the same navy outline and "
         "their neck shows. Keep the standing character's pose, head, face, arms, legs and feet exactly the same, and keep "
         "the table, the cup, the orange bag, the chairs and the cafe exactly the same. " + KEEP)),
+    # ---- bedroom base-pose candidates for video 2 (for review only; requested 2026-11-07) ----
+    'cand-bed-edge': dict(images=['04-waiting.png', '01-alone.png'], seeds=[101, 102], prompt=(
+        "Using the character from these images: the same white round-headed character with a dark navy outline, white "
+        "bulb-shaped torso, dark navy limbs and mitten hands, now SITTING ON THE EDGE OF A BED in a cozy bedroom, seen "
+        "from the side in three-quarter view facing right, feet on a wooden floor, arms relaxed at the sides, a rumpled "
+        "patchwork quilt behind them, a small wooden nightstand with a round alarm clock and a lamp, a window with golden "
+        "morning light and dappled shadows, a plant. Same proportions as the reference (very large round head, short "
+        "torso, long thin navy legs), same painterly illustration style, portrait framing. No text.")),
+    'cand-bed-asleep-top': dict(images=['04-waiting.png', '01-alone.png'], seeds=[111, 112], prompt=(
+        "Using the character from these images: the same white round-headed character with a dark navy outline, now "
+        "ASLEEP IN BED seen from DIRECTLY ABOVE (a top-down view): the bed fills the frame, the round white head rests on "
+        "a pale pillow at the top, the body is hidden under a warm patchwork quilt in rust, cream and teal squares, one "
+        "navy mitten hand on top of the quilt, a wooden nightstand with a round alarm clock beside the bed, soft golden "
+        "light and dappled shadows across the quilt. Same painterly illustration style, portrait framing. No text.")),
+    'cand-bed-awake': dict(images=['04-waiting.png', '01-alone.png'], seeds=[121, 122], prompt=(
+        "Using the character from these images: the same white round-headed character with a dark navy outline, now "
+        "LYING IN BED ON THEIR BACK at night, seen from the side at the level of the bed, head on a pale pillow on the "
+        "left, body under a patchwork quilt pulled up to the chest, both navy mitten hands resting on top of the quilt, "
+        "a wooden nightstand with a round alarm clock and a small lamp glowing warm, a dark blue window with moonlight, "
+        "cozy bedroom. Same proportions as the reference (very large round head), same painterly illustration style, "
+        "portrait framing. No text.")),
     'cand-lead-seated-left': dict(images=['04-waiting.png', '03-together.png'], seeds=[41, 42], prompt=(
         "Using the character and cafe from the first image: the same white round-headed character with a dark navy "
         "outline, white bulb-shaped torso and dark navy limbs, seated on the wooden chair on the RIGHT side of the round "
@@ -160,4 +181,9 @@ def main(names):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:] or ['plate-04-empty', 'plate-03-arms', 'plate-03-empty'])
+    args = sys.argv[1:]
+    # a .json argument is a jobs file (pipeline/bases.py writes one per episode); its jobs join JOBS
+    for a in [a for a in args if a.endswith('.json')]:
+        JOBS.update(json.loads(Path(a).read_text()))
+    args = [a for a in args if not a.endswith('.json')]
+    main(args or ['plate-04-empty', 'plate-03-arms', 'plate-03-empty'])

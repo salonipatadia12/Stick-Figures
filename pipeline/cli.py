@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 from . import config, store, styles
 from .cost import BudgetExceeded, PriceUnknown, usd
@@ -18,7 +19,7 @@ from .models import Episode, Voice, episode_json_schema
 from .review import script_view
 
 EXIT_ERROR, EXIT_CHECKS, EXIT_GATE, EXIT_BUDGET = 1, 2, 3, 4
-GATES = ('script',)  # Phase 2 adds 'style'
+GATES = ('script', 'bases')
 
 
 def errors_of(issues):
@@ -163,9 +164,43 @@ def cmd_make(args):
                 print(f'\nWAITING AT GATE: script. Review the script above, edit {base / "episode.json"} if needed, then run:\n'
                       f'  stick approve {episode.slug}\n  stick make --episode {episode.slug}')
                 return EXIT_GATE
-    print(f'\nScript approved ({episode.approvals["script"][:12]}). '
-          'Next stages (style board and images, voice, captions, compositing) arrive in Phases 2-4.')
+    print(f'\nScript approved ({episode.approvals["script"][:12]}).')
+    # The base plan: every beat needs an approved painted base pose. Missing ones stop here.
+    from . import bases
+    rows = bases.plan(episode)
+    print('\n' + bases.plan_view(rows))
+    miss = bases.missing(rows)
+    if miss and not episode.is_approved('bases'):
+        print(f'\nWAITING AT GATE: bases. Make candidates with\n  stick bases {episode.slug} --candidates\n'
+              f'then pick one per base:\n  stick approve {episode.slug} --gate bases --pick <base>=<candidate.png> ...')
+        return EXIT_GATE
+    print('\nBases ready. Next: build any newly approved base into layers (scripts/motion_test/build_bases.py), '
+          'then render the episode (see docs/RIG.md).')
     return 0
+
+
+def cmd_bases(args):
+    """Print the base plan; with --candidates, render FLUX candidates for the missing bases and a sheet."""
+    from . import bases
+    episode, base = store.load(args.episode)
+    rows = bases.plan(episode)
+    print(bases.plan_view(rows))
+    miss = bases.missing(rows)
+    if not args.candidates or not miss:
+        return EXIT_GATE if miss and not episode.is_approved('bases') else 0
+    jobs = bases.candidate_jobs(miss)
+    print(f'\nRendering {sum(len(j["seeds"]) for j in jobs.values())} candidates with FLUX.2 klein (local, free)...')
+    found = bases.render_candidates(jobs, episode.slug)
+    out = bases.sheet(found, episode.slug)
+    episode.meta['bases'] = dict(plan=[dict(beat=r['beat'], base=r['base'], wanted=r['wanted']) for r in rows],
+                                 candidates=found, sheet=str(out.relative_to(config.ROOT)), made=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    store.save(episode, base)
+    print(f'Candidate sheet: {out}')
+    for w, files in found.items():
+        print(f'  {w}: ' + ', '.join(Path(f).name for f in files))
+    print(f'\nWAITING AT GATE: bases. Pick one candidate per base:\n  stick approve {episode.slug} --gate bases '
+          + ' '.join(f'--pick {w}=<file>' for w in found))
+    return EXIT_GATE
 
 
 def cmd_show(args):
@@ -187,6 +222,32 @@ def cmd_validate(args):
 
 def cmd_approve(args):
     episode, base = store.load(args.episode)
+    if args.gate == 'bases':
+        from . import bases
+        rows = bases.plan(episode)
+        miss = bases.missing(rows)
+        picks = dict(p.split('=', 1) for p in (args.pick or []))
+        unknown = [w for w in picks if w not in miss]
+        if unknown or set(picks) != set(miss):
+            print(f'Pick exactly one candidate for each missing base {sorted(miss)}; got {sorted(picks)}.')
+            return EXIT_ERROR
+        lib = bases.library()
+        for wanted, cand in picks.items():
+            path = Path(cand)
+            if not path.is_absolute():
+                path = config.ROOT / (cand if '/' in cand else f'renders/bases/flux/{cand}')
+            if not path.exists():
+                print(f'No such candidate: {path}')
+                return EXIT_ERROR
+            bases.approve(lib, wanted, str(path.relative_to(config.ROOT)), miss[wanted], args.by)
+            print(f'  {wanted} <- {path.name} (approved, to build)')
+        bases.save_library(lib)
+        episode.approvals['bases'] = bases.plan_digest(rows)
+        episode.meta.setdefault('approval_log', []).append(dict(gate='bases', by=args.by, at=time.strftime('%Y-%m-%dT%H:%M:%S'),
+                                                               digest=episode.approvals['bases'][:12], picks=picks))
+        store.save(episode, base)
+        print(f'Approved bases for {episode.slug}. Build them with scripts/motion_test/build_bases.py, then render.')
+        return 0
     _, issues = check(episode)
     if errors_of(issues):
         for issue in errors_of(issues):
@@ -257,7 +318,13 @@ def build_parser():
     a.add_argument('episode')
     a.add_argument('--gate', default='script', choices=GATES)
     a.add_argument('--by', default='cli', help='who approved (recorded in the approval log)')
+    a.add_argument('--pick', action='append', help='bases gate: <wanted base>=<candidate png>, one per missing base')
     a.set_defaults(func=cmd_approve)
+
+    bs = sub.add_parser('bases', help='Show which painted base each beat needs; make FLUX candidates for missing ones')
+    bs.add_argument('episode')
+    bs.add_argument('--candidates', action='store_true', help='render candidates for the missing bases and a review sheet')
+    bs.set_defaults(func=cmd_bases)
 
     s = sub.add_parser('schema', help='Write the episode.json JSON schema')
     s.add_argument('--output')

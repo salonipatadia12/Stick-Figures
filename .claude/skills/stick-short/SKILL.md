@@ -46,7 +46,16 @@ done per episode by a render script modelled on `scripts/motion_test/episode_sal
    - **For a new draft:** if the user asks for a completely different script, run
      `stick make --episode <slug> --regenerate script`. This is a new paid call, so mention the cost first.
    - **After approval:** run `.venv/bin/stick approve <slug> --by user`, then `.venv/bin/stick make --episode <slug>`.
-5. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
+5. **Bases gate.** After the script is approved, `stick make --episode <slug>` prints the **base plan**:
+   which painted base pose each beat uses. If a beat needs a setting or pose the library doesn't have,
+   it stops at the `bases` gate (exit code 3). Then:
+   - run `.venv/bin/stick bases <slug> --candidates` (local FLUX.2 klein, free, about 80 s per image). It
+     renders two candidates per missing base and writes a review sheet under `renders/bases/candidates/`.
+   - Show the user the sheet and **stop**. Never pick a candidate yourself.
+   - When the user picks: `.venv/bin/stick approve <slug> --gate bases --by user --pick <base>=<file.png> ...`.
+     The pick enters `styles/cozy/bases/library.json` for every later video; the base is then built into
+     layers with `scripts/motion_test/build_bases.py` (a spec per base) before rendering.
+6. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
 
 ## Rules
 

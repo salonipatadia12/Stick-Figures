@@ -122,6 +122,25 @@ receipts read RENT → BILLS → LEFT and MON … FRI → PAYDAY and are at leas
 jars read BILLS → WEEK 1 → WEEK 2; the crossed-off calendar week stays visible in beats 8–9 at the beat-1
 size; the clink uses each character's inner arm; a QA check fails any on-screen text under 40 px.
 
+### 2b. Base poses a script needs (`pipeline/bases.py`, `stick bases`)
+
+When a script needs a setting or a pose the painted-base library doesn't have, that is a pipeline
+step, not a one-off (user, 2026-11-07):
+
+1. `stick make` (after the script gate) prints the **base plan**: per beat, the setting, pose, view and
+   cast read from the shot text, and the library base that serves it (`styles/cozy/bases/library.json`).
+   A top-down request falls back to the eye-level base of the same pose; two characters with no
+   two-shot base fall back to one base each, cut as two shots. A beat can force a base with
+   `shot.layers: ["base:<name>"]`.
+2. Missing bases stop at the **`bases` gate**. `stick bases <slug> --candidates` renders two FLUX.2 klein
+   candidates per missing base (local, free) and a review sheet in `renders/bases/candidates/`.
+3. The user picks one per base: `stick approve <slug> --gate bases --pick <base>=<file> ...`. The pick is
+   recorded in the library with its provenance, and the base is built into layers for this and every
+   later video.
+
+The description step is keyword-based for now; the next script prompt version should ask Claude for
+explicit `setting` and `pose` fields per beat (a paid-prompt change, so not done mid-episode).
+
 ### 3. Voice and captions
 
 - **`pipeline/voice.py`:** Kokoro-82M (Apache-2.0), local. One voice per episode, cached by text

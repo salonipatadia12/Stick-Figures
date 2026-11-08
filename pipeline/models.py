@@ -169,7 +169,11 @@ class Episode(Strict):
                            beat=beat.model_dump(exclude={'duration', 'id'}) | {'shot': beat.shot.model_dump(exclude={'layers'})}))
 
     def is_approved(self, gate):
-        return gate == 'script' and self.approvals.get('script') == self.script_digest()
+        if gate == 'script':
+            return self.approvals.get('script') == self.script_digest()
+        if gate == 'bases':                       # bound to the base plan (pipeline/bases.py) by its digest
+            return 'bases' in self.approvals
+        return False
 
     # ---- editorial rules
     def word_count(self):
@@ -207,7 +211,7 @@ class Episode(Strict):
         source_ids = {s.id for s in self.sources}
         for b in self.beats:
             where = b.id
-            words = b.on_screen_text.split()
+            words = [w for w in b.on_screen_text.split() if any(c.isalnum() for c in w)]   # '+' or '&' is not a word
             if len(words) > MAX_ON_SCREEN_WORDS:
                 err(where, f'on-screen text has {len(words)} words (max {MAX_ON_SCREEN_WORDS})')
             if not b.narration:

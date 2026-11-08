@@ -1,0 +1,53 @@
+{
+ "lead-at-table": {
+  "status": "built",
+  "setting": "cafe",
+  "pose": "seated-at-table",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "inserts": true,
+  "source": "legacy/bespoke/the-empty-chair-source/assets/04-waiting.png",
+  "approved": "2026-11-06",
+  "by": "user",
+  "note": "Empty Chair 04-waiting; has empty.png for table inserts"
+ },
+ "together": {
+  "status": "built",
+  "setting": "cafe",
+  "pose": "seated-at-table",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "legacy/bespoke/the-empty-chair-source/assets/03-together.png",
+  "approved": "2026-11-06",
+  "by": "user"
+ },
+ "friend-at-table": {
+  "status": "built",
+  "setting": "cafe",
+  "pose": "seated-at-table",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/cand-friend-seated-s52.png",
+  "approved": "2026-11-06",
+  "by": "user"
+ },
+ "lead-standing": {
+  "status": "built",
+  "setting": "cafe",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-lead-standing-b-s62.png",
+  "approved": "2026-11-06",
+  "by": "user"
+ }
+}
