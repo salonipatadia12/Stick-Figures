@@ -246,7 +246,8 @@ def sheet(found: dict, slug: str, rnd: int = 1) -> Path:
     d = ImageDraw.Draw(im)
     for r, (wanted, files) in enumerate(found.items()):
         y = r * row_h
-        d.text((gap, y + 10), f'{wanted}  (pick one)', font=font, fill=(30, 30, 50))
+        title = wanted if ('pick' in wanted or wanted.startswith('approved')) else f'{wanted}  (pick one)'
+        d.text((gap, y + 10), title, font=font, fill=(30, 30, 50))
         for c, f in enumerate(files):
             x = gap + c * (tw + gap)
             tile = Image.open(ROOT / f).convert('RGB').resize((tw, th))
