@@ -94,33 +94,60 @@ def knot(size: int = 220, seed: int = 3, tangle: float = 1.0) -> Image.Image:
 
 
 def ribbon(length: int = 420, height: int = 120, kink: float = 0.0, phase: float = 0.0, seed: int = 2) -> Image.Image:
-    """A pale blue ribbon of air flowing left to right; kink 0..1 pinches it shut in the middle like a bent hose."""
+    """The airway as a tube: two navy walls with a pale blue inside and flow chevrons moving along it. kink 0..1
+    pinches the walls together in the middle until the tube is shut; the flow stops at the pinch."""
     im = _canvas(length, height)
     d = ImageDraw.Draw(im)
-    n = 48
-    top, bot = [], []
+    n = 64
+    L, Hh = length * SS, height * SS
+    top, bot, mid = [], [], []
     for i in range(n + 1):
         u = i / n
-        x = u * length * SS
-        wave = math.sin(u * 2 * math.pi * 1.6 + phase) * height * 0.18 * SS
-        thick = height * 0.26 * SS
-        pinch = math.exp(-((u - 0.5) / 0.12) ** 2) * kink
-        th = thick * (1 - 0.92 * pinch)
-        bend = pinch * height * 0.22 * SS
-        y = height * SS / 2 + wave + bend
-        top.append((x, y - th / 2))
-        bot.append((x, y + th / 2))
-    poly = top + bot[::-1]
-    d.polygon(poly, fill=(168, 214, 236, 170), outline=(120, 176, 210, 220), width=int(2 * SS))
-    for i in range(0, n, 6):
-        x0, y0 = top[i]
-        x1, y1 = bot[i]
-        d.line([((x0 + x1) / 2 - 8 * SS, (y0 + y1) / 2), ((x0 + x1) / 2 + 8 * SS, (y0 + y1) / 2)], fill=(220, 240, 250, 150), width=int(2 * SS))
-    if kink > 0.5:
-        cx, cy = top[n // 2][0], (top[n // 2][1] + bot[n // 2][1]) / 2
-        d.line([(cx - 10 * SS, cy - 22 * SS), (cx + 10 * SS, cy + 22 * SS)], fill=NAVY + (int(200 * (kink - 0.5) * 2),), width=int(4 * SS))
-        d.line([(cx + 10 * SS, cy - 22 * SS), (cx - 10 * SS, cy + 22 * SS)], fill=NAVY + (int(200 * (kink - 0.5) * 2),), width=int(4 * SS))
-    return _done(im, seed, 0.4)
+        x = u * L
+        sway = math.sin(u * math.pi * 1.4 + 0.4) * Hh * 0.10
+        pinch = math.exp(-((u - 0.5) / 0.14) ** 2) * kink
+        half = Hh * 0.30 * (1 - 0.96 * pinch)
+        y = Hh / 2 + sway
+        top.append((x, y - half))
+        bot.append((x, y + half))
+        mid.append((x, y))
+    d.polygon(top + bot[::-1], fill=(190, 226, 242, 200))
+    # flow chevrons, spaced along the tube; they stop short of a closed pinch
+    step = 0.11
+    k = 0
+    while True:
+        u = ((k * step + phase * 0.05) % 1.0)
+        k += 1
+        if k > 1 / step + 1:
+            break
+        if kink > 0.5 and abs(u - 0.5) < 0.18:
+            continue
+        i = int(u * n)
+        x, y = mid[i]
+        half = (bot[i][1] - top[i][1]) / 2
+        if half < 6 * SS:
+            continue
+        a = half * 0.55
+        d.line([(x - a * 0.7, y - a), (x + a * 0.5, y), (x - a * 0.7, y + a)], fill=(90, 150, 196, 230), width=int(3 * SS), joint='curve')
+    d.line(top, fill=NAVY + (255,), width=int(5 * SS), joint='curve')
+    d.line(bot, fill=NAVY + (255,), width=int(5 * SS), joint='curve')
+    for pts in (top, bot):                        # rounded open ends
+        d.line([pts[0], (pts[0][0], mid[0][1])], fill=NAVY + (255,), width=int(5 * SS))
+        d.line([pts[-1], (pts[-1][0], mid[-1][1])], fill=NAVY + (255,), width=int(5 * SS))
+    if kink > 0.6:                                 # a red pinch mark where the walls meet
+        cx, cy = mid[n // 2]
+        r = 7 * SS
+        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=RED + (int(255 * min(1.0, (kink - 0.6) / 0.3)),))
+    return _done(im, seed, 0.35)
+
+
+def scrap_holed(size: int = 200, seed: int = 7) -> Image.Image:
+    """A quilt scrap with two ragged holes torn in it (broken sleep)."""
+    base = scrap(size, seed)
+    for k, (fx, fy, hs) in enumerate(((0.36, 0.40, 0.34), (0.66, 0.62, 0.28))):
+        h = hole(int(size * hs), seed + 10 + k)
+        base.alpha_composite(h, (int(size * fx - h.width / 2), int(size * fy - h.height / 2)))
+    return base
 
 
 def light_shaft(w: int = 90, h: int = 260, seed: int = 4) -> Image.Image:

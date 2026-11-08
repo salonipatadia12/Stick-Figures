@@ -91,9 +91,10 @@ class Beat:
         if alpha < 1:
             im.putalpha(im.getchannel('A').point(lambda v: int(v * alpha)))
         x, y = self.to_screen(cam, xy)
-        frame.alpha_composite(im, (round(x - im.width * anchor[0]), round(y - im.height * anchor[1])))
-        if 'em' in sprite.info:                       # a prop that carries type: log the size it reads at
-            O.note_text(sprite.info.get('label', '?'), sprite.info['em'] * s)
+        xy = (round(x - im.width * anchor[0]), round(y - im.height * anchor[1]))
+        frame.alpha_composite(im, xy)
+        if 'em' in sprite.info:                       # a prop that carries type: log the size it reads at, and where
+            O.note_text(sprite.info.get('label', '?'), sprite.info['em'] * s, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))
 
     def shadow(self, frame, cam, xy, w, h, strength=0.5):
         x, y = self.to_screen(cam, xy)

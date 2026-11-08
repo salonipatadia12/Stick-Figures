@@ -8,11 +8,11 @@ description: Make a narrated, captioned stick-figure Short (vertical explainer v
 The `stick` CLI in this repository does the work. Your job is to drive it, show the user
 each approval gate in the chat, apply the edits they ask for, and report the cost.
 
-**Current status:** `stick make` produces a researched, approved script in
-`episodes/<slug>/episode.json` and stops at the bases gate when a base pose is missing. Rendering
-(painted base poses, Kokoro voice, captions, SFX, QA) is done per episode by a beats module on the
-generic runner (`scripts/motion_test/episode_runner.py`; video 2 is `episode_sleep.py` + `sleep_beats.py`,
-see `docs/PLAN.md` §2c); it is not yet wired into the `stick` CLI.
+**Current status:** `stick make` produces a researched, approved script (schema v3, with per-beat
+staging fields) in `episodes/<slug>/episode.json` and stops at the bases gate when a base pose is missing.
+`stick props` makes missing props. Rendering (painted bases, verbs, Kokoro voice, captions, SFX, QA) is
+composed from the script by `scripts/motion_test/episode_compose.py <slug>` (docs/PLAN.md §7); videos 1 and 2
+still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
 
 ## Setup check (once per session)
 
@@ -44,6 +44,8 @@ see `docs/PLAN.md` §2c); it is not yet wired into the `stick` CLI.
    - **To make edits:** edit `episodes/<slug>/episode.json` directly. Keep the beat `id`s, and keep
      every `anchor` a word that appears in that beat's `narration`. Then run
      `.venv/bin/stick validate <slug>` and fix every error.
+   - **Feasibility warnings** (crowds, animals, fast action, walking across a room, posture changes) are
+     printed at the gate with a simpler staging. They do not block; relay them so the user can decide.
    - **For a new draft:** if the user asks for a completely different script, run
      `stick make --episode <slug> --regenerate script`. This is a new paid call, so mention the cost first.
    - **After approval:** run `.venv/bin/stick approve <slug> --by user`, then `.venv/bin/stick make --episode <slug>`.
@@ -62,7 +64,17 @@ see `docs/PLAN.md` §2c); it is not yet wired into the `stick` CLI.
      renders three new seeds with the user's words in place of the pose template, using the approved bases
      of the same setting as reference images (continuity), and writes a new sheet (`-r2.jpg`). Show it and
      **stop** again.
-6. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
+6. **Props.** `.venv/bin/stick props <slug> --generate` makes any script prop no library has (local FLUX,
+   cut-out, QA). It prompts only when a prop fails QA on both seeds (exit 3 with a sheet under `renders/props/`):
+   show the sheet and ask how the prop should look, or which stand-in to use.
+7. **Render.** `.venv/bin/python scripts/motion_test/episode_compose.py <slug> --voice am_michael` composes the
+   beats from the script's staging fields and renders the Short to `renders/sample/<slug>/`. Report the file paths
+   at the very top of the reply, then the library percentage from `qa.json` (`library.library_pct`, target 80 %).
+8. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
+
+**Starter base pack.** `.venv/bin/stick pack starter --candidates` renders candidates for eight common settings
+(office, kitchen, living room, street, park, classroom, gym, car) and writes one sheet per setting. Show the
+sheets and stop; the user picks with `stick pack starter --pick <base>=<file> ...` (or `--reject`/`--direction`).
 
 ## Rules
 

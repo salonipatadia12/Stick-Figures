@@ -1,0 +1,230 @@
+"""The automatic props step (docs/PLAN.md §7 C): `stick props <slug>`.
+
+A script (schema v3) lists the props each beat needs. Most come from a library: the base's own cut-outs, the
+shared sprites, the prop library (`styles/cozy/props/library.json`) or the code-drawn set
+(`pipeline/rig/drawn.py`). For each prop no library has, this step:
+
+1. renders two FLUX.2 klein text-to-image candidates of the prop alone on a plain light ground (local, free,
+   about 25 s each at 512 px),
+2. cuts the object out (`props.key_neutral` + `props.clean_alpha`),
+3. checks the sprite: one object, a sensible share of the canvas, not touching the border, in the palette,
+4. on the first pass, enters it in the prop library with its provenance; if both seeds fail, puts the prop on a
+   one-row sheet for the user. That is the only time props prompt the user.
+"""
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import time
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+from . import config
+
+ROOT = config.ROOT
+LIBRARY = ROOT / 'styles/cozy/props/library.json'
+SPRITES = ROOT / 'styles/cozy/props'
+FLUX_OUT = ROOT / 'renders/props/flux'
+SHEETS = ROOT / 'renders/props'
+PROMPT = ('A single {name}, alone, centred, seen from slightly above, on a plain flat light grey background and nothing '
+          'else. Children\'s-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, '
+          'warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, '
+          'no people, no hands, no table, no ground shadow.')
+# the code-drawn and shared props the composer already knows (keys after compose_beats.prop_key)
+BUILT_IN = {'lamp', 'clock', 'spring', 'knot', 'thread', 'quilt', 'scrap', 'steam', 'figure', 'person', 'hole', 'receipt', 'phone', 'box', 'cup'}
+
+
+def library() -> dict:
+    return json.loads(LIBRARY.read_text()) if LIBRARY.exists() else {}
+
+
+def save_library(lib: dict):
+    LIBRARY.parent.mkdir(parents=True, exist_ok=True)
+    LIBRARY.write_text(json.dumps(lib, indent=1, ensure_ascii=False) + '\n')
+
+
+def prop_key(name: str) -> str:
+    import sys
+    sys.path.insert(0, str(ROOT / 'scripts/motion_test'))
+    from compose_beats import prop_key as pk
+    return pk(name)
+
+
+def needed(episode, lib: dict | None = None) -> dict:
+    """Prop key -> dict(name, beats) for every script prop that no library provides."""
+    from . import bases as B
+    lib = library() if lib is None else lib
+    rows = {r['beat']: r for r in B.plan(episode)}
+    out = {}
+    for b in episode.beats:
+        st = b.shot.staging
+        if st is None:
+            continue
+        base = rows[b.id]['base'] or ''
+        base_props = set()
+        for name in base.split(' + '):
+            meta = ROOT / 'styles/cozy/bases' / name / 'base.json'
+            if meta.exists():
+                m = json.loads(meta.read_text())
+                base_props |= set(m.get('props', {})) | ({'cup'} if m.get('cups') else set())
+        for p in st.props:
+            key = prop_key(p.name)
+            if key in base_props or key in BUILT_IN or key in lib:
+                continue
+            out.setdefault(key, dict(name=p.name, beats=[]))['beats'].append(b.id)
+    return out
+
+
+def jobs(keys: dict, rnd: int = 1) -> dict:
+    out = {}
+    for key, d in keys.items():
+        job = f'prop-{key}' + ('' if rnd == 1 else f'-r{rnd}')
+        s0 = sum(ord(c) for c in key) % 700 + 100 + 50 * (rnd - 1)
+        out[key] = dict(job=job, seeds=[s0, s0 + 1], size=512, prompt=PROMPT.format(name=d['name']), round=rnd)
+    return out
+
+
+def render(job_map: dict, slug: str) -> dict:
+    spec = {j['job']: dict(prompt=j['prompt'], seeds=j['seeds'], size=j['size']) for j in job_map.values()}
+    todo = [n for n, j in spec.items() if not all((FLUX_OUT / f'{n}-s{s}.png').exists() for s in j['seeds'])]
+    if todo:
+        SHEETS.mkdir(parents=True, exist_ok=True)
+        jobs_file = SHEETS / f'{slug}-prop-jobs.json'
+        jobs_file.write_text(json.dumps(spec, indent=1))
+        subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_props.py'), str(jobs_file), *todo], check=True)
+    return {k: [FLUX_OUT / f"{j['job']}-s{s}.png" for s in j['seeds']] for k, j in job_map.items()}
+
+
+def cut(path: Path) -> Image.Image:
+    from .rig.props import clean_alpha, key_neutral
+    sprite = key_neutral(str(path), sat_max=30, lum_min=120)
+    return clean_alpha(sprite, solid=90, soft=1.0)
+
+
+def check(sprite: Image.Image, canvas: int = 512) -> dict:
+    """One object of a sensible size, clear of the border, with some colour: pass/fail with reasons."""
+    box = sprite.getchannel('A').point(lambda v: 255 if v > 128 else 0).getbbox()
+    if box is None:
+        return dict(pass_=False, reasons=['nothing cut out'], size=[0, 0], coverage=0.0, pieces=0)
+    sprite = sprite.crop(box)
+    a = np.asarray(sprite.getchannel('A')) > 128
+    reasons = []
+    cover = a.mean() if a.size else 0.0
+    w, h = sprite.size
+    if w < 100 or h < 100:
+        reasons.append(f'too small ({w}x{h} px)')
+    if w > canvas * 0.96 or h > canvas * 0.96:
+        reasons.append('fills the canvas: the backdrop was not separated')
+    sizes = _pieces(a)
+    n = len(sizes)
+    if n == 0:
+        reasons.append('nothing cut out')
+    elif max(sizes) / a.sum() < 0.9:
+        reasons.append(f'{n} separate pieces: not one object')
+    if 0.0 < cover < 0.22:
+        reasons.append(f'sprite is mostly empty ({cover:.0%} solid): a thin or broken object')
+    rgb = np.asarray(sprite.convert('RGB')).astype(int)
+    sat = (rgb.max(-1) - rgb.min(-1))[a] if a.any() else np.array([0])
+    if sat.mean() < 18:
+        reasons.append('grey: no colour from the palette')
+    lum = rgb.mean(-1)[a] if a.any() else np.array([255])
+    if (lum > 235).mean() > 0.6:
+        reasons.append('mostly white: the object merged with the backdrop')
+    return dict(pass_=not reasons, reasons=reasons, size=[w, h], coverage=round(float(cover), 3), pieces=int(n))
+
+
+def _pieces(mask: np.ndarray, min_px: int = 30) -> list:
+    """Pixel counts of the connected solid pieces (flood fills on a PIL image; no SciPy in this env)."""
+    from PIL import ImageDraw
+    m = Image.fromarray((mask * 255).astype(np.uint8)).convert('I')
+    arr = np.asarray(m)
+    sizes, label = [], 1
+    ys, xs = np.nonzero(arr == 255)
+    for y, x in zip(ys[::7], xs[::7]):                      # sample seeds; every piece over a few dozen px is hit
+        if np.asarray(m)[y, x] != 255:
+            continue
+        ImageDraw.floodfill(m, (int(x), int(y)), label, thresh=0)
+        size = int((np.asarray(m) == label).sum())
+        if size >= min_px:
+            sizes.append(size)
+        label += 1
+    return sizes
+
+
+def sheet(rows: list, slug: str) -> Path:
+    """rows = [(key, name, [(png, sprite, check)])]: the failed props, for the user."""
+    from PIL import ImageDraw, ImageFont
+    font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf', 20)
+    tw, pad = 256, 40
+    cols = max(len(r[2]) for r in rows) * 2
+    im = Image.new('RGB', (cols * (tw + 12) + 12, len(rows) * (tw + pad * 2)), (246, 238, 222))
+    d = ImageDraw.Draw(im)
+    for r, (key, name, cands) in enumerate(rows):
+        y = r * (tw + pad * 2)
+        d.text((12, y + 8), f'{name}  (failed QA on both seeds; tell me how it should look, or name a stand-in)', font=font, fill=(30, 30, 50))
+        for c, (png, sprite, chk) in enumerate(cands):
+            x = 12 + c * 2 * (tw + 12)
+            im.paste(Image.open(png).convert('RGB').resize((tw, tw)), (x, y + pad))
+            tile = Image.new('RGB', (tw, tw), (200, 230, 200))
+            sp = sprite.copy()
+            sp.thumbnail((tw - 8, tw - 8))
+            tile.paste(sp, ((tw - sp.width) // 2, (tw - sp.height) // 2), sp)
+            im.paste(tile, (x + tw + 12, y + pad))
+            d.text((x, y + pad + tw + 6), '; '.join(chk['reasons'])[:60], font=font, fill=(150, 40, 40))
+    SHEETS.mkdir(parents=True, exist_ok=True)
+    out = SHEETS / f'{slug}-props.jpg'
+    im.save(out, quality=90)
+    return out
+
+
+def run(episode, lib: dict | None = None, generate: bool = True) -> dict:
+    """Generate, cut and check every prop the script needs and no library has. Returns what was added and what failed."""
+    lib = library() if lib is None else lib
+    need = needed(episode, lib)
+    result = dict(needed=need, added={}, failed={}, sheet=None)
+    if not need or not generate:
+        return result
+    found = render(jobs(need), episode.slug)
+    SPRITES.mkdir(parents=True, exist_ok=True)
+    failed_rows = []
+    for key, pngs in found.items():
+        tried = []
+        for png in pngs:
+            sprite = cut(png)
+            chk = check(sprite)
+            tried.append((png, sprite, chk))
+            if chk['pass_']:
+                dst = SPRITES / f'{key}.png'
+                sprite.save(dst)
+                lib[key] = dict(sprite=str(dst.relative_to(ROOT)), width=0.4, name=need[key]['name'], source=str(png.relative_to(ROOT)),
+                                qa=chk, made=time.strftime('%Y-%m-%d'), licence='apache-2.0 (FLUX.2 klein output)',
+                                note='generated by the props step; width is the default 0.4 head diameters')
+                result['added'][key] = lib[key]
+                break
+        else:
+            result['failed'][key] = dict(name=need[key]['name'], candidates=[str(p.relative_to(ROOT)) for p, _, _ in tried],
+                                         reasons=[c['reasons'] for _, _, c in tried])
+            failed_rows.append((key, need[key]['name'], tried))
+    if result['added']:
+        save_library(lib)
+    if failed_rows:
+        result['sheet'] = str(sheet(failed_rows, episode.slug).relative_to(ROOT))
+    return result
+
+
+def view(result: dict) -> str:
+    lines = []
+    need = result['needed']
+    if not need:
+        return 'Props: every script prop comes from a library (base cut-outs, shared sprites, prop library, code-drawn).'
+    lines.append(f'Props to make ({len(need)}): ' + ', '.join(f"{d['name']} [{', '.join(d['beats'])}]" for d in need.values()))
+    for k, e in result['added'].items():
+        lines.append(f'  + {k}: {e["sprite"]} (passed QA, from {Path(e["source"]).name})')
+    for k, f in result['failed'].items():
+        lines.append(f'  ! {k} ({f["name"]}): failed QA on both seeds: ' + ' | '.join('; '.join(r) for r in f['reasons']))
+    if result['sheet']:
+        lines.append(f'Sheet of the failed props: {result["sheet"]}')
+    return '\n'.join(lines)

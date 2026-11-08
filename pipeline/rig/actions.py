@@ -139,7 +139,7 @@ def shrug(t0: float, t1: float, sign: int = 1):
     """Palms up and out, shoulders up, head tilt, small frown."""
     def fn(t, p):
         q = back_out((t - t0) / 0.35)
-        return replace(p, lh=(-0.78, -0.62 - 0.08 * q), rh=(0.78, -0.62 - 0.08 * q), l_shape='open', r_shape='open',
+        return replace(p, lh=(-0.78, -0.62 - 0.08 * q), rh=(0.78, -0.62 - 0.08 * q), l_shape='open_palm', r_shape='open_palm',
                        l_rot=-75, r_rot=75, l_bend=1, r_bend=1, head_tilt=sign * 9 * q, brow_worry=0.8, brow_raise=0.45,
                        smile=-0.35, stretch=0.02 * q, head_dy=0.03 * q)
     return fn
@@ -150,7 +150,7 @@ def facepalm(t0: float, side: str = 'r'):
     def fn(t, p):
         q = ease((t - t0) / 0.3)
         hand = (0.30 if side == 'r' else -0.30, -1.95)
-        kw = dict(rh=hand, r_shape='open', r_rot=-105, r_bend=1) if side == 'r' else dict(lh=hand, l_shape='open', l_rot=105, l_bend=1)
+        kw = dict(rh=hand, r_shape='open_palm', r_rot=-105, r_bend=1) if side == 'r' else dict(lh=hand, l_shape='open_palm', l_rot=105, l_bend=1)
         return replace(p, head_tilt=-6 * q if side == 'r' else 6 * q, eye_open=1 - 0.8 * q, brow_worry=1, smile=-0.5,
                        lean=-2 * q, **kw)
     return fn
@@ -165,7 +165,7 @@ def arms_wide(t0: float):
         crouch = keys(u, [(0, 0), (0.08, 0.10), (0.18, 0.0), (0.42, 0.0), (0.5, 0.08), (0.7, 0.0)])
         squash = keys(u, [(0, 0), (0.08, -0.05), (0.2, 0.06), (0.42, 0.0), (0.5, -0.06), (0.7, 0.0)])
         return replace(p, lh=(-1.05, -2.15 * up + (-0.3) * (1 - up)), rh=(1.05, -2.15 * up - 0.3 * (1 - up)),
-                       l_shape='open', r_shape='open', l_rot=-20, r_rot=20, lift=max(0.0, lift), crouch=max(0.0, crouch),
+                       l_shape='open_palm', r_shape='open_palm', l_rot=-20, r_rot=20, lift=max(0.0, lift), crouch=max(0.0, crouch),
                        stretch=squash, smile=1.0, mouth_open=0.85, eye_wide=0.6, brow_raise=0.8)
     return fn
 
@@ -174,7 +174,7 @@ def rub_hands(t0: float, t1: float, height: float = -0.78):
     """Both hands together in front of the chest, rubbing in anticipation."""
     def fn(t, p):
         k = math.sin(2 * math.pi * (t - t0) * 4.5) * 0.05
-        return replace(p, lh=(-0.10 + k, height), rh=(0.10 + k, height + 0.02), l_shape='relaxed', r_shape='relaxed',
+        return replace(p, lh=(-0.10 + k, height), rh=(0.10 + k, height + 0.02), l_shape='resting', r_shape='resting',
                        l_rot=-60, r_rot=60, l_bend=1, r_bend=1, smile=0.8, brow_raise=0.4, lean=-1.5)
     return fn
 

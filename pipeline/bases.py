@@ -51,10 +51,24 @@ def save_library(lib: dict):
 
 
 def describe(beat) -> dict:
-    """What a beat needs from a base: setting, pose, view and cast, read from the shot text."""
+    """What a beat needs from a base: setting, pose, view and cast. From the script's staging fields when
+    the beat has them (script v3), else read from the shot text with keywords (older episodes)."""
     text = f'{beat.visual_intent} {beat.shot.image_prompt}'.lower()
     cast = sorted(beat.shot.cast)
     view = 'top-down' if beat.shot.framing == 'top_down' or any(w in text for w in TOP_WORDS) else 'eye-level'
+    st = getattr(beat.shot, 'staging', None)
+    if st is not None:
+        setting = st.setting if st.setting != 'other' else re.sub(r'[^a-z0-9]+', '-', st.setting_detail.lower()).strip('-')
+        poses = {p.who: p.pose for p in st.poses if p.who in cast}
+        if not cast:
+            pose = 'insert'
+        elif len(set(poses.values())) == 1:
+            pose = next(iter(poses.values()))
+        else:
+            pose = 'mixed'
+        if pose == 'bed-awake' and view == 'top-down':
+            pose = 'bed-asleep-top'
+        return dict(setting=setting, pose=pose, view=view, cast=cast, poses=poses, source='staging')
     bed_hits = sum(w in text for w in BED_WORDS)
     if bed_hits >= 2 or (bed_hits and 'caf' not in text):          # "a quilt scrap on the café table" is the café
         setting = 'bedroom'
@@ -72,13 +86,15 @@ def describe(beat) -> dict:
         pose = 'standing'
     else:
         pose = 'seated-at-table'
-    return dict(setting=setting, pose=pose, view=view, cast=cast)
+    return dict(setting=setting, pose=pose, view=view, cast=cast, poses={who: pose for who in cast}, source='keywords')
 
 
 def wanted_name(desc: dict) -> str:
     who = '-'.join(desc['cast']) or 'empty'
     if desc['pose'] == 'insert':
         return f'{desc["setting"]}-insert'
+    if desc['pose'] == 'mixed':                      # two characters in different poses: one base each
+        return ' + '.join(f'{w}-{desc["poses"][w]}' + ('' if desc['setting'] == 'cafe' else f'-{desc["setting"]}') for w in desc['cast'])
     return f'{who}-{desc["pose"]}' + ('' if desc['setting'] == 'cafe' else f'-{desc["setting"]}')
 
 
@@ -99,13 +115,16 @@ def match(desc: dict, lib: dict):
         return None
     if desc['pose'] == 'insert':
         return next((n for n, e in live.items() if e.get('setting') == desc['setting'] and e.get('inserts')), None)
-    hit = find(desc['setting'], desc['pose'], desc['view'], desc['cast'])
-    if hit is None and desc['view'] == 'top-down' and not desc['pose'].endswith('-top'):
-        hit = find(desc['setting'], desc['pose'], 'eye-level', desc['cast'])
+    hit = None
+    if desc['pose'] != 'mixed':
+        hit = find(desc['setting'], desc['pose'], desc['view'], desc['cast'])
+        if hit is None and desc['view'] == 'top-down' and not desc['pose'].endswith('-top'):
+            hit = find(desc['setting'], desc['pose'], 'eye-level', desc['cast'])
     if hit is None and len(desc['cast']) > 1:
+        poses = desc.get('poses') or {who: desc['pose'] for who in desc['cast']}
         parts = []
         for who in desc['cast']:
-            one = find(desc['setting'], desc['pose'], 'eye-level', [who]) or next(
+            one = find(desc['setting'], poses[who], 'eye-level', [who]) or next(
                 (n for n, e in live.items() if e.get('setting') == desc['setting'] and e.get('cast') == [who]), None)
             if one is None:
                 return None
@@ -131,6 +150,13 @@ def missing(rows: list) -> dict:
     out = {}
     for r in rows:
         if r['base'] is None:
+            if r['pose'] == 'mixed':                 # one base per character
+                for who in r['cast']:
+                    one = dict(r, cast=[who], pose=r['poses'][who], poses={who: r['poses'][who]})
+                    name = wanted_name(one)
+                    out.setdefault(name, dict(setting=r['setting'], pose=one['pose'], view=r['view'], cast=[who],
+                                              beats=[])).setdefault('beats', []).append(r['beat'])
+                continue
             out.setdefault(r['wanted'], dict(setting=r['setting'], pose=r['pose'], view=r['view'], cast=r['cast'],
                                               beats=[])).setdefault('beats', []).append(r['beat'])
     return out
@@ -141,11 +167,14 @@ def plan_digest(rows: list) -> str:
 
 
 def plan_view(rows: list) -> str:
-    lines = ['Base plan (setting · pose · view · cast -> library base)']
+    src = {r.get('source', 'keywords') for r in rows}
+    how = 'from the script staging fields' if src == {'staging'} else 'from the shot text (keywords)' if src == {'keywords'} else 'staging where given, else keywords'
+    lines = [f'Base plan (setting · pose · view · cast -> library base), {how}']
     for r in rows:
         who = ', '.join(r['cast']) or 'no characters'
         base = r['base'] or f'MISSING -> {r["wanted"]}'
-        lines.append(f"  {r['beat']}  {r['setting']:8} {r['pose']:16} {r['view']:9} [{who}]  {base}")
+        pose = r['pose'] if r['pose'] != 'mixed' else '/'.join(r['poses'][w] for w in r['cast'])
+        lines.append(f"  {r['beat']}  {r['setting']:8} {pose:16} {r['view']:9} [{who}]  {base}")
     miss = missing(rows)
     if miss:
         lines.append(f'\n{len(miss)} base pose(s) to make and approve: ' + ', '.join(miss))

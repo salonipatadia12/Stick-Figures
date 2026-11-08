@@ -226,7 +226,27 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
 - **Hero shots:** an optional image-to-video lane for at most 1–2 beats, within the budget.
 - **Studio:** reads and edits `episode.json`.
 
-### 7. Any topic (north star, user 2026-11-08; planned, not started)
+### 7. Any topic (north star, user 2026-11-08; A, B, G built 2026-11-08, C and D built and awaiting their first run)
+
+**Where it stands (2026-11-08):**
+- A: `shot.staging` (setting, poses, actions, props) is in the schema (`pipeline/models.py`, prompt `script-v3`);
+  `Episode.check` validates it and prints feasibility warnings with staging suggestions; `pipeline/bases.py`
+  plans from it (keywords remain the fallback for v1/v2 episodes); the review shows a STAGE line per beat.
+- B: `pipeline/rig/verbs.py` (16 in-place verbs returning `Move`s with hold/flight schedules) and
+  `scripts/motion_test/compose_beats.py` (`for_episode(slug)` → BEATS, shots, LIBRARY_REPORT). Posture verbs cut
+  to the second base when the library has it, else a punch-in with a note. Run an episode with
+  `scripts/motion_test/episode_compose.py <slug>`.
+- C: `stick props <slug> [--generate]` (`pipeline/propgen.py`, `scripts/motion_test/flux_props.py`): text-to-image
+  at 512 px, key-out, QA (one piece, size, border, colour), prop library `styles/cozy/props/library.json`; a
+  sheet only for props that fail both seeds.
+- D: `stick pack starter --candidates` (`pipeline/basepack.py`): 24 bases, one sheet per setting under
+  `renders/bases/candidates/pack-starter-<setting>-candidates.jpg`; `--pick/--reject/--direction` as at the
+  bases gate. Building approved pack bases still needs a spec per base (`build_bases.py`); the plate-derived
+  spec helper is the next piece.
+- G: `qa.json['library']` on every render (`library_pct`, hand-written beats, per-beat detail); the runner
+  prints it. Video 2 scored 0 % (all beats hand-written), the salary episode composes at 100 % (untested on
+  screen).
+- E and F: not started.
 
 The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
 needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or

@@ -29,6 +29,14 @@ def script_view(episode, style=None, issues=()):
         out.append(wrap(motion, '    MOVE  '))
         if b.shot.pose_variants:
             out.append(wrap(' / '.join(b.shot.pose_variants), '    POSES '))
+        st = getattr(b.shot, 'staging', None)
+        if st is not None:
+            place = st.setting if st.setting != 'other' else f'other: {st.setting_detail}'
+            bits = [place] + [f'{p.who} {p.pose}' for p in st.poses]
+            bits += [f'{a.who} {a.verb}' + (f' {a.target}' if a.target else '') + f'@"{a.anchor}"' for a in st.actions]
+            if st.props:
+                bits.append('props: ' + ', '.join(p.name + (f' ({p.held_by})' if p.held_by else '') for p in st.props))
+            out.append(wrap(' · '.join(bits), '    STAGE '))
         if b.sfx:
             out.append(wrap(', '.join(f'{s.name}@"{s.anchor}"' for s in b.sfx), '    SFX   '))
         notes = []

@@ -67,5 +67,46 @@ class TextCheckTest(unittest.TestCase):
         self.assertEqual(r['caption_frames_too_small'], 1)
 
 
+class SafeAreaTest(unittest.TestCase):
+    """Overlay text is logged with its box and must stay inside the caption safe area (user, video 2 review)."""
+    def setUp(self):
+        O.take_text_log()
+
+    def test_slam_logs_its_box_and_slides_inside_the_safe_area(self):
+        from pipeline import captions as C
+        frame = Image.new('RGBA', (1080, 1920))
+        O.slam(frame, O.text_layer('Stress keeps you alert', 78), 2.0, 1.0, centre=(540, 1130))
+        box = O.take_text_log()[0]['box']
+        self.assertLessEqual(box[2], C.SAFE['right'])
+        self.assertGreaterEqual(box[0], C.SAFE['left'])
+
+    def test_a_too_wide_slam_is_drawn_smaller_not_clipped(self):
+        from pipeline import captions as C
+        frame = Image.new('RGBA', (1080, 1920))
+        O.slam(frame, O.text_layer('A sentence far too long for a phone screen', 90), 2.0, 1.0)
+        d = O.take_text_log()[0]
+        self.assertLessEqual(d['box'][2], C.SAFE['right'])
+        self.assertLess(d['em'], 90)
+        self.assertGreaterEqual(d['em'], 40)
+
+    def test_split_compare_fits_both_labels_inside_the_safe_area(self):
+        from pipeline import captions as C
+        frame = Image.new('RGBA', (1080, 1920))
+        O.split_compare(frame, 3.0, 'eight hours', 'eight good ones?', 1.0, 2.0, centre=(540, 330))
+        log = O.take_text_log()
+        self.assertEqual(len(log), 2)
+        self.assertLessEqual(max(d['box'][2] for d in log), C.SAFE['right'])
+        self.assertGreaterEqual(min(d['em'] for d in log), 40)
+
+    def test_text_check_fails_overlay_text_outside_the_safe_area(self):
+        r = qa.text_check([dict(t=1.0, label='x', em=60, box=[600, 300, 1000, 380], box_label='x')], [])
+        self.assertFalse(r['pass_'])
+        self.assertEqual(r['frames_outside_safe_area'], 1)
+        r = qa.text_check([dict(t=1.0, label='x', em=60, box=[100, 1400, 500, 1500], box_label='x')], [])
+        self.assertFalse(r['pass_'], 'bottom quarter')
+        r = qa.text_check([dict(t=1.0, label='x', em=60, box=[100, 300, 900, 380], box_label='x')], [])
+        self.assertTrue(r['pass_'])
+
+
 if __name__ == '__main__':
     unittest.main()

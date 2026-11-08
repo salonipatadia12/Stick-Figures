@@ -119,10 +119,32 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0) -> d
     small = [d for d in text_sizes if d['em'] < min_px]
     small_caps = [b for b in caption_boxes if b['font_size'] < min_px]
     offenders = sorted({d['label']: d['em'] for d in small}.items(), key=lambda kv: kv[1])
+    # Overlay text (slams, splits, checklists, labels) must stay inside the safe area like the captions do:
+    # off the right edge (phone UI), out of the bottom quarter (captions and the platform's own bar).
+    outside = [d for d in text_sizes if 'box' in d and (d['box'][2] > C.SAFE['right'] or d['box'][3] > C.SAFE['bottom']
+                                                          or d['box'][0] < C.SAFE['left'])]
+    out_labels = sorted({d['box_label']: d['box'] for d in outside}.items())
     return dict(min_px=min_px, frames_with_text=len(text_sizes),
                 smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
                 too_small=[dict(label=l, em=e) for l, e in offenders][:12], caption_frames_too_small=len(small_caps),
-                pass_=not small and not small_caps)
+                frames_outside_safe_area=len(outside), outside_safe_area=[dict(label=l, box=b) for l, b in out_labels][:12],
+                rightmost=max((d['box'][2] for d in text_sizes if 'box' in d), default=0),
+                lowest_bottom=max((d['box'][3] for d in text_sizes if 'box' in d), default=0),
+                pass_=not small and not small_caps and not outside)
+
+
+LIBRARY_TARGET_PCT = 80
+
+
+def library_report(summary: dict | None) -> dict:
+    """How much of the video came from the libraries alone (bases, verbs, overlays, props) versus hand-written beat
+    code. The target is 80 %+ (user, 2026-11-08). Reported, not a pass/fail gate: a hand-written beat is a
+    legitimate choice, but the number must be visible on every video."""
+    s = summary or dict(beats=0, library_beats=0, library_pct=0, per_beat={})
+    return dict(beats=s.get('beats', 0), library_beats=s.get('library_beats', 0), library_pct=s.get('library_pct', 0),
+                target_pct=LIBRARY_TARGET_PCT, meets_target=s.get('library_pct', 0) >= LIBRARY_TARGET_PCT,
+                hand_written_beats=sorted(k for k, r in s.get('per_beat', {}).items() if r.get('hand_written')),
+                per_beat=s.get('per_beat', {}))
 
 
 def characters_check() -> dict:
@@ -162,7 +184,7 @@ def contact_sheet(video: Path, plan: list, out: Path, cols: int = 5):
 
 
 def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, plan: list, voice: str,
-        text_sizes: list | None = None, ledger: Path | None = None) -> dict:
+        text_sizes: list | None = None, ledger: Path | None = None, library: dict | None = None) -> dict:
     duration = probe_duration(video)
     target = float(tl.get('target', 45))
     loud = sfx.loudness(video)
@@ -183,6 +205,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
                       pass_=abs(loud['integrated_lufs'] + 14.0) <= 1.0 and loud['true_peak_dbtp'] <= -1.0),
         characters=characters_check(),
         cost=dict(spent_usd=spent, cap_usd=2.0, note='only the Claude script call is paid; images, voice and rendering are local'),
+        library=library_report(library),
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())

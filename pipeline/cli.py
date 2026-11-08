@@ -215,6 +215,63 @@ def cmd_bases(args):
     return EXIT_GATE
 
 
+def cmd_props(args):
+    """List the script props no library has; with --generate, make them (FLUX text-to-image, cut, QA) and ask
+    only about the ones that fail."""
+    from . import propgen
+    episode, _ = store.load(args.episode)
+    result = propgen.run(episode, generate=args.generate)
+    print(propgen.view(result))
+    if result['failed']:
+        print(f'\nWAITING: {len(result["failed"])} prop(s) failed QA on both seeds. Tell me how each should look, name a '
+              'stand-in, or drop it from the script.')
+        return EXIT_GATE
+    if result['needed'] and not args.generate:
+        print('\nRun with --generate to make them (local FLUX, about 25 s per candidate).')
+    return 0
+
+
+def cmd_pack(args):
+    """The starter base pack: render candidates per setting and lay out one sheet per setting; record the user's
+    picks and rejections."""
+    from . import basepack
+    want = basepack.wanted(args.settings.split(',') if args.settings else None)
+    state = basepack.load_state(args.pack)
+    picks = dict(p.split('=', 1) for p in (args.pick or []))
+    rejects = dict(r.split('=', 1) if '=' in r else (r, '') for r in (args.reject or []))
+    unknown = [n for n in list(picks) + list(rejects) if n not in want]
+    if unknown:
+        print(f'Unknown pack bases: {unknown}')
+        return EXIT_ERROR
+    if picks or rejects:
+        for line in basepack.approve(state, picks, rejects, args.by, want):
+            print(line)
+    if args.candidates:
+        direction = dict(d.split('=', 1) for d in (args.direction or []))
+        from . import bases
+        lib = bases.library()
+        todo = {n: d for n, d in want.items() if lib.get(n, {}).get('status') not in ('approved', 'built')}
+        job_map = basepack.jobs(todo, state, direction)
+        print(f'Rendering {sum(len(j["seeds"]) for j in job_map.values())} candidates for {len(job_map)} bases with FLUX.2 klein (local, free)...')
+        for n, j in job_map.items():
+            print(f'  {n}: {j["job"]} seeds {j["seeds"]}')
+        found = basepack.render(job_map, args.pack)
+        sheets = basepack.sheets(found, job_map, args.pack)
+        state['candidates'].update(found)
+        state['sheets'] = sheets
+        state['made'] = time.strftime('%Y-%m-%dT%H:%M:%S')
+        if direction:
+            state.setdefault('direction', {}).update(direction)
+        basepack.save_state(state)
+        print('\nSheets (one per setting):')
+        for setting, path in sheets.items():
+            print(f'  {setting}: {path}')
+        print(f'\nWAITING: pick one candidate per base:\n  stick pack {args.pack} ' + ' '.join(f'--pick {n}=<file>' for n in list(found)[:3]) + ' ...')
+        return EXIT_GATE
+    print(basepack.status(state, want))
+    return 0
+
+
 def cmd_show(args):
     episode, _ = store.load(args.episode)
     style, issues = check(episode)
@@ -360,6 +417,21 @@ def build_parser():
     bs.add_argument('--direction', action='append', help='<wanted base>="<what the base should show>": the user\'s direction for a '
                                                          'redo round, used in place of the pose template')
     bs.set_defaults(func=cmd_bases)
+
+    pr = sub.add_parser('props', help='Make the props a script needs that no library has (FLUX, cut-out, QA); asks only on failure')
+    pr.add_argument('episode')
+    pr.add_argument('--generate', action='store_true', help='render, cut and check the missing props (local FLUX)')
+    pr.set_defaults(func=cmd_props)
+
+    pk = sub.add_parser('pack', help='The starter base pack: candidates per setting, one sheet each, then picks')
+    pk.add_argument('pack', nargs='?', default='starter')
+    pk.add_argument('--candidates', action='store_true', help='render candidates for every base not yet approved')
+    pk.add_argument('--settings', help='comma-separated subset of settings')
+    pk.add_argument('--pick', action='append', help='<base>=<candidate png>')
+    pk.add_argument('--reject', action='append', help='<base>[=reason]')
+    pk.add_argument('--direction', action='append', help='<base>="<what the base should show>" for a redo round')
+    pk.add_argument('--by', default='cli')
+    pk.set_defaults(func=cmd_pack)
 
     s = sub.add_parser('schema', help='Write the episode.json JSON schema')
     s.add_argument('--output')

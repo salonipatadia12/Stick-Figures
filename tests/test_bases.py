@@ -50,6 +50,41 @@ class BasePlanTest(unittest.TestCase):
         self.assertIsNone(bases.match(desc | dict(pose='bed-awake'), lib))
 
 
+class StagingPlanTest(unittest.TestCase):
+    """Script v3 beats are planned from their staging fields, not the prose."""
+    def _beat(self, **kw):
+        from pipeline.models import Beat
+        from pipeline_fixtures import beat, staging
+        b = beat('setup', 'Payday feels huge.', 'Something that mentions a bed and a quilt and a pillow by mistake.',
+                 [('push_in', '', '')], **kw)
+        return Beat.model_validate(dict(id='b02', **b))
+
+    def test_staging_wins_over_keywords(self):
+        from pipeline_fixtures import staging
+        b = self._beat(stage=staging(('lead',), 'cafe', 'seated-at-table'))
+        d = bases.describe(b)
+        self.assertEqual((d['setting'], d['pose'], d['source']), ('cafe', 'seated-at-table', 'staging'))
+        self.assertEqual(bases.match(d, CAFE_ONLY), 'lead-at-table')
+
+    def test_two_characters_in_different_poses_take_one_base_each(self):
+        from pipeline_fixtures import staging
+        st = staging(('lead', 'friend'), 'cafe', 'seated-at-table')
+        st['poses'][0]['pose'] = 'standing'
+        d = bases.describe(self._beat(cast=('lead', 'friend'), stage=st))
+        self.assertEqual(d['pose'], 'mixed')
+        self.assertEqual(bases.match(d, CAFE_ONLY), 'friend-at-table + lead-standing')
+        self.assertEqual(bases.wanted_name(d), 'friend-seated-at-table + lead-standing')
+
+    def test_an_other_setting_becomes_a_new_wanted_base(self):
+        from pipeline_fixtures import staging
+        d = bases.describe(self._beat(stage=staging(('lead',), 'other', 'standing', detail='A rooftop at night')))
+        self.assertEqual(d['setting'], 'a-rooftop-at-night')
+        self.assertIsNone(bases.match(d, CAFE_ONLY))
+        rows = [dict(beat='b02', **d, base=None, wanted=bases.wanted_name(d))]
+        self.assertEqual(list(bases.missing(rows)), ['lead-standing-a-rooftop-at-night'])
+        self.assertIn('staging', bases.plan_view(rows))
+
+
 if __name__ == '__main__':
     unittest.main()
 

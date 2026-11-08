@@ -116,7 +116,7 @@ BASES = {
         props=[dict(name='clock', box=(658, 560, 748, 688))],
         seats=[dict(name='lead', head=dict(centre=(302, 655), size=(363, 358), refine=False), face_lum=100, face_sat=130,
                     facing=1, torso='covered',
-                    shoulders=dict(l=(268, 862), r=(548, 782)), hip=None, rest=dict(l=(430, 915), r=(655, 872)))],
+                    shoulders=dict(l=(268, 862), r=(548, 782)), hip=None, rest=dict(l=(455, 1095), r=(705, 1035)))],   # arms lying on the quilt (user: the higher hands read as a 'W')
         places=dict(clock=dict(xy=(690, 650), width=0.33)),
         light='right'),
 }

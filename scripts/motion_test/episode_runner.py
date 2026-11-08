@@ -33,6 +33,19 @@ from pipeline import overlays as O  # noqa: E402
 from pipeline import sfx  # noqa: E402
 
 W, H, FPS = 1080, 1920, 30
+
+
+def text_summary(drawn: list) -> dict:
+    """One record per frame for QA: the smallest type drawn, and the text box that reaches furthest right/down."""
+    small = min(drawn, key=lambda d: d['em'])
+    out = dict(label=small['label'], em=small['em'])
+    boxed = [d for d in drawn if 'box' in d]
+    if boxed:
+        left = min(d['box'][0] for d in boxed)
+        far = max(boxed, key=lambda d: (d['box'][2] - 1080) + (d['box'][3] - 1440))      # the one nearest the right/bottom limits
+        out['box'] = [left, min(d['box'][1] for d in boxed), far['box'][2], max(d['box'][3] for d in boxed)]
+        out['box_label'] = far['label']
+    return out
 LEAD_IN, GAP, TAIL = 0.35, 0.25, 1.0
 RIG_CODE = ['pipeline/rig/puppet.py', 'pipeline/rig/hands.py', 'pipeline/rig/props.py', 'pipeline/rig/actions.py',
             'pipeline/rig/skeleton.py', 'pipeline/overlays.py', 'pipeline/captions.py', 'scripts/motion_test/beat_base.py',
@@ -52,8 +65,23 @@ class Runner:
 
     @property
     def beats(self):
+        """The beats module, or what `for_episode(slug)` composes from the script (compose_beats)."""
         import importlib
-        return importlib.import_module(self.beats_name)
+        mod = importlib.import_module(self.beats_name)
+        if hasattr(mod, 'for_episode'):
+            if getattr(self, '_composed', None) is None or self._composed.slug != self.slug:
+                self._composed = mod.for_episode(self.slug, overrides=getattr(self, 'overrides', None))
+            return self._composed
+        return mod
+
+    def library_summary(self) -> dict:
+        """Beats built from the libraries alone versus hand-written code (docs/PLAN.md §7 G)."""
+        beats = self.beats
+        if hasattr(beats, 'library_summary'):
+            return beats.library_summary()
+        rep = getattr(beats, 'LIBRARY_REPORT', {})
+        lib = sum(1 for r in rep.values() if not r.get('hand_written'))
+        return dict(beats=len(rep), library_beats=lib, library_pct=round(100 * lib / len(rep)) if rep else 0, per_beat=rep)
 
     # ---- narration and the timeline --------------------------------------------------------------
     def voice_clip(self, voice: str, beat: str):
@@ -148,8 +176,7 @@ class Runner:
                 boxes.append(dict(t=round(t, 3), **C.draw(frame, line, t)))
             drawn = O.take_text_log()
             if drawn:
-                small = min(drawn, key=lambda d: d['em'])
-                texts.append(dict(t=round(t, 3), **small))
+                texts.append(dict(t=round(t, 3), **text_summary(drawn)))
             proc.stdin.write(frame.convert('RGB').tobytes())
         proc.stdin.close()
         if proc.wait():
@@ -210,8 +237,9 @@ class Runner:
                 path = self.out / f'still-{s:05.2f}.jpg'
                 frame.convert('RGB').save(path, quality=90)
                 drawn = O.take_text_log()
-                small = min(drawn, key=lambda d: d['em']) if drawn else None
-                print(path, name, f"smallest text: {small['em']}px ({small['label']})" if small else '')
+                small = text_summary(drawn) if drawn else None
+                print(path, name, f"smallest text: {small['em']}px ({small['label']})" if small else '',
+                      f"text box right {small['box'][2]} bottom {small['box'][3]} ({small['box_label']})" if small and 'box' in small else '')
             return
         clip_dir = self.out / 'shots'
         clip_dir.mkdir(exist_ok=True)
@@ -252,5 +280,7 @@ class Runner:
         if not args.no_qa:
             from pipeline import qa
             report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes,
-                            ledger=ROOT / 'episodes' / self.slug / 'ledger.json')
+                            ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary())
             print(json.dumps(report['summary'], indent=1))
+            lib = report['library']
+            print(f"library: {lib['library_beats']}/{lib['beats']} beats from the libraries alone = {lib['library_pct']}% (target {lib['target_pct']}%)")

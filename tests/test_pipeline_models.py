@@ -105,6 +105,58 @@ class EpisodeRules(unittest.TestCase):
         self.assertEqual([i for i, (a, b) in enumerate(zip(digests, after)) if a != b], [3])
 
 
+def warnings(ep):
+    return [i.message for i in ep.check(CAST) if i.severity == 'warning']
+
+
+class StagingRules(unittest.TestCase):
+    """Script v3: the staging block is checked against the shot, and what the rig cannot stage is flagged."""
+    def test_reference_draft_stages_every_beat(self):
+        ep = episode()
+        self.assertTrue(all(b.shot.staging is not None for b in ep.beats))
+        self.assertEqual(errors(ep), [])
+
+    def test_poses_must_cover_the_cast_exactly(self):
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging']['poses'].append(dict(who='friend', pose='standing')))
+        self.assertTrue(any('one pose per cast id' in e for e in errors(ep)))
+
+    def test_action_anchor_must_be_spoken_and_actor_in_cast(self):
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging']['actions'].append(dict(who='lead', verb='shrug', target='', anchor='banana')))
+        self.assertTrue(any('anchor "banana"' in e for e in errors(ep)))
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging']['actions'].append(dict(who='boss', verb='shrug', target='', anchor='Payday')))
+        self.assertTrue(any('"boss"' in e for e in errors(ep)))
+
+    def test_posture_verbs_and_far_walks_are_flagged_as_cuts(self):
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging']['actions'].append(dict(who='lead', verb='stand_up', target='', anchor='Payday')))
+        self.assertTrue(any('match cut' in w for w in warnings(ep)))
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging']['actions'].append(dict(who='lead', verb='walk', target='across the room', anchor='Payday')))
+        self.assertTrue(any('cannot be animated' in w for w in warnings(ep)))
+
+    def test_crowds_animals_and_fast_action_are_flagged_with_simpler_staging(self):
+        ep = mutate(lambda d: d['beats'][1].update(visual_intent='A crowd of commuters runs for the train while a dog barks.'))
+        ws = ' '.join(warnings(ep))
+        self.assertIn('crowd', ws)
+        self.assertIn('animal', ws)
+        self.assertIn('fast physical action', ws)
+        self.assertIn('Suggest', ws)
+        self.assertEqual([e for e in errors(ep) if 'crowd' in e], [], 'warnings, not errors: the user decides at the gate')
+
+    def test_other_setting_needs_detail_and_warns_about_a_new_base(self):
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging'].update(setting='other', setting_detail=''))
+        self.assertTrue(any('no setting_detail' in e for e in errors(ep)))
+        ep = mutate(lambda d: d['beats'][1]['shot']['staging'].update(setting='other', setting_detail='a rooftop at night'))
+        self.assertTrue(any('bases gate' in w for w in warnings(ep)))
+
+    def test_episodes_written_before_v3_load_without_staging(self):
+        d = copy.deepcopy(salary_draft())
+        for b in d['beats']:
+            del b['shot']['staging']
+        ep = Episode(slug='old', topic='An older episode', beats=[Beat.model_validate(dict(id=f'b{i + 1:02d}', **b)) for i, b in enumerate(d['beats'])])
+        self.assertTrue(all(b.shot.staging is None for b in ep.beats))
+        with self.assertRaises(Exception):
+            ScriptDraft.model_validate(d)                    # but Claude's draft must always carry it
+
+
 class Schemas(unittest.TestCase):
     def test_structured_output_schema_is_api_compatible(self):
         schema = transform_schema(ScriptDraft)

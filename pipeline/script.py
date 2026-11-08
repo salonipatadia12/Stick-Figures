@@ -20,7 +20,7 @@ from . import config
 from .cost import token_cost, usage_dict
 from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest
 
-PROMPT_VERSION = 'script-v2'  # v2: direct web search so answers carry URL citations
+PROMPT_VERSION = 'script-v3'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props)
 RESEARCH_MAX_SEARCHES = 4
 RESEARCH_MAX_TOKENS = 4096
 # Search results are billed as input tokens and can't be counted before the call. This is the
@@ -74,6 +74,17 @@ Rules:
 10. IMAGE PROMPTS. Describe one painted frame for an image model: which cast ids appear, where,
    pose, expression, props, light and framing. No text, letters or numbers inside the picture.
    Keep recurring props and places consistent across beats. Do not restate the art style.
+11. STAGING. The video is built from libraries, so fill shot.staging exactly: setting from the list
+   (cafe, bedroom, office, kitchen, living-room, street, park, classroom, gym, car; "other" only if
+   none fits, with setting_detail); one pose per cast id (seated-at-table, standing, bed-edge,
+   bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, walking); 0-3
+   actions from reach, point, shrug, facepalm, pick_up, put_down, throw, drink, type, write, wave,
+   nod, shake_head, slump, jolt, gaze, each on a word of this beat's narration; 0-4 props with
+   where they sit and who holds them. Use at most 2 settings and 2 characters per video; characters
+   hold one pose per beat. What the characters CANNOT do: walk across a room, run, jump, fall,
+   fight, dance; crowds; animals. A change of posture (lie_down, sit_up, stand_up, walk) is staged
+   as a cut to another beat or base, so put it on the first word of a new beat. Stage such moments
+   through the moment before or after, a prop, the far background, or a diagram.
 
 Visual style of this channel:
 """

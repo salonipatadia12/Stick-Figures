@@ -3,12 +3,19 @@ import json
 from types import SimpleNamespace as NS
 
 
+def staging(cast=('lead',), setting='cafe', pose='seated-at-table', actions=(), props=(), detail=''):
+    """Script v3 staging block: one pose per cast id, actions as (who, verb, target, anchor), props as (name, held_by, where)."""
+    return dict(setting=setting, setting_detail=detail, poses=[dict(who=w, pose=pose) for w in cast],
+                actions=[dict(who=w, verb=v, target=t, anchor=a) for w, v, t, a in actions],
+                props=[dict(name=n, held_by=h, where=wh) for n, h, wh in props])
+
+
 def beat(role, narration, visual, motion, *, text='', cast=('lead',), framing='medium', poses=(), sfx=(),
-         sources=(), example=False, transition='cut'):
+         sources=(), example=False, transition='cut', stage=None):
     return dict(role=role, narration=narration, on_screen_text=text, visual_intent=visual,
                 shot=dict(framing=framing, cast=list(cast), image_prompt=f'Painted frame: {visual}',
                           pose_variants=list(poses), motion=[dict(recipe=r, anchor=a, detail=d) for r, a, d in motion],
-                          transition=transition),
+                          transition=transition, staging=stage or staging(cast)),
                 sfx=[dict(name=n, anchor=a) for n, a in sfx], source_ids=list(sources), illustrative_numbers=example)
 
 

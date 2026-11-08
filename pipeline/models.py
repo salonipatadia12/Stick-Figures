@@ -35,6 +35,27 @@ MotionRecipe = Literal[
 ANCHORED_RECIPES = {'punch_in', 'pose_swap', 'impact_shake', 'text_slam', 'number_counter',
                     'underline_draw', 'arrow_draw', 'icon_pop', 'checklist_tick'}
 MAX_ON_SCREEN_WORDS = 5
+
+# ---- staging vocabulary (script v3). The base library is keyed by setting + pose + cast; the action
+# library (pipeline/rig/actions.py) is keyed by verb. A script is composed from these, so the words are fixed.
+Setting = Literal['cafe', 'bedroom', 'office', 'kitchen', 'living-room', 'street', 'park', 'classroom', 'gym', 'car', 'other']
+PoseName = Literal['seated-at-table', 'standing', 'bed-edge', 'bed-awake', 'bed-asleep-top', 'seated-sofa', 'seated-desk',
+                   'seated-bench', 'driving', 'walking']
+Verb = Literal[
+    # arm and head verbs the rig performs in place
+    'reach', 'point', 'shrug', 'facepalm', 'pick_up', 'put_down', 'throw', 'drink', 'type', 'write', 'wave', 'nod',
+    'shake_head', 'slump', 'jolt', 'gaze',
+    # posture and travel: a painted torso cannot do these, so they are staged as a match cut between two bases
+    # of the same setting on the anchor word (walk: a pan, or the far-off drawn figure)
+    'lie_down', 'sit_up', 'stand_up', 'walk',
+]
+STAGING_VERBS = {'lie_down', 'sit_up', 'stand_up', 'walk'}
+MAX_ACTIONS, MAX_PROPS, MAX_CAST = 3, 4, 2
+# Things the approach cannot stage well; the script gate warns and suggests simpler staging (user item 8).
+CROWD = re.compile(r'\b(crowd|crowded|crowds|dozens of|hundreds of|a group of|audience|everyone in the|packed with people|queue of|line of people)\b', re.I)
+ANIMAL = re.compile(r'\b(dog|dogs|cat|cats|bird|birds|horse|horses|cow|cows|fish|animal|animals|pet|pets|puppy|kitten|pigeon|squirrel|insect|bee|bees|mouse|mice|rat|rats|wolf|lion|elephant)\b', re.I)
+FAST = re.compile(r'\b(runs?|running|sprints?|sprinting|jumps?|jumping|leaps?|falls?|falling|trips? over|fights?|fighting|dances?|dancing|chases?|chasing|punches|kicks?|climbs?|climbing|swims?|swimming|rides? a bike|cycling|skating)\b', re.I)
+WALK_FAR = re.compile(r'\b(across|around|through|down the|along|over to|out of|into|away|to the (door|window|other))\b', re.I)
 GREETING = re.compile(r"^\s*(hi|hey|hello|welcome|what'?s up|in this video|today,? (we|i)|let'?s talk|so,)\b", re.I)
 TALKING_HEAD = re.compile(r'talking head|talks? (directly )?(to|into) (the )?camera|speaks? to (the )?camera|addresses the viewer', re.I)
 # A digit that is not part of an ordinal date ("the 20th") counts as a number claim.
@@ -65,9 +86,40 @@ class SfxCue(Strict):
     anchor: str = Field(description="Exact word from this beat's narration where the sound lands.")
 
 
+class CastPose(Strict):
+    who: str = Field(description='A cast id from shot.cast.')
+    pose: PoseName = Field(description='The painted base pose this character holds for the whole beat.')
+
+
+class ActionCue(Strict):
+    who: str = Field(description='A cast id from shot.cast.')
+    verb: Verb = Field(description='One verb from the action library.')
+    target: str = Field(description='What the verb acts on: a prop name from props, a cast id, "window", "camera", '
+                                    'or empty string.')
+    anchor: str = Field(description="Exact word from THIS beat's narration where the action happens.")
+
+
+class PropCue(Strict):
+    name: str = Field(description='Short lowercase noun for one prop in the frame ("alarm clock", "coffee cup").')
+    held_by: str = Field(description='Cast id holding it at the start of the beat, or empty string.')
+    where: str = Field(description='Where it sits: "nightstand", "table", "left hand", "wall", "floor"…')
+
+
+class Staging(Strict):
+    """What the beat needs from the libraries: which painted base (setting + pose per character), which verbs
+    on which words, which props. The base planner and the composer read these fields, not the prose."""
+    setting: Setting = Field(description='The place. "other" only when none of the listed settings fits.')
+    setting_detail: str = Field(description='For "other": the place in 3-6 words. Otherwise empty string.')
+    poses: list[CastPose] = Field(description='One entry per cast id in shot.cast; empty for object-only inserts.')
+    actions: list[ActionCue] = Field(description='0-3 verbs, each on a narration word. Prefer the in-place verbs; '
+                                                 'lie_down/sit_up/stand_up/walk become a cut to another base.')
+    props: list[PropCue] = Field(description='0-4 props the picture needs beyond the base furniture.')
+
+
 class DraftShot(Strict):
     framing: Framing
     cast: list[str] = Field(description='Style cast ids visible in the frame; empty for object-only inserts.')
+    staging: Staging
     image_prompt: str = Field(description='One painted frame: setting, who is where, pose, expression, props, '
                                           'lighting. Concrete and visual. No text, numbers or letters in the art. '
                                           'Do not describe the art style; it is appended separately.')
@@ -104,6 +156,7 @@ class Layer(Strict):
 
 
 class Shot(DraftShot):
+    staging: Staging | None = None                     # None on episodes written before script v3 (keyword planning)
     layers: list[Layer] = Field(default_factory=list)  # filled by pipeline/layers.py (Phase 2)
 
 
@@ -250,12 +303,63 @@ class Episode(Strict):
             anchored = any(m.recipe in ANCHORED_RECIPES for m in b.shot.motion)
             if seconds > 2.5 and not anchored:
                 warn(where, f'~{seconds:.1f}s of narration with no word-anchored change; the picture may sit static')
+            if len(b.shot.cast) > MAX_CAST:
+                warn(where, f'{len(b.shot.cast)} characters in one frame; the bases hold at most {MAX_CAST}. Stage it as two shots')
+            self._check_staging(b, spoken, err, warn)
         expected = self.target_length * words_per_second
         words = self.word_count()
         if not 0.75 * expected <= words <= 1.2 * expected:
             warn('beats', f'{words} narration words ~ {words / words_per_second:.0f}s; target {self.target_length}s '
                           f'is ~{expected:.0f} words at {words_per_second} w/s')
         return issues
+
+    @staticmethod
+    def _check_staging(b, spoken, err, warn):
+        """Staging fields are consistent with the shot, and what the rig cannot stage well is flagged with a
+        simpler staging, at the script gate, before any base or render work (user item 8)."""
+        where = b.id
+        prose = f'{b.visual_intent} {b.shot.image_prompt}'
+        if CROWD.search(prose):
+            warn(where, f'crowd in the picture ("{CROWD.search(prose).group(0)}"): the rig draws at most a few far-off figures. '
+                        'Suggest: 3-6 small figures behind glass, or an empty place with signs of people')
+        if ANIMAL.search(prose):
+            warn(where, f'animal in the picture ("{ANIMAL.search(prose).group(0)}"): no animal rig. Suggest: a prop that implies it '
+                        '(a leash, a bowl, feathers), or leave it to the narration')
+        if FAST.search(prose):
+            warn(where, f'fast physical action ("{FAST.search(prose).group(0)}"): painted bases do not run, jump or fall. '
+                        'Suggest: the moment before or after (a frozen pose, impact_shake, a whip cut)')
+        st = b.shot.staging
+        if st is None:
+            return
+        posed = [p.who for p in st.poses]
+        if sorted(posed) != sorted(b.shot.cast):
+            err(where, f'staging.poses names {posed}, shot.cast is {b.shot.cast}; give exactly one pose per cast id')
+        if st.setting == 'other' and not st.setting_detail:
+            err(where, 'staging.setting is "other" with no setting_detail')
+        if st.setting == 'other':
+            warn(where, f'setting "{st.setting_detail}" is not in the library: a new base will stop at the bases gate')
+        if len(st.actions) > MAX_ACTIONS:
+            err(where, f'{len(st.actions)} actions; at most {MAX_ACTIONS} per beat')
+        if len(st.props) > MAX_PROPS:
+            err(where, f'{len(st.props)} props; at most {MAX_PROPS} per beat')
+        prop_names = {p.name for p in st.props}
+        for a in st.actions:
+            if a.who not in b.shot.cast:
+                err(where, f'action {a.verb} by "{a.who}", who is not in shot.cast')
+            if not a.anchor or a.anchor.casefold() not in spoken:
+                err(where, f'action {a.verb} anchor "{a.anchor}" is not in the narration')
+            if a.verb in ('pick_up', 'put_down', 'drink', 'throw') and a.target and a.target not in prop_names:
+                warn(where, f'{a.verb} targets "{a.target}", which is not listed in staging.props')
+            if a.verb in STAGING_VERBS:
+                if a.verb == 'walk' and WALK_FAR.search(a.target + ' ' + prose):
+                    warn(where, f'walk ("{a.target}"): walking across a room cannot be animated on a painted base. '
+                                'Suggest: cut to the arrival on the anchor word, or a pan over the far-off figure')
+                else:
+                    warn(where, f'{a.verb} on "{a.anchor}": a posture change is staged as a match cut between two bases of the '
+                                'same setting on that word (not a continuous move)')
+        for p in st.props:
+            if p.held_by and p.held_by not in b.shot.cast:
+                err(where, f'prop "{p.name}" held by "{p.held_by}", who is not in shot.cast')
 
 
 @dataclass

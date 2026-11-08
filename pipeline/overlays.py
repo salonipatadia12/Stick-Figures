@@ -30,8 +30,16 @@ TEXT_MIN_PX = 40                          # the smallest on-screen type that rea
 _text_log: list = []
 
 
-def note_text(label: str, em_px: float):
-    _text_log.append(dict(label=label, em=round(float(em_px), 1)))
+def note_text(label: str, em_px: float, box=None):
+    """box = (left, top, right, bottom) in frame pixels, so QA can check the text stays in the safe area."""
+    d = dict(label=label, em=round(float(em_px), 1))
+    if box is not None:
+        d['box'] = [int(round(v)) for v in box]
+    _text_log.append(d)
+
+
+def _box(xy, im: Image.Image):
+    return (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height)
 
 
 def take_text_log() -> list:
@@ -49,9 +57,10 @@ def place_text(frame: Image.Image, im: Image.Image, centre, scale: float = 1.0, 
     """Composite a text sprite centred at `centre`, scaled, and log the size its type ends up at.
     settled=False while it is still popping in (those frames are briefly small by design, not unreadable)."""
     sized = im if scale == 1.0 else im.resize((max(1, int(im.width * scale)), max(1, int(im.height * scale))), Image.BICUBIC)
-    frame.alpha_composite(sized, (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2) + dy))
+    xy = (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2) + dy)
+    frame.alpha_composite(sized, xy)
     if settled and 'em' in im.info:
-        note_text(im.info.get('label', '?'), im.info['em'] * scale)
+        note_text(im.info.get('label', '?'), im.info['em'] * scale, _box(xy, sized))
 
 
 @lru_cache(maxsize=32)
@@ -86,6 +95,17 @@ def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C
     """Text that slams in at t0 (overshoot and a little shake), optionally fading out at `until`."""
     if t < t0 or (until is not None and t > until + 0.25):
         return
+    from . import captions as C
+    avail = C.SAFE['right'] - C.SAFE['left'] - 20
+    if im.width > avail:                                          # too wide for the safe area: smaller, never clipped
+        f = avail / im.width
+        em = im.info.get('em', 0) * f
+        sm = im.resize((max(1, int(im.width * f)), max(1, int(im.height * f))), Image.BICUBIC)
+        if 'em' in im.info:
+            mark(sm, im.info.get('label', '?'), em)
+        im = sm
+    cx = max(C.SAFE['left'] + im.width / 2, min(centre[0], C.SAFE['right'] - im.width / 2))   # slide inside the safe area
+    centre = (cx, centre[1])
     u = t - t0
     s = 1.0 + 0.45 * (1 - back_out(u / 0.2, 2.2))
     shake = 10 * math.sin(u * 70) * math.exp(-u * 12)
@@ -93,9 +113,10 @@ def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C
     if until is not None and t > until:
         a = 1 - ease((t - until) / 0.25)
         sized.putalpha(sized.getchannel('A').point(lambda v: int(v * a)))
-    frame.alpha_composite(sized, (int(centre[0] - sized.width / 2 + shake), int(centre[1] - sized.height / 2)))
-    if 'em' in im.info:
-        note_text(im.info.get('label', '?'), im.info['em'] * s)
+    xy = (int(centre[0] - sized.width / 2 + shake), int(centre[1] - sized.height / 2))
+    frame.alpha_composite(sized, xy)
+    if 'em' in im.info and u > 0.3:                     # logged once settled: the overshoot dips below size by design
+        note_text(im.info.get('label', '?'), im.info['em'] * s, _box(xy, sized))
 
 
 def checklist(frame: Image.Image, t: float, rows: list, t_in: float, centre=TEXT_C, width: int = 470):
@@ -134,9 +155,10 @@ def checklist(frame: Image.Image, t: float, rows: list, t_in: float, centre=TEXT
     card = painterly(card, 4, 0.5)
     s = 0.6 + 0.4 * min(1.0, q)
     sized = card.resize((max(1, int(card.width * s)), max(1, int(card.height * s))), Image.BICUBIC)
-    frame.alpha_composite(sized, (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2)))
+    xy = (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2))
+    frame.alpha_composite(sized, xy)
     if q >= 1.0:                                  # settled; while it pops in it is briefly smaller
-        note_text('checklist: ' + ', '.join(r[0] for r in rows), (num_px if any(r[1] for r in rows) else lab_px) * s)
+        note_text('checklist: ' + ', '.join(r[0] for r in rows), (num_px if any(r[1] for r in rows) else lab_px) * s, _box(xy, sized))
 
 
 def _ink(d: ImageDraw.ImageDraw, pts: list, width: int, fill=INK):
@@ -210,7 +232,7 @@ def bubble(frame: Image.Image, t: float, t0: float, text: str, tail, offset=(60,
     y = tail[1] + offset[1] - sized.height + 60 * s
     frame.alpha_composite(sized, (int(x), int(y)))
     if q >= 1.0:
-        note_text('bubble: ' + text, 46 * s)
+        note_text('bubble: ' + text, 46 * s, _box((int(x), int(y)), sized))
 
 
 @lru_cache(maxsize=16)
@@ -330,16 +352,24 @@ def split_compare(frame: Image.Image, t: float, left: str, right: str, t_left: f
     the right at t_right; the divider grows between them."""
     if t < t_left:
         return
+    from . import captions as C
+    avail = C.SAFE['right'] - C.SAFE['left'] - 20                 # the pair must sit inside the safe area
     li, ri = text_layer(left, size), text_layer(right, size, fill=(255, 236, 190))
     total = li.width + ri.width + gap
-    x0 = centre[0] - total / 2
+    if total > avail:                                             # long labels: smaller type, never past the edge
+        size = max(TEXT_MIN_PX, int(size * avail / total))
+        li, ri = text_layer(left, size), text_layer(right, size, fill=(255, 236, 190))
+        total = li.width + ri.width + gap
+    x0 = max(C.SAFE['left'], min(centre[0] - total / 2, C.SAFE['right'] - total))
     ql = back_out((t - t_left) / 0.35, 1.5)
-    frame.alpha_composite(li, (int(x0 - (1 - ql) * 500), int(centre[1] - li.height / 2)))
-    note_text(left, size)
+    xy = (int(x0 - (1 - ql) * 500), int(centre[1] - li.height / 2))
+    frame.alpha_composite(li, xy)
+    note_text(left, size, _box(xy, li) if t - t_left > 0.4 else None)
     if t >= t_right:
         qr = back_out((t - t_right) / 0.35, 1.5)
-        frame.alpha_composite(ri, (int(x0 + li.width + gap + (1 - qr) * 500), int(centre[1] - ri.height / 2)))
-        note_text(right, size)
+        xy = (int(x0 + li.width + gap + (1 - qr) * 500), int(centre[1] - ri.height / 2))
+        frame.alpha_composite(ri, xy)
+        note_text(right, size, _box(xy, ri) if t - t_right > 0.4 else None)
         grow = ease((t - t_right) / 0.3)
         h = int((max(li.height, ri.height) - 30) * grow)
         d = ImageDraw.Draw(frame)
