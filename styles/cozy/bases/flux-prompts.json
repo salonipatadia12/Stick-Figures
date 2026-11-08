@@ -361,5 +361,43 @@
       122
     ],
     "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, now LYING IN BED ON THEIR BACK at night, seen from the side at the level of the bed, head on a pale pillow on the left, body under a patchwork quilt pulled up to the chest, both navy mitten hands resting on top of the quilt, a wooden nightstand with a round alarm clock and a small lamp glowing warm, a dark blue window with moonlight, cozy bedroom. Same proportions as the reference (very large round head), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-bed-awake-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-edge-s101.png",
+      "cand-bed-asleep-top-s112.png"
+    ],
+    "seeds": [
+      221,
+      222,
+      223
+    ],
+    "prompt": "Using the character, the room, the bed and the furniture from these images (keep the same bed, headboard, quilt pattern, pillow, nightstand and lamp): the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now LYING ON THEIR BACK IN THE SAME BED AT NIGHT, seen from beside the bed and slightly above: the round white head rests on the pale pillow against the wooden headboard, face turned up toward the ceiling with both eyes open and two small eyebrows, a calm natural face. The body is under the patchwork quilt of rust, cream and teal squares from the second image, pulled up to the chest, both navy mitten hands resting on top of the quilt. The small wooden nightstand from the first image stands right beside the bed within arm's reach, with ONE round alarm clock standing upright and level in the middle of its top, and the brass lamp switched on, glowing warm. Behind, a window with cool blue moonlight and a plain night sky, nothing in the window but sky. Warm lamp light on the quilt, cool moonlight from the window, cozy. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-bed-awake-r3": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-bed-edge-s101.png",
+      "cand-bed-asleep-top-s112.png"
+    ],
+    "seeds": [
+      321,
+      322,
+      323
+    ],
+    "prompt": "Using the character, the room, the bed and the furniture from these images (keep the same bed, headboard, quilt pattern, pillow, nightstand and lamp): the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now LYING FLAT ON THEIR BACK IN THE BED AT NIGHT: the whole body is stretched out along the mattress and hidden under the patchwork quilt of rust, cream and teal squares from the chest down to the feet, so no legs and no feet are visible and nothing hangs over the side of the bed. Seen from beside the bed and slightly above, the bed runs down the frame with the wooden headboard and the pale pillow at the top and the foot of the bed at the bottom. The round white head rests on the pillow, face turned up toward the ceiling with both eyes open and two small eyebrows, a calm natural face. Both navy mitten hands rest on top of the quilt over the chest. The small wooden nightstand from the first image stands right beside the pillow within arm's reach, with ONE round alarm clock standing upright and level in the middle of its top, and the brass lamp switched on, glowing warm. Behind, a window with cool blue moonlight and a plain night sky, nothing in the window but sky. Warm lamp light on the quilt, cool moonlight from the window, cozy. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
   }
 }

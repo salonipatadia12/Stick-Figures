@@ -188,12 +188,24 @@ def cmd_bases(args):
     miss = bases.missing(rows)
     if not args.candidates or not miss:
         return EXIT_GATE if miss and not episode.is_approved('bases') else 0
-    jobs = bases.candidate_jobs(miss)
-    print(f'\nRendering {sum(len(j["seeds"]) for j in jobs.values())} candidates with FLUX.2 klein (local, free)...')
+    meta = episode.meta.get('bases') or {}
+    direction = dict(d.split('=', 1) for d in (args.direction or []))
+    unknown = [w for w in direction if w not in miss]
+    if unknown:
+        print(f'--direction names bases that are not missing: {unknown}; missing: {sorted(miss)}')
+        return EXIT_ERROR
+    jobs = bases.candidate_jobs(miss, rejected=meta.get('rejected'), direction=direction)
+    rnd = max(j['round'] for j in jobs.values())
+    print(f'\nRendering {sum(len(j["seeds"]) for j in jobs.values())} candidates with FLUX.2 klein (local, free), round {rnd}...')
+    for w, j in jobs.items():
+        print(f'  {w}: {j["job"]} seeds {j["seeds"]}, references {j["images"]}')
     found = bases.render_candidates(jobs, episode.slug)
-    out = bases.sheet(found, episode.slug)
-    episode.meta['bases'] = dict(plan=[dict(beat=r['beat'], base=r['base'], wanted=r['wanted']) for r in rows],
-                                 candidates=found, sheet=str(out.relative_to(config.ROOT)), made=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    out = bases.sheet(found, episode.slug, rnd)
+    meta.update(plan=[dict(beat=r['beat'], base=r['base'], wanted=r['wanted']) for r in rows], candidates=found,
+                sheet=str(out.relative_to(config.ROOT)), made=time.strftime('%Y-%m-%dT%H:%M:%S'), round=rnd)
+    if direction:
+        meta.setdefault('direction', {}).update(direction)
+    episode.meta['bases'] = meta
     store.save(episode, base)
     print(f'Candidate sheet: {out}')
     for w, files in found.items():
@@ -227,10 +239,20 @@ def cmd_approve(args):
         rows = bases.plan(episode)
         miss = bases.missing(rows)
         picks = dict(p.split('=', 1) for p in (args.pick or []))
-        unknown = [w for w in picks if w not in miss]
-        if unknown or set(picks) != set(miss):
-            print(f'Pick exactly one candidate for each missing base {sorted(miss)}; got {sorted(picks)}.')
+        rejects = dict(r.split('=', 1) if '=' in r else (r, '') for r in (args.reject or []))
+        unknown = [w for w in list(picks) + list(rejects) if w not in miss]
+        if unknown or not (picks or rejects) or set(picks) & set(rejects):
+            print(f'Each --pick/--reject names one missing base {sorted(miss)} (not both for the same base); got '
+                  f'picks {sorted(picks)}, rejects {sorted(rejects)}.')
             return EXIT_ERROR
+        meta = episode.meta.setdefault('bases', {})
+        for wanted, reason in rejects.items():
+            files = (meta.get('candidates') or {}).get(wanted, [])
+            meta.setdefault('rejected', {}).setdefault(wanted, []).extend(f for f in files if f not in meta.get('rejected', {}).get(wanted, []))
+            meta.setdefault('rejections', []).append(dict(base=wanted, files=files, reason=reason, by=args.by,
+                                                          at=time.strftime('%Y-%m-%dT%H:%M:%S')))
+            print(f'  {wanted}: rejected {", ".join(Path(f).name for f in files) or "(no candidates on record)"}'
+                  + (f' ({reason})' if reason else ''))
         lib = bases.library()
         for wanted, cand in picks.items():
             path = Path(cand)
@@ -241,10 +263,19 @@ def cmd_approve(args):
                 return EXIT_ERROR
             bases.approve(lib, wanted, str(path.relative_to(config.ROOT)), miss[wanted], args.by)
             print(f'  {wanted} <- {path.name} (approved, to build)')
-        bases.save_library(lib)
+        if picks:
+            bases.save_library(lib)
+            episode.meta.setdefault('approval_log', []).append(dict(gate='bases', by=args.by, at=time.strftime('%Y-%m-%dT%H:%M:%S'),
+                                                                   picks=picks, rejects=sorted(rejects)))
+        still = bases.missing(bases.plan(episode, lib))
+        if still:
+            episode.approvals.pop('bases', None)
+            store.save(episode, base)
+            print(f'Still missing: {sorted(still)}. Make new candidates with\n  stick bases {episode.slug} --candidates'
+                  + ''.join(f' --direction {w}="<what the base should show>"' for w in sorted(still) if w in rejects))
+            return EXIT_GATE
         episode.approvals['bases'] = bases.plan_digest(rows)
-        episode.meta.setdefault('approval_log', []).append(dict(gate='bases', by=args.by, at=time.strftime('%Y-%m-%dT%H:%M:%S'),
-                                                               digest=episode.approvals['bases'][:12], picks=picks))
+        episode.meta['approval_log'][-1]['digest'] = episode.approvals['bases'][:12]
         store.save(episode, base)
         print(f'Approved bases for {episode.slug}. Build them with scripts/motion_test/build_bases.py, then render.')
         return 0
@@ -318,12 +349,16 @@ def build_parser():
     a.add_argument('episode')
     a.add_argument('--gate', default='script', choices=GATES)
     a.add_argument('--by', default='cli', help='who approved (recorded in the approval log)')
-    a.add_argument('--pick', action='append', help='bases gate: <wanted base>=<candidate png>, one per missing base')
+    a.add_argument('--pick', action='append', help='bases gate: <wanted base>=<candidate png>; bases may be picked over several calls')
+    a.add_argument('--reject', action='append', help='bases gate: <wanted base>[=reason]; its candidates are rejected and the next '
+                                                     '`stick bases --candidates` renders new ones')
     a.set_defaults(func=cmd_approve)
 
     bs = sub.add_parser('bases', help='Show which painted base each beat needs; make FLUX candidates for missing ones')
     bs.add_argument('episode')
     bs.add_argument('--candidates', action='store_true', help='render candidates for the missing bases and a review sheet')
+    bs.add_argument('--direction', action='append', help='<wanted base>="<what the base should show>": the user\'s direction for a '
+                                                         'redo round, used in place of the pose template')
     bs.set_defaults(func=cmd_bases)
 
     s = sub.add_parser('schema', help='Write the episode.json JSON schema')

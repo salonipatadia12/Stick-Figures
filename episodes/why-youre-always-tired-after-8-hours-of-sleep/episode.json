@@ -464,18 +464,30 @@
         "by": "user (approve with edits, 2026-11-07)",
         "at": "2026-11-07T19:15:35",
         "digest": "37e64ea8860a"
+      },
+      {
+        "gate": "bases",
+        "by": "user",
+        "at": "2026-11-08T02:00:51",
+        "picks": {
+          "lead-bed-edge-bedroom": "cand-bed-edge-s101.png",
+          "lead-bed-asleep-top-bedroom": "cand-bed-asleep-top-s112.png"
+        },
+        "rejects": [
+          "lead-bed-awake-bedroom"
+        ]
       }
     ],
     "bases": {
       "plan": [
         {
           "beat": "b01",
-          "base": null,
+          "base": "lead-bed-edge-bedroom",
           "wanted": "lead-bed-edge-bedroom"
         },
         {
           "beat": "b02",
-          "base": null,
+          "base": "lead-bed-asleep-top-bedroom",
           "wanted": "lead-bed-asleep-top-bedroom"
         },
         {
@@ -495,7 +507,7 @@
         },
         {
           "beat": "b06",
-          "base": null,
+          "base": "lead-bed-edge-bedroom",
           "wanted": "lead-bed-edge-bedroom"
         },
         {
@@ -515,21 +527,50 @@
         }
       ],
       "candidates": {
-        "lead-bed-edge-bedroom": [
-          "renders/bases/flux/cand-bed-edge-s101.png",
-          "renders/bases/flux/cand-bed-edge-s102.png"
-        ],
-        "lead-bed-asleep-top-bedroom": [
-          "renders/bases/flux/cand-bed-asleep-top-s111.png",
-          "renders/bases/flux/cand-bed-asleep-top-s112.png"
-        ],
         "lead-bed-awake-bedroom": [
-          "renders/bases/flux/cand-bed-awake-s121.png",
-          "renders/bases/flux/cand-bed-awake-s122.png"
+          "renders/bases/flux/cand-bed-awake-r3-s321.png",
+          "renders/bases/flux/cand-bed-awake-r3-s322.png",
+          "renders/bases/flux/cand-bed-awake-r3-s323.png"
         ]
       },
-      "sheet": "renders/bases/candidates/why-youre-always-tired-after-8-hours-of-sleep-candidates.jpg",
-      "made": "2026-11-07T19:19:09"
+      "sheet": "renders/bases/candidates/why-youre-always-tired-after-8-hours-of-sleep-candidates-r3.jpg",
+      "made": "2026-11-08T02:10:01",
+      "rejected": {
+        "lead-bed-awake-bedroom": [
+          "renders/bases/flux/cand-bed-awake-s121.png",
+          "renders/bases/flux/cand-bed-awake-s122.png",
+          "renders/bases/flux/cand-bed-awake-r2-s221.png",
+          "renders/bases/flux/cand-bed-awake-r2-s222.png",
+          "renders/bases/flux/cand-bed-awake-r2-s223.png"
+        ]
+      },
+      "rejections": [
+        {
+          "base": "lead-bed-awake-bedroom",
+          "files": [
+            "renders/bases/flux/cand-bed-awake-s121.png",
+            "renders/bases/flux/cand-bed-awake-s122.png"
+          ],
+          "reason": "user: face, clock placement and window; redo with s101/s112 continuity",
+          "by": "user",
+          "at": "2026-11-08T02:00:51"
+        },
+        {
+          "base": "lead-bed-awake-bedroom",
+          "files": [
+            "renders/bases/flux/cand-bed-awake-r2-s221.png",
+            "renders/bases/flux/cand-bed-awake-r2-s222.png",
+            "renders/bases/flux/cand-bed-awake-r2-s223.png"
+          ],
+          "reason": "pipeline: all three have the legs out of bed with feet on the floor; the brief says lying on the back under the quilt",
+          "by": "pipeline",
+          "at": "2026-11-08T02:06:11"
+        }
+      ],
+      "round": 3,
+      "direction": {
+        "lead-bed-awake-bedroom": "now LYING FLAT ON THEIR BACK IN THE BED AT NIGHT: the whole body is stretched out along the mattress and hidden under the patchwork quilt of rust, cream and teal squares from the chest down to the feet, so no legs and no feet are visible and nothing hangs over the side of the bed. Seen from beside the bed and slightly above, the bed runs down the frame with the wooden headboard and the pale pillow at the top and the foot of the bed at the bottom. The round white head rests on the pillow, face turned up toward the ceiling with both eyes open and two small eyebrows, a calm natural face. Both navy mitten hands rest on top of the quilt over the chest. The small wooden nightstand from the first image stands right beside the pillow within arm's reach, with ONE round alarm clock standing upright and level in the middle of its top, and the brass lamp switched on, glowing warm. Behind, a window with cool blue moonlight and a plain night sky, nothing in the window but sky. Warm lamp light on the quilt, cool moonlight from the window, cozy"
+      }
     }
   }
 }

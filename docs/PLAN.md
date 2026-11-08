@@ -136,7 +136,12 @@ step, not a one-off (user, 2026-11-07):
    candidates per missing base (local, free) and a review sheet in `renders/bases/candidates/`.
 3. The user picks one per base: `stick approve <slug> --gate bases --pick <base>=<file> ...`. The pick is
    recorded in the library with its provenance, and the base is built into layers for this and every
-   later video.
+   later video. Picks may come over several calls; the gate closes when nothing is missing.
+4. The user may reject a base's candidates (`--reject <base>="reason"`, recorded in
+   `episode.meta['bases']['rejections']`). The next `stick bases --candidates --direction <base>="..."`
+   renders a redo round: three new seeds, the user's direction in place of the pose template, and the
+   approved bases of the same setting as FLUX reference images so the new pose keeps the same room, bed
+   and props. Each round gets its own sheet and jobs file (`-r2`), earlier ones stay on disk.
 
 The description step is keyword-based for now; the next script prompt version should ask Claude for
 explicit `setting` and `pose` fields per beat (a paid-prompt change, so not done mid-episode).

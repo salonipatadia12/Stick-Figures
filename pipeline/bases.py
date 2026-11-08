@@ -9,7 +9,10 @@ lying down). This module:
    in `.venvs/mlx` and lays out a candidate sheet for the user,
 4. stops at the `bases` approval gate. Nothing is used until the user picks a candidate per base; the
    pick is recorded in the library with its provenance, and the base is then built into layers
-   (`scripts/motion_test/build_bases.py`) for this and every later video.
+   (`scripts/motion_test/build_bases.py`) for this and every later video. The user may also reject a
+   base's candidates (`stick approve --gate bases --reject <base>`): the next `stick bases --candidates`
+   round renders new seeds, with the user's direction (`--direction <base>="..."`) replacing the pose
+   template, and with the approved bases of the same setting as reference images for continuity.
 
 The description step reads the shot's free text with keywords, so it is a first pass: the base plan is
 printed for review and can be corrected by hand in `episode.json` (`shot.layers` may name a base).
@@ -173,8 +176,22 @@ REFERENCES = {'lead': ['04-waiting.png', '01-alone.png'], 'friend': ['03-togethe
 SEEDS = {'bed-edge': [101, 102], 'bed-asleep-top': [111, 112], 'bed-awake': [121, 122]}
 
 
-def candidate_jobs(miss: dict) -> dict:
-    """FLUX.2 klein edit jobs (two seeds each) for the missing bases, in flux_bases.py's job format."""
+def references_for(desc: dict, lib: dict, who: str) -> list:
+    """Reference images for a candidate: the approved bases of the same setting (so a new pose keeps the same
+    room, bed and props), else the character references from The Empty Chair."""
+    same = [e['source'] for e in lib.values() if e.get('status') in ('approved', 'built') and e.get('setting') == desc['setting']
+            and who in e.get('cast', []) and e.get('source')]
+    return [Path(src).name for src in same[:2]] or REFERENCES.get(who, REFERENCES['lead'])
+
+
+def candidate_jobs(miss: dict, lib: dict | None = None, rejected: dict | None = None, direction: dict | None = None) -> dict:
+    """FLUX.2 klein edit jobs for the missing bases, in flux_bases.py's job format.
+
+    Two seeds on the first round. When a base's candidates were rejected (`rejected[wanted]` lists them), the job
+    gets a round suffix, three new seeds and, if given, the user's `direction[wanted]` in place of the pose template.
+    """
+    lib = library() if lib is None else lib
+    rejected, direction = rejected or {}, direction or {}
     jobs = {}
     for wanted, d in miss.items():
         if d['pose'] == 'insert':
@@ -183,11 +200,24 @@ def candidate_jobs(miss: dict) -> dict:
         job = 'cand-' + d['pose'] if who == 'lead' else f'cand-{who}-{d["pose"]}'
         if d['setting'] != 'cafe' and d['pose'] in ('standing', 'seated-at-table'):
             job += f'-{d["setting"]}'
-        pose = POSES.get(d['pose'], 'in a new pose that fits the scene, in {setting}.').format(setting=SETTINGS.get(d['setting'], d['setting']))
-        prompt = f'Using the character from these images: {CHARACTER.get(who, CHARACTER["lead"])}, {pose} {STYLE}'
+        rnd = 1 + len({Path(f).name.rsplit('-s', 1)[0] for f in rejected.get(wanted, [])})
         base_seed = sum(ord(c) for c in job) % 900 + 100
-        jobs[wanted] = dict(job=job, images=REFERENCES.get(who, REFERENCES['lead']), seeds=SEEDS.get(d['pose'], [base_seed, base_seed + 1]),
-                            prompt=prompt)
+        seeds = SEEDS.get(d['pose'], [base_seed, base_seed + 1])
+        if rnd > 1:
+            job += f'-r{rnd}'
+            seeds = [seeds[0] + 100 * (rnd - 1) + i for i in range(3)]
+        images = references_for(d, lib, who)
+        setting = SETTINGS.get(d['setting'], d['setting'])
+        if wanted in direction:
+            pose = direction[wanted].strip().rstrip('.') + '.'
+            lead_in = ('Using the character, the room, the bed and the furniture from these images (keep the same bed, '
+                       'headboard, quilt pattern, pillow, nightstand and lamp): ' if images != REFERENCES.get(who, REFERENCES['lead'])
+                       else 'Using the character from these images: ')
+        else:
+            pose = POSES.get(d['pose'], 'in a new pose that fits the scene, in {setting}.').format(setting=setting)
+            lead_in = 'Using the character from these images: '
+        prompt = f'{lead_in}{CHARACTER.get(who, CHARACTER["lead"])}, {pose} {STYLE}'
+        jobs[wanted] = dict(job=job, images=images, seeds=seeds, prompt=prompt, round=rnd)
     return jobs
 
 
@@ -197,14 +227,16 @@ def render_candidates(jobs: dict, slug: str) -> dict:
     todo = [name for name, j in spec.items() if not all((FLUX_OUT / f'{name}-s{s}.png').exists() for s in j['seeds'])]
     if todo:
         CANDIDATES.mkdir(parents=True, exist_ok=True)
-        jobs_file = CANDIDATES / f'{slug}-jobs.json'
+        rnd = max(j.get('round', 1) for j in jobs.values())
+        jobs_file = CANDIDATES / (f'{slug}-jobs.json' if rnd == 1 else f'{slug}-jobs-r{rnd}.json')
         jobs_file.write_text(json.dumps(spec, indent=1))
         subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_bases.py'), str(jobs_file), *todo], check=True)
     return {w: [str((FLUX_OUT / f"{j['job']}-s{s}.png").relative_to(ROOT)) for s in j['seeds']] for w, j in jobs.items()}
 
 
-def sheet(found: dict, slug: str) -> Path:
-    """One row per wanted base, one labelled thumbnail per candidate, for the approval."""
+def sheet(found: dict, slug: str, rnd: int = 1) -> Path:
+    """One row per wanted base, one labelled thumbnail per candidate, for the approval. Later rounds get their
+    own file, so earlier sheets stay on disk."""
     from PIL import Image, ImageDraw, ImageFont
     font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf', 22)
     tw, th, pad, gap = 360, 640, 44, 12
@@ -221,7 +253,7 @@ def sheet(found: dict, slug: str) -> Path:
             im.paste(tile, (x, y + pad))
             d.text((x, y + pad + th + 10), Path(f).name, font=font, fill=(30, 30, 50))
     CANDIDATES.mkdir(parents=True, exist_ok=True)
-    out = CANDIDATES / f'{slug}-candidates.jpg'
+    out = CANDIDATES / (f'{slug}-candidates.jpg' if rnd == 1 else f'{slug}-candidates-r{rnd}.jpg')
     im.save(out, quality=90)
     return out
 

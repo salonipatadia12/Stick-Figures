@@ -49,5 +49,31 @@
   "source": "renders/bases/flux/cand-lead-standing-b-s62.png",
   "approved": "2026-11-06",
   "by": "user"
+ },
+ "lead-bed-edge-bedroom": {
+  "status": "approved",
+  "setting": "bedroom",
+  "pose": "bed-edge",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-bed-edge-s101.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+ },
+ "lead-bed-asleep-top-bedroom": {
+  "status": "approved",
+  "setting": "bedroom",
+  "pose": "bed-asleep-top",
+  "view": "top-down",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-bed-asleep-top-s112.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
  }
 }
