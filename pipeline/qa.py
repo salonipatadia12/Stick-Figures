@@ -76,8 +76,9 @@ def norm(word: str) -> str:
     return re.sub(r"[^a-z0-9']", '', w)
 
 
-NUMBER_WORDS = {'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'ten': '10', 'twenty': '20', 'fifty': '50',
-                'hundred': '100', 'thousand': '1000'}
+NUMBER_WORDS = {'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6', 'seven': '7', 'eight': '8',
+                'nine': '9', 'ten': '10', 'eleven': '11', 'twelve': '12', 'fifteen': '15', 'twenty': '20', 'thirty': '30', 'forty': '40',
+                'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90', 'hundred': '100', 'thousand': '1000'}
 
 
 def words_check(script_words: list, heard: list) -> dict:
