@@ -142,7 +142,8 @@ def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
         return result
     DIR.mkdir(parents=True, exist_ok=True)
     for stage in ('scenes', 'variants'):             # variants are edits of scenes, so scenes go first
-        part = {k: d for k, d in want.items() if bool(d.get('base')) == (stage == 'variants')}
+        part = {k: d for k, d in want.items() if bool(d.get('base')) == (stage == 'variants')
+                and (stage == 'scenes' or d['base'] in lib)}   # a variant waits for its scene to exist
         if not part:
             continue
         jm = jobs(part)
@@ -164,7 +165,6 @@ def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
         save_library(lib)
         if result['failed']:
             result['sheet'] = str(sheet(result['failed'], results, episode.slug).relative_to(ROOT))
-            break
     return result
 
 

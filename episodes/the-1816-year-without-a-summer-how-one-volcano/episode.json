@@ -80,7 +80,7 @@
   {
    "id": "b02",
    "role": "setup",
-   "narration": "In April 1815, Tambora erupted. Within a day, it released an estimated 53 to 58 million tonnes of sulfur dioxide.",
+   "narration": "In April 1815, Tambora erupted. It released an estimated 53 to 58 million tonnes of sulfur dioxide.",
    "on_screen_text": "53–58 million tonnes of SO₂",
    "visual_intent": "A notebook sketch of a smoking volcano on the table, with the lead pointing at it as grey plumes are drawn rising from the peak.",
    "shot": {
@@ -293,7 +293,7 @@
   {
    "id": "b05",
    "role": "reveal",
-   "narration": "Together they formed a veil that bounced sunlight back to space.",
+   "narration": "They formed a veil that bounced sunlight back to space.",
    "on_screen_text": "",
    "visual_intent": "The friend points at the window as a thin veil hangs across the sky and sunbeams hit it and bounce away.",
    "shot": {
@@ -450,7 +450,7 @@
       },
       {
        "who": "friend",
-       "verb": "shrug",
+       "verb": "nod",
        "target": "",
        "anchor": "Virginia"
       }
@@ -573,7 +573,7 @@
   {
    "id": "b09",
    "role": "payoff",
-   "narration": "So that's how one volcano cancelled summer: a veil of sulfur, high above everyone.",
+   "narration": "That's how one volcano cancelled summer: a veil of sulfur, high above everyone.",
    "on_screen_text": "",
    "visual_intent": "The lead and friend review a notebook sketch showing the volcano, the veil and a cooler sun, ticking off the chain of cause and effect.",
    "shot": {

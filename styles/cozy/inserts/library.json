@@ -1,0 +1,142 @@
+{
+ "summer-village": {
+  "scene": "a small New England village green on a bright summer afternoon: a white wooden church with a steeple, picket fences, leafy maple trees, a dirt road, warm sunshine",
+  "source": "renders/inserts/flux/scene-summer-village-s151.png",
+  "file": "styles/cozy/inserts/summer-village.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a small New England village green on a bright summer afternoon: a white wooden church with a steeple, picket fences, leafy maple trees, a dirt road, warm sunshine. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1727,
+   "contrast": 66.7,
+   "mean": 149.2
+  },
+  "made": "2026-11-08",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "volcano-erupting": {
+  "scene": "a tall volcano on a tropical island erupting at dusk, a huge billowing grey ash column rising into the sky, glowing orange at the crater, palm trees and the sea in the foreground",
+  "source": "renders/inserts/flux/scene-volcano-erupting-s378.png",
+  "file": "styles/cozy/inserts/volcano-erupting.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a tall volcano on a tropical island erupting at dusk, a huge billowing grey ash column rising into the sky, glowing orange at the crater, palm trees and the sea in the foreground. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.093,
+   "contrast": 41.3,
+   "mean": 107.4
+  },
+  "made": "2026-11-08",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "ash-falling-coast": {
+  "scene": "a tropical coast just after a great eruption: grey ash drifting down onto palm trees, a beach and a calm sea, a darkened sky, a faint pale haze layer high above the clouds",
+  "source": "renders/inserts/flux/scene-ash-falling-coast-s378.png",
+  "file": "styles/cozy/inserts/ash-falling-coast.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a tropical coast just after a great eruption: grey ash drifting down onto palm trees, a beach and a calm sea, a darkened sky, a faint pale haze layer high above the clouds. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0762,
+   "contrast": 44.7,
+   "mean": 94.3
+  },
+  "made": "2026-11-08",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "earth-haze-layer": {
+  "scene": "the curved edge of the Earth seen from very high up, the blue atmosphere glowing along the horizon, a thin pale yellow-white haze layer floating above it, black space with a few stars, sunlight from the left",
+  "source": "renders/inserts/flux/scene-earth-haze-layer-s288.png",
+  "file": "styles/cozy/inserts/earth-haze-layer.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: the curved edge of the Earth seen from very high up, the blue atmosphere glowing along the horizon, a thin pale yellow-white haze layer floating above it, black space with a few stars, sunlight from the left. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0391,
+   "contrast": 71.9,
+   "mean": 72.5
+  },
+  "made": "2026-11-08",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "street-noon": {
+  "scene": "a quiet painted street corner at noon: brick shopfronts, a lamp post, a tree with dappled shade, a wide clear bright blue sky above the rooftops, the sun out of view",
+  "source": "renders/inserts/flux/scene-street-noon-s550.png",
+  "file": "styles/cozy/inserts/street-noon.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a quiet painted street corner at noon: brick shopfronts, a lamp post, a tree with dappled shade, a wide clear bright blue sky above the rooftops, the sun out of view. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1723,
+   "contrast": 50.6,
+   "mean": 120.1
+  },
+  "made": "2026-11-08",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "mars-day": {
+  "scene": "a rocky Martian desert landscape in daytime: rust-red rocks and dunes, a distant crater rim, a hazy butterscotch-pink sky",
+  "source": "renders/inserts/flux/scene-mars-day-s199.png",
+  "file": "styles/cozy/inserts/mars-day.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a rocky Martian desert landscape in daytime: rust-red rocks and dunes, a distant crater rim, a hazy butterscotch-pink sky. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0846,
+   "contrast": 59.9,
+   "mean": 135.4
+  },
+  "made": "2026-11-08",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "street-noon--at-sunset-the-whole-sky-glowing-deep-ora": {
+  "scene": "at sunset, the whole sky glowing deep orange and red, long warm shadows",
+  "source": "renders/inserts/flux/scene-street-noon--at-sunset-the-whole-sky-glowing-deep-ora-s345.png",
+  "file": "styles/cozy/inserts/street-noon--at-sunset-the-whole-sky-glowing-deep-ora.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but at sunset, the whole sky glowing deep orange and red, long warm shadows. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "street-noon",
+  "qa": {
+   "edges": 0.058,
+   "contrast": 27.2,
+   "mean": 45.5
+  },
+  "made": "2026-11-08",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "doorway-threshold": {
+  "scene": "an open wooden doorway seen straight on between a warm living room with a rust-coloured sofa and a cozy kitchen with open shelves and jars, the threshold strip on the wooden floor clearly visible, soft daylight",
+  "source": "renders/inserts/flux/scene-doorway-threshold-s491.png",
+  "file": "styles/cozy/inserts/doorway-threshold.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: an open wooden doorway seen straight on between a warm living room with a rust-coloured sofa and a cozy kitchen with open shelves and jars, the threshold strip on the wooden floor clearly visible, soft daylight. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.115,
+   "contrast": 52.2,
+   "mean": 127.2
+  },
+  "made": "2026-11-08",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "frosted-farm-may": {
+  "scene": "a New England farm in late spring: rows of young green crops and blossoming apple trees covered in white frost, a red barn, a split-rail fence, a pale cold early-morning sky",
+  "source": "renders/inserts/flux/scene-frosted-farm-may-s298.png",
+  "file": "styles/cozy/inserts/frosted-farm-may.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a New England farm in late spring: rows of young green crops and blossoming apple trees covered in white frost, a red barn, a split-rail fence, a pale cold early-morning sky. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1784,
+   "contrast": 65.0,
+   "mean": 169.1
+  },
+  "made": "2026-11-08",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "summer-village--under-a-heavy-cold-grey-sky-in-summer-th": {
+  "scene": "under a heavy cold grey sky in summer, the leaves pale and limp, a thin white frost on the grass",
+  "source": "renders/inserts/flux/scene-summer-village--under-a-heavy-cold-grey-sky-in-summer-th-s581.png",
+  "file": "styles/cozy/inserts/summer-village--under-a-heavy-cold-grey-sky-in-summer-th.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but under a heavy cold grey sky in summer, the leaves pale and limp, a thin white frost on the grass. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "summer-village",
+  "qa": {
+   "edges": 0.1261,
+   "contrast": 29.5,
+   "mean": 121.1
+  },
+  "made": "2026-11-08",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ }
+}

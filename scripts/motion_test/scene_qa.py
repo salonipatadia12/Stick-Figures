@@ -39,17 +39,22 @@ def check(path: Path) -> dict:
         reasons.append(f'too dark (mean {lum.mean():.0f})')
     if (lum > 245).mean() > 0.35:
         reasons.append('blown out')
-    try:
-        heads = SP._head_circles(im, 1, lum, sat, np.ones((h, w), bool))
-        cx, cy, r = heads[0]
-        # a sun or moon is a bright disc too; a character's head has a dark outline all round and dark eye marks inside
+    # a character's head: a white disc with a dark outline nearly all round, almost all white inside (over 88 %) with
+    # two small dark eye marks (0.5-8 % dark). Trees, windows and clouds that pass the circle test are far less white
+    # inside or far darker (measured 2026-11-08: heads 95 % white / 3-5 % dark; frosted trees 48-78 % / 10-13 %).
+    for tier in ((0.8, 0.5), (0.65, 0.45), (0.5, 0.4)):
+        try:
+            cx, cy, r = SP._head_circles(im, 1, lum, sat, np.ones((h, w), bool), tiers=(tier,))[0]
+        except RuntimeError:
+            continue
         m = np.zeros((h, w), np.uint8)
         cv2.circle(m, (int(cx), int(cy)), int(r * 0.7), 255, -1)
-        dark_inside = float((lum[m > 0] < 90).mean())
-        if dark_inside > 0.01:
+        inside = im[m > 0].astype(np.float32)
+        dark = float((inside.mean(-1) < 90).mean())
+        white = float(((inside.mean(-1) > 170) & (inside.max(-1) - inside.min(-1) < 50)).mean())
+        if white > 0.88 and 0.005 < dark < 0.08:
             reasons.append(f'a character-like head at ({float(cx):.0f},{float(cy):.0f})')
-    except RuntimeError:
-        pass
+            break
     score = float(density * 100 + contrast / 10 - abs(float(lum.mean()) - 135) / 20)
     return dict(path=str(path), ok=not reasons, reasons=reasons, score=round(score, 2),
                 stats=dict(edges=round(density, 4), contrast=round(contrast, 1), mean=round(float(lum.mean()), 1)))

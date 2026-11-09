@@ -33,7 +33,8 @@ BAND = {'sky': (0.12, 0.30), 'top': (0.05, 0.2), 'horizon': (0.36, 0.48), 'centr
         '': (0.14, 0.30), 'peak': (0.2, 0.34), 'left': (0.14, 0.3), 'right': (0.14, 0.3)}
 TINT = {'blue': (95, 150, 235), 'red': (236, 84, 52), 'orange': (246, 140, 58), 'gold': (255, 200, 110), 'warm': (255, 196, 120),
         'cold': (140, 180, 235), 'grey': (150, 152, 162), 'gray': (150, 152, 162), 'night': (40, 52, 96), 'dusk': (150, 90, 120),
-        'pink': (236, 150, 160), 'green': (110, 170, 110), 'noon': (200, 225, 255), 'violet': (150, 100, 210)}
+        'pink': (236, 150, 160), 'green': (110, 170, 110), 'noon': (200, 225, 255), 'violet': (150, 100, 210),
+        'butterscotch': (224, 164, 96), 'mars-dusk': (138, 98, 84)}
 
 
 @dataclass
@@ -177,10 +178,10 @@ class InsertScene:
             ys = np.linspace(1.0, 0.45, H, dtype=np.float32)[:, None, None]
             lum = arr.mean(-1, keepdims=True)
             coloured = np.clip(lum / 140.0 * tint, 0, 255)
-            strength = 0.5 * q * ys
+            strength = 0.68 * q * ys
             out = arr * (1 - strength) + coloured * strength
-            if b_name in ('cold', 'night', 'grey', 'gray', 'dusk'):
-                out *= 1 - 0.12 * q
+            if b_name in ('cold', 'night', 'grey', 'gray', 'dusk', 'mars-dusk'):
+                out *= 1 - (0.22 if b_name == 'mars-dusk' else 0.12) * q
             return out
         if e.kind == 'dim':
             q = ease(_ramp(t, e.at if e.at is not None else self.t0, 1.2))
@@ -191,6 +192,8 @@ class InsertScene:
         return arr
 
     def _sun(self, frame, e, t):
+        if 'blue' in e.detail.lower():                       # a Martian sunset: a small pale sun with a soft blue glow
+            return self._pale_sun(frame, e, t)
         a_name, b_name = _parse_pair(e.detail, ('high', 'low'))
         hi, lo = (0.64, 0.12), (0.40, 0.40)
         p0, p1 = (hi, lo) if a_name != 'low' else (lo, hi)
@@ -209,6 +212,25 @@ class InsertScene:
         glow = glow.filter(ImageFilter.GaussianBlur(28))
         frame.alpha_composite(glow)
         ImageDraw.Draw(frame).ellipse((x - r, y - r, x + r, y + r), fill=col + (255,))
+
+    def _pale_sun(self, frame, e, t):
+        q = ease(_ramp(t, e.at if e.at is not None else self.t0, 1.2))
+        if q <= 0:
+            return
+        x, y = 0.62 * W, (0.37 if e.region in ('', 'horizon') else REGION.get(e.region, REGION['horizon'])[1]) * H
+        y += (1 - q) * 30                                   # it settles onto the horizon as it appears
+        glow = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(glow)
+        for k in range(8, 0, -1):
+            rr = 24 * (1 + 0.75 * k)
+            d.ellipse((x - rr, y - rr, x + rr, y + rr), fill=(108, 156, 238, int(52 * q)))
+        glow = glow.filter(ImageFilter.GaussianBlur(44))
+        a = np.asarray(glow.getchannel('A')).astype(np.float32) * 2.0
+        ys = np.arange(H, dtype=np.float32)[:, None]
+        a *= np.clip(1 - (ys - (y + 30)) / 70, 0, 1)            # the glow stays in the sky, behind the horizon
+        glow.putalpha(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)))
+        frame.alpha_composite(glow)
+        ImageDraw.Draw(frame).ellipse((x - 24, y - 24, x + 24, y + 24), fill=(242, 240, 232, int(255 * q)))
 
     def _haze(self, frame, e, t):
         tex = e.data['tex']

@@ -75,7 +75,8 @@ def _ring_coverage(navy: np.ndarray, cx: float, cy: float, r: float, bins: int =
     return hits / bins
 
 
-def _head_circles(orig: np.ndarray, n: int, lum: np.ndarray, sat: np.ndarray, char: np.ndarray) -> list:
+def _head_circles(orig: np.ndarray, n: int, lum: np.ndarray, sat: np.ndarray, char: np.ndarray,
+                  tiers=((0.8, 0.5), (0.65, 0.45), (0.5, 0.4))) -> list:
     """The n heads as (cx, cy, r): circles in the navy outlines with a white inside and an outline around (nearly)
     the whole circumference, which a round torso bottom never has; two heads must be alike in size and height."""
     h, w = orig.shape[:2]
@@ -98,11 +99,12 @@ def _head_circles(orig: np.ndarray, n: int, lum: np.ndarray, sat: np.ndarray, ch
             if not sel.any():
                 continue
             raw.append((float(cx), float(cy), float(r), float(white[sel].mean()), _ring_coverage(navy_d, cx, cy, r)))
-    def torso_like(c):                                                   # another candidate sits right above it: a torso
-        return any(abs(q[0] - c[0]) < 0.7 * c[2] and 0.8 * c[2] < c[1] - q[1] < 3.2 * c[2] and q[4] > 0.45 for q in raw)
+    def torso_like(c):            # a good head candidate of similar size sits right above it: c is that head's torso
+        return any(abs(q[0] - c[0]) < 0.7 * c[2] and 0.8 * c[2] < c[1] - q[1] < 3.2 * c[2] and q[4] > 0.65 and q[3] > 0.5
+                   and 0.6 < q[2] / c[2] < 1.6 for q in raw)
     raw = [c for c in raw if not torso_like(c)]
     picked, cands = [], []
-    for min_cov, min_in in ((0.8, 0.5), (0.65, 0.45), (0.5, 0.4)):                 # strict first, then looser
+    for min_cov, min_in in tiers:                                                    # strict first, then looser
         cands = [(cx, cy, r, cov * inside * r) for cx, cy, r, inside, cov in raw if inside > min_in and cov > min_cov]
         cands.sort(key=lambda c: -c[3])
         if n == 1:
@@ -222,7 +224,8 @@ def derive(source: Path, arms: Path, empty: Path, cast: list | None = None, movi
         for k, (rx, ry) in rests.items():
             rests[k] = (min(w - 1, max(0, rx)), min(h - 1, max(0, ry)))
         seat = dict(name=name, head=dict(centre=(round(cx, 1), round(cy, 1)), size=(round(ew, 1), round(eh, 1)), angle=round(ang, 1), refine=False),
-                    facing=facing, torso_seed=seed, hip=hip if (moving and not covered) else None, rest=rests)
+                    facing=facing, torso_seed=seed, hip=hip if (moving and not covered) else None, rest=rests,
+                    legs_from=int(min(hip[1], cy + 1.75 * D)))
         if scarf:
             band = teal & (yy > cy + 0.3 * D) & (yy < cy + 0.95 * D)
             band[:, :max(0, int(cx - 0.7 * D))] = False
@@ -238,7 +241,8 @@ def derive(source: Path, arms: Path, empty: Path, cast: list | None = None, movi
         seats.append(seat)
         measured.append(dict(D=round(D, 1), scarf=bool(scarf), pose=pose, body_px=int(body.sum())))
         # the edit region: everything the arms could have covered, from the shoulders down past the hands
-        rois.append((max(0, int(torso_cx - 1.25 * D)), int(cy + 0.45 * D), min(w, int(torso_cx + 1.25 * D)), min(h, int(cy + r['dy'] * D + 0.4 * D))))
+        bottom = cy + (r['dy'] + 0.18) * D                  # just below the resting hands: never down the legs
+        rois.append((max(0, int(torso_cx - 1.25 * D)), int(cy + 0.45 * D), min(w, int(torso_cx + 1.25 * D)), min(h, int(bottom))))
     rx0, ry0 = min(r_[0] for r_ in rois), min(r_[1] for r_ in rois)
     rx1, ry1 = max(r_[2] for r_ in rois), max(r_[3] for r_ in rois)
     roi = [(rx0, ry0), (rx1, ry0), (rx1, ry1), (rx0, ry1)]

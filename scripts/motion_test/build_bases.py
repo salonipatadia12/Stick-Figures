@@ -535,6 +535,16 @@ def build(name: str, spec: dict):
     arms = register(orig, load(FLUX / spec['arms']), ~(roi | head_disc))
     diff = cv2.GaussianBlur(np.abs(orig.astype(np.float32) - arms.astype(np.float32)).mean(-1), (0, 0), 2.5)
     edit = (diff > 34) & roi & ~head_disc
+    # Painted legs never turn into background: below a seat's torso (legs_from, set by derived specs), a pixel that is
+    # navy in the original but not on the arms plate is FLUX erasing a thigh, not an arm (2026-11-08, sofa bases).
+    navy_o = (orig.astype(np.int32).mean(-1) < 120) & (orig[..., 2].astype(np.int32) >= orig[..., 0].astype(np.int32) - 6)
+    navy_a = (arms.astype(np.int32).mean(-1) < 120) & (arms[..., 2].astype(np.int32) >= arms[..., 0].astype(np.int32) - 6)
+    for s_, e_ in zip(spec['seats'], ells):
+        if s_.get('legs_from') is not None:
+            D_ = (e_[1][0] + e_[1][1]) / 2
+            col = np.zeros((h, w), bool)
+            col[:, max(0, int(e_[0][0] - 1.3 * D_)):min(w, int(e_[0][0] + 1.3 * D_))] = True
+            edit &= ~(navy_o & ~navy_a & col & (yy > s_['legs_from'] - 0.05 * D_))
     edit = cv2.morphologyEx(edit.astype(np.uint8), cv2.MORPH_CLOSE, disk(7)) > 0
     n, lab, stats, _ = cv2.connectedComponentsWithStats(edit.astype(np.uint8))
     for i in range(1, n):
@@ -693,7 +703,7 @@ def build(name: str, spec: dict):
         if moving:
             # the body moves, so the café behind it comes from the empty plate (never over the table)
             fa = arms.astype(np.int32)
-            legs = (fa.mean(-1) < 120) & (fa[..., 2] >= fa[..., 0] - 6) & ~(cv2.dilate(body.astype(np.uint8), disk(2)) > 0)
+            legs = (((fa.mean(-1) < 120) & (fa[..., 2] >= fa[..., 0] - 6)) | navy_o) & ~(cv2.dilate(body.astype(np.uint8), disk(2)) > 0)
             behind = (cv2.dilate(full_alpha.astype(np.uint8), disk(16)) > 0) & ~table_m & ~cup_zone & ~legs
             bm = feather(behind, 0, 1.5)[..., None]
             plate = (plate.astype(np.float32) * (1 - bm) + empty.astype(np.float32) * bm).astype(np.uint8)

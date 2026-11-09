@@ -1,0 +1,249 @@
+{
+  "style-test-t2i": {
+    "seeds": [
+      11
+    ],
+    "prompt": "A tall volcano erupting at dusk on a tropical island, a huge billowing grey ash column rising into the sky, glowing orange at the crater, the sea in the foreground. A cozy hand-painted storybook illustration: soft painterly brushwork, visible paper texture, warm natural light, gentle textured shading, a muted earthy palette with teal, rust, cream and deep navy accents, clean simple shapes, the look of a background painting in a calm animated film. Vertical portrait composition with open sky or open space in the top third. No people, no characters, no animals, no text, no letters, no signs, no logos, no frame.",
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "t2i"
+  },
+  "style-test-edit": {
+    "seeds": [
+      11
+    ],
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, light, palette and texture), but with none of its content and NO people or characters: A tall volcano erupting at dusk on a tropical island, a huge billowing grey ash column rising into the sky, glowing orange at the crater, the sea in the foreground. Vertical portrait composition. No text.",
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-summer-village": {
+    "seeds": [
+      150,
+      151
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a small New England village green on a bright summer afternoon: a white wooden church with a steeple, picket fences, leafy maple trees, a dirt road, warm sunshine. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-volcano-erupting": {
+    "seeds": [
+      377,
+      378
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a tall volcano on a tropical island erupting at dusk, a huge billowing grey ash column rising into the sky, glowing orange at the crater, palm trees and the sea in the foreground. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-ash-falling-coast": {
+    "seeds": [
+      377,
+      378
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a tropical coast just after a great eruption: grey ash drifting down onto palm trees, a beach and a calm sea, a darkened sky, a faint pale haze layer high above the clouds. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-earth-haze-layer": {
+    "seeds": [
+      287,
+      288
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: the curved edge of the Earth seen from very high up, the blue atmosphere glowing along the horizon, a thin pale yellow-white haze layer floating above it, black space with a few stars, sunlight from the left. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-frosted-farm-may": {
+    "seeds": [
+      298,
+      299
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a New England farm in late spring: rows of young green crops and blossoming apple trees covered in white frost, a red barn, a split-rail fence, a pale cold early-morning sky. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-street-noon": {
+    "seeds": [
+      550,
+      551
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a quiet painted street corner at noon: brick shopfronts, a lamp post, a tree with dappled shade, a wide clear bright blue sky above the rooftops, the sun out of view. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-mars-day": {
+    "seeds": [
+      198,
+      199
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a rocky Martian desert landscape in daytime: rust-red rocks and dunes, a distant crater rim, a hazy butterscotch-pink sky. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-street-noon--at-sunset-the-whole-sky-glowing-deep-ora": {
+    "seeds": [
+      344,
+      345
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but at sunset, the whole sky glowing deep orange and red, long warm shadows. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/street-noon.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-mars-day--at-sunset-the-sky-darkening-to-brownish-": {
+    "seeds": [
+      704,
+      705
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but at sunset: the sky darkening to brownish dusk and a small pale sun near the horizon with a soft blue glow around it. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/mars-day.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-doorway-threshold": {
+    "seeds": [
+      491,
+      492
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: an open wooden doorway seen straight on between a warm living room with a rust-coloured sofa and a cozy kitchen with open shelves and jars, the threshold strip on the wooden floor clearly visible, soft daylight. Vertical portrait composition with open sky or open space in the top third. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-summer-village--under-a-heavy-cold-grey-sky-in-summer-th": {
+    "seeds": [
+      580,
+      581
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but under a heavy cold grey sky in summer, the leaves pale and limp, a thin white frost on the grass. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/summer-village.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-mars-day--at-sunset-a-dusky-butterscotch-brown-sky": {
+    "seeds": [
+      103,
+      104
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but at sunset: a dusky butterscotch-brown sky still light enough to see the rocks, and a small pale sun low over the crater rim with a soft blue glow around it. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/mars-day.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  }
+}

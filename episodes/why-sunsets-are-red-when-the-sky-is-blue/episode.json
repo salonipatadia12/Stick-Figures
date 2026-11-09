@@ -455,10 +455,16 @@
      "scene": "a rocky Martian desert landscape in daytime: rust-red rocks and dunes, a distant crater rim, a hazy butterscotch-pink sky",
      "effects": [
       {
-       "kind": "crossfade",
+       "kind": "grade",
        "anchor": "blue-gray",
        "at": "",
-       "detail": "at sunset: the sky darkening to brownish dusk and a small pale sun near the horizon with a soft blue glow around it"
+       "detail": "butterscotch -> mars-dusk"
+      },
+      {
+       "kind": "sun_path",
+       "anchor": "blue-gray",
+       "at": "horizon",
+       "detail": "low -> low, small and pale with a blue glow"
       },
       {
        "kind": "dust",
