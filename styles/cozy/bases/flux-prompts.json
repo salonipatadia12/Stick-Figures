@@ -1226,5 +1226,413 @@
       716
     ],
     "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-office-friend-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      940,
+      941,
+      942
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-office-together-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "03-together.png"
+    ],
+    "seeds": [
+      531,
+      532,
+      533
+    ],
+    "prompt": "Using the two characters from this image (the one with the teal scarf and the one without): the same white round-headed characters with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now SEATED SIDE BY SIDE AT ONE RECTANGULAR WORK DESK on office chairs, turned a little toward each other, hands on the desktop beside the keyboard, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-classroom-lead-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      573,
+      574,
+      575
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now SEATED AT A RECTANGULAR WOODEN SCHOOL DESK on a wooden school chair, in three-quarter view facing right, both navy mitten hands resting on the desk, full upper body and the chair visible, in a classroom: the green chalkboard with nothing written on it behind, a window with daylight, a shelf with books and a globe. There is NO round cafe table anywhere. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-car-friend-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      500,
+      501,
+      502
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now ALONE IN THE PASSENGER SEAT of the car, seen from the side in three-quarter view, hands resting in the lap, the driver's seat beside them EMPTY with nobody at the steering wheel, in the inside of a small car seen from the passenger side: the driver's seat, the steering wheel, the dashboard, the windscreen with a sunny road and trees outside, soft light. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-standing-doorway-pe72b": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "04-waiting.png",
+      "01-alone.png"
+    ],
+    "seeds": [
+      425,
+      426
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline, white bulb-shaped torso, dark navy limbs and mitten hands, now STANDING, full body visible from head to feet, three-quarter view facing right, arms relaxed at the sides, in an open doorway between a warm living room and a cozy kitchen, the wooden door frame clearly visible in the middle of the picture, the living room (a rust-coloured sofa, a floor lamp, a plant) partly seen on one side and the kitchen (a wooden counter with a kettle, open shelves with jars, a window) partly seen through the doorway on the other, both rooms in soft daylight. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "cand-together-standing-living-room-p2f7f-r2": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-living-room-together-s450.png"
+    ],
+    "seeds": [
+      902,
+      903,
+      904
+    ],
+    "prompt": "Using the two characters, the room and the furniture from these images (keep the same room, furniture and light): the same two white round-headed characters (the one with the teal scarf and the one without) with dark navy outlines, white bulb-shaped torsos, dark navy limbs and mitten hands, both now STANDING side by side in the living room, full bodies visible from head to feet, turned a little toward each other, arms relaxed at the sides. ONLY the character on the right wears the teal scarf; the character on the left has a plain bare white neck with NO scarf. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "plate-together-kitchen-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-kitchen-together-s554.png"
+    ],
+    "seeds": [
+      63,
+      64
+    ],
+    "prompt": "Edit this illustration. Delete both standing characters' navy arms and navy mitten hands entirely. Each character's torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the scene behind them where the arms were. Keep their round heads and faces, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-together-kitchen-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-kitchen-together-s554.png"
+    ],
+    "seeds": [
+      65
+    ],
+    "prompt": "Edit this illustration. Remove both standing characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-lead-seated-bench-street-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-together-seated-bench-street-p6f51-s658.png"
+    ],
+    "seeds": [
+      73,
+      74
+    ],
+    "prompt": "Edit this illustration. Delete both seated characters' navy arms and navy mitten hands entirely. Each character's torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the bench slats behind and beside them where the arms were. Keep their round heads and faces, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-lead-seated-bench-street-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-together-seated-bench-street-p6f51-s658.png"
+    ],
+    "seeds": [
+      75
+    ],
+    "prompt": "Edit this illustration. Remove both seated characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-standing-street-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-street-friend-s642.png"
+    ],
+    "seeds": [
+      11,
+      12
+    ],
+    "prompt": "Edit this illustration. Delete the standing character with the teal scarf's navy arms and both navy mitten hands entirely. Their torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the scene behind them where the arms were. Keep their round head and face, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-standing-street-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-street-friend-s642.png"
+    ],
+    "seeds": [
+      13
+    ],
+    "prompt": "Edit this illustration. Remove the standing character with the teal scarf completely (head, torso, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-standing-street-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-street-lead-s416.png"
+    ],
+    "seeds": [
+      25,
+      26
+    ],
+    "prompt": "Edit this illustration. Delete the standing character's navy arms and both navy mitten hands entirely. Their torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the scene behind them where the arms were. Keep their round head and face, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-standing-street-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-street-lead-s416.png"
+    ],
+    "seeds": [
+      27
+    ],
+    "prompt": "Edit this illustration. Remove the standing character completely (head, torso, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-together-street-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-street-together-s474.png"
+    ],
+    "seeds": [
+      64,
+      65
+    ],
+    "prompt": "Edit this illustration. Delete both standing characters' navy arms and navy mitten hands entirely. Each character's torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the scene behind them where the arms were. Keep their round heads and faces, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-together-street-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-street-together-s474.png"
+    ],
+    "seeds": [
+      66
+    ],
+    "prompt": "Edit this illustration. Remove both standing characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-lead-seated-at-table-kitchen-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-together-seated-at-table-kitchen-p3086-s102.png"
+    ],
+    "seeds": [
+      18,
+      19
+    ],
+    "prompt": "Edit this illustration. Delete both seated characters' navy arms and navy mitten hands entirely. Each character's torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the chair back behind them and the bare tabletop where the arms were. Keep their round heads and faces, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-lead-seated-at-table-kitchen-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-together-seated-at-table-kitchen-p3086-s102.png"
+    ],
+    "seeds": [
+      20
+    ],
+    "prompt": "Edit this illustration. Remove both seated characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-seated-at-table-kitchen-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-seated-at-table-kitchen-p80ed-s991.png"
+    ],
+    "seeds": [
+      61,
+      62
+    ],
+    "prompt": "Edit this illustration. Delete the seated character's navy arms and both navy mitten hands entirely. Their torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the chair back behind them and the bare tabletop where the arms were. Keep their round head and face, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-seated-at-table-kitchen-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-seated-at-table-kitchen-p80ed-s991.png"
+    ],
+    "seeds": [
+      63
+    ],
+    "prompt": "Edit this illustration. Remove the seated character completely (head, torso, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-seated-sofa-living-room-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-living-room-lead-s635.png"
+    ],
+    "seeds": [
+      25,
+      26
+    ],
+    "prompt": "Edit this illustration. Delete the seated character's navy arms and both navy mitten hands entirely. Their torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the sofa cushions behind and beside them where the arms were. Keep their round head and face, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-seated-sofa-living-room-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-living-room-lead-s635.png"
+    ],
+    "seeds": [
+      27
+    ],
+    "prompt": "Edit this illustration. Remove the seated character completely (head, torso, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-together-living-room-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-living-room-together-s450.png"
+    ],
+    "seeds": [
+      60,
+      61
+    ],
+    "prompt": "Edit this illustration. Delete both seated characters' navy arms and navy mitten hands entirely. Each character's torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the sofa cushions behind and beside them where the arms were. Keep their round heads and faces, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-together-living-room-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "pack-living-room-together-s450.png"
+    ],
+    "seeds": [
+      62
+    ],
+    "prompt": "Edit this illustration. Remove both seated characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
   }
 }

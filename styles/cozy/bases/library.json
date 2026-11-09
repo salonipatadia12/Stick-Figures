@@ -131,7 +131,7 @@
   "inserts": true
  },
  "together-kitchen": {
-  "status": "approved",
+  "status": "built",
   "setting": "kitchen",
   "pose": "standing",
   "view": "eye-level",
@@ -144,10 +144,16 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "pack": "starter",
-  "inserts": true
+  "inserts": true,
+  "plates": {
+   "arms": "plate-together-kitchen-arms-s64.png",
+   "empty": "plate-together-kitchen-empty-s65.png"
+  },
+  "debug": "renders/bases/debug-together-kitchen.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "lead-seated-sofa-living-room": {
-  "status": "approved",
+  "status": "built",
   "setting": "living-room",
   "pose": "seated-sofa",
   "view": "eye-level",
@@ -159,7 +165,21 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "pack": "starter",
-  "inserts": true
+  "inserts": true,
+  "plates": {
+   "arms": "plate-lead-seated-sofa-living-room-arms-s25.png",
+   "empty": "plate-lead-seated-sofa-living-room-empty-s27.png"
+  },
+  "debug": "renders/bases/debug-lead-seated-sofa-living-room.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)",
+  "head_hints": {
+   "lead": [
+    380,
+    583,
+    166
+   ]
+  },
+  "head_hints_note": "placed by hand on the picture (the search took the torso); 2026-11-08"
  },
  "friend-seated-sofa-living-room": {
   "status": "approved",
@@ -177,7 +197,7 @@
   "inserts": true
  },
  "together-living-room": {
-  "status": "approved",
+  "status": "built",
   "setting": "living-room",
   "pose": "seated-sofa",
   "view": "eye-level",
@@ -190,10 +210,16 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "pack": "starter",
-  "inserts": true
+  "inserts": true,
+  "plates": {
+   "arms": "plate-together-living-room-arms-s61.png",
+   "empty": "plate-together-living-room-empty-s62.png"
+  },
+  "debug": "renders/bases/debug-together-living-room.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "lead-standing-street": {
-  "status": "approved",
+  "status": "built",
   "setting": "street",
   "pose": "standing",
   "view": "eye-level",
@@ -205,10 +231,16 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "pack": "starter",
-  "inserts": true
+  "inserts": true,
+  "plates": {
+   "arms": "plate-lead-standing-street-arms-s26.png",
+   "empty": "plate-lead-standing-street-empty-s27.png"
+  },
+  "debug": "renders/bases/debug-lead-standing-street.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "friend-standing-street": {
-  "status": "approved",
+  "status": "built",
   "setting": "street",
   "pose": "standing",
   "view": "eye-level",
@@ -220,10 +252,16 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "pack": "starter",
-  "inserts": true
+  "inserts": true,
+  "plates": {
+   "arms": "plate-friend-standing-street-arms-s12.png",
+   "empty": "plate-friend-standing-street-empty-s13.png"
+  },
+  "debug": "renders/bases/debug-friend-standing-street.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "together-street": {
-  "status": "approved",
+  "status": "built",
   "setting": "street",
   "pose": "standing",
   "view": "eye-level",
@@ -236,7 +274,13 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "pack": "starter",
-  "inserts": true
+  "inserts": true,
+  "plates": {
+   "arms": "plate-together-street-arms-s64.png",
+   "empty": "plate-together-street-empty-s66.png"
+  },
+  "debug": "renders/bases/debug-together-street.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "lead-seated-bench-park": {
   "status": "approved",
@@ -401,7 +445,7 @@
   "inserts": true
  },
  "friend-lead-seated-bench-street": {
-  "status": "approved",
+  "status": "built",
   "setting": "street",
   "pose": "seated-bench",
   "view": "eye-level",
@@ -412,10 +456,16 @@
   "source": "renders/bases/flux/cand-together-seated-bench-street-p6f51-s658.png",
   "approved": "2026-11-08",
   "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "plates": {
+   "arms": "plate-friend-lead-seated-bench-street-arms-s74.png",
+   "empty": "plate-friend-lead-seated-bench-street-empty-s75.png"
+  },
+  "debug": "renders/bases/debug-friend-lead-seated-bench-street.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "friend-lead-seated-at-table-kitchen": {
-  "status": "approved",
+  "status": "built",
   "setting": "kitchen",
   "pose": "seated-at-table",
   "view": "eye-level",
@@ -426,10 +476,16 @@
   "source": "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s102.png",
   "approved": "2026-11-08",
   "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "plates": {
+   "arms": "plate-friend-lead-seated-at-table-kitchen-arms-s19.png",
+   "empty": "plate-friend-lead-seated-at-table-kitchen-empty-s20.png"
+  },
+  "debug": "renders/bases/debug-friend-lead-seated-at-table-kitchen.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  },
  "lead-seated-at-table-kitchen": {
-  "status": "approved",
+  "status": "built",
   "setting": "kitchen",
   "pose": "seated-at-table",
   "view": "eye-level",
@@ -439,7 +495,21 @@
   "source": "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s991.png",
   "approved": "2026-11-08",
   "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)"
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "plates": {
+   "arms": "plate-lead-seated-at-table-kitchen-arms-s61.png",
+   "empty": "plate-lead-seated-at-table-kitchen-empty-s63.png"
+  },
+  "debug": "renders/bases/debug-lead-seated-at-table-kitchen.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)",
+  "head_hints": {
+   "lead": [
+    315,
+    590,
+    150
+   ]
+  },
+  "head_hints_note": "placed by hand on the picture (the search took the torso); 2026-11-08"
  },
  "lead-standing-living-room": {
   "status": "approved",

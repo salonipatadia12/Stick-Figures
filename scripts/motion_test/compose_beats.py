@@ -169,12 +169,17 @@ class Composed(Beat):
             xy = tuple(places[key]['xy'])
         elif p is None:
             xy = (self.base.size[0] / 2, self.base.size[1] * 0.6)
+        elif any(k in where for k in ('sky', 'above', 'ceiling', 'air', 'overhead')):
+            xy = (p.s['head'][0] + 1.0 * p.D * p.facing, p.s['head'][1] - 1.1 * p.D)      # high in the frame, ahead
         elif 'wall' in where or 'window' in where:
             xy = (p.s['head'][0] + 0.9 * p.D * p.facing, p.s['head'][1] - 0.3 * p.D)
         elif 'floor' in where:
             xy = (p.mid[0] + 0.9 * p.D * p.facing, p.mid[1] + 1.4 * p.D)
         elif 'hand' in where or cue.get('held_by'):
             xy = self.table_point(p, 0.45)
+        elif 'table' in where and 'table' not in self.base.layers and p.s.get('hip') is None:
+            n = len(self.props_in_frame)                        # a standing scene with no table: the thing sits low, ahead
+            xy = (p.mid[0] + (0.9 + 0.35 * n) * p.D * p.facing, p.mid[1] + 0.5 * p.D)
         else:
             n = len(self.props_in_frame)
             xy = self.table_point(p, 0.45 + 0.35 * n)

@@ -103,7 +103,7 @@ def build(names: list, lib: dict | None = None) -> list:
         poses = e.get('poses') or {c: e.get('pose') for c in e.get('cast', ['lead'])}
         moving = any(p in MOVING for p in poses.values())
         args.append(json.dumps(dict(name=n, source=str(ROOT / e['source']), arms=plates[n]['arms'], empty=plates[n]['empty'],
-                                    cast=e.get('cast', ['lead']), moving=moving)))
+                                    cast=e.get('cast', ['lead']), moving=moving, poses=poses, head_hints=e.get('head_hints'))))
     proc = subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/build_pack.py'), *args],
                           capture_output=True, text=True)
     lines = (proc.stdout + proc.stderr).splitlines()

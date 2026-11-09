@@ -70,7 +70,8 @@ def main(argv):
             orig = BB.load(Path(job['source']), (941, 1672))
             arms = pick_arms(orig, job['arms']) if len(job['arms']) > 1 else job['arms'][0]
             empty = pick_empty(orig, job['empty']) if len(job['empty']) > 1 else job['empty'][0]
-            spec = SP.derive(Path(job['source']), Path(arms), Path(empty), cast=job.get('cast', ['lead']), moving=job.get('moving', False))
+            spec = SP.derive(Path(job['source']), Path(arms), Path(empty), cast=job.get('cast', ['lead']), moving=job.get('moving', False),
+                             poses=job.get('poses'), head_hints=job.get('head_hints'))
             SP.debug_image(spec, name)
             # build_bases wants plate names relative to renders/bases/flux and the source as a path it can find
             spec['arms'], spec['empty'] = Path(arms).name, Path(empty).name

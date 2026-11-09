@@ -737,7 +737,7 @@
         {
           "beat": "b01",
           "base": null,
-          "wanted": "lead-standing-living-room"
+          "wanted": "lead-standing-doorway"
         },
         {
           "beat": "b02",
@@ -746,38 +746,38 @@
         },
         {
           "beat": "b03",
-          "base": null,
+          "base": "lead-seated-sofa-living-room",
           "wanted": "living-room-insert"
         },
         {
           "beat": "b04",
           "base": null,
-          "wanted": "lead-standing-kitchen"
+          "wanted": "lead-standing-doorway"
         },
         {
           "beat": "b05",
-          "base": null,
+          "base": "together-kitchen",
           "wanted": "friend-lead-standing-kitchen"
         },
         {
           "beat": "b06",
-          "base": null,
+          "base": "together-living-room",
           "wanted": "friend-lead-seated-sofa-living-room"
         },
         {
           "beat": "b07",
-          "base": null,
+          "base": "friend-lead-seated-at-table-kitchen",
           "wanted": "friend-lead-seated-at-table-kitchen"
         },
         {
           "beat": "b08",
-          "base": null,
+          "base": "lead-seated-at-table-kitchen",
           "wanted": "lead-seated-at-table-kitchen"
         },
         {
           "beat": "b09",
           "base": null,
-          "wanted": "lead-standing-kitchen"
+          "wanted": "lead-standing-doorway"
         },
         {
           "beat": "b10",
@@ -786,26 +786,19 @@
         }
       ],
       "candidates": {
-        "lead-standing-living-room": [
-          "renders/bases/flux/cand-standing-living-room-pfd23-s791.png",
-          "renders/bases/flux/cand-standing-living-room-pfd23-s792.png"
+        "lead-standing-doorway": [
+          "renders/bases/flux/cand-standing-doorway-pe72b-s425.png",
+          "renders/bases/flux/cand-standing-doorway-pe72b-s426.png"
         ],
         "friend-lead-standing-living-room": [
-          "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
-          "renders/bases/flux/cand-together-standing-living-room-p6d83-s803.png"
-        ],
-        "friend-lead-seated-at-table-kitchen": [
-          "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s102.png",
-          "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s103.png"
-        ],
-        "lead-seated-at-table-kitchen": [
-          "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s991.png",
-          "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s992.png"
+          "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s902.png",
+          "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s903.png",
+          "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s904.png"
         ]
       },
-      "sheet": "renders/bases/candidates/why-you-forget-why-you-walked-into-a-room-candidates.jpg",
-      "made": "2026-11-08T16:31:26",
-      "round": 1,
+      "sheet": "renders/bases/candidates/why-you-forget-why-you-walked-into-a-room-candidates-r2.jpg",
+      "made": "2026-11-08T17:49:28",
+      "round": 2,
       "rejected": {
         "friend-lead-standing-living-room": [
           "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
@@ -823,7 +816,10 @@
           "by": "user",
           "at": "2026-11-08T17:19:04"
         }
-      ]
+      ],
+      "direction": {
+        "friend-lead-standing-living-room": "both now STANDING side by side in the living room, full bodies visible from head to feet, turned a little toward each other, arms relaxed at the sides. ONLY the character on the right wears the teal scarf; the character on the left has a plain bare white neck with NO scarf"
+      }
     },
     "approval_log": [
       {

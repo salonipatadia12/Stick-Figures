@@ -1,0 +1,99 @@
+{
+ "name": "lead-seated-sofa-living-room",
+ "source": "renders/bases/flux/pack-living-room-lead-s635.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-lead-seated-sofa-living-room-arms-s25.png",
+  "empty": "plate-lead-seated-sofa-living-room-empty-s27.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    377.6,
+    580.4
+   ],
+   "D": 343.7,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     268.0,
+     774
+    ],
+    "r": [
+     431.5,
+     774
+    ]
+   },
+   "rest": {
+    "l": [
+     251,
+     1095
+    ],
+    "r": [
+     470,
+     1095
+    ]
+   },
+   "hip": [
+    308,
+    1033
+   ],
+   "neck": {
+    "join_y": 763.0,
+    "stroke": [
+     5,
+     4
+    ],
+    "left": [
+     0.0,
+     -0.7119,
+     273.2333
+    ],
+    "right": [
+     0.0002,
+     0.5766,
+     427.4347
+    ]
+   },
+   "body": {
+    "sprite": "body-lead.png",
+    "xy": [
+     238,
+     607
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     251,
+     745
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     190.6,
+     191.4
+    ],
+    "size": [
+     334.2,
+     353.2
+    ],
+    "angle": 81.3
+   }
+  }
+ ],
+ "places": {}
+}

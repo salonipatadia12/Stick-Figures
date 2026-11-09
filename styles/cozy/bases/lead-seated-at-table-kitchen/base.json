@@ -1,0 +1,89 @@
+{
+ "name": "lead-seated-at-table-kitchen",
+ "source": "renders/bases/flux/cand-seated-at-table-kitchen-p80ed-s991.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-lead-seated-at-table-kitchen-arms-s61.png",
+  "empty": "plate-lead-seated-at-table-kitchen-empty-s63.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    312.8,
+    586.6
+   ],
+   "D": 302.1,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     212.0,
+     762
+    ],
+    "r": [
+     340.5,
+     762
+    ]
+   },
+   "rest": {
+    "l": [
+     227,
+     918
+    ],
+    "r": [
+     396,
+     918
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 750.0,
+    "stroke": [
+     4,
+     8
+    ],
+    "left": [
+     0.0,
+     -0.9123,
+     223.0349
+    ],
+    "right": [
+     0.0,
+     0.1033,
+     343.9351
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     192,
+     731
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     167.8,
+     167.6
+    ],
+    "size": [
+     297.3,
+     307.0
+    ],
+    "angle": 78.9
+   }
+  }
+ ],
+ "places": {}
+}

@@ -1,0 +1,159 @@
+{
+ "name": "together-street",
+ "source": "renders/bases/flux/pack-street-together-s474.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-together-street-arms-s64.png",
+  "empty": "plate-together-street-empty-s66.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "friend",
+   "head": [
+    301.9,
+    638.4
+   ],
+   "D": 283.3,
+   "facing": 1,
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     233.5,
+     795
+    ],
+    "r": [
+     371.0,
+     795
+    ]
+   },
+   "rest": {
+    "l": [
+     190,
+     1040
+    ],
+    "r": [
+     417,
+     1040
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "scarf": [
+     [
+      254,
+      802
+     ],
+     [
+      266,
+      768
+     ],
+     [
+      348,
+      768
+     ],
+     [
+      360,
+      802
+     ]
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     229,
+     772
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     156.9,
+     157.4
+    ],
+    "size": [
+     281.5,
+     285.1
+    ],
+    "angle": 101.0
+   }
+  },
+  {
+   "name": "lead",
+   "head": [
+    631.0,
+    593.3
+   ],
+   "D": 311.6,
+   "facing": -1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     596.0,
+     773
+    ],
+    "r": [
+     690.5,
+     773
+    ]
+   },
+   "rest": {
+    "l": [
+     521,
+     1035
+    ],
+    "r": [
+     770,
+     1035
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 763.0,
+    "stroke": [
+     4,
+     4
+    ],
+    "left": [
+     -0.0002,
+     -0.135,
+     595.2633
+    ],
+    "right": [
+     0.0004,
+     0.0962,
+     692.3137
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     586,
+     750
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     172.0,
+     172.3
+    ],
+    "size": [
+     308.3,
+     314.9
+    ],
+    "angle": 110.6
+   }
+  }
+ ],
+ "places": {}
+}

@@ -2,16 +2,19 @@
  "pack": "starter",
  "candidates": {
   "lead-seated-desk-office": [
-   "renders/bases/flux/pack-office-lead-s614.png",
-   "renders/bases/flux/pack-office-lead-s615.png"
+   "renders/bases/flux/pack-office-lead-r2-s714.png",
+   "renders/bases/flux/pack-office-lead-r2-s715.png",
+   "renders/bases/flux/pack-office-lead-r2-s716.png"
   ],
   "friend-seated-desk-office": [
-   "renders/bases/flux/pack-office-friend-s840.png",
-   "renders/bases/flux/pack-office-friend-s841.png"
+   "renders/bases/flux/pack-office-friend-r2-s940.png",
+   "renders/bases/flux/pack-office-friend-r2-s941.png",
+   "renders/bases/flux/pack-office-friend-r2-s942.png"
   ],
   "together-office": [
-   "renders/bases/flux/pack-office-together-s431.png",
-   "renders/bases/flux/pack-office-together-s432.png"
+   "renders/bases/flux/pack-office-together-r2-s531.png",
+   "renders/bases/flux/pack-office-together-r2-s532.png",
+   "renders/bases/flux/pack-office-together-r2-s533.png"
   ],
   "lead-standing-kitchen": [
    "renders/bases/flux/pack-kitchen-lead-s494.png",
@@ -62,8 +65,9 @@
    "renders/bases/flux/pack-park-together-s742.png"
   ],
   "lead-seated-desk-classroom": [
-   "renders/bases/flux/pack-classroom-lead-s473.png",
-   "renders/bases/flux/pack-classroom-lead-s474.png"
+   "renders/bases/flux/pack-classroom-lead-r2-s573.png",
+   "renders/bases/flux/pack-classroom-lead-r2-s574.png",
+   "renders/bases/flux/pack-classroom-lead-r2-s575.png"
   ],
   "friend-standing-classroom": [
    "renders/bases/flux/pack-classroom-friend-s457.png",
@@ -96,6 +100,11 @@
   "together-car": [
    "renders/bases/flux/pack-car-together-s621.png",
    "renders/bases/flux/pack-car-together-s622.png"
+  ],
+  "friend-passenger-car": [
+   "renders/bases/flux/pack-car-friend-r2-s500.png",
+   "renders/bases/flux/pack-car-friend-r2-s501.png",
+   "renders/bases/flux/pack-car-friend-r2-s502.png"
   ]
  },
  "rejected": {
@@ -198,17 +207,18 @@
   "together-car": "renders/bases/flux/pack-car-together-s621.png"
  },
  "sheets": {
-  "office": "renders/bases/candidates/pack-starter-office-candidates.jpg",
-  "kitchen": "renders/bases/candidates/pack-starter-kitchen-candidates.jpg",
-  "living-room": "renders/bases/candidates/pack-starter-living-room-candidates.jpg",
-  "street": "renders/bases/candidates/pack-starter-street-candidates.jpg",
-  "park": "renders/bases/candidates/pack-starter-park-candidates.jpg",
-  "classroom": "renders/bases/candidates/pack-starter-classroom-candidates.jpg",
-  "gym": "renders/bases/candidates/pack-starter-gym-candidates.jpg",
-  "car": "renders/bases/candidates/pack-starter-car-candidates.jpg"
+  "office": "renders/bases/candidates/pack-starter-office-candidates-r2.jpg",
+  "classroom": "renders/bases/candidates/pack-starter-classroom-candidates-r2.jpg",
+  "car": "renders/bases/candidates/pack-starter-car-candidates-r2.jpg"
  },
- "made": "2026-11-08T15:51:08",
+ "made": "2026-11-08T17:43:19",
  "renamed": {
   "friend-driving-car": "friend-passenger-car"
+ },
+ "direction": {
+  "lead-seated-desk-office": "now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere",
+  "friend-seated-desk-office": "now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere",
+  "together-office": "both now SEATED SIDE BY SIDE AT ONE RECTANGULAR WORK DESK on office chairs, turned a little toward each other, hands on the desktop beside the keyboard, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere",
+  "lead-seated-desk-classroom": "now SEATED AT A RECTANGULAR WOODEN SCHOOL DESK on a wooden school chair, in three-quarter view facing right, both navy mitten hands resting on the desk, full upper body and the chair visible, in a classroom: the green chalkboard with nothing written on it behind, a window with daylight, a shelf with books and a globe. There is NO round cafe table anywhere"
  }
 }

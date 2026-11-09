@@ -1,0 +1,179 @@
+{
+ "name": "friend-lead-seated-bench-street",
+ "source": "renders/bases/flux/cand-together-seated-bench-street-p6f51-s658.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-friend-lead-seated-bench-street-arms-s74.png",
+  "empty": "plate-friend-lead-seated-bench-street-empty-s75.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    273.1,
+    623.2
+   ],
+   "D": 301.6,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     180.0,
+     792
+    ],
+    "r": [
+     340.0,
+     792
+    ]
+   },
+   "rest": {
+    "l": [
+     146,
+     1075
+    ],
+    "r": [
+     327,
+     1075
+    ]
+   },
+   "hip": [
+    196,
+    1110
+   ],
+   "neck": {
+    "join_y": 786.0,
+    "stroke": [
+     9,
+     9
+    ],
+    "left": [
+     0.0,
+     -0.3942,
+     178.3021
+    ],
+    "right": [
+     0.0008,
+     0.0062,
+     344.3845
+    ]
+   },
+   "body": {
+    "sprite": "body-lead.png",
+    "xy": [
+     124,
+     645
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     162,
+     766
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     169.1,
+     169.2
+    ],
+    "size": [
+     294.5,
+     308.8
+    ],
+    "angle": 106.1
+   }
+  },
+  {
+   "name": "friend",
+   "head": [
+    656.4,
+    601.8
+   ],
+   "D": 302.3,
+   "facing": -1,
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     599.0,
+     776
+    ],
+    "r": [
+     777.0,
+     776
+    ]
+   },
+   "rest": {
+    "l": [
+     622,
+     1055
+    ],
+    "r": [
+     803,
+     1055
+    ]
+   },
+   "hip": [
+    768,
+    1089
+   ],
+   "neck": {
+    "scarf": [
+     [
+      628,
+      788
+     ],
+     [
+      640,
+      734
+     ],
+     [
+      729,
+      734
+     ],
+     [
+      741,
+      788
+     ]
+    ]
+   },
+   "body": {
+    "sprite": "body-friend.png",
+    "xy": [
+     583,
+     733
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     590,
+     738
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     168.4,
+     167.8
+    ],
+    "size": [
+     297.2,
+     307.4
+    ],
+    "angle": 73.9
+   }
+  }
+ ],
+ "places": {}
+}

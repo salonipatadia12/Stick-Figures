@@ -1,0 +1,159 @@
+{
+ "name": "friend-lead-seated-at-table-kitchen",
+ "source": "renders/bases/flux/cand-together-seated-at-table-kitchen-p3086-s102.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-friend-lead-seated-at-table-kitchen-arms-s19.png",
+  "empty": "plate-friend-lead-seated-at-table-kitchen-empty-s20.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    245.0,
+    676.9
+   ],
+   "D": 285.1,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     154.5,
+     844
+    ],
+    "r": [
+     279.0,
+     844
+    ]
+   },
+   "rest": {
+    "l": [
+     164,
+     990
+    ],
+    "r": [
+     323,
+     990
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 834.0,
+    "stroke": [
+     6,
+     9
+    ],
+    "left": [
+     0.0,
+     -0.4743,
+     155.8775
+    ],
+    "right": [
+     0.002,
+     -0.2945,
+     282.7319
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     136,
+     811
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     158.0,
+     157.9
+    ],
+    "size": [
+     283.1,
+     287.0
+    ],
+    "angle": 107.7
+   }
+  },
+  {
+   "name": "friend",
+   "head": [
+    681.7,
+    656.6
+   ],
+   "D": 288.4,
+   "facing": -1,
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     654.5,
+     823
+    ],
+    "r": [
+     801.0,
+     823
+    ]
+   },
+   "rest": {
+    "l": [
+     693,
+     973
+    ],
+    "r": [
+     854,
+     973
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "scarf": [
+     [
+      769,
+      911
+     ],
+     [
+      781,
+      770
+     ],
+     [
+      817,
+      770
+     ],
+     [
+      829,
+      911
+     ]
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     650,
+     778
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     162.7,
+     162.6
+    ],
+    "size": [
+     280.4,
+     296.4
+    ],
+    "angle": 36.9
+   }
+  }
+ ],
+ "places": {}
+}

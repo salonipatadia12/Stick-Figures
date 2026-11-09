@@ -2,21 +2,26 @@
 plate with the arms removed, and the FLUX plate with the character(s) removed.
 
   .venvs/mlx/bin/python scripts/motion_test/spec_from_plates.py <name> <source.png> <arms.png> <empty.png>
-        [--cast lead,friend] [--moving] [--covered] [--build]
+        [--cast lead,friend] [--poses lead=standing,friend=seated-sofa] [--heads lead=cx,cy,r;friend=cx,cy,r]
+        [--moving] [--covered] [--build]
 
 What it reads off the plates, per character:
 - the character: where the empty plate differs from the source;
-- the head: a big white low-saturation blob at the top of the character, fitted to its outline
+- the head: a big circle in the navy outlines, white inside and outlined round nearly its whole circumference
+  (a round torso bottom is outlined only below), fitted to its outline
   (`build_bases.fit_head` + `refine_head`), and which way it faces (the eyes sit on the facing side);
-- the arms: navy limb pixels of the source that the arms plate no longer has, inside the character's column and
-  outside the head. Each blob's top gives a shoulder, its far end gives the resting hand; the edit region is their
-  hull;
-- the torso: the white blob below the head without the arms; its centroid seeds the torso cut, its bottom is the
-  hip (only used when --moving: a seated torso that leans; a torso at a table or standing stays painted);
+- the torso: the white flooded under the head on the arms plate (as the builder cuts it); its bottom is the hip
+  (used when --moving: a seated torso that leans; a torso at a table or standing stays painted);
+- the resting hands: from the pose (hands at the sides, on the table, on the knees, on the wheel), in head
+  diameters from the torso centre; the painted arms are removed, so the drawn arms define the look. The edit
+  region covers everything from the shoulders to below the hands. Shoulders come from the torso outline in the
+  builder;
 - the scarf: teal under a head marks the friend (accessory 'scarf', with the neck polygon the builder paints).
 
-Two characters: the two highest white blobs that are apart are the heads; everything else is split at the
-midpoint between them. The one with the scarf is the friend; with no scarf on either, the left one is the lead.
+Two characters: the two strongest head circles; everything below is split at the midpoint between them. The one with the scarf is the friend; with no scarf on either, the left one is the lead.
+
+When the head search picks the wrong circle, `--heads` (or `head_hints` in the library entry, written by hand from
+the picture) places the heads and the rest is derived as usual.
 
 It prints the spec, writes a debug overlay to renders/bases/debug/<name>-spec.jpg, and with --build runs
 `build_bases.build` with it. A hand-written spec in build_bases.BASES always wins; this is for the pack bases.
@@ -54,37 +59,93 @@ def _largest(mask: np.ndarray, keep: int = 1, min_area: int = 400) -> list:
     return [(lab == i) for _, i in comps[:keep]]
 
 
-def _heads(white: np.ndarray, n: int) -> list:
-    """The n head blobs: the highest big white blobs that sit apart from each other."""
-    blobs = _largest(white, keep=6, min_area=2000)
-    if not blobs:
-        raise RuntimeError('no white head blob found')
-    info = []
-    for m in blobs:
-        ys, xs = np.nonzero(m)
-        info.append(dict(m=m, y=ys.mean(), x=xs.mean(), w=xs.max() - xs.min(), area=len(ys)))
-    info.sort(key=lambda d: d['y'])                                   # highest first
-    picked = []
-    for d in info:
-        if all(abs(d['x'] - p['x']) > 0.6 * max(d['w'], p['w']) for p in picked):
-            picked.append(d)
+def _ring_coverage(navy: np.ndarray, cx: float, cy: float, r: float, bins: int = 36) -> float:
+    """How much of a circle's circumference has navy outline on it (a head: nearly all; a round torso bottom: half)."""
+    h, w = navy.shape
+    hits = 0
+    for k in range(bins):
+        a = 2 * np.pi * k / bins
+        found = False
+        for rr in np.linspace(r * 0.85, r * 1.22, 9):                 # heads are ellipses: the ring is a band
+            x, y = int(cx + rr * np.cos(a)), int(cy + rr * np.sin(a))
+            if 0 <= x < w and 0 <= y < h and navy[y, x]:
+                found = True
+                break
+        hits += found
+    return hits / bins
+
+
+def _head_circles(orig: np.ndarray, n: int, lum: np.ndarray, sat: np.ndarray, char: np.ndarray) -> list:
+    """The n heads as (cx, cy, r): circles in the navy outlines with a white inside and an outline around (nearly)
+    the whole circumference, which a round torso bottom never has; two heads must be alike in size and height."""
+    h, w = orig.shape[:2]
+    f = orig.astype(np.int32)
+    navy = (lum < 110) & (f[..., 2] > f[..., 0] - 10)
+    navy_d = cv2.dilate(navy.astype(np.uint8), BB.disk(3)) > 0
+    edges = cv2.GaussianBlur((navy.astype(np.uint8) * 255), (0, 0), 2.0)
+    white = ((sat < 60) & (lum > 150)).astype(np.float32)
+    raw = []
+    for p2 in (40, 30, 22, 16, 12):
+        circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=2, minDist=60, param1=120, param2=p2, minRadius=90, maxRadius=270)
+        if circles is None:
+            continue
+        for cx, cy, r in circles[0]:
+            if cy > 0.7 * h or cy < r * 0.7 or any(np.hypot(cx - c[0], cy - c[1]) < 0.3 * r for c in raw):
+                continue
+            m = np.zeros((h, w), np.uint8)
+            cv2.circle(m, (int(cx), int(cy)), int(r * 0.75), 255, -1)
+            sel = m > 0
+            if not sel.any():
+                continue
+            raw.append((float(cx), float(cy), float(r), float(white[sel].mean()), _ring_coverage(navy_d, cx, cy, r)))
+    def torso_like(c):                                                   # another candidate sits right above it: a torso
+        return any(abs(q[0] - c[0]) < 0.7 * c[2] and 0.8 * c[2] < c[1] - q[1] < 3.2 * c[2] and q[4] > 0.45 for q in raw)
+    raw = [c for c in raw if not torso_like(c)]
+    picked, cands = [], []
+    for min_cov, min_in in ((0.8, 0.5), (0.65, 0.45), (0.5, 0.4)):                 # strict first, then looser
+        cands = [(cx, cy, r, cov * inside * r) for cx, cy, r, inside, cov in raw if inside > min_in and cov > min_cov]
+        cands.sort(key=lambda c: -c[3])
+        if n == 1:
+            picked = cands[:1]
+        else:
+            picked = []
+            for i, c in enumerate(cands):
+                for q in cands[i + 1:]:
+                    if (abs(c[0] - q[0]) > 0.9 * (c[2] + q[2]) and max(c[2], q[2]) / min(c[2], q[2]) < 1.45
+                            and abs(c[1] - q[1]) < 1.2 * max(c[2], q[2])):
+                        picked = [c, q]
+                        break
+                if picked:
+                    break
         if len(picked) == n:
             break
     if len(picked) < n:
-        raise RuntimeError(f'found {len(picked)} head blob(s), wanted {n}')
-    picked.sort(key=lambda d: d['x'])                                  # left to right
-    return [d['m'] for d in picked]
+        raise RuntimeError(f'found {len(picked)} head circle(s), wanted {n} (candidates: {[(round(c[0]), round(c[1]), round(c[2])) for c in cands[:6]]})')
+    picked.sort(key=lambda c: c[0])
+    return [(c[0], c[1], c[2]) for c in picked]
 
 
-def derive(source: Path, arms: Path, empty: Path, cast: list | None = None, moving: bool = False, covered: bool = False) -> dict:
+# resting hands per pose, in head diameters from the head centre (x outward from the body's centre, y down)
+RESTS = {                                   # measured on the hand-written bases: hands at the sides ±0.38 D, on the table ±0.27 D
+    'standing': dict(dx=0.4, dy=1.42), 'seated-at-table': dict(dx=0.28, dy=1.1), 'seated-desk': dict(dx=0.28, dy=1.1),
+    'seated-sofa': dict(dx=0.32, dy=1.5), 'seated-bench': dict(dx=0.3, dy=1.5), 'driving': dict(dx=0.45, dy=0.95),
+    'passenger': dict(dx=0.25, dy=1.45), 'bed-edge': dict(dx=0.45, dy=1.45),
+}
+
+
+def derive(source: Path, arms: Path, empty: Path, cast: list | None = None, moving: bool = False, covered: bool = False,
+           poses: dict | None = None, head_hints: dict | None = None) -> dict:
     cast = cast or ['lead']
+    head_hints = head_hints or {}
+    poses = poses or {c: 'standing' for c in cast}
     orig = BB.load(source, (941, 1672))
     h, w = orig.shape[:2]
     hsv = cv2.cvtColor(orig, cv2.COLOR_RGB2HSV)
     sat, lum = hsv[..., 1].astype(np.float32), orig.astype(np.float32).mean(-1)
     f = orig.astype(np.int32)
     yy = np.mgrid[0:h, 0:w][0]
-    # the character(s)
+    # the character(s): where the empty plate differs from the source (FLUX also redraws some background, so
+    # this is only a hint for the head search)
     empty_p = BB.register(orig, BB.load(empty), np.ones((h, w), bool))
     char = _mask_diff(orig, empty_p, 30)
     char = cv2.morphologyEx(char.astype(np.uint8), cv2.MORPH_CLOSE, BB.disk(9)) > 0
@@ -92,113 +153,95 @@ def derive(source: Path, arms: Path, empty: Path, cast: list | None = None, movi
     ys, xs = np.nonzero(char)
     if not len(ys):
         raise RuntimeError('no character found: the empty plate equals the source')
-    # heads: white blobs high in the character
-    white = (sat < 45) & (lum > 165) & char
-    white = cv2.morphologyEx(white.astype(np.uint8), cv2.MORPH_OPEN, BB.disk(3)) > 0
-    head_blobs = _heads(white, len(cast))
     ells = []
-    for hb in head_blobs:
-        hy, hx = np.nonzero(hb)
-        grow = 26
-        box = (max(0, hx.min() - grow), max(0, hy.min() - grow), min(w, hx.max() + grow), min(h, hy.max() + grow))
+    if len(head_hints) == len(cast):                                   # the user placed the heads (cx, cy, r), left to right
+        circles = sorted((tuple(v) for v in head_hints.values()), key=lambda c: c[0])
+    else:
+        circles = _head_circles(orig, len(cast), lum, sat, char)
+    for cx0, cy0, r0 in circles:
+        g = 0.12 * r0
+        box = (int(max(0, cx0 - r0 - g)), int(max(0, cy0 - r0 - g)), int(min(w, cx0 + r0 + g)), int(min(h, cy0 + r0 + g)))
         ells.append(BB.refine_head(orig, BB.fit_head(orig, box)))
     centres = [e[0][0] for e in ells]
-    # columns: each character owns the strip around its head, bounded by the midpoints to the neighbours
     bounds = [0] + [int((centres[i] + centres[i + 1]) / 2) for i in range(len(ells) - 1)] + [w]
     all_heads = np.zeros((h, w), bool)
     for e in ells:
         all_heads |= BB.ellipse_mask(orig.shape, e, 10)
     arms_p = BB.register(orig, BB.load(arms), ~all_heads)
-    plate_lum = cv2.GaussianBlur(arms_p.astype(np.float32).mean(-1), (0, 0), 1.5)
-    navy = (lum < 95) & (sat < 150) & (f[..., 2] > f[..., 0] + 6)              # navy limbs, not dark wood
-    teal = (f[..., 1] > f[..., 0] + 12) & (f[..., 2] > f[..., 0] + 4) & (lum > 50) & (lum < 200) & char
-    seats, measured, all_arm = [], [], np.zeros((h, w), bool)
-    for i, e in enumerate(ells):
+    teal = (f[..., 1] > f[..., 0] + 12) & (f[..., 2] > f[..., 0] + 4) & (lum > 50) & (lum < 200)
+    white = (sat < 45) & (lum > 165)
+    # names first (the scarf marks the friend), so each seat knows its pose
+    scarves = []
+    for e in ells:
+        (cx, cy), (ew, eh), _ = e
+        D = (ew + eh) / 2
+        band = teal & (yy > cy + 0.3 * D) & (yy < cy + 0.95 * D)
+        band[:, :max(0, int(cx - 0.7 * D))] = False
+        band[:, min(w, int(cx + 0.7 * D)):] = False
+        scarves.append(band.sum() > 0.01 * D * D)
+    names = list(cast)
+    if len(cast) == 2 and 'friend' in cast and 'lead' in cast:
+        names = (['friend', 'lead'] if scarves[0] else ['lead', 'friend']) if scarves.count(True) == 1 else ['lead', 'friend']
+    seats, measured, rois = [], [], []
+    for i, (e, name, scarf) in enumerate(zip(ells, names, scarves)):
         (cx, cy), (ew, eh), ang = e
         D = (ew + eh) / 2
+        pose = poses.get(name, 'standing')
         head_m = BB.ellipse_mask(orig.shape, e, 0)
         marks = head_m & BB.ellipse_mask(orig.shape, e, -16) & (lum < 90)
         my, mx = np.nonzero(marks)
         facing = 1 if (mx.mean() if len(mx) else cx) >= cx else -1
-        column = np.zeros((h, w), bool)
-        x0, x1 = max(bounds[i], int(cx - 1.6 * D)), min(bounds[i + 1], int(cx + 1.6 * D))
-        column[:, x0:x1] = True
-        # the scarf: teal just under the head
-        sc = teal & column & (yy > cy + 0.3 * D) & (yy < cy + 0.95 * D)
-        sc = cv2.morphologyEx(sc.astype(np.uint8), cv2.MORPH_OPEN, BB.disk(2)) > 0
-        scarf = sc.sum() > 0.01 * D * D
-        # torso: the white below the head in the column (its bottom is the hip; the arms are bounded by it)
-        torso = white & ~BB.ellipse_mask(orig.shape, e, 6) & column & (yy < cy + 2.4 * D)
-        torso = cv2.morphologyEx(torso.astype(np.uint8), cv2.MORPH_OPEN, BB.disk(5)) > 0
-        tb = _largest(torso, keep=3, min_area=1500)
-        if tb:
-            ty, tx = np.nonzero(np.logical_or.reduce(tb))
-            torso_seed = (int(np.median(tx)), int(np.percentile(ty, 35)))
-            hip = (int(np.median(tx[ty > np.percentile(ty, 90)])), int(np.percentile(ty, 97)))
-            torso_cx = torso_seed[0]
-        else:
-            torso_seed = (int(cx), int(cy + 0.9 * D))
-            hip = (int(cx), int(cy + 1.6 * D))
-            torso_cx = int(cx)
-        arm_m = navy & (plate_lum > 118) & column & ~BB.ellipse_mask(orig.shape, e, 10) & (yy < hip[1] + 0.35 * D)
-        arm_m = cv2.morphologyEx(arm_m.astype(np.uint8), cv2.MORPH_CLOSE, BB.disk(9)) > 0
-        arm_blobs = _largest(arm_m, keep=2, min_area=600)
-        for m in arm_blobs:
-            all_arm |= m
-        shoulders, rests = {}, {}
-        if len(arm_blobs) == 1:                                   # arms merged into one blob: split at the torso centre
-            m = arm_blobs[0]
-            left = m.copy(); left[:, torso_cx:] = False
-            right = m.copy(); right[:, :torso_cx] = False
-            arm_blobs = [b for b in (left, right) if b.sum() > 600]
-        for m in arm_blobs:
-            ay, ax = np.nonzero(m)
-            top = ay < np.percentile(ay, 12)
-            sh = (float(ax[top].mean()), float(ay[top].mean()))
-            far = np.argmax((ax - sh[0]) ** 2 + (ay - sh[1]) ** 2)
-            hand = (float(ax[far]), float(ay[far]))
-            side = 'l' if sh[0] < torso_cx else 'r'
-            if side in shoulders:
+        # the torso: flood the white under the head on the arms plate (the builder cuts it the same way)
+        x0, x1 = max(bounds[i], int(cx - 1.3 * D)), min(bounds[i + 1], int(cx + 1.3 * D))
+        seed = None
+        for dy in (0.85, 0.75, 1.0, 1.15, 0.65):
+            yq = int(cy + dy * D)
+            if yq >= h:
                 continue
-            shoulders[side] = (round(sh[0]), round(sh[1]))
-            rests[side] = (int(min(w - 1, max(0, hand[0] - 0.04 * D * (1 if hand[0] > sh[0] else -1)))), int(min(h - 1, hand[1] - 0.05 * D)))
-        for side in ('l', 'r'):                                    # an arm hidden behind the body: mirror the other
-            if side not in shoulders:
-                other = 'r' if side == 'l' else 'l'
-                if other in shoulders:
-                    dx = shoulders[other][0] - torso_cx
-                    shoulders[side] = (round(torso_cx - dx), shoulders[other][1])
-                    rests[side] = (round(torso_cx - (rests[other][0] - torso_cx)), rests[other][1])
-                else:
-                    shoulders[side] = (round(cx + (-0.45 if side == 'l' else 0.45) * D), round(cy + 0.62 * D))
-                    rests[side] = (round(cx + (-0.6 if side == 'l' else 0.6) * D), round(cy + 1.3 * D))
-        seat = dict(name=None, head=dict(centre=(round(cx, 1), round(cy, 1)), size=(round(ew, 1), round(eh, 1)), angle=round(ang, 1), refine=False),
-                    facing=facing, torso_seed=torso_seed, hip=hip if (moving and not covered) else None, rest=rests)
+            row = np.nonzero(white[yq, x0:x1] & ~all_heads[yq, x0:x1])[0]
+            if len(row) > 0.1 * D:
+                seed = (int(x0 + np.median(row)), yq)
+                break
+        if seed is None:
+            seed = (int(cx), int(cy + 0.85 * D))
+        try:
+            body = BB.torso_mask(arms_p, seed, scarf) & ~all_heads
+        except cv2.error:
+            body = np.zeros((h, w), bool)
+        if body.sum() > 0.3 * D * D:
+            by, bx = np.nonzero(body)
+            hip = (int(np.median(bx[by > np.percentile(by, 92)])), int(np.percentile(by, 98)))
+            torso_cx = int(np.median(bx))
+        else:
+            hip = (int(cx), int(cy + 1.65 * D))
+            torso_cx = int(cx)
+        r = RESTS.get(pose, RESTS['standing'])
+        rests = dict(l=(int(torso_cx - r['dx'] * D), int(cy + r['dy'] * D)), r=(int(torso_cx + r['dx'] * D), int(cy + r['dy'] * D)))
+        if pose == 'driving':                                           # both hands forward, on the wheel
+            rests = dict(l=(int(torso_cx + 0.55 * D * facing), int(cy + 0.9 * D)), r=(int(torso_cx + 0.75 * D * facing), int(cy + 1.0 * D)))
+        for k, (rx, ry) in rests.items():
+            rests[k] = (min(w - 1, max(0, rx)), min(h - 1, max(0, ry)))
+        seat = dict(name=name, head=dict(centre=(round(cx, 1), round(cy, 1)), size=(round(ew, 1), round(eh, 1)), angle=round(ang, 1), refine=False),
+                    facing=facing, torso_seed=seed, hip=hip if (moving and not covered) else None, rest=rests)
         if scarf:
-            sy_, sx_ = np.nonzero(sc)
+            band = teal & (yy > cy + 0.3 * D) & (yy < cy + 0.95 * D)
+            band[:, :max(0, int(cx - 0.7 * D))] = False
+            band[:, min(w, int(cx + 0.7 * D)):] = False
+            sy_, sx_ = np.nonzero(band)
             top_y, bot_y = int(np.percentile(sy_, 5)), int(np.percentile(sy_, 95))
             xl, xr = int(np.percentile(sx_, 3)), int(np.percentile(sx_, 97))
             seat.update(accessory='scarf', head_grow=6,
                         scarf_neck=dict(poly=[(xl + 6, bot_y), (xl + 18, top_y), (xr - 18, top_y), (xr - 6, bot_y)],
                                         colour_at=(int(np.median(sx_)), int(np.median(sy_)))))
         if covered:
-            seat.update(torso='covered', shoulders=shoulders)
+            seat.update(torso='covered')
         seats.append(seat)
-        measured.append(dict(shoulders=shoulders, D=round(D, 1), scarf=bool(scarf)))
-    # names: the scarf marks the friend; otherwise left to right in the order given
-    names = list(cast)
-    if len(cast) == 2 and 'friend' in cast and 'lead' in cast:
-        scarves = [m['scarf'] for m in measured]
-        if scarves.count(True) == 1:
-            names = ['friend', 'lead'] if scarves[0] else ['lead', 'friend']
-        else:
-            names = ['lead', 'friend']
-    for s, n in zip(seats, names):
-        s['name'] = n
-    ay, ax = np.nonzero(all_arm) if all_arm.any() else (np.array([int(ells[0][0][1])]), np.array([int(ells[0][0][0])]))
-    pad = 40
-    roi = [(max(0, int(ax.min()) - pad), max(0, int(ay.min()) - pad)), (min(w, int(ax.max()) + pad), max(0, int(ay.min()) - pad)),
-           (min(w, int(ax.max()) + pad), min(h, int(ay.max()) + pad)), (max(0, int(ax.min()) - pad), min(h, int(ay.max()) + pad))]
+        measured.append(dict(D=round(D, 1), scarf=bool(scarf), pose=pose, body_px=int(body.sum())))
+        # the edit region: everything the arms could have covered, from the shoulders down past the hands
+        rois.append((max(0, int(torso_cx - 1.25 * D)), int(cy + 0.45 * D), min(w, int(torso_cx + 1.25 * D)), min(h, int(cy + r['dy'] * D + 0.4 * D))))
+    rx0, ry0 = min(r_[0] for r_ in rois), min(r_[1] for r_ in rois)
+    rx1, ry1 = max(r_[2] for r_ in rois), max(r_[3] for r_ in rois)
+    roi = [(rx0, ry0), (rx1, ry0), (rx1, ry1), (rx0, ry1)]
     spec = dict(source=str(source), arms=str(arms), empty=str(empty), edit_roi=roi, seats=seats, light='right', derived=True, inserts=True,
                 measured=dict(seats=measured, character_box=[int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())]))
     return spec
@@ -212,8 +255,6 @@ def debug_image(spec: dict, name: str) -> Path:
     for s, m in zip(spec['seats'], spec['measured']['seats']):
         (cx, cy), (ew, eh) = s['head']['centre'], s['head']['size']
         d.ellipse((cx - ew / 2, cy - eh / 2, cx + ew / 2, cy + eh / 2), outline=(255, 40, 40), width=3)
-        for side, xy in m['shoulders'].items():
-            d.ellipse((xy[0] - 8, xy[1] - 8, xy[0] + 8, xy[1] + 8), fill=(40, 120, 255))
         for side, xy in s['rest'].items():
             d.ellipse((xy[0] - 10, xy[1] - 10, xy[0] + 10, xy[1] + 10), outline=(255, 200, 0), width=4)
             d.text((xy[0] + 12, xy[1]), side, fill=(255, 200, 0))
@@ -222,7 +263,7 @@ def debug_image(spec: dict, name: str) -> Path:
             d.ellipse((s['hip'][0] - 8, s['hip'][1] - 8, s['hip'][0] + 8, s['hip'][1] + 8), fill=(200, 60, 200))
         if s.get('scarf_neck'):
             d.polygon(s['scarf_neck']['poly'], outline=(0, 200, 200), width=2)
-        d.text((cx - 30, cy - eh / 2 - 18), f"{s['name']} facing {s['facing']} D {m['D']}", fill=(255, 255, 255))
+        d.text((cx - 30, cy - eh / 2 - 18), f"{s['name']} {m['pose']} facing {s['facing']} D {m['D']}", fill=(255, 255, 255))
     DEBUG.mkdir(parents=True, exist_ok=True)
     out = DEBUG / f'{name}-spec.jpg'
     im.save(out, quality=88)
@@ -236,7 +277,14 @@ def main(argv):
     cast = ['lead']
     if '--cast' in argv:
         cast = argv[argv.index('--cast') + 1].split(',')
-    spec = derive(Path(source), Path(arms), Path(empty), cast=cast, moving='--moving' in argv, covered='--covered' in argv)
+    poses = None
+    if '--poses' in argv:
+        poses = dict(kv.split('=') for kv in argv[argv.index('--poses') + 1].split(','))
+    hints = None
+    if '--heads' in argv:                                              # --heads lead=315,590,150
+        hints = {kv.split('=')[0]: tuple(float(x) for x in kv.split('=')[1].split(',')) for kv in argv[argv.index('--heads') + 1].split(';')}
+    spec = derive(Path(source), Path(arms), Path(empty), cast=cast, moving='--moving' in argv, covered='--covered' in argv, poses=poses,
+                  head_hints=hints)
     print(json.dumps(spec, indent=1, default=str))
     print('debug:', debug_image(spec, name))
     if '--build' in argv:

@@ -143,8 +143,27 @@ def rumble(rng, seconds=0.5):
     return 0.3 * np.sin(2 * np.pi * (48 - 20 * t) * t) * np.exp(-t * 7) + 0.1 * _noise(rng, len(t), hi=300) * np.exp(-t * 9)
 
 
+def ding(rng):
+    """A small bright bell: the clink's ring with a longer tail (the script vocabulary's 'ding')."""
+    t = _t(0.9)
+    sig = np.zeros_like(t)
+    for k, (f, a) in enumerate(((1760.0, 1.0), (2637.0, 0.45), (3520.0, 0.2))):
+        sig += a * np.sin(2 * np.pi * f * t) * np.exp(-t * (5.5 + 2 * k))
+    return sig * 0.5
+
+
+def typing(rng, seconds=0.9, n=9):
+    """A short burst of key taps (the script vocabulary's 'typing')."""
+    out = np.zeros(int(seconds * SR))
+    for k in range(n):
+        at = int((0.04 + k * (seconds - 0.1) / n + rng.uniform(-0.015, 0.015)) * SR)
+        c = tap(rng)
+        out[at:at + len(c)] += c[:max(0, len(out) - at)] * rng.uniform(0.6, 1.0)
+    return out
+
+
 SFX = dict(thud=thud, alarm=alarm, click=click, snore=snore, rumble=rumble, coin=coin, coin_big=lambda r: coin(r, True), trickle=trickle, whoosh=whoosh, pop=pop, tick=tick,
-           tap=tap, paper=paper, crack=crack, clink=clink, slide=slide, sparkle=sparkle)
+           tap=tap, paper=paper, crack=crack, clink=clink, slide=slide, sparkle=sparkle, ding=ding, typing=typing)
 
 
 def music_bed(seconds: float, seed: int = 3) -> np.ndarray:
@@ -188,7 +207,7 @@ def mix(seconds: float, voice: list, events: list, music: bool = True, seed: int
     fx = np.zeros(n)
     rng = np.random.default_rng(seed)
     for at, name, gain in sorted(events, key=lambda e: e[0]):
-        sig = SFX[name](rng) * gain
+        sig = SFX.get(name, pop)(rng) * gain                       # an unknown name is a soft pop, never a crash
         i = int(max(0.0, at) * SR)
         sig = sig[:max(0, n - i)]
         fx[i:i + len(sig)] += sig

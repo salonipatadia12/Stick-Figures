@@ -1,0 +1,92 @@
+{
+ "name": "friend-standing-street",
+ "source": "renders/bases/flux/pack-street-friend-s642.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-friend-standing-street-arms-s12.png",
+  "empty": "plate-friend-standing-street-empty-s13.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "friend",
+   "head": [
+    496.1,
+    487.7
+   ],
+   "D": 338.2,
+   "facing": 1,
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     391.5,
+     685
+    ],
+    "r": [
+     515.5,
+     685
+    ]
+   },
+   "rest": {
+    "l": [
+     327,
+     967
+    ],
+    "r": [
+     598,
+     967
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "scarf": [
+     [
+      389,
+      794
+     ],
+     [
+      401,
+      634
+     ],
+     [
+      550,
+      634
+     ],
+     [
+      562,
+      794
+     ]
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     366,
+     640
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     186.1,
+     186.7
+    ],
+    "size": [
+     332.5,
+     343.9
+    ],
+    "angle": 125.6
+   }
+  }
+ ],
+ "places": {}
+}

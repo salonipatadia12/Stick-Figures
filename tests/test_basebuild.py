@@ -49,3 +49,14 @@ class MatchTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SfxVocabularyTest(unittest.TestCase):
+    def test_every_script_sfx_name_has_a_sound(self):
+        from typing import get_args
+        from pipeline import sfx
+        import numpy as np
+        rng = np.random.default_rng(1)
+        for name in get_args(models.SfxName):
+            self.assertIn(name, sfx.SFX)
+            self.assertGreater(len(sfx.SFX[name](rng)), 100)

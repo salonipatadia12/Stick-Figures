@@ -63,6 +63,13 @@ class Runner:
         self.default_voice = voice
         self._bases_hash = None
 
+    def __getstate__(self):
+        # workers get a Runner without the composed beats (their classes are made at run time and cannot be
+        # pickled); each worker composes them again from the script, which is deterministic
+        state = dict(self.__dict__)
+        state.pop('_composed', None)
+        return state
+
     @property
     def beats(self):
         """The beats module, or what `for_episode(slug)` composes from the script (compose_beats)."""

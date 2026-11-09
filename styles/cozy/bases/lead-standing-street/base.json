@@ -1,0 +1,89 @@
+{
+ "name": "lead-standing-street",
+ "source": "renders/bases/flux/pack-street-lead-s416.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-lead-standing-street-arms-s26.png",
+  "empty": "plate-lead-standing-street-empty-s27.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    454.2,
+    573.8
+   ],
+   "D": 333.5,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     357.5,
+     764
+    ],
+    "r": [
+     511.5,
+     764
+    ]
+   },
+   "rest": {
+    "l": [
+     307,
+     1047
+    ],
+    "r": [
+     574,
+     1047
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 755.0,
+    "stroke": [
+     9,
+     9
+    ],
+    "left": [
+     0.0,
+     -0.3486,
+     356.9274
+    ],
+    "right": [
+     0.0,
+     0.3518,
+     513.2504
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     338,
+     735
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     182.2,
+     181.8
+    ],
+    "size": [
+     331.7,
+     335.4
+    ],
+    "angle": 124.3
+   }
+  }
+ ],
+ "places": {}
+}
