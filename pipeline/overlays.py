@@ -82,16 +82,69 @@ def font(path: str, size: int):
     return ImageFont.truetype(path, size)
 
 
+SUBSCRIPT = str.maketrans('\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089', '0123456789')
+
+
+def _runs(text: str) -> list:
+    """The text split into (chars, is_subscript) runs; subscript digits (SO\u2082, CO\u2082) come back as plain digits."""
+    runs = []
+    for ch in text:
+        sub = '\u2080' <= ch <= '\u2089'
+        if runs and runs[-1][1] == sub:
+            runs[-1][0] += ch.translate(SUBSCRIPT)
+        else:
+            runs.append([ch.translate(SUBSCRIPT), sub])
+    return runs
+
+
 @lru_cache(maxsize=64)
 def text_layer(text: str, size: int, fill=(255, 255, 255), stroke=NAVY, path: str = FONT) -> Image.Image:
     f = font(path, size)
     sw = max(3, size // 9)
-    l, t, r, b = f.getbbox(text, stroke_width=sw)
-    im = Image.new('RGBA', (r - l + 24, b - t + 24), (0, 0, 0, 0))
+    runs = _runs(text)
+    if len(runs) == 1 and not runs[0][1]:
+        l, t, r, b = f.getbbox(text, stroke_width=sw)
+        im = Image.new('RGBA', (r - l + 24, b - t + 24), (0, 0, 0, 0))
+        d = ImageDraw.Draw(im)
+        d.text((12 - l + 4, 12 - t + 6), text, font=f, fill=NAVY + (110,), stroke_width=sw, stroke_fill=NAVY + (110,))
+        d.text((12 - l, 12 - t), text, font=f, fill=fill, stroke_width=sw, stroke_fill=stroke)
+        return mark(im, text, size)
+    # The UI font has no subscript digits (they would draw as empty boxes): draw them smaller and lowered.
+    fs, drop = font(path, max(12, int(size * 0.62))), int(size * 0.32)
+    x, top, bottom, pieces = 0.0, 10 ** 6, -10 ** 6, []
+    for chars, sub in runs:
+        ff, dy = (fs, drop) if sub else (f, 0)
+        _, t_, _, b_ = ff.getbbox(chars, stroke_width=sw)
+        pieces.append((x, dy, chars, ff))
+        top, bottom = min(top, t_ + dy), max(bottom, b_ + dy)
+        x += ff.getlength(chars)
+    im = Image.new('RGBA', (int(x) + 2 * sw + 28, bottom - top + 24), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.text((12 - l + 4, 12 - t + 6), text, font=f, fill=NAVY + (110,), stroke_width=sw, stroke_fill=NAVY + (110,))
-    d.text((12 - l, 12 - t), text, font=f, fill=fill, stroke_width=sw, stroke_fill=stroke)
+    for shadow in (True, False):
+        for px, dy, chars, ff in pieces:
+            xy = (12 + sw + px + (4 if shadow else 0), 12 - top + dy + (6 if shadow else 0))
+            if shadow:
+                d.text(xy, chars, font=ff, fill=NAVY + (110,), stroke_width=sw, stroke_fill=NAVY + (110,))
+            else:
+                d.text(xy, chars, font=ff, fill=fill, stroke_width=sw, stroke_fill=stroke)
     return mark(im, text, size)
+
+
+MIN_HOLD = 1.2      # seconds every text, label and diagram item stays up before its shot cuts
+
+
+def settle(times: list, t0: float, t1: float, hold: float = MIN_HOLD, step: float = 0.45) -> list:
+    """Anchor times pulled earlier where needed so that each item is on screen at least `hold` seconds before the
+    cut at t1, in the same order, each at least `step` before the next one (user review 2026-11-08: items anchored on
+    a beat's last word flashed for a few frames, or were still sliding in at the cut). Times after t1 belong to the
+    next shot and None (no anchor) are left alone; nothing moves before t0 unless its word already was."""
+    out = list(times)
+    order = sorted((i for i, a in enumerate(out) if a is not None and a <= t1), key=lambda i: out[i], reverse=True)
+    cap = t1 - hold
+    for i in order:
+        out[i] = max(min(out[i], cap), min(out[i], t0 + 0.1))
+        cap = out[i] - step
+    return out
 
 
 @lru_cache(maxsize=16)

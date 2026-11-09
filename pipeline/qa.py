@@ -56,16 +56,37 @@ def freezes(path: Path, fps: int = 30, threshold: float = 0.35) -> dict:
                 mean_change=round(float(diff.mean()), 3))
 
 
-def heard_words(path: Path) -> list:
-    """faster-whisper (small.en, CPU) transcript of the final audio, in .venvs/torch. The audio is decoded
-    with ffmpeg to 16 kHz mono first (faster-whisper's own decoder doesn't match the installed PyAV)."""
+CHUNK_S = 20.0
+
+
+def chunks(tl: dict | None, limit: float = CHUNK_S) -> list:
+    """(start, end) windows of at most ~`limit` seconds, cut in the pauses before beats. Whisper decodes long audio in
+    30 s windows and can skip a sentence at a window edge (2026-11-08: "younger and older adults. But here's the
+    catch. Later studies" vanished from a clean 47 s mix that transcribed perfectly on its own)."""
+    starts = [b['words'][0][1] - 0.15 for b in (tl or {}).get('beats', []) if b.get('words')]
+    if not starts:
+        return [(0.0, 1e9)]
+    cuts = [0.0]
+    for i in range(1, len(starts) - 1):           # cut before beat i when taking it in would run the window too long
+        if starts[i + 1] - cuts[-1] > limit and starts[i] > cuts[-1] + 1:
+            cuts.append(starts[i])
+    return [(a, b) for a, b in zip(cuts, cuts[1:] + [1e9])]
+
+
+def heard_words(path: Path, tl: dict | None = None) -> list:
+    """faster-whisper (small.en, CPU) transcript of the final audio, in .venvs/torch, decoded chunk by chunk (see
+    `chunks`). The audio is decoded with ffmpeg to 16 kHz mono first (faster-whisper's own decoder doesn't match the
+    installed PyAV)."""
     wav = path.with_suffix('.qa16k.wav')
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(path), '-ac', '1', '-ar', '16000', str(wav)], check=True)
-    code = ("import sys,json,soundfile as sf; from faster_whisper import WhisperModel;"
-            "a,_=sf.read(sys.argv[1],dtype='float32'); m=WhisperModel('small.en',device='cpu',compute_type='int8');"
-            "segs,_=m.transcribe(a,word_timestamps=True,language='en');"
-            "print(json.dumps([dict(w=w.word,s=w.start,e=w.end) for s in segs for w in (s.words or [])]))")
-    out = subprocess.run([str(ROOT / '.venvs/torch/bin/python'), '-c', code, str(wav)], capture_output=True, text=True)
+    code = ("import sys,json,soundfile as sf\nfrom faster_whisper import WhisperModel\n"
+            "a,sr=sf.read(sys.argv[1],dtype='float32'); m=WhisperModel('small.en',device='cpu',compute_type='int8'); out=[]\n"
+            "for s,e in json.loads(sys.argv[2]):\n"
+            "    segs,_=m.transcribe(a[int(s*sr):int(min(e,len(a)/sr)*sr)],word_timestamps=True,language='en')\n"
+            "    out+=[dict(w=w.word,s=w.start+s,e=w.end+s) for g in segs for w in (g.words or [])]\n"
+            "print(json.dumps(out))")
+    out = subprocess.run([str(ROOT / '.venvs/torch/bin/python'), '-c', code, str(wav), json.dumps(chunks(tl))],
+                         capture_output=True, text=True)
     wav.unlink(missing_ok=True)
     if out.returncode:
         raise RuntimeError(out.stderr[-2000:])
@@ -82,7 +103,7 @@ NUMBER_WORDS = {'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 
                 'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90', 'hundred': '100', 'thousand': '1000'}
 
 
-SPELLINGS = {'tonnes': 'tons', 'tonne': 'ton', 'colour': 'color', 'colours': 'colors', 'grey': 'gray', 'metres': 'meters',
+SPELLINGS = {'tonnes': 'tons', 'tonne': 'ton', 'cancelled': 'canceled', 'travelled': 'traveled', 'modelling': 'modeling', 'colour': 'color', 'colours': 'colors', 'grey': 'gray', 'metres': 'meters',
              'litres': 'liters', 'centre': 'center', 'favourite': 'favorite', 'behaviour': 'behavior'}   # UK spelling, US hearing
 
 
@@ -107,6 +128,8 @@ def words_check(script_words: list, heard: list) -> dict:
                     break
             if found is not None:
                 break
+        if found is None and k in ('a', 'an', 'the'):     # the recogniser often drops an article; the line still reads
+            continue
         if found is None:
             missing.append(w)
         else:
@@ -123,7 +146,7 @@ def captions_check(boxes: list) -> dict:
                 safe=C.SAFE, pass_=not bad)
 
 
-def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0) -> dict:
+def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, promised: list | None = None) -> dict:
     """Every on-screen text must read on a phone: its type at least `min_px` tall (font em, frame pixels).
     text_sizes: per frame, the smallest text drawn (from overlays' log); captions bring their font size."""
     small = [d for d in text_sizes if d['em'] < min_px]
@@ -150,7 +173,9 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0) -> d
             for c in d.get('chars', []):
                 if _overlap(a, c) > 0.12:
                     on_body.setdefault(a[4], d['t'])
-    return dict(min_px=min_px, frames_with_text=len(text_sizes),
+    brief = brief_texts(text_sizes)
+    missing = missing_texts(text_sizes, promised or [])
+    return dict(min_px=min_px, frames_with_text=len(text_sizes), brief_text=brief[:12], missing_text=missing[:12],
                 overlapping_text=[dict(texts=k, t=v) for k, v in overlaps.items()][:12],
                 text_on_character=[dict(text=k, t=v) for k, v in on_body.items()][:12],
                 smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
@@ -158,7 +183,68 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0) -> d
                 frames_outside_safe_area=len(outside), outside_safe_area=[dict(label=l, box=b) for l, b in out_labels][:12],
                 rightmost=max((d['box'][2] for d in text_sizes if 'box' in d), default=0),
                 lowest_bottom=max((d['box'][3] for d in text_sizes if 'box' in d), default=0),
-                pass_=not small and not small_caps and not outside and not overlaps and not on_body)
+                pass_=not small and not small_caps and not outside and not overlaps and not on_body and not brief
+                and not missing)
+
+
+def _words(text: str) -> set:
+    return set(re.findall(r'[a-z0-9]+', str(text).lower()))
+
+
+def promised_texts(episode: dict) -> list:
+    """Every text the script asks to see on screen (on_screen_text unless only a counter shows it, split and checklist
+    entries, diagram items, insert labels), as dict(beat, text)."""
+    out = []
+    for b in episode.get('beats', []):
+        sh = b.get('shot', {})
+        recipes = {m['recipe'] for m in sh.get('motion', [])}
+        ost = (b.get('on_screen_text') or '').strip()
+        if ost and (recipes & {'text_slam'} or not recipes & {'number_counter', 'split_compare', 'checklist_tick'}):
+            out.append(dict(beat=b['id'], text=ost))
+        for m in sh.get('motion', []):
+            if m['recipe'] in ('split_compare', 'checklist_tick') and m.get('detail'):
+                out += [dict(beat=b['id'], text=x.strip()) for x in m['detail'].split('|') if x.strip()]
+        g = sh.get('graphic') or {}
+        for item in g.get('items', []):
+            parts = item.split(':') if g.get('kind') == 'cards' else [item]
+            out += [dict(beat=b['id'], text=x.strip()) for x in parts if x.strip()]
+        for e in (sh.get('insert') or {}).get('effects', []):
+            if e.get('kind') == 'label' and e.get('detail'):
+                out.append(dict(beat=b['id'], text=e['detail']))
+    return out
+
+
+def missing_texts(text_sizes: list, promised: list) -> list:
+    """Promised texts that never settled on screen (user review 2026-11-08: an approved on_screen_text was never
+    drawn). A text counts as shown when one drawn text holds all its words (a slam may be stacked on two lines)."""
+    drawn = [_words(it[4]) for d in text_sizes for it in d.get('items', [])]
+    drawn = [w for i, w in enumerate(drawn) if w and w not in drawn[:i]]
+    return [p for p in promised if _words(p['text']) and not any(_words(p['text']) <= w for w in drawn)]
+
+
+COUNTING = re.compile(r'[$€£₹¥]?[\d,.]+%?')
+BRIEF_S = 0.8       # logged (settled) seconds; a text also shows ~0.3 s while it pops in
+
+
+def brief_texts(text_sizes: list, min_s: float = BRIEF_S) -> list:
+    """Overlay texts (slams, labels, diagram items) that are on screen too briefly to read: settled for under
+    `min_s` in one stretch (user review 2026-11-08: items on a beat's last word flashed for a few frames before the
+    cut). A counting number changes its text every frame, so all numbers count as one text."""
+    seen = {}
+    for d in text_sizes:
+        for it in d.get('items', []):
+            seen.setdefault('(number)' if COUNTING.fullmatch(str(it[4])) else it[4], set()).add(round(d['t'], 3))
+    out = []
+    for label, ts in seen.items():
+        ts = sorted(ts)
+        start = prev = ts[0]
+        for t in ts[1:] + [None]:
+            if t is None or t - prev > 0.1:
+                if prev - start + 1 / 30 < min_s:
+                    out.append(dict(text=label, t=start, seconds=round(prev - start + 1 / 30, 2)))
+                start = t
+            prev = t if t is not None else prev
+    return sorted(out, key=lambda d: d['t'])
 
 
 def _overlap(a, b) -> float:
@@ -237,11 +323,12 @@ def contact_sheet(video: Path, plan: list, out: Path, cols: int = 5):
 
 
 def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, plan: list, voice: str,
-        text_sizes: list | None = None, ledger: Path | None = None, library: dict | None = None) -> dict:
+        text_sizes: list | None = None, ledger: Path | None = None, library: dict | None = None,
+        promised: list | None = None) -> dict:
     duration = probe_duration(video)
     target = float(tl.get('target', 45))
     loud = sfx.loudness(video)
-    heard = heard_words(video)
+    heard = heard_words(video, tl)
     script = [w for b in tl['beats'] for w, _ in b['words']]
     spent = None
     if ledger and ledger.exists():
@@ -253,7 +340,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         freeze=freezes(video),
         captions=captions_check(caption_boxes) | dict(lines=len(lines), srt=str((out_dir / (video.stem + '.srt')).relative_to(ROOT))),
         words=words_check(script, heard),
-        text=text_check(text_sizes or [], caption_boxes),
+        text=text_check(text_sizes or [], caption_boxes, promised=promised),
         loudness=dict(**loud, target_lufs=-14.0, max_true_peak=-1.0,
                       pass_=abs(loud['integrated_lufs'] + 14.0) <= 1.0 and loud['true_peak_dbtp'] <= -1.0),
         characters=characters_check(),

@@ -97,9 +97,9 @@
     "pose_variants": [],
     "motion": [
      {
-      "recipe": "number_counter",
-      "anchor": "tonnes",
-      "detail": "0 -> 58"
+      "recipe": "text_slam",
+      "anchor": "53",
+      "detail": ""
      }
     ],
     "transition": "cut",

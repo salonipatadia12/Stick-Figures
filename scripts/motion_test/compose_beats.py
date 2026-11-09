@@ -40,6 +40,7 @@ from beat_base import PROPS, Beat, punch, shake, word_times  # noqa: F401
 ROOT = Path(__file__).resolve().parents[2]
 PROP_LIBRARY = ROOT / 'styles/cozy/props/library.json'
 TEXT_TOP, TEXT_LOW = (540, 300), (540, 1130)
+HEAD_CLEAR = 395                         # screen y a head may not rise above while the top text slot is in use
 FRAMING_WIDTH = {'wide': 940, 'medium': 760, 'close': 560, 'insert': 620, 'top_down': 760}
 MOOD = {'hook': dict(smile=-0.1, brow_worry=0.4), 'setup': dict(smile=0.3), 'tension': dict(smile=-0.15, brow_worry=0.5),
         'reveal': dict(smile=0.3, brow_raise=0.2), 'payoff': dict(smile=0.6), 'ending': dict(smile=0.6)}
@@ -121,6 +122,28 @@ def text_items(spec: dict, tw) -> list:
         elif r == 'underline_draw':
             out.append((r, at, detail))
     return out
+
+
+TEXT_KINDS = ('slam', 'counter', 'checklist', 'split')
+STOPWORDS = {'the', 'and', 'for', 'not', 'but', 'you', 'your', 'are', 'was', 'its', "it's", 'with', 'when', 'than', 'then',
+             'that', 'this', 'what', 'why', 'how', 'who', 'all', 'one', 'out', 'off', 'into', 'from', 'about'}
+
+
+def finish_text_items(spec: dict, tw, items: list, t0: float, t1: float) -> list:
+    """The beat's text items, completed and timed for its shot:
+    - a beat whose script sets on_screen_text but no recipe that draws it (text_slam, number_counter, split_compare,
+      checklist_tick) still shows it, slammed on the first narration word it shares with the text, else a third of
+      the way in (user review 2026-11-08: doorway b08's "Only when overloaded" never appeared);
+    - every item lands at least overlays.MIN_HOLD before the cut (O.settle)."""
+    items = list(items)
+    ost = (spec.get('on_screen_text') or '').strip()
+    if ost and not any(k in TEXT_KINDS for k, _, _ in items):
+        keys = {w for w in re.findall(r"[\w'-]+", ost.lower()) if len(w) > 2 and w not in STOPWORDS}
+        word = next((w for w in re.findall(r"[\w'-]+", spec.get('narration', '').lower()) if w in keys), None)
+        at = tw(word) if word else t0 + 0.33 * (t1 - t0)
+        items.append(('slam', at, ost))
+    times = O.settle([at for _, at, _ in items], t0, t1)
+    return [(k, at, payload) for (k, _, payload), at in zip(items, times)]
 
 
 def draw_text_items(frame, t, items, centre, spec, t_min=None):
@@ -365,6 +388,7 @@ class Composed(Beat):
             acts = [mv.action for mv in moves[who]]
             perfs[who] = Performance(base, Idle(seed=40 + k + len(spec['id'])), acts)
         # sound
+        self.text_items = finish_text_items(spec, self.tw, self.text_items, self.t0, self.t1)
         for s in spec.get('sfx', []):
             self.events.append((self.tw(s['anchor']), s['name'], 0.6))
         for kind, at, _ in self.text_items:
@@ -467,6 +491,18 @@ class Composed(Beat):
             elif r == 'punch_in':
                 w -= w * punch(t, at, 0.1, 0.2)
         x0, y0, s = self.stage.camera(cx + dx, cy, w)
+        if p is not None and any(it[0] != 'arrow_draw' for it in self.text_items):
+            # the text slot at the top must stay clear of heads: frame lower, or wider when the plate ends (user 2026-11-08)
+            top = min(self.p[n].s['head'][1] - 0.58 * self.p[n].D for n in self.cast)
+            for _ in range(6):
+                head_top = (top - y0) * s
+                if head_top >= HEAD_CLEAR:
+                    break
+                cy -= (HEAD_CLEAR - head_top) / s
+                x0, y0, s = self.stage.camera(cx + dx, cy, w)
+                if (top - y0) * s < HEAD_CLEAR:
+                    w = min(self.base.size[0], w * 1.08)
+                    x0, y0, s = self.stage.camera(cx + dx, cy, w)
         for r, at in self.cam_moves:
             if r == 'impact_shake':
                 sx, sy = shake(t, at, 1.0)
@@ -535,7 +571,9 @@ class Composed(Beat):
         if getattr(self, '_centre', None) is None:
             mid = (self.t0 + self.t1) / 2
             boxes = self.char_boxes(mid)
-            longest = max((len(str(p)) for _, _, p in self.text_items), default=12)
+            def chars(kind, p):
+                return len(p) if isinstance(p, str) else (9 if kind == 'counter' else max((len(str(x)) for x in p), default=10) * (2 if kind == 'split' else 1))
+            longest = max((chars(k, p) for k, _, p in self.text_items if k != 'arrow_draw'), default=12)
             half = min(470, 28 * longest + 60)
             self._centre = TEXT_TOP
             for c in (TEXT_TOP, (540, 420), TEXT_LOW):
@@ -572,7 +610,7 @@ class VisualShot:
     def __init__(self, T, t0, t1, load_art=True):
         self.T, self.t0, self.t1 = T, t0, t1
         self.events, self.notes = [], []
-        self.text_items = text_items(self.spec, self.tw)
+        self.text_items = finish_text_items(self.spec, self.tw, text_items(self.spec, self.tw), t0, t1)
         for snd in self.spec.get('sfx', []):
             at = self.tw(snd['anchor'])
             if at <= t1:
@@ -598,15 +636,20 @@ class InsertShot(VisualShot):
         from pipeline.rig.inserts import Effect, InsertScene
         ins = self.spec['shot']['insert']
         effects = []
+        from pipeline.rig.inserts import settle_effects
         for k, e in enumerate(ins.get('effects', [])):
             at = self.tw(e['anchor']) if e.get('anchor') else None
             effects.append(Effect(e['kind'], at, e.get('at', ''), e.get('detail', ''), seed=11 + k))
-            if e['kind'] == 'shake' and at is not None:
-                self.events.append((at, 'thud', 0.6))
-            elif e['kind'] in ('label', 'arrow') and at is not None:
-                self.events.append((at, 'pop', 0.45))
-            elif e['kind'] == 'crossfade' and at is not None:
-                self.events.append((at, 'whoosh', 0.4))
+        settle_effects(effects, self.t0, self.t1)
+        for e in effects:
+            if e.at is None:
+                continue
+            if e.kind == 'shake':
+                self.events.append((e.at, 'thud', 0.6))
+            elif e.kind in ('label', 'arrow'):
+                self.events.append((e.at, 'pop', 0.45))
+            elif e.kind == 'crossfade':
+                self.events.append((e.at, 'whoosh', 0.4))
         for m in self.spec['shot'].get('motion', []):               # camera recipes act on the painting
             r, at = m['recipe'], self.tw(m.get('anchor', ''))
             if r == 'punch_in':
@@ -654,6 +697,7 @@ class GraphicShot(VisualShot):
             a = anchors[k] if k < len(anchors) else ''
             default = self.t0 + 0.35 + k * (span * 0.6 / max(1, len(items)))
             times.append(self.tw(a, default) if a else default)
+        times = O.settle(times, self.t0, self.t1)
         for at in times:
             self.events.append((at, 'pop', 0.45))
         self.graphic = Graphic(g['kind'], items, times, g.get('detail', ''), self.t0, self.t1, seed=sum(map(ord, self.spec['id'])))

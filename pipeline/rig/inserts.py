@@ -58,10 +58,29 @@ def _parse_pair(detail: str, default=('', '')):
     return default
 
 
+# How long each light/colour change takes to build (the ramps below); it must finish SETTLE seconds before the cut.
+RAMP = dict(grade=2.2, crossfade=1.4, haze=1.4, dim=1.2, sun_path=1.6)
+SETTLE = 0.6
+
+
+def settle_effects(effects: list, t0: float, t1: float) -> list:
+    """Effects timed so the viewer sees them land (user review 2026-11-08: the Martian sunset began on "blue-gray",
+    1.2 s before the cut, and never got dark): a light or colour change starts early enough to finish SETTLE seconds
+    before the cut; labels and arrows land overlays.MIN_HOLD before it, in order. Effects after t1 (the next shot's)
+    and whole-beat ones (at None) are left alone. Idempotent."""
+    for e in effects:
+        if e.at is not None and e.kind in RAMP and e.at <= t1:
+            e.at = max(min(e.at, t1 - SETTLE - RAMP[e.kind]), min(e.at, t0 + 0.1))
+    info = [e for e in effects if e.kind in ('label', 'arrow') and e.at is not None]
+    for e, at in zip(info, O.settle([e.at for e in info], t0, t1)):
+        e.at = at
+    return effects
+
+
 class InsertScene:
     def __init__(self, scene: Image.Image, effects: list, t0: float, t1: float, variants: dict | None = None, seed: int = 3):
         self.t0, self.t1 = t0, t1
-        self.effects = effects
+        self.effects = settle_effects(effects, t0, t1)
         self.plate = scene.convert('RGB')
         self.variants = {k: v.convert('RGB').resize(self.plate.size, Image.LANCZOS) for k, v in (variants or {}).items()}
         self.seed = seed

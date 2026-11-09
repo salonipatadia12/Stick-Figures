@@ -272,6 +272,14 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   `library`. QA also fails text over text, text over the caption, and text on a character's head or body; the text
   slot shows one text at a time and moves off the characters; standing characters are never framed as body-filling
   close-ups. Voice clips are cached by their text (a changed line is re-voiced, the old take archived).
+  Timing (review of the first insert renders): every text, label and diagram item lands at least 1.2 s before its
+  shot cuts (`overlays.settle`), light/colour changes finish 0.6 s before the cut (`rig/inserts.settle_effects`),
+  and an on_screen_text with no text recipe is still slammed on the first word it shares with the narration (the
+  script gate warns about it, and about a number_counter that would drop the text's words). QA also fails text on
+  screen for under ~1 s (`text.brief_text`) and any text the script promises that never appears
+  (`text.missing_text`). Subscript digits (SO₂, CO₂) are drawn by hand (the UI font has none). Shot clips are cached
+  on their beat's script entry and the insert/prop libraries too. The words check transcribes in windows of at most
+  20 s cut in the pauses before beats (Whisper skipped a whole sentence at a 30 s window edge of a clean mix).
 
 The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
 needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or

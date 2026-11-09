@@ -50,7 +50,7 @@ def text_summary(drawn: list) -> dict:
 LEAD_IN, GAP, TAIL = 0.35, 0.25, 1.0
 RIG_CODE = ['pipeline/rig/puppet.py', 'pipeline/rig/hands.py', 'pipeline/rig/props.py', 'pipeline/rig/actions.py',
             'pipeline/rig/skeleton.py', 'pipeline/overlays.py', 'pipeline/captions.py', 'scripts/motion_test/beat_base.py',
-            'scripts/motion_test/episode_runner.py']
+            'scripts/motion_test/episode_runner.py', 'pipeline/rig/inserts.py', 'pipeline/rig/graphics.py']
 
 
 class Runner:
@@ -178,20 +178,26 @@ class Runner:
         return self.make_scene(name, tl, load_art=False).events
 
     def bases_hash(self) -> str:
+        """Content hash of the art libraries a shot draws from: bases, insert scenes and props."""
         if self._bases_hash is None:
             h = hashlib.sha256()
-            for f in sorted((ROOT / 'styles/cozy/bases').rglob('*')):
-                if f.is_file():
-                    h.update(f.name.encode())
-                    h.update(f.read_bytes())
+            for lib in ('bases', 'inserts', 'props'):
+                for f in sorted((ROOT / 'styles/cozy' / lib).rglob('*')):
+                    if f.is_file():
+                        h.update(str(f.relative_to(ROOT)).encode())
+                        h.update(f.read_bytes())
             self._bases_hash = h.hexdigest()
         return self._bases_hash
 
     def digest(self, name, t0, t1, lines) -> str:
+        """A shot's cache key: its time span, the code that draws it, the art libraries, its captions and its beat's
+        script entry (staging, visuals, on-screen text), so an edit to any of them re-renders only what it touches."""
         h = hashlib.sha256(f'{name}|{t0:.3f}|{t1:.3f}|{W}x{H}@{FPS}'.encode())
         for p in self.code:
             h.update((ROOT / p).read_bytes())
         h.update(self.bases_hash().encode())
+        spec = next((b for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == name[:3]), None)
+        h.update(json.dumps(spec, sort_keys=True).encode())
         h.update(json.dumps([(l.text, round(l.start, 3), round(l.end, 3)) for l in lines]).encode())
         return h.hexdigest()[:16]
 
@@ -234,6 +240,19 @@ class Runner:
             subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(src), '-ar', str(sfx.SR), '-ac', '1', str(dst)], check=True)
         with wave.open(str(dst)) as f:
             return np.frombuffer(f.readframes(f.getnframes()), np.int16).astype(np.float32) / 32768
+
+    def shot_events(self, plan, tl) -> list:
+        """Each shot's sounds, kept only while that shot is on screen: the two shots of a split beat both know the
+        beat's cues, and a cue heard twice doubles in level (2026-11-08: a doubled whoosh on "leave" made the word
+        "leaf" to the transcript). Identical cues at the same moment play once."""
+        events, seen = [], set()
+        for name, t0, t1 in plan:
+            for at, snd, gain in self.scene_sfx(name, tl):
+                key = (snd, round(at, 2))
+                if t0 - 0.05 <= at < t1 and key not in seen:
+                    seen.add(key)
+                    events.append((at, snd, gain))
+        return events
 
     def build_audio(self, tl, voice, events) -> Path:
         clips = []
@@ -298,9 +317,7 @@ class Runner:
         listing.write_text(''.join(f"file '{p.resolve()}'\n" for p in clips))
         video = self.out / 'video.mp4'
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', str(listing), '-c', 'copy', str(video)], check=True)
-        events = []
-        for name, _, _ in plan:
-            events += self.scene_sfx(name, tl)
+        events = self.shot_events(plan, tl)
         audio = self.build_audio(tl, args.voice, events)
         final = self.out / f'{self.slug}.mp4'
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(video), '-i', str(audio), '-map', '0:v', '-map', '1:a',
@@ -319,7 +336,8 @@ class Runner:
         if not args.no_qa:
             from pipeline import qa
             report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes,
-                            ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary())
+                            ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary(),
+                            promised=qa.promised_texts(json.loads(self.episode_path.read_text())))
             print(json.dumps(report['summary'], indent=1))
             lib = report['library']
             print(f"library: {lib['library_beats']}/{lib['beats']} beats from the libraries alone = {lib['library_pct']}% (target {lib['target_pct']}%)")

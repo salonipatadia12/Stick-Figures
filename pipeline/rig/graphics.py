@@ -69,9 +69,20 @@ def text(frame, label, xy, size=LABEL, anchor='mm', fill=INK, q=1.0):
     """Draw a label at xy (anchor as PIL's), scaled by the pop q, and log it."""
     if q <= 0.02 or not label:
         return
-    f = O.font(O.FONT, max(8, int(size * q)))
+    from .. import captions as C
     d = ImageDraw.Draw(frame, 'RGBA')
-    box = d.textbbox(xy, label, font=f, anchor=anchor)
+    lo, hi = C.SAFE['left'], C.SAFE['right']
+    while True:                                       # inside the safe area: slide, then shrink (never below 40 px)
+        f = O.font(O.FONT, max(8, int(size * q)))
+        box = d.textbbox(xy, label, font=f, anchor=anchor)
+        if box[2] - box[0] > hi - lo and size > 42:
+            size -= 2
+            continue
+        shift = (hi - box[2]) if box[2] > hi else (lo - box[0]) if box[0] < lo else 0
+        if shift:
+            xy = (xy[0] + shift, xy[1])
+            box = d.textbbox(xy, label, font=f, anchor=anchor)
+        break
     d.text(xy, label, font=f, fill=fill, anchor=anchor)
     if q > 0.9:
         O.note_text(label, size, box)
@@ -353,10 +364,11 @@ class Graphic:
             d.rounded_rectangle((x + 30, y - 34, x + 230, y + 10), radius=12, fill=colour_for(item, k), outline=INK, width=5)
             title, _, note = item.partition(':')
             ty = y + 78                                  # the title shows above the next card
-            text(frame, title.strip(), (x + cw / 2, ty), q=1.0 if g > 0.9 else 0.0)
+            shown = 1.0 if g > 0.7 else 0.0               # the words ride in on the card once it has nearly arrived
+            text(frame, title.strip(), (x + cw / 2, ty), q=shown)
             if note.strip():
                 nx, ny = x + cw / 2, y + 168
-                text(frame, note.strip(), (nx, ny), size=50, fill=RUST, q=1.0 if g > 0.9 else 0.0)
+                text(frame, note.strip(), (nx, ny), size=50, fill=RUST, q=shown)
 
     def _layers(self, frame, t):
         d = ImageDraw.Draw(frame, 'RGBA')

@@ -78,7 +78,8 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
 7. **Render.** `.venv/bin/python scripts/motion_test/episode_compose.py <slug> --voice am_michael` composes the
    beats from the script's staging fields and renders the Short to `renders/sample/<slug>/`. Report the file paths
    at the very top of the reply, then the library percentage (`library.library_pct`, target 80 %) and the
-   subject-on-screen percentage (`subject.subject_pct`, target 70 %) from `qa.json`.
+   subject-on-screen percentage (`subject.subject_pct`, target 70 %) from `qa.json`. Before reporting, look at two
+   frames per shot (not only the contact sheet) and read `text.brief_text` and `text.missing_text`.
 8. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
 
 **Starter base pack.** `.venv/bin/stick pack starter --candidates` renders candidates for eight common settings

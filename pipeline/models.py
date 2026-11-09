@@ -462,6 +462,17 @@ class Episode(Strict):
                 if n.strip().casefold() not in said:
                     err(where, f'"{n}" is drawn on screen ("{text}") but this beat never says it; on-screen numbers must '
                                'match the narration or on_screen_text')
+        # on_screen_text is drawn by a text recipe; without one the composer slams it on a shared word (a fallback)
+        shows = {m.recipe for m in sh.motion}
+        ost = b.on_screen_text.strip()
+        if ost and not shows & {'text_slam', 'number_counter', 'split_compare', 'checklist_tick'}:
+            warn(where, f'on_screen_text "{ost}" has no text_slam to show it; the composer will slam it on the first '
+                        'word it shares with the narration')
+        elif ost and 'number_counter' in shows and 'text_slam' not in shows:
+            left = [w for w in ost.split() if not NUMBER.search(w)]
+            if left:
+                warn(where, f'the number_counter draws only its number, so "{" ".join(left)}" from on_screen_text is not '
+                            'shown; use text_slam if those words matter')
         if sh.visual == 'character' and not sh.cast:
             warn(where, 'a character beat with no cast; make it an insert (a scene of the subject) or a graphic')
         if sh.visual == 'insert':
