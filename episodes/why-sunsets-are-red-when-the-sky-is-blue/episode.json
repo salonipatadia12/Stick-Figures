@@ -527,9 +527,9 @@
         },
         "motion": [
           {
-            "recipe": "number_counter",
+            "recipe": "text_slam",
             "anchor": "38",
-            "detail": "0 -> 38"
+            "detail": ""
           }
         ],
         "image_prompt": "",
@@ -800,10 +800,10 @@
     },
     {
       "id": "s3",
-      "claim": "The human eye is more receptive to blue than to violet, so the sky looks blue even though violet is also scattered.",
-      "url": "https://www.timeanddate.com/astronomy/red-sunset.html",
-      "title": "red sunset",
-      "quote": "Blue Skies And Yellow Sun\n\nWhen you look up at the sky during the day, this scattered blue and violet light reaches your eyes, however, the human eye ..."
+      "claim": "Some violet light is absorbed by the upper atmosphere, and our eyes are not as sensitive to violet as they are to blue.",
+      "url": "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-the-sky-blue",
+      "title": "NOAA NESDIS: Why is the sky blue?",
+      "quote": "Also, our eyes are not as sensitive to violet as they are to blue."
     },
     {
       "id": "s4",
@@ -814,10 +814,10 @@
     },
     {
       "id": "s5",
-      "claim": "Near the horizon, sunlight passes through roughly 38 times more air than when the Sun is overhead.",
-      "url": "https://physicstribune.com/questions/why-is-the-sky-red-at-sunset/",
-      "title": "Why Is the Sky Red at Sunset? Pink and Orange Skies",
-      "quote": "Orange Sun setting over a calm sea with pink and red clouds above, showing how a long path through air reddens sunlight\n\nSunsets are red because sunli..."
+      "claim": "The air mass (the path through the atmosphere relative to straight up) is exactly one at the zenith and about 38 at the horizon, at sea level.",
+      "url": "https://aty.sdsu.edu/explain/extinction/airmass/intro.html",
+      "title": "Andrew T. Young, San Diego State University: Atmospheric extinction, air mass",
+      "quote": "at the horizon, it's about 38, at sea level."
     },
     {
       "id": "s6",

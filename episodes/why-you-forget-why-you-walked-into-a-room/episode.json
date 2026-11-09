@@ -394,13 +394,14 @@
       "role": "story",
       "narration": "Even after passing several doorways and returning to the first room, memory didn't improve.",
       "on_screen_text": "",
-      "visual_intent": "A hallway of several open doorways loops back to the starting room while the host walks through.",
+      "visual_intent": "A warm hallway of open doors: the host at one door, then a cut (with a quick pan) to the host at the next door, and back at the first room.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
-          "doing": "walks along the hallway past several open doorways",
-          "to_camera": false
+          "doing": "stands at the first open door, then the picture cuts to the host at the next door (quick pan)",
+          "to_camera": false,
+          "cut_on": "returning"
         },
         "visual": "insert",
         "insert": {
@@ -433,17 +434,10 @@
           "poses": [
             {
               "who": "lead",
-              "pose": "walking"
+              "pose": "standing"
             }
           ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "walk",
-              "target": "",
-              "anchor": "passing"
-            }
-          ],
+          "actions": [],
           "props": []
         },
         "motion": [
@@ -619,7 +613,7 @@
     {
       "id": "b09",
       "role": "story",
-      "narration": "Fair warning: one study found no effect. Another says it shows up when you're already mentally stretched.",
+      "narration": "Fair warning: a 2021 study mostly found no effect, except when memory was already loaded.",
       "on_screen_text": "Not always",
       "visual_intent": "A cluttered, dim kitchen shows a mentally overloaded host slumping.",
       "shot": {
@@ -636,7 +630,7 @@
           "effects": [
             {
               "kind": "dim",
-              "anchor": "stretched",
+              "anchor": "loaded",
               "at": "",
               "detail": ""
             }
@@ -662,7 +656,7 @@
               "who": "lead",
               "verb": "slump",
               "target": "",
-              "anchor": "stretched"
+              "anchor": "loaded"
             }
           ],
           "props": [
@@ -687,7 +681,6 @@
       },
       "sfx": [],
       "source_ids": [
-        "s5",
         "s6"
       ],
       "illustrative_numbers": false,
@@ -862,17 +855,10 @@
       "quote": "They found that passing through doorways that joined identical rooms mostly didn’t impact memory – perhaps because there wasn’t enough of a changed co..."
     },
     {
-      "id": "s5",
-      "claim": "Researcher Oliver Baumann reads his results as showing that the doorway effect emerges when someone is already cognitively vulnerable, rather than being a standing feature of how memory works.",
-      "url": "https://www.earth.com/science/why-does-walking-into-a-room-often-make-you-forget-why-you-are-there-scientists-think-they-know/",
-      "title": "Why does walking into a room often make you forget why you are there? Scientists think they know",
-      "quote": "Baumann’s reading is that the doorway effect emerges when someone is already cognitively vulnerable, rather than being a standing feature of how memor..."
-    },
-    {
       "id": "s6",
-      "claim": "One series of experiments observed no significant effect of doorways on forgetting.",
+      "claim": "Across four experiments (McFadyen, Nolan, Pinocy, Buteri and Baumann, BMC Psychology 2021), doorways had no significant effect on forgetting, except under working-memory load, when memory was more susceptible to interference after moving through doorways.",
       "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7938580/",
-      "title": "Doorways do not always cause forgetting: a multimodal investigation",
+      "title": "McFadyen et al. 2021, Doorways do not always cause forgetting: a multimodal investigation, BMC Psychology 9:41",
       "quote": "Across this series of experiments, we observed no significant effect of doorways on forgetting."
     }
   ],

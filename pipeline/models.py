@@ -188,6 +188,7 @@ class HostCue(Strict):
                                    'snow on the roses").')
     to_camera: bool = Field(description='True when the host talks to the viewer (eyes to camera, lips moving); false '
                                         'when it watches the scene.')
+    cut_on: str = ''        # a narration word where the picture cuts to the host at the next spot (no walk animation)
 
 
 class DraftShot(Strict):
@@ -225,7 +226,7 @@ class DraftBeat(Strict):
 
 
 WIRE_OMIT = {'DraftShot': ('image_prompt', 'pose_variants', 'transition', 'reaction_anchor', 'framing'),
-             'HostCue': ('side',), 'HookOption': ('host_doing', 'scene_key', 'scene')}
+             'HostCue': ('side', 'cut_on'), 'HookOption': ('host_doing', 'scene_key', 'scene')}
 # The writer fills a flat "picture" of plain strings instead of the nested insert/graphic objects: with them the
 # compiled output grammar was too large for the API (HTTP 400, measured 2026-11-08); from_wire() rebuilds them.
 PICTURE = {

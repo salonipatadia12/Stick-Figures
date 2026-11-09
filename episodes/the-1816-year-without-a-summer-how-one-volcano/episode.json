@@ -115,7 +115,7 @@
       },
       "sfx": [],
       "source_ids": [
-        "s6"
+        "s3"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -191,8 +191,8 @@
     {
       "id": "b03",
       "role": "story",
-      "narration": "In 1815, Tambora erupted. The largest eruption in 1,800 years.",
-      "on_screen_text": "1,800 YEARS",
+      "narration": "In 1815, Tambora erupted: the largest eruption in recorded history.",
+      "on_screen_text": "LARGEST ON RECORD",
       "visual_intent": "The volcano explodes into a huge ash column while the host flinches on the beach.",
       "shot": {
         "host": {
@@ -259,7 +259,7 @@
           },
           {
             "recipe": "text_slam",
-            "anchor": "1,800",
+            "anchor": "largest",
             "detail": ""
           }
         ],
@@ -283,8 +283,8 @@
     {
       "id": "b04",
       "role": "story",
-      "narration": "It launched sixty to eighty megatons of sulfur gas into the stratosphere.",
-      "on_screen_text": "60-80 MEGATONS",
+      "narration": "It blasted sulfur gas high into the stratosphere.",
+      "on_screen_text": "INTO THE STRATOSPHERE",
       "visual_intent": "A layered diagram shows sulfur gas rising from the volcano into the stratosphere while the host points at it.",
       "shot": {
         "host": {
@@ -334,12 +334,12 @@
         "motion": [
           {
             "recipe": "arrow_draw",
-            "anchor": "launched",
+            "anchor": "blasted",
             "detail": ""
           },
           {
             "recipe": "text_slam",
-            "anchor": "megatons",
+            "anchor": "stratosphere",
             "detail": ""
           }
         ],
@@ -438,7 +438,7 @@
     {
       "id": "b06",
       "role": "story",
-      "narration": "And up there, the air is calm. So the veil stayed for years.",
+      "narration": "Up there, a veil like that can cool the planet for up to three years.",
       "on_screen_text": "FOR YEARS",
       "visual_intent": "The host looks up at a pale haze veil that spreads slowly across the whole sky.",
       "shot": {
@@ -487,7 +487,7 @@
               "who": "lead",
               "verb": "look_up",
               "target": "",
-              "anchor": "calm"
+              "anchor": "veil"
             }
           ],
           "props": []
@@ -511,7 +511,7 @@
       },
       "sfx": [],
       "source_ids": [
-        "s3"
+        "s2"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -519,8 +519,8 @@
     {
       "id": "b07",
       "role": "story",
-      "narration": "Global temperatures fell about half a degree. Europe had its coldest summer on record.",
-      "on_screen_text": "HALF A DEGREE",
+      "narration": "Temperatures fell around the world. Cold rain soaked Europe that summer.",
+      "on_screen_text": "A COLD SUMMER",
       "visual_intent": "A thermometer falls while the host pops in to point at it.",
       "shot": {
         "host": {
@@ -534,12 +534,12 @@
         "graphic": {
           "kind": "thermometer",
           "items": [
-            "Global temps",
-            "Coldest summer"
+            "World temps",
+            "Europe"
           ],
           "anchors": [
             "fell",
-            "coldest"
+            "Europe"
           ],
           "detail": "falls"
         },
@@ -569,13 +569,13 @@
         },
         "motion": [
           {
-            "recipe": "text_slam",
-            "anchor": "half a degree",
+            "recipe": "push_in",
+            "anchor": "",
             "detail": ""
           },
           {
-            "recipe": "underline_draw",
-            "anchor": "coldest",
+            "recipe": "text_slam",
+            "anchor": "Cold",
             "detail": ""
           }
         ],
@@ -586,6 +586,7 @@
       },
       "sfx": [],
       "source_ids": [
+        "s1",
         "s4"
       ],
       "illustrative_numbers": false,
@@ -594,8 +595,8 @@
     {
       "id": "b08",
       "role": "story",
-      "narration": "In New England, six inches of snow fell in June.",
-      "on_screen_text": "SIX INCHES",
+      "narration": "In June, heavy snow fell in New York and Maine.",
+      "on_screen_text": "SNOW IN JUNE",
       "visual_intent": "The host shivers in a farm field of green crops buried under fresh snow.",
       "shot": {
         "host": {
@@ -651,12 +652,12 @@
         "motion": [
           {
             "recipe": "punch_in",
-            "anchor": "six inches",
+            "anchor": "snow",
             "detail": ""
           },
           {
             "recipe": "text_slam",
-            "anchor": "six inches",
+            "anchor": "June",
             "detail": ""
           }
         ],
@@ -667,7 +668,7 @@
       },
       "sfx": [],
       "source_ids": [
-        "s6"
+        "s3"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -675,8 +676,8 @@
     {
       "id": "b09",
       "role": "story",
-      "narration": "Crops failed. Grain prices tripled in Germany and Switzerland. Families left New England for the Midwest.",
-      "on_screen_text": "PRICES TRIPLED",
+      "narration": "Crops failed across Europe and America, and grain prices soared.",
+      "on_screen_text": "PRICES SOARED",
       "visual_intent": "Two bars show grain prices tripling while the host points at the taller bar.",
       "shot": {
         "host": {
@@ -691,13 +692,13 @@
           "kind": "bars",
           "items": [
             "Before",
-            "Tripled"
+            "After"
           ],
           "anchors": [
             "Crops",
-            "tripled"
+            "soared"
           ],
-          "detail": "1 | 3"
+          "detail": "2 | 5"
         },
         "reaction_anchor": "",
         "framing": "medium",
@@ -718,7 +719,7 @@
               "who": "lead",
               "verb": "point",
               "target": "",
-              "anchor": "tripled"
+              "anchor": "soared"
             }
           ],
           "props": []
@@ -726,12 +727,7 @@
         "motion": [
           {
             "recipe": "text_slam",
-            "anchor": "tripled",
-            "detail": ""
-          },
-          {
-            "recipe": "arrow_draw",
-            "anchor": "Midwest",
+            "anchor": "soared",
             "detail": ""
           }
         ],
@@ -743,11 +739,11 @@
       "sfx": [
         {
           "name": "coin",
-          "anchor": "tripled"
+          "anchor": "soared"
         }
       ],
       "source_ids": [
-        "s6"
+        "s3"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -828,8 +824,8 @@
       },
       "sfx": [],
       "source_ids": [
-        "s2",
-        "s3"
+        "s1",
+        "s2"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -899,7 +895,7 @@
       },
       "sfx": [],
       "source_ids": [
-        "s4"
+        "s1"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -908,45 +904,31 @@
   "sources": [
     {
       "id": "s1",
-      "claim": "was the largest volcanic event in 1,800 years.",
-      "url": "https://www.farmersalmanac.com/the-year-without-a-summer",
-      "title": "1816: The Year Without a Summer, Mount Tambora, and How It Changed History",
-      "quote": "- **What caused it:** the April 1815 eruption of Mount Tambora in Indonesia, the largest volcanic event in 1,800 years."
+      "claim": "On April 10, 1815, Tambora produced the largest eruption in recorded history; its ash reduced the sunlight reaching the surface, causing global cooling and the 1816 \"year without a summer\".",
+      "url": "https://science.nasa.gov/earth/earth-observatory/mount-tambora-volcano-sumbawa-island-indonesia-39412",
+      "title": "NASA Earth Observatory: Mount Tambora Volcano, Sumbawa Island, Indonesia",
+      "quote": "On April 10, 1815, the Tambora Volcano produced the largest eruption in recorded history."
     },
     {
       "id": "s2",
-      "claim": "emitted 60 to 80 megatons of sulfur dioxide into the stratosphere, where it formed sulfate aerosols that were about the same size as visible light, so they backscattered incoming sunlight and global temperatures dropped.",
-      "url": "https://www.researchgate.net/publication/317702476_Impact_of_the_1815_Tambora_Eruption_to_global_climate_change",
-      "title": "(PDF) Impact of the 1815 Tambora Eruption to global climate change",
-      "quote": "# Impact of the 1815 Tambora Eruption to global climate change\n\nThe 1815 Tambora eruption emitted 60 to 80 megatons of SO2 to the stratosphere (44 km ..."
+      "claim": "Large eruptions send sulfur dioxide into the stratosphere, where it forms fine sulfate aerosols that increase the reflection of sunlight back into space; several eruptions cooled the Earth for one to three years, and Tambora 1815 disturbed the stratosphere more than Pinatubo did.",
+      "url": "https://www.usgs.gov/programs/VHP/volcanoes-can-affect-climate",
+      "title": "USGS Volcano Hazards Program: Volcanoes Can Affect Climate",
+      "quote": "The aerosols increase the reflection of radiation from the Sun back into space."
     },
     {
       "id": "s3",
-      "claim": "the stratosphere has little atmospheric turbulence, the aerosols can remain for years before settling, so the veil spread worldwide and was still cooling the planet the following summer.",
-      "url": "https://www.britannica.com/science/volcanic-winter",
-      "title": "Volcanic winter",
-      "quote": "Because the stratosphere has little atmospheric turbulence, the aerosols can remain for years before settling."
+      "claim": "In June 1816 heavy snow smothered the ground in Albany, New York and Dennysville, Maine; crops failed across Europe and the U.S., causing grain and oat prices to soar.",
+      "url": "https://www.nps.gov/articles/000/1816-the-year-without-summer.htm",
+      "title": "National Park Service: 1816, the Year Without Summer",
+      "quote": "In June, heavy snow smothered the ground in Albany, New York and Dennysville, Maine"
     },
     {
       "id": "s4",
-      "claim": "Global average temperatures fell by roughly 0.4–0.7 °C, and in Europe summer temperatures were the coldest on record between 1766 and 2000.",
-      "url": "https://volcanodb.com/mount-tambora-eruption",
-      "title": "Mount Tambora 1815 Eruption: The Largest in Recorded History",
-      "quote": "Global average temperatures fell by roughly **0.4–0.7 °C** — small as a number, catastrophic as a growing-season disruption."
-    },
-    {
-      "id": "s5",
-      "claim": "including the Tambora eruption made the European cold anomaly up to 100 times more likely in climate models.",
-      "url": "https://doaj.org/article/f46fbe912edd40948e2f4b7b8adabca7",
-      "title": "Environmental Research Letters (Jan 2019)",
-      "quote": "We find that in climate models, including the forcing by the Tambora eruption makes the European cold anomaly up to 100 times more likely, while the p..."
-    },
-    {
-      "id": "s6",
-      "claim": "six inches of snow fell in June and every month of the year had a hard frost, while in Europe grain prices tripled in Germany and Switzerland and the famine triggered one of the largest migrations in American history up to that point, as people left New England for the Midwest.",
-      "url": "https://newenglandhistoricalsociety.com/1816-year-without-a-summer/",
-      "title": "1816: The Year Without a Summer - New England Historical Society",
-      "quote": "New England Historical Society\n\nNew England Historical Society\n\nNew England Historical Society\n\nNew England Historical Society\n\nThe year 1816 was know..."
+      "claim": "In the summer of 1816 gloomy, cold rains fell throughout Europe.",
+      "url": "https://scied.ucar.edu/learning-zone/how-climate-works/mount-tambora-and-year-without-summer",
+      "title": "UCAR Center for Science Education: Mount Tambora and the Year Without a Summer",
+      "quote": "Gloomy, cold rains fell throughout Europe."
     }
   ],
   "approvals": {},
