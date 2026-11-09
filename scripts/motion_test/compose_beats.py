@@ -622,7 +622,15 @@ HOST_HEAD_BASE = 'lead-standing-doorway'
 HOST_H = 0.44                 # the host's height (head top to feet) as a share of the frame, standing in a scene
 POP_H = 0.40                  # popping in under a diagram: head and shoulders below the captions, the rest off-frame
 HOST_X = {'left': 0.15, 'centre': 0.50, 'right': 0.85}   # off-centre by default: the captions run across the middle
+HOST_MARGIN = 14              # px: the whole host, arms included, stays this far inside the frame (a pop-in excepted)
+HOST_REST = {'l': (-0.47, 0.93), 'r': (0.47, 0.93)}   # body space: arms relaxed at the sides, not hands on the hips
+TINT_MAX = 0.06               # the scene's colour on the host, per channel (user 2026-11-09: white everywhere, tint <= 10-15 %)
+LIGHT_RANGE = (0.88, 1.02)    # and the whole light match within 12 % of the host's own white
+RIM = 0.4                     # rim light strength on the lit edge
 MAX_SFX = 6                   # user 2026-11-08: at most 5-6 meaningful sounds per video
+ACT_GAP = 1.0                 # s: at most one new gesture this often
+FILL_GAP = 1.6                # s: a longer still stretch gets a small gesture of its own
+LOOKS = ('present', 'gaze', 'point', 'look')   # while these play the host looks at the thing, not at the viewer
 
 
 def talk_curve(starts: list, t: float) -> float:
@@ -649,22 +657,114 @@ def host_spec(spec: dict) -> dict:
     return s
 
 
+SURPRISE = re.compile(r"\b(but|even|wait|except|actually|forgot|failed|warning|no effect|erupted|cancell?ed)\b")
+BIG = re.compile(r"\d|\b(more|most|far|times|huge|whole|every|worldwide|around the world|all|soared|millions?|largest|three)\b")
+YOU = re.compile(r"\b(you|your|you're|we|let me|let's|me)\b")
+CONCLUDE = re.compile(r"^(so|that's|here's|this is)\b|\banswer\b|\bthat's why\b|\bthat's how\b")
+THING = re.compile(r"\b(there|this|that|it|sky|sun|light|door\w*|room|volcano|air|snow|veil|scene|kitchen|field|farm)\b")
+
+
+def clauses(narration: str, T: dict) -> list:
+    """(text, start time) per clause of the narration: split at punctuation, at most 7 words. T is word -> time in
+    spoken order (beat_base.word_times); when the script's words and the spoken ones differ in count, 4-word chunks."""
+    toks, items = narration.split(), list(T.items())
+    if len(toks) != len(items):
+        toks = [k.split('#')[0] + (',' if (i + 1) % 4 == 0 else '') for i, (k, _) in enumerate(items)]
+    out, cur, start = [], [], None
+    for tok, (_, t) in zip(toks, items):
+        if not cur:
+            start = t
+        cur.append(tok)
+        if re.search(r"[,.;:?!—…]$", tok) or len(cur) >= 7:
+            out.append((' '.join(cur), start))
+            cur = []
+    if cur:
+        out.append((' '.join(cur), start))
+    return out
+
+
+def acting(narration: str, T: dict, t0: float, t1: float, busy: list, where: str = 'scene') -> list:
+    """The host reacts to every line (user 2026-11-09): one gesture per clause that the script's own verbs leave free.
+    A question shrugs, a surprise steps back, a conclusion nods, a big number opens the hands, 'you' leans in, a thing
+    in the scene is presented with an open palm; otherwise talking hands, a look, a nod or a lean, never twice running.
+    Returns [(gesture, at, dur)]."""
+    cycle = ['explain', 'present', 'nod', 'lean'] if where == 'scene' else ['explain', 'nod', 'open_hands', 'lean']
+    cl = clauses(narration, T)
+    out, last, last_t, k = [], None, -9.0, 0
+    for i, (text, at) in enumerate(cl):
+        nxt = cl[i + 1][1] if i + 1 < len(cl) else t1
+        at = max(at, last_t + ACT_GAP)                  # right after another gesture: later in the same clause, if it fits
+        if at < t0 - 0.05 or at > t1 - 0.7 or at > nxt - 0.4:
+            continue
+        if any(a - 0.5 <= at <= b + 0.2 for a, b in busy):
+            continue
+        low = text.lower()
+        if '?' in text:
+            verb = 'shrug'
+        elif SURPRISE.search(low):
+            verb = 'step_back'
+        elif CONCLUDE.search(low):
+            verb = 'nod'
+        elif BIG.search(low):
+            verb = 'open_hands'
+        elif YOU.search(low):
+            verb = 'lean'
+        elif THING.search(low):
+            verb = 'present'
+        else:
+            verb = cycle[k % len(cycle)]
+            k += 1
+        if where != 'scene' and verb in ('step_back', 'present'):
+            verb = 'explain'
+        while verb == last:
+            verb = cycle[k % len(cycle)]
+            k += 1
+        out.append((verb, at, max(0.9, min(2.2, nxt - at - 0.1))))
+        last, last_t = verb, at
+    # second pass: no still stretch of FILL_GAP or more inside a long clause or between the script's own verbs
+    spans = sorted([(a, b) for a, b in busy] + [(at, at + dur) for _, at, dur in out])
+    cursor, gaps = t0 + 0.3, []
+    for a, b in spans:
+        if a - cursor >= FILL_GAP:
+            gaps.append((cursor, a))
+        cursor = max(cursor, b + 0.35)
+    if t1 - 0.6 - cursor >= FILL_GAP:
+        gaps.append((cursor, t1 - 0.6))
+    for a, b in gaps:
+        verb = cycle[k % len(cycle)]
+        k += 1
+        prev = max((x for x in out if x[1] < a), key=lambda x: x[1], default=None)
+        if prev and prev[0] == verb:
+            verb = cycle[k % len(cycle)]
+            k += 1
+        out.append((verb, a + 0.1, min(1.6, b - a - 0.2)))
+    return sorted(out, key=lambda x: x[1])
+
+
 class HostLayer:
     """The host, full body on a transparent canvas, animated by the same verbs, idle motion and live face as a painted
-    base (its body cut once from a standing base: scripts/motion_test/host_cutout.py), with lip-sync. `draw` puts it
-    into a scene frame: standing on the ground with a contact shadow and the scene's light, or popping in at the
-    bottom-left edge of a diagram."""
+    base (its body cut once from a standing base: scripts/motion_test/host_cutout.py), with lip-sync and a gesture on
+    every line (`acting`). `draw` puts it into a scene frame: standing on the ground, fully inside the frame, with a
+    contact shadow, a light tint (at most 15 %) and a rim light from the scene; or popping in at the bottom-left edge
+    of a diagram. `hit(box)` counts the host's pixels inside a box (captions keep off the host)."""
 
     def __init__(self, spec: dict, T: dict, t0: float, t1: float):
         from dataclasses import replace as dc_replace
-        from pipeline.rig.puppet import Stage
+        from pipeline.rig.puppet import Puppet, Stage, load_base
         meta = json.loads((HOST_DIR / 'host.json').read_text())
-        self.c = make_class(host_spec(spec), {}, meta['base'])(T, t0, t1)
+        base_cls = make_class(host_spec(spec), {}, meta['base'])
+
+        class Host(base_cls):
+            def build(self):                            # arms relaxed at the sides, not on the hips
+                lead = self.p['lead']
+                lead.s = dict(lead.s, rest={k: lead.world(v) for k, v in HOST_REST.items()})
+                return super().build()
+
+        self.c = Host(T, t0, t1)
         body = Image.open(HOST_DIR / 'body.png').convert('RGBA')
         self.c.base = dc_replace(self.c.base, plate=body)
         self.c.stage = Stage(self.c.base, (W, H))
         self.cam = self.c.stage.camera(body.width / 2, body.height / 2, body.width)
-        from pipeline.rig.puppet import Puppet, load_base
         lead = self.c.p['lead']                         # the head painted on the approved doorway base (s426): a clean rim, no
         clean = Puppet(load_base(HOST_HEAD_BASE), 'lead')      # ring of brick from the street base the body was cut from
         k = lead.D / clean.D
@@ -682,16 +782,39 @@ class HostLayer:
         self.t0 = t0
         self.starts = sorted(v for v in T.values() if t0 - 0.05 <= v <= t1)
         self.shivers = [self.c.tw(a['anchor']) for a in (spec['shot'].get('staging') or {}).get('actions', []) if a['verb'] == 'shiver']
-        self.facing = self.c.p['lead'].facing
+        self.facing = lead.facing
+        perf = self.c.perfs['lead']
+        busy = [(a.start, a.end) for a in perf.actions]
+        self.acts = acting(spec.get('narration', ''), T, t0, t1, busy, self.where)
+        for verb, at, dur in self.acts:
+            fn = V.GESTURES[verb]
+            mv = fn(lead, at, dur=min(dur, 1.0)) if verb == 'nod' else fn(lead, at, dur=min(dur, 1.4)) if verb == 'shrug' else fn(lead, at, dur=dur)
+            perf.actions.append(mv.action)
+        perf.actions.sort(key=lambda a: a.start)
+        self.last = None                                # (x, y, alpha >= 128) of the last frame drawn
 
     def sprite(self, t: float) -> Image.Image:
         pose = self.c.pose('lead', t)
         pose = replace(pose, mouth_open=max(pose.mouth_open, talk_curve(self.starts, t)))
-        if self.to_camera:
-            pose = replace(pose, gaze_x=pose.gaze_x * 0.2, turn=pose.turn * 0.55)
+        if self.to_camera:                              # eyes to the viewer, except while looking at the thing
+            look = max((a.weight(t) for a in self.c.perfs['lead'].actions if a.name.split()[0] in LOOKS), default=0.0)
+            pose = replace(pose, gaze_x=pose.gaze_x * (0.2 + 0.8 * look), turn=pose.turn * (0.55 + 0.45 * look))
         frame = self.c.stage.compose(self.cam, [self.c.p['lead']], [pose], [{}])
         x0, x1 = int(self.cx - 1.7 * self.D), int(self.cx + 1.7 * self.D)
         return frame.crop((max(0, x0), int(self.top), min(W, x1), int(self.feet) + 4)), self.cx - max(0, x0)
+
+    def body_motion(self, t: float):
+        """(tilt degrees toward the facing side, scale, rise as a share of H) from the lean and step-back gestures."""
+        tilt, scale, rise = 0.0, 1.0, 0.0
+        for verb, at, dur in self.acts:
+            if verb not in ('lean', 'step_back') or not at - 0.05 <= t <= at + dur + 0.4:
+                continue
+            q = ease((t - at) / 0.35) * (1 - ease((t - at - dur) / 0.4))
+            if verb == 'lean':
+                tilt, scale = tilt + 3.5 * q, scale * (1 + 0.025 * q)
+            else:
+                scale, rise = scale * (1 - 0.06 * q), rise + 0.016 * q
+        return tilt, scale, rise
 
     def draw(self, frame: Image.Image, t: float, zoom: float = 1.0, dx: float = 0.0, dy: float = 0.0):
         import numpy as np
@@ -700,15 +823,17 @@ class HostLayer:
         side = self.side
         if self.cut_at is not None:                    # the host is at one spot, then (a cut) at the next one
             side = 'left' if t < self.cut_at else 'right'
-        if self.where == 'pop_in':
+        tilt, grow, rise = self.body_motion(t)
+        pop = self.where == 'pop_in'
+        if pop:
             k = POP_H * H / sp.height
             fx = 0.2 * W
             fy = 1.17 * H + 0.3 * H * (1 - ease((t - self.t0) / 0.35))
             flip = self.facing < 0
         else:
-            k = HOST_H * H * zoom / sp.height
+            k = HOST_H * H * zoom * grow / sp.height
             fx = W / 2 + (HOST_X.get(side, 0.5) * W - W / 2 - dx) * zoom
-            fy = H / 2 + (0.93 * H - H / 2 - dy) * zoom
+            fy = H / 2 + (0.93 * H - H / 2 - dy) * zoom - rise * H
             flip = (side == 'right' and self.facing > 0) or (side == 'left' and self.facing < 0)
         for at in self.shivers:
             if 0 <= t - at <= 2.2:
@@ -718,22 +843,84 @@ class HostLayer:
         if flip:
             sp = sp.transpose(Image.FLIP_LEFT_RIGHT)
             foot = sp.width - foot
+        if tilt and not pop:                           # lean about the feet toward the side the host faces on screen
+            pad = int(sp.height * 0.08)
+            big = Image.new('RGBA', (sp.width + 2 * pad, sp.height), (0, 0, 0, 0))
+            big.alpha_composite(sp, (pad, 0))
+            faces_right = (self.facing > 0) != flip
+            sp = big.rotate(-tilt if faces_right else tilt, Image.BICUBIC, center=(foot + pad, sp.height - 1))
+            foot += pad
+        bb = sp.getchannel('A').point(lambda v: 255 if v >= 128 else 0).getbbox() or (0, 0, sp.width, sp.height)
         x, y = int(fx - foot), int(fy - sp.height)
-        if self.where != 'pop_in':                     # the scene's light on the host, and a soft contact shadow
+        if not pop:                                    # fully inside the frame (user 2026-11-09), however the camera moves
+            x = min(max(x, HOST_MARGIN - bb[0]), W - HOST_MARGIN - bb[2])
+            y = max(min(y, H - HOST_MARGIN - bb[3]), HOST_MARGIN - bb[1])    # feet in frame too when the camera zooms
+        fx = x + foot
+        rgb_ratio = [1.0, 1.0, 1.0]
+        if not pop:                                    # the scene's light on the host: a capped tint, a rim light, a shadow
             box = (max(0, x), max(0, y), min(W, x + sp.width), min(H, y + sp.height))
             if box[2] > box[0] and box[3] > box[1]:
-                env = np.asarray(frame.crop(box).convert('RGB')).reshape(-1, 3).astype(np.float32).mean(0)
-                a = np.asarray(sp).astype(np.float32)
-                tint = 0.82 + 0.18 * env / max(1.0, float(env.mean()))
-                light = min(1.05, max(0.62, float(env.mean()) / 150))
-                a[..., :3] *= (tint * (0.55 + 0.45 * light))[None, None, :]
-                sp = Image.fromarray(a.clip(0, 255).astype(np.uint8), 'RGBA')
+                sp, rgb_ratio = light_match(sp, frame, box)
             sh = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-            ImageDraw.Draw(sh).ellipse((fx - 0.32 * sp.width, fy - 0.03 * sp.height, fx + 0.32 * sp.width, fy + 0.03 * sp.height),
+            w0 = bb[2] - bb[0]
+            ImageDraw.Draw(sh).ellipse((fx - 0.42 * w0, fy - 0.03 * sp.height, fx + 0.42 * w0, fy + 0.03 * sp.height),
                                        fill=(20, 16, 24, 90))
             frame.alpha_composite(sh.filter(ImageFilter.GaussianBlur(10)))
         frame.alpha_composite(sp, (x, y))
-        O.note_box('character', (x + 0.15 * sp.width, y, x + 0.85 * sp.width, min(H, y + sp.height)))
+        a = np.asarray(sp.getchannel('A')) >= 128
+        self.last = (x, y, a)
+        ab = (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
+        in_frame = ab[0] >= 0 and ab[1] >= 0 and ab[2] <= W and ab[3] <= H
+        O.note_box('character', (max(0, ab[0]), max(0, ab[1]), min(W, ab[2]), min(H, ab[3])), host=True, pop_in=pop,
+                   in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio])
+
+    def hit(self, box) -> int:
+        """How many of the host's pixels (last frame drawn) fall inside `box` (x0, y0, x1, y1)."""
+        if self.last is None:
+            return 0
+        x, y, a = self.last
+        x0, y0 = max(0, int(box[0]) - x), max(0, int(box[1]) - y)
+        x1, y1 = min(a.shape[1], int(box[2]) - x), min(a.shape[0], int(box[3]) - y)
+        return int(a[y0:y1, x0:x1].sum()) if x1 > x0 and y1 > y0 else 0
+
+
+def light_match(sp: Image.Image, frame: Image.Image, box) -> tuple:
+    """Light the host by the scene without losing its white (user 2026-11-09: never pink, orange or brown): the scene's
+    colour at most TINT_MAX per channel, the overall light within LIGHT_RANGE, and a rim of the scene's brightest
+    colour along the edge facing the light. Returns (sprite, per-channel ratio of the body's white after/before)."""
+    import numpy as np
+    from PIL import ImageFilter
+    env_img = np.asarray(frame.crop(box).convert('RGB')).reshape(-1, 3).astype(np.float32)
+    env = env_img.mean(0)
+    m = max(1.0, float(env.mean()))
+    tint = 1 + TINT_MAX * np.clip(env / m - 1, -1, 1)
+    shade = min(1.0, max(LIGHT_RANGE[0] + 0.03, m / 150))
+    factor = np.clip(tint * shade, *LIGHT_RANGE)
+    small = np.asarray(frame.convert('RGB').resize((54, 96))).astype(np.float32)
+    lum = small.mean(-1)
+    left, right = lum[:, :18].mean(), lum[:, -18:].mean()
+    light = 'left' if left > right * 1.04 else 'right' if right > left * 1.04 else 'top'
+    hi = small.reshape(-1, 3)[lum.reshape(-1) >= np.percentile(lum, 97)].mean(0)
+    rim_col = 0.7 * hi + 0.3 * 255
+    a = np.asarray(sp).astype(np.float32)
+    alpha = a[..., 3] / 255
+    r = max(2, round(0.004 * sp.height))
+    shifted = np.zeros_like(alpha)
+    if light == 'left':
+        shifted[:, r:] = alpha[:, :-r]
+    elif light == 'right':
+        shifted[:, :-r] = alpha[:, r:]
+    else:
+        shifted[r:] = alpha[:-r]
+    rim = np.clip(alpha - shifted, 0, 1)
+    rim = np.asarray(Image.fromarray((rim * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1))).astype(np.float32) / 255
+    body = (alpha > 0.99) & (a[..., :3].mean(-1) > 190) & (rim < 0.1)
+    before = a[..., :3][body].mean(0) if body.any() else None
+    a[..., :3] *= factor[None, None, :]
+    a[..., :3] = a[..., :3] * (1 - RIM * rim[..., None]) + rim_col[None, None, :] * RIM * rim[..., None]
+    after = a[..., :3][body].mean(0) if body.any() else None
+    ratio = (after / np.maximum(before, 1)).tolist() if before is not None else [1.0, 1.0, 1.0]
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8), 'RGBA'), ratio
 
 
 class VisualShot:
@@ -762,6 +949,10 @@ class VisualShot:
 
     def tw(self, anchor, default=None):
         return word_time(self.T, anchor, self.t0 + 0.4 if default is None else default)
+
+    def host_hit(self, box) -> int:
+        """The host's pixels inside `box` in the frame just drawn (captions keep off the host)."""
+        return self.host.hit(box) if self.host is not None else 0
 
     def frame(self, t):
         frame = self.draw(t)
@@ -809,9 +1000,12 @@ class InsertShot(VisualShot):
         if not load_art:
             return
         lib = INS.library()
-        if self.key not in lib:
+        if self.key.startswith('base:'):               # an approved base's empty plate (its painted figure left out)
+            scene = Image.open(ROOT / 'styles/cozy/bases' / self.key[5:] / 'empty.png')
+        elif self.key not in lib:
             raise RuntimeError(f'{self.spec["id"]}: insert scene "{self.key}" is not in the library; run stick inserts --generate')
-        scene = Image.open(ROOT / lib[self.key]['file'])
+        else:
+            scene = Image.open(ROOT / lib[self.key]['file'])
         variants = {}
         for e in ins.get('effects', []):
             if e['kind'] == 'crossfade' and e.get('detail'):
@@ -826,6 +1020,10 @@ class InsertShot(VisualShot):
 
     def draw(self, t):
         return self.scene.frame(t)
+
+
+FRAMED_KINDS = ('thermometer',)   # diagrams whose drawn frame is itself the main element (the thermometer is there at once;
+                                  # the atmosphere's layers too, but their first label still shows from the first frame)
 
 
 class GraphicShot(VisualShot):
@@ -843,6 +1041,8 @@ class GraphicShot(VisualShot):
             default = self.t0 + 0.35 + k * (span * 0.6 / max(1, len(items)))
             times.append(self.tw(a, default) if a else default)
         times = O.settle(times, self.t0, self.t1)
+        if times and g['kind'] not in FRAMED_KINDS:     # the main element is on the paper from the first frame (user
+            times[0] = self.t0 - 2.0                    # 2026-11-09: no second of blank paper); the rest land on their words
         for at in times:
             self.events.append((at, 'pop', 0.45))
         self.graphic = Graphic(g['kind'], items, times, g.get('detail', ''), self.t0, self.t1, seed=sum(map(ord, self.spec['id'])))
@@ -1004,8 +1204,13 @@ def host_episode(episode, specs: dict, lib: dict, slug: str):
         else:
             want = dict(setting=st.setting if st else 'other', pose='standing', view='eye-level', cast=['lead'], poses={'lead': 'standing'})
             base = BASES.match(want, lib) if st else None
-            if base:
-                cls = make_class(spec, {}, base)
+            if base and not (ROOT / 'styles/cozy/bases' / base / 'empty.png').exists():
+                base = None
+            if base:                                    # one host look (user 2026-11-09): the composited host stands in the
+                s2 = copy.deepcopy(spec)                # base's empty plate instead of the base's own painted figure
+                s2['shot']['visual'], s2['shot']['insert'] = 'insert', dict(key=f'base:{base}', scene='', effects=[])
+                cls = make_visual_class(s2)
+                notes.append(f'the host stands in the {base} scene (empty plate; the painted figure is not used)')
                 lib_used = [f'base {base}'] + used
             else:
                 near = sorted(scene_of, key=lambda r: (r[1] != (st.setting if st else None), abs(r[0] - i), -r[0]))

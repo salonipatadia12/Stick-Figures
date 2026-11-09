@@ -41,9 +41,10 @@ def note_text(label: str, em_px: float, box=None):
 _box_log: list = []
 
 
-def note_box(kind: str, box):
-    """A non-text box drawn this frame (kind 'character': a character's head and body on screen), for QA."""
-    _box_log.append(dict(kind=kind, box=[int(round(v)) for v in box]))
+def note_box(kind: str, box, **extra):
+    """A non-text box drawn this frame (kind 'character': a character's head and body on screen), for QA. `extra`
+    carries per-kind facts (the host: pop_in, in_frame, body_rgb)."""
+    _box_log.append(dict(kind=kind, box=[int(round(v)) for v in box], **extra))
 
 
 def take_box_log() -> list:

@@ -349,6 +349,76 @@ def freeze(p, t0: float, dur: float = 1.8) -> Move:
     return Move(Action(t0 - 0.05, t0 + dur, fn, 0.12, 0.35, 'freeze'), label='freeze')
 
 
+# ---- presenter gestures (user 2026-11-09: the host reacts to every line, never hands-on-hips for a whole beat) ------
+# The composer adds these line by line (compose_beats.acting); they are not script verbs.
+
+def _window(t, t0, dur, rise=0.3, fall=0.35):
+    return ease((t - t0) / rise) * (1 - ease((t - t0 - dur + fall) / fall))
+
+
+def explain(p, t0: float, dur: float = 1.4, side: str = 'far') -> Move:
+    """Talking hands: one hand comes up in front of the chest, palm up, and beats with the words."""
+    s = _side(p, side)
+    sgn = 1 if s == 'r' else -1
+    spot = (0.40 * sgn, 0.36)
+
+    def fn(t, pose):
+        u = t - t0
+        q = back_out(u / 0.3, 1.3)
+        beat = 0.05 * math.sin(max(0.0, u - 0.3) * 2 * math.pi * 1.7) * (1 - ease((u - dur + 0.3) / 0.3))
+        return replace(pose, **_hand(s, _lerp(p.rest(s), (spot[0], spot[1] + beat), q), 'open_palm', rot=70 * sgn, bend=1,
+                                     droop=1.0, front=1.0), brow_raise=0.25 * q, smile=max(pose.smile, 0.35))
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.12, 0.35, 'explain'), label='explain')
+
+
+def present(p, t0: float, dur: float = 1.5) -> Move:
+    """An open palm out toward the thing (the side the host faces), eyes on it, then back to the viewer."""
+    s = 'r' if p.facing > 0 else 'l'
+    target = (0.95 * p.facing, 0.12)
+    look = _toward(p, (2.0 * p.facing, -0.3))
+
+    def fn(t, pose):
+        u = t - t0
+        q = back_out(u / 0.32, 1.3)
+        eyes = 1 - ease((u - 0.8) / 0.3)
+        return replace(pose, **_hand(s, _lerp(p.rest(s), target, q), 'open_palm', rot=55 * p.facing, bend=1, droop=1.2, front=1.0),
+                       turn=pose.turn + (look['turn'] - pose.turn) * eyes, gaze_x=pose.gaze_x + (look['gaze_x'] - pose.gaze_x) * eyes,
+                       brow_raise=0.35 * q, smile=max(pose.smile, 0.4))
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.12, 0.35, 'present'), label='present')
+
+
+def lean(p, t0: float, dur: float = 1.6) -> Move:
+    """Lean in to the viewer (the composer tilts the whole host about the feet): a smile, brows up."""
+    def fn(t, pose):
+        q = _window(t, t0, dur)
+        return replace(pose, lean=4.0 * q, head_tilt=5 * q * p.facing, smile=max(pose.smile, 0.55), brow_raise=0.35 * q, eye_wide=0.1 * q)
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.15, 0.35, 'lean'), label='lean')
+
+
+def step_back(p, t0: float, dur: float = 1.5) -> Move:
+    """A small step back in surprise (the composer moves the host back): both palms up and out, brows up."""
+    lh, rh = (-0.50, 0.12), (0.50, 0.12)
+
+    def fn(t, pose):
+        q = back_out((t - t0) / 0.3, 1.3)
+        return replace(pose, lh=_lerp(pose.lh, lh, q), rh=_lerp(pose.rh, rh, q), l_shape='open_palm', r_shape='open_palm',
+                       l_rot=-20, r_rot=20, l_bend=1, r_bend=1, eye_wide=0.6 * q, brow_raise=0.8 * q, smile=-0.05, head_dy=-0.02 * q)
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.1, 0.35, 'step back'), label='step_back')
+
+
+def open_hands(p, t0: float, dur: float = 1.4) -> Move:
+    """'This much': both hands apart at chest height, palms in, for a big number or a big difference."""
+    lh, rh = (-0.80, 0.22), (0.80, 0.22)
+
+    def fn(t, pose):
+        q = back_out((t - t0) / 0.32, 1.3)
+        return replace(pose, lh=_lerp(pose.lh, lh, q), rh=_lerp(pose.rh, rh, q), l_shape='open_palm', r_shape='open_palm',
+                       l_rot=10, r_rot=-10, l_bend=1, r_bend=1, eye_wide=0.3 * q, brow_raise=0.5 * q, smile=max(pose.smile, 0.3))
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.12, 0.35, 'open hands'), label='open_hands')
+
+
 VERBS = dict(reach=reach, point=point, shrug=shrug, facepalm=facepalm, pick_up=pick_up, put_down=put_down, throw=throw,
              drink=drink, type=type_, write=write, wave=wave, nod=nod, shake_head=shake_head, slump=slump, jolt=jolt, gaze=gaze,
              shiver=shiver, look_up=look_up, snap=snap, freeze=freeze)
+GESTURES = dict(explain=explain, present=present, lean=lean, step_back=step_back, open_hands=open_hands, nod=nod, shrug=shrug,
+                gaze=gaze, point=point)

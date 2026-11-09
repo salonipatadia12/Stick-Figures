@@ -1,7 +1,7 @@
 # Deployment plan: VPS + this Mac as the GPU worker
 
-Status: **plan, waiting for the user's OK.** Nothing is installed on the VPS yet. The spec check
-(`scripts/deploy/vps_spec_check.sh`) only reads; it changes nothing.
+Status: **plan, waiting for the user's OK.** Nothing is installed on the VPS yet. The key install adds one line to
+`~/.ssh/authorized_keys`; the spec check (`scripts/deploy/vps_spec_check.sh`) only reads.
 
 ## Shape
 
@@ -34,10 +34,10 @@ Status: **plan, waiting for the user's OK.** Nothing is installed on the VPS yet
   `SELECT … FOR UPDATE SKIP LOCKED`. GPU jobs (`kind = gpu.flux_*`) are only ever claimed by the Mac.
 - **Secrets:** `/srv/stick/.env` on the VPS only (mode 600, owner `deploy`), loaded with Compose `env_file`, never
   in git or in images. It holds the Anthropic key, the Postgres password and the GPU worker's token hash.
-- **Access:** an SSH key, not the password. Steps: install the Mac's ed25519 public key for a new non-root `deploy`
-  user (one last login with the password, which you run or approve), confirm the key login works, then turn off
-  password and root login (`PasswordAuthentication no`, `PermitRootLogin no`). The password file can then be
-  archived. Firewall: only 22, 80 and 443 open; fail2ban on SSH.
+- **Access:** an SSH key, not the password. The password is used once, to add the Mac's own ed25519 key
+  (`scripts/deploy/install_key.sh`); every later login uses the key. After your OK: a non-root `deploy` user with
+  that key, then password and root login off (`PasswordAuthentication no`, `PermitRootLogin no`), and the password
+  file can be archived. Firewall: only 22, 80 and 443 open; fail2ban on SSH.
 - **Code:** the VPS pulls `pipeline-v2` with a read-only deploy key. Nothing ever pushes to `main`.
 
 ## The Mac (GPU worker)
@@ -72,8 +72,11 @@ Status: **plan, waiting for the user's OK.** Nothing is installed on the VPS yet
 
 ## Rollout, each step for your OK
 
-1. **Spec check (read-only):** OS, CPU cores, RAM, free disk, Docker, open ports, firewall.
-2. **SSH key + `deploy` user,** then password login turned off.
+1. **SSH key, then the spec check (read-only).** `scripts/deploy/install_key.sh <user>@<host> <password-file>` uses the
+   password once to add this Mac's own key (`~/.ssh/stick_vps_ed25519`) and confirms the key logs in; then
+   `vps_spec_check.sh` reads OS, CPU, RAM, swap, disk, Docker, what already runs, open ports, firewall and SSH settings.
+   Password login stays on; nothing is installed.
+2. **After your OK: a `deploy` user** with the same key, then password and root login turned off.
 3. **Docker Compose stack** with the CLI pipeline unchanged (`stick` inside `app`); render one known video on the
    VPS and compare it with the Mac render (byte-for-byte frames where the code is deterministic).
 4. **Queue + GPU worker:** the Mac claims one insert job end to end; then the launchd agent.

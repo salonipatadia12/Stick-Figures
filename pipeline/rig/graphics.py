@@ -418,12 +418,12 @@ class Graphic:
         n = max(1, len(self.items))
         h = (BOTTOM - TOP) / n
         cols = [(240, 232, 200), SKY, (150, 196, 230), GROUND]
-        for k, item in enumerate(self.items):
-            q = pop(t, self.at(k))
-            if q <= 0:
-                continue
+        for k, item in enumerate(self.items):          # every band is there from the first frame (the atmosphere is the
+            q = pop(t, self.at(k))                      # picture); each label, and the first band's particles, on its word
             y = TOP + k * h
             d.rectangle((80, y, W - 80, y + h - 8), fill=cols[min(k, 3)] if n <= 4 else cols[k % 4], outline=INK, width=5)
+            if q <= 0:
+                continue
             if k == 0:
                 rng = random.Random(self.seed)
                 for _ in range(40):

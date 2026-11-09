@@ -169,8 +169,6 @@ class InsertScene:
 
     def frame(self, t):
         frame = self.base_frame(t)
-        if self.host is not None:                       # before the colour effects, so a grade or dim lights the host too
-            self.host(frame, t, *self.camera(t))
         arr = None
         for e in self.effects:
             if e.kind in ('grade', 'dim', 'flash'):
@@ -178,6 +176,8 @@ class InsertScene:
                 arr = self._colour(arr, e, t)
         if arr is not None:
             frame = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert('RGBA')
+        if self.host is not None:       # after the grade: the host takes the scene's light as a capped tint and a rim light,
+            self.host(frame, t, *self.camera(t))      # not the full grade, so it stays white (user 2026-11-09)
         for e in self.effects:
             if e.kind == 'sun_path':
                 self._sun(frame, e, t)

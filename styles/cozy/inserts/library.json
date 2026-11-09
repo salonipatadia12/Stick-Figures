@@ -404,5 +404,19 @@
   },
   "made": "2026-11-09",
   "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "home-kitchen-cluttered-day": {
+  "scene": "Inside the same cozy home: a bright kitchen in warm afternoon daylight, the counter piled with grocery bags, mail and a teapot, a little messy, wooden floor.",
+  "source": "renders/inserts/flux/scene-home-kitchen-cluttered-day-s593.png",
+  "file": "styles/cozy/inserts/home-kitchen-cluttered-day.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Inside the same cozy home: a bright kitchen in warm afternoon daylight, the counter piled with grocery bags, mail and a teapot, a little messy, wooden floor. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.134,
+   "contrast": 51.3,
+   "mean": 139.3
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
  }
 }

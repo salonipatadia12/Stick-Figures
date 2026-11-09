@@ -292,6 +292,17 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   script's own cues, at most 6. QA adds `character` (host on screen, target 70 %), `hook` (pass/fail), `fill`
   (no near-empty frames) and `text.caption_on_character_s`. The writer's schema is sent with a flat `picture`
   (a nested insert/graphic schema compiled to a grammar the API rejects).
+- Host fixes (user 2026-11-09): one host look: character beats stand the composited host in the base's empty plate
+  (key `base:<name>`), never the base's painted figure. The host is lit AFTER the scene's colour grade by
+  `light_match` (tint <= 6 % per channel, light within 12 %, a thin rim of the scene's highlight on the lit edge), so
+  it stays white in a red sunset. It is clamped fully inside the frame (pop-ins excepted). Arms rest relaxed at the
+  sides; `acting` gives every clause a gesture (question -> shrug, surprise -> step back, conclusion -> nod, big
+  number -> open hands, "you" -> lean in, a thing in the scene -> present it; otherwise talking hands), and fills any
+  still stretch of 1.6 s or more. Captions slide sideways, then rise above the head, to stay off the host's pixels.
+  A diagram's first item is on the paper from the first frame (the thermometer and the atmosphere's layers are drawn
+  at once). QA: `fill` measures content against the frame's median colour (blank paper 0.06, fail < 0.12 for 0.5 s;
+  the old texture measure passed blank watercolour paper), `host` fails a standing host cut by the frame edge or
+  tinted more than 15 %, and `text` fails any caption on the host's pixels.
 
 The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
 needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or

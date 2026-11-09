@@ -187,10 +187,13 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, prom
     chars_at = {round(d['t'], 2): d.get('chars', []) for d in text_sizes if d.get('chars')}
     cap_on_body = sum(1 for b in caption_boxes if 'box' in b and 't' in b
                       and any(_overlap(b['box'], c) > 0.25 for c in chars_at.get(round(b['t'], 2), [])))
+    # Captions on the host's pixels (user 2026-11-09: never on the host's body); measured on the host's own mask.
+    on_host = [b for b in caption_boxes if b.get('on_host', 0) > 0]
     brief = brief_texts(text_sizes)
     missing = missing_texts(text_sizes, promised or [])
     return dict(min_px=min_px, frames_with_text=len(text_sizes), brief_text=brief[:12], missing_text=missing[:12],
-                caption_on_character_s=round(cap_on_body / 30, 1),
+                caption_on_character_s=round(cap_on_body / 30, 1), caption_on_host_frames=len(on_host),
+                caption_on_host=[dict(t=b['t'], text=b['text'], px=b['on_host']) for b in on_host][:12],
                 overlapping_text=[dict(texts=k, t=v) for k, v in overlaps.items()][:12],
                 text_on_character=[dict(text=k, t=v) for k, v in on_body.items()][:12],
                 smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
@@ -199,7 +202,25 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, prom
                 rightmost=max((d['box'][2] for d in text_sizes if 'box' in d), default=0),
                 lowest_bottom=max((d['box'][3] for d in text_sizes if 'box' in d), default=0),
                 pass_=not small and not small_caps and not outside and not overlaps and not on_body and not brief
-                and not missing)
+                and not missing and not on_host)
+
+
+HOST_TINT = 0.15      # the host's white may shift at most 15 % per channel (user 2026-11-09: white in every scene)
+
+
+def host_check(text_sizes: list) -> dict:
+    """The composited host (script v5): fully inside the frame whenever it stands in a scene (a pop-in under a diagram
+    is deliberately cut by the bottom edge), and its body white within HOST_TINT of itself (no pink, orange or brown
+    from the scene's light). Read from the per-frame host log (compose_beats.HostLayer)."""
+    frames = [(d['t'], h) for d in text_sizes for h in d.get('host', [])]
+    cut = [(t, h) for t, h in frames if not h['pop_in'] and not h['in_frame']]
+    tinted = [(t, h) for t, h in frames if not h['pop_in'] and any(abs(v - 1) > HOST_TINT for v in h['body_rgb'])]
+    worst = max((abs(v - 1) for _, h in frames if not h['pop_in'] for v in h['body_rgb']), default=0.0)
+    return dict(frames=len(frames), standing_frames=sum(1 for _, h in frames if not h['pop_in']),
+                cut_by_frame_edge=len(cut), cut_at=[dict(t=t, box=h['box']) for t, h in cut][:12],
+                max_tint=round(worst, 3), tint_limit=HOST_TINT, over_tint=len(tinted),
+                over_tint_at=[dict(t=t, rgb=h['body_rgb']) for t, h in tinted][:12],
+                pass_=not cut and not tinted)
 
 
 def _words(text: str) -> set:
@@ -270,33 +291,46 @@ def _overlap(a, b) -> float:
     return (x1 - x0) * (y1 - y0) / max(1.0, (a[2] - a[0]) * (a[3] - a[1]))
 
 
-FILL_MIN, FILL_SECONDS = 0.25, 1.0
+FILL_MIN, FILL_SECONDS, FILL_FPS = 0.12, 0.5, 4
+FILL_SPREAD = 38              # a pixel this far (any channel) from the frame's median colour is content, not paper
 
 
-def fill_check(video: Path, fps: int = 2) -> dict:
-    """No near-empty frames (user 2026-11-08: no blank beige). Coverage = the share of 10x10 tiles (at 270x480, caption
-    band left out) with visible detail; painted scenes measure 0.35-0.9, a diagram on plain paper 0-0.2. A stretch
-    of FILL_SECONDS or more below FILL_MIN fails."""
+def coverage(a) -> float:
+    """Share of 10x10 tiles (at 270x480, the picture above the caption band only: the captions, a popping-in host and
+    the platform's bar below are not the picture) whose pixels are at least 20 % content: far from the frame's median
+    colour. Calibrated 2026-11-09 on the proof videos: blank paper 0.06, paper with only a bar chart's baseline 0.09,
+    one bar 0.21, one flow card 0.26, the thermometer 0.13, painted scenes 0.35-0.95. The earlier measure (tile
+    texture) scored blank watercolour paper 0.45 and passed it."""
+    import numpy as np
+    a = a[:int(a.shape[0] * 0.67)]
+    med = np.median(a.reshape(-1, 3), 0)
+    fg = np.abs(a - med).max(-1) > FILL_SPREAD
+    t = 10
+    h, w = fg.shape
+    tiles = fg[:h // t * t, :w // t * t].reshape(h // t, t, w // t, t).mean((1, 3))
+    return float((tiles > 0.2).mean())
+
+
+def fill_check(video: Path, fps: int = FILL_FPS) -> dict:
+    """No near-empty frames (user 2026-11-08: no blank beige; 2026-11-09: not even the first second of a diagram).
+    A stretch of FILL_SECONDS or more below FILL_MIN `coverage` fails."""
     import numpy as np
     w, h = 270, 480
     raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(video), '-vf', f'fps={fps},scale={w}:{h}', '-f', 'rawvideo',
-                          '-pix_fmt', 'gray', '-'], capture_output=True).stdout
-    a = np.frombuffer(raw, np.uint8).reshape(-1, h, w).astype(np.float32)
-    a = np.concatenate([a[:, :int(h * 0.67)], a[:, int(h * 0.735):]], axis=1)
-    n, hh, ww = a.shape
-    t = 10
-    tiles = a[:, :hh // t * t, :ww // t * t].reshape(n, hh // t, t, ww // t, t)
-    cov = (tiles.std(axis=(2, 4)) > 5).mean(axis=(1, 2))
+                          '-pix_fmt', 'rgb24', '-'], capture_output=True).stdout
+    frames = np.frombuffer(raw, np.uint8).reshape(-1, h, w, 3).astype(np.float32)
+    cov = [coverage(f) for f in frames]
+    n = len(cov)
     runs, start = [], None
-    for i, c in enumerate(list(cov) + [1.0]):
+    for i, c in enumerate(cov + [1.0]):
         if c < FILL_MIN and start is None:
             start = i
         elif c >= FILL_MIN and start is not None:
             if (i - start) / fps >= FILL_SECONDS:
-                runs.append(dict(start=round(start / fps, 1), end=round(i / fps, 1), lowest=round(float(cov[start:i].min()), 2)))
+                runs.append(dict(start=round(start / fps, 2), end=round(i / fps, 2), lowest=round(float(min(cov[start:i])), 3)))
             start = None
-    return dict(min_coverage=FILL_MIN, median_coverage=round(float(np.median(cov)), 2) if n else None,
-                near_empty=runs[:12], pass_=not runs)
+    return dict(min_coverage=FILL_MIN, min_seconds=FILL_SECONDS, median_coverage=round(float(np.median(cov)), 2) if n else None,
+                lowest=round(float(min(cov)), 3) if n else None, near_empty=runs[:12], pass_=not runs)
 
 
 LIBRARY_TARGET_PCT = 80
@@ -409,6 +443,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         words=words_check(script, heard),
         text=text_check(text_sizes or [], caption_boxes, promised=promised),
         fill=fill_check(video),
+        host=host_check(text_sizes or []),
         loudness=dict(**loud, target_lufs=-14.0, max_true_peak=-1.0,
                       pass_=abs(loud['integrated_lufs'] + 14.0) <= 1.0 and loud['true_peak_dbtp'] <= -1.0),
         characters=characters_check(),

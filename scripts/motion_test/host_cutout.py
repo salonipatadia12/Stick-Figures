@@ -49,7 +49,7 @@ def cut(base: str) -> tuple[Image.Image, dict]:
     tx0, ty0, tw, th = cv2.boundingRect(torso)
     under = np.zeros((h, w), bool)
     under[ty0 + int(0.75 * th):, max(0, tx0 - int(0.12 * D)):min(w, tx0 + tw + int(0.12 * D))] = True
-    legs = ((navy & under).astype(np.uint8) * 255)
+    legs = ((navy & under & (lum < 64)).astype(np.uint8) * 255)   # the shoes' own navy, not the pavement shadow (lum 66-97)
     legs = cv2.morphologyEx(legs, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7)))
     legs = cv2.morphologyEx(legs, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
     n, lab, stats, _ = cv2.connectedComponentsWithStats(legs)

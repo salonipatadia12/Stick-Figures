@@ -622,19 +622,19 @@
       "role": "story",
       "narration": "Fair warning: a 2021 study mostly found no effect, except when memory was already loaded.",
       "on_screen_text": "Not always",
-      "visual_intent": "A cluttered, dim kitchen shows a mentally overloaded host slumping.",
+      "visual_intent": "Inside the same house: a cluttered kitchen counter in daylight; the overloaded host slumps.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
-          "doing": "slumps in a cluttered kitchen, looking worn out",
+          "doing": "slumps beside the cluttered kitchen counter at home, looking worn out",
           "to_camera": true,
           "cut_on": ""
         },
         "visual": "insert",
         "insert": {
-          "key": "cluttered-kitchen-dim",
-          "scene": "A kitchen counter piled with grocery bags, papers and a cold teapot, dim late-evening light through the window, messy and tired.",
+          "key": "home-kitchen-cluttered-day",
+          "scene": "Inside the same cozy home: a bright kitchen in warm afternoon daylight, the counter piled with grocery bags, mail and a teapot, a little messy, wooden floor.",
           "effects": [
             {
               "kind": "dim",
@@ -874,7 +874,7 @@
   ],
   "approvals": {
     "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8",
-    "script": "33e93a5f3d4fecbcf2dc099adf835c5ab16c788abb977c4870d691daa6ea223b"
+    "script": "78c49143fb777a1966f76f11dafe75da39e7b70b99b5f3e68cf82b504f0ad230"
   },
   "meta": {
     "script": {
@@ -1007,6 +1007,12 @@
         "by": "user",
         "at": "2026-11-09T01:17:03",
         "digest": "33e93a5f3d4f"
+      },
+      {
+        "gate": "script",
+        "by": "user (2026-11-09 request: b09 kept inside the house; picture only, narration unchanged)",
+        "at": "2026-11-09T15:44:19",
+        "digest": "78c49143fb77"
       }
     ]
   }

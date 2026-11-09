@@ -215,15 +215,18 @@ class Runner:
         for i in range(f0, f1):
             t = i / FPS
             frame = scene.frame(t)
-            line = C.at(lines, t)
-            if line:
-                boxes.append(dict(t=round(t, 3), **C.draw(frame, line, t)))
             drawn = O.take_text_log()
-            chars = [b['box'] for b in O.take_box_log() if b['kind'] == 'character']
+            line = C.at(lines, t)
+            if line:                                    # captions keep off the host (scenes that composite one say where)
+                boxes.append(dict(t=round(t, 3), **C.draw(frame, line, t, avoid=getattr(scene, 'host_hit', None),
+                                                          keep_clear=[d['box'] for d in drawn if 'box' in d])))
+            logged = [b for b in O.take_box_log() if b['kind'] == 'character']
+            chars = [b['box'] for b in logged]
+            host = [{k: b[k] for k in ('box', 'pop_in', 'in_frame', 'body_rgb')} for b in logged if b.get('host')]
             if drawn:
-                texts.append(dict(t=round(t, 3), **text_summary(drawn), chars=chars))
+                texts.append(dict(t=round(t, 3), **text_summary(drawn), chars=chars, host=host))
             elif chars:                                 # character boxes on every frame (captions over a body are counted)
-                texts.append(dict(t=round(t, 3), label='', em=999.0, chars=chars))
+                texts.append(dict(t=round(t, 3), label='', em=999.0, chars=chars, host=host))
             proc.stdin.write(frame.convert('RGB').tobytes())
         proc.stdin.close()
         if proc.wait():
@@ -293,10 +296,11 @@ class Runner:
         if args.still is not None:
             for s in args.still:
                 name, t0, t1 = next(p for p in plan if p[1] <= s < p[2])
-                frame = self.make_scene(name, tl).frame(s)
+                scene = self.make_scene(name, tl)
+                frame = scene.frame(s)
                 line = C.at(lines, s)
                 if line:
-                    C.draw(frame, line, s)
+                    C.draw(frame, line, s, avoid=getattr(scene, 'host_hit', None))
                 path = self.out / f'still-{s:05.2f}.jpg'
                 frame.convert('RGB').save(path, quality=90)
                 drawn = O.take_text_log()

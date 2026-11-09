@@ -131,14 +131,68 @@ def layout(line: Line, size: int = SIZE):
         size -= 4
 
 
-def draw(frame: Image.Image, line: Line, t: float) -> dict:
-    """Draw one caption line; the word being spoken is highlighted. Returns its box (for QA)."""
-    font, widths, space, total = layout(line)
-    cx = (SAFE['left'] + SAFE['right']) / 2
-    x = cx - total / 2
-    sw = max(4, font.size // 9)
+CLEAR = 18            # px kept between a caption and the host
+_placed: dict = {}    # (line start, text) -> (x, y, size): a line keeps its spot while it stays clear of the host
+
+
+def _metrics(line: Line, size: int):
+    font = _font(size)
+    space = font.getlength(' ')
+    widths = [font.getlength(w.text) for w in line.words]
     asc, desc = font.getmetrics()
-    y = CENTRE_Y - (asc + desc) / 2
+    sw = max(4, font.size // 9)
+    return font, widths, space, sum(widths) + space * (len(widths) - 1), asc + desc, sw
+
+
+def _overlap_area(a, b) -> float:
+    return max(0, min(a[2], b[2]) - max(a[0], b[0])) * max(0, min(a[3], b[3]) - max(a[1], b[1]))
+
+
+def place(line: Line, avoid=None, keep_clear=()):
+    """Where a caption line goes: (x, y, font size). Centred in the caption band unless that puts it on the host
+    (user 2026-11-09: never on the host's body); then, in order: slid sideways within the safe area, a little
+    smaller and slid, or raised above the host. `avoid(box)` counts the host's pixels in a box."""
+    font, widths, space, total = layout(line)
+    size = font.size
+    _, _, _, total, hgt, sw = _metrics(line, size)
+    cx = (SAFE['left'] + SAFE['right']) / 2
+    default = (cx - total / 2, CENTRE_Y - hgt / 2, size)
+    if avoid is None:
+        return default
+
+    def hits(x, y, sz):                         # the host's pixels, and any on-screen text (a slam, a label)
+        _, _, _, tot, hh, s = _metrics(line, sz)
+        box = (x - s - CLEAR, y - s - CLEAR, x + tot + s + CLEAR, y + hh + s + CLEAR)
+        return 1000 * avoid(box) + sum(_overlap_area(box, b) for b in keep_clear)    # the host above all
+
+    key = (round(line.start, 3), line.text)
+    if key in _placed and hits(*_placed[key]) == 0:
+        return _placed[key]
+    options = [default]
+
+    def slid(sz):
+        if sz < 44:
+            return []
+        _, _, _, tot, hh, s = _metrics(line, sz)
+        y = CENTRE_Y - hh / 2
+        return [(SAFE['left'] + s, y, sz), (SAFE['right'] - s - tot, y, sz)]
+    options += slid(size) + slid(size - 6)
+    for k in range(1, 9):                       # raised, centred, full size: above a standing host's head
+        options.append((default[0], default[1] - 70 * k, size))
+    options += slid(size - 14)
+    for k in range(9, 14):                      # higher still (a label or a slam already sits just above the head)
+        options.append((default[0], default[1] - 70 * k, size))
+    best = min(options, key=lambda o: (hits(*o) > 0, hits(*o), options.index(o)))
+    _placed[key] = best
+    return best
+
+
+def draw(frame: Image.Image, line: Line, t: float, avoid=None, keep_clear=()) -> dict:
+    """Draw one caption line; the word being spoken is highlighted. Returns its box (for QA), and with `avoid` the
+    host's pixels under it (`on_host`, 0 when clear). `keep_clear`: boxes of on-screen texts already in the frame."""
+    x, y, size = place(line, avoid, keep_clear)
+    font, widths, space, total, hgt, sw = _metrics(line, size)
+    asc, desc = font.getmetrics()
     layer = Image.new('RGBA', frame.size, (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
     current = None
@@ -152,8 +206,11 @@ def draw(frame: Image.Image, line: Line, t: float) -> dict:
         d.text((xx, y), w.text, font=font, fill=HIGHLIGHT if i == current else WHITE, stroke_width=sw, stroke_fill=STROKE)
         xx += ww + space
     frame.alpha_composite(layer)
-    return dict(text=line.text, box=[round(x - sw), round(y - sw), round(x + total + sw), round(y + asc + desc + sw)],
-                font_size=font.size, lines=1)
+    box = [round(x - sw), round(y - sw), round(x + total + sw), round(y + asc + desc + sw)]
+    out = dict(text=line.text, box=box, font_size=font.size, lines=1)
+    if avoid is not None:
+        out['on_host'] = int(avoid(box))
+    return out
 
 
 def at(lines: list, t: float):
