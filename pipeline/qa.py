@@ -255,6 +255,35 @@ def _overlap(a, b) -> float:
     return (x1 - x0) * (y1 - y0) / max(1.0, (a[2] - a[0]) * (a[3] - a[1]))
 
 
+FILL_MIN, FILL_SECONDS = 0.25, 1.0
+
+
+def fill_check(video: Path, fps: int = 2) -> dict:
+    """No near-empty frames (user 2026-11-08: no blank beige). Coverage = the share of 10x10 tiles (at 270x480, caption
+    band left out) with visible detail; painted scenes measure 0.35-0.9, a diagram on plain paper 0-0.2. A stretch
+    of FILL_SECONDS or more below FILL_MIN fails."""
+    import numpy as np
+    w, h = 270, 480
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(video), '-vf', f'fps={fps},scale={w}:{h}', '-f', 'rawvideo',
+                          '-pix_fmt', 'gray', '-'], capture_output=True).stdout
+    a = np.frombuffer(raw, np.uint8).reshape(-1, h, w).astype(np.float32)
+    a = np.concatenate([a[:, :int(h * 0.67)], a[:, int(h * 0.735):]], axis=1)
+    n, hh, ww = a.shape
+    t = 10
+    tiles = a[:, :hh // t * t, :ww // t * t].reshape(n, hh // t, t, ww // t, t)
+    cov = (tiles.std(axis=(2, 4)) > 5).mean(axis=(1, 2))
+    runs, start = [], None
+    for i, c in enumerate(list(cov) + [1.0]):
+        if c < FILL_MIN and start is None:
+            start = i
+        elif c >= FILL_MIN and start is not None:
+            if (i - start) / fps >= FILL_SECONDS:
+                runs.append(dict(start=round(start / fps, 1), end=round(i / fps, 1), lowest=round(float(cov[start:i].min()), 2)))
+            start = None
+    return dict(min_coverage=FILL_MIN, median_coverage=round(float(np.median(cov)), 2) if n else None,
+                near_empty=runs[:12], pass_=not runs)
+
+
 LIBRARY_TARGET_PCT = 80
 
 
@@ -341,6 +370,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         captions=captions_check(caption_boxes) | dict(lines=len(lines), srt=str((out_dir / (video.stem + '.srt')).relative_to(ROOT))),
         words=words_check(script, heard),
         text=text_check(text_sizes or [], caption_boxes, promised=promised),
+        fill=fill_check(video),
         loudness=dict(**loud, target_lufs=-14.0, max_true_peak=-1.0,
                       pass_=abs(loud['integrated_lufs'] + 14.0) <= 1.0 and loud['true_peak_dbtp'] <= -1.0),
         characters=characters_check(),

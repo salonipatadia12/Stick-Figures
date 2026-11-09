@@ -196,8 +196,9 @@ def duck(music: np.ndarray, voice: np.ndarray, depth: float = 0.55) -> np.ndarra
     return music * (1 - depth * np.clip(on, 0, 1))
 
 
-def mix(seconds: float, voice: list, events: list, music: bool = True, seed: int = 5) -> np.ndarray:
-    """voice: [(start_s, samples at SR)], events: [(time_s, sfx name, gain)]."""
+def mix(seconds: float, voice: list, events: list, music: bool = False, seed: int = 5) -> np.ndarray:
+    """voice: [(start_s, samples at SR)], events: [(time_s, sfx name, gain)]. No music bed unless asked (user
+    2026-11-08: no music, no ambience by default; the soft bed is an option to compare)."""
     n = int(seconds * SR)
     v = np.zeros(n)
     for at, clip in voice:

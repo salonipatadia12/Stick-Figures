@@ -19,7 +19,9 @@ SCHEMA_VERSION = 1
 Aspect = Literal['9:16', '1:1', '16:9']
 ASPECT_SIZES = {'9:16': (1080, 1920), '1:1': (1080, 1080), '16:9': (1920, 1080)}
 
-BeatRole = Literal['hook', 'setup', 'tension', 'reveal', 'payoff', 'ending']
+# script v5 (host format): hook -> promise -> story... -> payoff -> loop; v1-v4 roles stay valid for old episodes
+BeatRole = Literal['hook', 'promise', 'story', 'setup', 'tension', 'reveal', 'payoff', 'loop', 'ending']
+HOST_ROLES = ('hook', 'promise', 'story', 'payoff', 'loop')
 Framing = Literal['wide', 'medium', 'close', 'insert', 'top_down']
 Transition = Literal['cut', 'whip', 'match_cut']
 SfxName = Literal['pop', 'whoosh', 'ding', 'coin', 'thud', 'paper', 'typing']
@@ -45,6 +47,8 @@ Verb = Literal[
     # arm and head verbs the rig performs in place
     'reach', 'point', 'shrug', 'facepalm', 'pick_up', 'put_down', 'throw', 'drink', 'type', 'write', 'wave', 'nod',
     'shake_head', 'slump', 'jolt', 'gaze',
+    # host verbs (script v5): a whole-body shiver, looking up at the sky, a finger snap, freezing mid-step
+    'shiver', 'look_up', 'snap', 'freeze',
     # posture and travel: a painted torso cannot do these, so they are staged as a match cut between two bases
     # of the same setting on the anchor word (walk: a pan, or the far-off drawn figure)
     'lie_down', 'sit_up', 'stand_up', 'walk',
@@ -72,6 +76,9 @@ SUBJECT_TARGET = 0.5                    # share of beats the writer aims to give
 PEOPLE = re.compile(r'\b(people|person|man|woman|men|women|child|children|kids?|farmers?|villagers?|crowd|figure|figures|'
                     r'character|characters|someone|somebody|family|families|workers?|he|she|they)\b', re.I)
 MAX_ACTIONS, MAX_PROPS, MAX_CAST = 3, 4, 2
+HostWhere = Literal['scene', 'pop_in', 'off']
+HOOK_MAX_WORDS, HOOK_OPTIONS = 8, 3
+CHARACTER_TARGET = 0.7                  # script v5: the host is on screen in at least 70 % of the beats
 # Things the approach cannot stage well; the script gate warns and suggests simpler staging (user item 8).
 CROWD = re.compile(r'\b(crowd|crowded|crowds|dozens of|hundreds of|a group of|audience|everyone in the|packed with people|queue of|line of people)\b', re.I)
 ANIMAL = re.compile(r'\b(dog|dogs|cat|cats|bird|birds|horse|horses|cow|cows|fish|animal|animals|pet|pets|puppy|kitten|pigeon|squirrel|insect|bee|bees|mouse|mice|rat|rats|wolf|lion|elephant)\b', re.I)
@@ -169,25 +176,39 @@ class Staging(Strict):
     props: list[PropCue] = Field(description='0-4 props the picture needs beyond the base furniture.')
 
 
+class HostCue(Strict):
+    """Script v5: the lead is the HOST. It talks to the viewer and acts the story out INSIDE the picture: full-body in
+    the painted scene (an insert or a setting), matched to its light and scale, or popping in at the frame edge to
+    point at a diagram. Its pose and verbs are the "lead" entries of shot.cast and shot.staging (kept there so the
+    output grammar stays small)."""
+    where: HostWhere = Field(description='scene: full-body inside this beat\'s picture (the insert scene or the setting); '
+                                         'pop_in: pops in at a frame edge to point at the diagram; off: not on screen.')
+    side: Literal['left', 'centre', 'right'] = 'centre'
+    doing: str = Field(description='What the host does in the picture, 4-15 words ("shivers in a t-shirt, staring at '
+                                   'snow on the roses").')
+    to_camera: bool = Field(description='True when the host talks to the viewer (eyes to camera, lips moving); false '
+                                        'when it watches the scene.')
+
+
 class DraftShot(Strict):
+    host: HostCue = Field(description='Where the host is and what it does in this beat; where="off" only when the host '
+                                      'truly is not in the picture. When the host is on screen, "lead" is in cast with a '
+                                      'pose and its verbs in staging.')
     visual: VisualType = Field(description='character: the characters act it out; insert: a painted scene of the subject '
                                            'with no characters; graphic: a drawn diagram. On explainer topics at least '
                                            'half of the beats are insert or graphic.')
     insert: InsertCue | None = Field(description='Required when visual is insert, else null.')
     graphic: GraphicCue | None = Field(description='Required when visual is graphic, else null.')
-    reaction_anchor: str = Field(description='insert/graphic beats: a narration word where the picture cuts to the cast '
-                                             'reacting (cast, staging and actions describe that reaction); empty string '
-                                             'for no reaction cut.')
-    framing: Framing
+    reaction_anchor: str = Field('', description='insert/graphic beats: a narration word where the picture cuts to the '
+                                                 'cast reacting; empty string for no reaction cut.')
+    framing: Framing = 'medium'
     cast: list[str] = Field(description='Style cast ids visible in the frame; empty for object-only inserts.')
     staging: Staging
-    image_prompt: str = Field(description='One painted frame: setting, who is where, pose, expression, props, '
-                                          'lighting. Concrete and visual. No text, numbers or letters in the art. '
-                                          'Do not describe the art style; it is appended separately.')
-    pose_variants: list[str] = Field(description='0-2 alternate poses for the SAME frame (same camera, setting, '
-                                                 'props; only the character changes), used by pose_swap.')
     motion: list[Motion] = Field(description='1-2 motion recipes.')
-    transition: Transition = Field(description='cut unless a whip or match cut is motivated by the story.')
+    # Not asked of the writer since script v5 (WIRE_OMIT: a smaller output grammar); earlier episodes keep theirs.
+    image_prompt: str = ''
+    pose_variants: list[str] = Field(default_factory=list)
+    transition: Transition = 'cut'
 
 
 class DraftBeat(Strict):
@@ -203,9 +224,128 @@ class DraftBeat(Strict):
                                                    'that is clearly framed as an example ("say you earn 3,000").')
 
 
+WIRE_OMIT = {'DraftShot': ('image_prompt', 'pose_variants', 'transition', 'reaction_anchor', 'framing'),
+             'HostCue': ('side',), 'HookOption': ('host_doing', 'scene_key', 'scene')}
+# The writer fills a flat "picture" of plain strings instead of the nested insert/graphic objects: with them the
+# compiled output grammar was too large for the API (HTTP 400, measured 2026-11-08); from_wire() rebuilds them.
+PICTURE = {
+    'type': 'object', 'additionalProperties': False,
+    'description': 'What the frame shows besides the host. For visual "insert" fill the insert_* fields; for "graphic" '
+                   'fill the graphic_* fields; leave the others as empty strings.',
+    'properties': {
+        'insert_key': {'type': 'string', 'description': 'Kebab-case scene name, reused across videos ("volcano-erupting").'},
+        'insert_scene': {'type': 'string', 'description': 'The place or thing painted WITHOUT people, 10-30 words: what is '
+                                                          'in frame, time of day, weather. No text.'},
+        'insert_effects': {'type': 'string', 'description':
+            '0-4 code effects separated by ";", each "kind | anchor word | region | detail". kind: ash, snow, dust, embers, '
+            'rain, haze, grade, dim, flash, sun_path, crossfade, push, pan, shake, label, arrow. region: sky, top, centre, '
+            'ground, left, right, peak, horizon or empty. detail: grade "blue -> red" or "warm -> cold"; crossfade the '
+            'changed scene in a few words; sun_path "high -> low"; label 1-3 words; arrow "from -> to" regions; else '
+            'empty. Example: "ash | | | ; shake | erupted | | ; label | sulfur | sky | Sulfur". No ";" inside a field.'},
+        'graphic_kind': {'type': 'string', 'description': 'flow, bounce, scatter, two_paths, waves, bars, thermometer, '
+                                                          'cards or layers; empty unless visual is graphic.'},
+        'graphic_items': {'type': 'string', 'description': '1-4 labels of 1-3 words in reading order, each with the '
+                                                           'narration word where it appears: "Sunlight@sun | Sulfur veil@veil".'},
+        'graphic_detail': {'type': 'string', 'description': 'bars: relative heights "3 | 5"; two_paths: both, long or short; '
+                                                            'thermometer: "from -> to" or falls/rises; else empty.'},
+    },
+}
+PICTURE['required'] = list(PICTURE['properties'])
+
+
+def wire_schema(schema: dict) -> dict:
+    """The structured-output schema sent to the writer: without the fields it is no longer asked for, and with the
+    flat picture in place of the nested insert/graphic objects."""
+    defs = schema.get('$defs', {})
+    for name, fields in WIRE_OMIT.items():
+        d = defs.get(name)
+        if d:
+            for f in fields:
+                d.get('properties', {}).pop(f, None)
+                if f in d.get('required', []):
+                    d['required'].remove(f)
+    shot = defs.get('DraftShot')
+    if shot and 'insert' in shot['properties']:
+        props = {}
+        for k, val in shot['properties'].items():          # keep the field order, picture where insert was
+            if k == 'insert':
+                props['picture'] = {'$ref': '#/$defs/Picture'}
+            elif k != 'graphic':
+                props[k] = val
+        shot['properties'] = props
+        shot['required'] = list(props)
+        defs['Picture'] = PICTURE
+        for unused in ('InsertCue', 'EffectCue', 'GraphicCue'):
+            defs.pop(unused, None)
+    return schema
+
+
+def _split(text: str, sep: str) -> list:
+    return [x.strip() for x in (text or '').split(sep)]
+
+
+def from_wire(data: dict) -> tuple[dict, list]:
+    """Rebuild insert/graphic objects from each shot's flat picture. Unknown effect kinds, regions or graphic kinds
+    are dropped with a note rather than losing the whole (paid) script."""
+    from typing import get_args
+    notes = []
+    kinds, regions, gkinds = set(get_args(InsertEffect)), set(get_args(Region)), set(get_args(GraphicKind))
+    for n, beat in enumerate(data.get('beats', []), 1):
+        shot = beat.get('shot', {})
+        pic = shot.pop('picture', None)
+        if pic is None:
+            continue
+        insert = graphic = None
+        if shot.get('visual') == 'insert' or pic.get('insert_key'):
+            effects = []
+            for raw in filter(None, _split(pic.get('insert_effects', ''), ';')):
+                f = (_split(raw, '|') + ['', '', '', ''])[:4]
+                if f[0] not in kinds:
+                    notes.append(f'b{n:02d}: effect "{f[0]}" is not in the library; dropped')
+                    continue
+                if f[2] not in regions:
+                    notes.append(f'b{n:02d}: region "{f[2]}" unknown; effect kept without a region')
+                    f[2] = ''
+                effects.append(dict(kind=f[0], anchor=f[1], at=f[2], detail=f[3]))
+            if pic.get('insert_key'):
+                insert = dict(key=pic['insert_key'], scene=pic.get('insert_scene', ''), effects=effects)
+        if shot.get('visual') == 'graphic' or pic.get('graphic_kind'):
+            kind = (pic.get('graphic_kind') or '').strip()
+            if kind in gkinds:
+                pairs = [x.split('@', 1) + [''] for x in _split(pic.get('graphic_items', ''), '|') if x]
+                items = [a.strip() for a, b, *_ in pairs]
+                anchors = [b.strip() for a, b, *_ in pairs]
+                anchors = anchors if all(anchors) else []
+                graphic = dict(kind=kind, items=items, anchors=anchors if len(anchors) == len(items) else [],
+                               detail=pic.get('graphic_detail', ''))
+            elif kind:
+                notes.append(f'b{n:02d}: graphic kind "{kind}" is not in the library; dropped')
+        shot['insert'], shot['graphic'] = insert, graphic
+    return data, notes
+
+
+class HookOption(Strict):
+    """One of three hooks the user chooses between at the script gate. Option 1 is written into beat 1; picking
+    another rewrites beat 1 from these fields (flat on purpose: a nested beat made the output grammar too large)."""
+    line: str = Field(description=f'The spoken hook, at most {HOOK_MAX_WORDS} words: a question or a bold, honest claim '
+                                  'that the payoff answers. Never walked back later.')
+    frame_one: str = Field(description='What the very first frame shows: the host already in a surprising situation, '
+                                       '10-25 words.')
+    # filled at the gate when the user picks the hook (not asked of the writer: a smaller output grammar)
+    host_doing: str = ''
+    scene_key: str = ''
+    scene: str = ''
+    answer: str = Field(description='One sentence: how the payoff beat answers this hook.')
+    loop_line: str = Field(description='The narration of the final loop beat for this hook: its last words tie back to '
+                                       'the hook line.')
+
+
 class ScriptDraft(Strict):
     title: str = Field(description='Working title, at most 60 characters.')
     hook_promise: str = Field(description='The question or tension the hook opens; the payoff must resolve it.')
+    hook_options: list[HookOption] = Field(description=f'Exactly {HOOK_OPTIONS} hooks. Option 1 is the one used in beats.')
+    subject_settings: list[str] = Field(description='Settings that ARE the subject (e.g. "doorway" for a video about '
+                                                       'doorways); empty for most topics.')
     beats: list[DraftBeat]
 
 
@@ -217,6 +357,7 @@ class Layer(Strict):
 
 
 class Shot(DraftShot):
+    host: HostCue | None = None                        # script v5; None on earlier episodes
     staging: Staging | None = None                     # None on episodes written before script v3 (keyword planning)
     visual: VisualType = 'character'                   # script v4; earlier episodes are all character beats
     insert: InsertCue | None = None
@@ -243,7 +384,7 @@ class Beat(Strict):
         return cls(id=f'b{index + 1:02d}', **draft.model_dump())
 
 
-V4_DEFAULTS = dict(visual='character', insert=None, graphic=None, reaction_anchor='')
+V4_DEFAULTS = dict(visual='character', insert=None, graphic=None, reaction_anchor='', host=None)
 
 
 class Source(Strict):
@@ -272,6 +413,9 @@ class Episode(Strict):
     voice: Voice = Field(default_factory=Voice)
     title: str = ''
     hook_promise: str = ''
+    hook_options: list[HookOption] = Field(default_factory=list)   # script v5: three hooks for the user to choose from
+    hook_pick: int = 0                                             # 1-3 once the user picked; 0 = not yet
+    subject_settings: list[str] = Field(default_factory=list)
     beats: list[Beat] = Field(default_factory=list)
     sources: list[Source] = Field(default_factory=list)
     approvals: dict[str, str] = Field(default_factory=dict)
@@ -290,7 +434,40 @@ class Episode(Strict):
         content = dict(title=self.title, hook_promise=self.hook_promise, sources=[s.model_dump() for s in self.sources],
                        beats=[b.model_dump(exclude={'duration'}, exclude_none=True) | {'shot': self._shot_dump(b.shot)}
                               for b in self.beats])
+        if self.hook_options:                          # script v5 only: earlier digests stay the same
+            content |= dict(hook_options=[h.model_dump() for h in self.hook_options], hook_pick=self.hook_pick,
+                            subject_settings=list(self.subject_settings))
         return digest(content)
+
+    @property
+    def host_format(self) -> bool:
+        return bool(self.hook_options)
+
+    def pick_hook(self, n: int):
+        """Use hook option n (1-based): beat 1 becomes its hook beat and the loop beat says its loop line."""
+        if not 1 <= n <= len(self.hook_options):
+            raise ValueError(f'hook option {n}: pick 1-{len(self.hook_options)}')
+        opt = self.hook_options[n - 1]
+        b = self.beats[0]
+        b.narration, b.visual_intent = opt.line, opt.frame_one
+        spoken = opt.line.casefold()
+        keep = lambda anchor: not anchor or anchor.casefold() in spoken          # cues on words the new line no longer says go
+        b.shot.motion = [m for m in b.shot.motion if keep(m.anchor)] or [Motion(recipe='push_in', anchor='', detail='')]
+        b.sfx = [x for x in b.sfx if keep(x.anchor)]
+        if b.on_screen_text and not all(w.casefold() in spoken for w in re.findall(r"[\w']+", b.on_screen_text)):
+            b.on_screen_text = ''
+        if b.shot.host:
+            b.shot.host.doing = opt.host_doing or opt.frame_one
+        if b.shot.staging:
+            b.shot.staging.actions = [a for a in b.shot.staging.actions if keep(a.anchor)]
+        if opt.scene_key:
+            effects = [e for e in (b.shot.insert.effects if b.shot.insert else []) if keep(e.anchor)]
+            b.shot.visual, b.shot.insert = 'insert', InsertCue(key=opt.scene_key, scene=opt.scene, effects=effects)
+        elif b.shot.insert:
+            b.shot.insert.effects = [e for e in b.shot.insert.effects if keep(e.anchor)]
+        if self.beats[-1].role in ('loop', 'ending'):
+            self.beats[-1].narration = opt.loop_line
+        self.hook_pick = n
 
     def beat_digest(self, beat):
         """Per-beat identity so later stages regenerate only beats whose content changed."""
@@ -323,11 +500,13 @@ class Episode(Strict):
             err('beats', 'beat ids must be unique')
         if self.beats[0].role != 'hook':
             err(self.beats[0].id, 'the first beat must be the hook')
+        if self.host_format:
+            self._check_host_format(err, warn)
         if not any(b.role == 'payoff' for b in self.beats):
             err('beats', 'no payoff beat: the hook promise is never delivered')
         if self.beats[-1].role == 'payoff':           # a payoff that closes the video (user cut the ending, 2026-11-08)
             warn(self.beats[-1].id, 'the video ends on the payoff with no loop-back ending')
-        elif self.beats[-1].role != 'ending':
+        elif self.beats[-1].role not in ('ending', 'loop'):
             err(self.beats[-1].id, 'the last beat must be the ending (loop back or tease a follow-up)')
         if not self.hook_promise:
             err('hook_promise', 'state what the hook promises so the payoff can be checked against it')
@@ -347,9 +526,9 @@ class Episode(Strict):
                 err(where, f'on-screen text has {len(words)} words (max {MAX_ON_SCREEN_WORDS})')
             if not b.narration:
                 err(where, 'empty narration')
-            if not b.visual_intent or not b.shot.image_prompt:
-                err(where, 'missing visual intent or image prompt')
-            if TALKING_HEAD.search(b.visual_intent + ' ' + b.shot.image_prompt):
+            if not b.visual_intent:
+                err(where, 'missing visual intent')
+            if not self.host_format and TALKING_HEAD.search(b.visual_intent + ' ' + b.shot.image_prompt):
                 err(where, 'visual is a talking head; show the idea through action, metaphor or a diagram')
             if not 1 <= len(b.shot.motion) <= 2:
                 err(where, f'{len(b.shot.motion)} motion recipes; pick 1-2')
@@ -359,7 +538,7 @@ class Episode(Strict):
                     err(where, f'{m.recipe} needs an anchor word from the narration')
                 if m.anchor and m.anchor.casefold() not in spoken:
                     err(where, f'{m.recipe} anchor "{m.anchor}" is not in the narration')
-                if m.recipe == 'pose_swap' and not b.shot.pose_variants:
+                if m.recipe == 'pose_swap' and not b.shot.pose_variants and not self.host_format:
                     err(where, 'pose_swap needs at least one pose variant')
             if len(b.shot.pose_variants) > 2:
                 err(where, 'at most 2 pose variants')
@@ -397,6 +576,43 @@ class Episode(Strict):
             warn('beats', f'{words} narration words ~ {words / words_per_second:.0f}s; target {self.target_length}s '
                           f'is ~{expected:.0f} words at {words_per_second} w/s')
         return issues
+
+    def _check_host_format(self, err, warn):
+        """Script v5 (user 2026-11-08): the lead hosts and tells the story; hook -> promise -> story -> payoff -> loop;
+        a hook of at most 8 words with the host in frame 1, answered in the payoff; the last line ties back."""
+        roles = [b.role for b in self.beats]
+        if any(r not in HOST_ROLES for r in roles):
+            err('beats', f'host format roles are {"/".join(HOST_ROLES)}; got {sorted(set(roles) - set(HOST_ROLES))}')
+        order = [r for r in roles if r in HOST_ROLES]
+        if len(roles) >= 4 and (roles[1] != 'promise' or roles[-1] != 'loop' or 'payoff' not in roles
+                                or roles.index('payoff') != len(roles) - 2 or any(r != 'story' for r in roles[2:-2])):
+            err('beats', f'order must be hook, promise, story..., payoff, loop; got {", ".join(order)}')
+        if len(self.hook_options) != HOOK_OPTIONS:
+            err('hook_options', f'{len(self.hook_options)} hook options; give exactly {HOOK_OPTIONS}')
+        for k, h in enumerate(self.hook_options, 1):
+            n = len(re.findall(r"[\w'’-]+", h.line))
+            if n > HOOK_MAX_WORDS:
+                err(f'hook {k}', f'"{h.line}" is {n} words; at most {HOOK_MAX_WORDS}')
+            if not h.answer:
+                err(f'hook {k}', 'say how the payoff answers this hook')
+            if not _shares_word(h.loop_line, h.line):
+                warn(f'hook {k}', f'loop line "{h.loop_line}" does not echo the hook "{h.line}"; the last line should tie back')
+        if self.hook_options and self.beats[0].narration.strip() != self.hook_options[(self.hook_pick or 1) - 1].line.strip():
+            warn(self.beats[0].id, 'beat 1 should say exactly the chosen hook line, nothing more (0-3 s)')
+        if not self.beats[0].shot.host or self.beats[0].shot.host.where == 'off':
+            err(self.beats[0].id, 'frame 1 must show the host')
+        hosted = [b for b in self.beats if b.shot.host and b.shot.host.where != 'off']
+        if len(hosted) < CHARACTER_TARGET * len(self.beats):
+            warn('beats', f'the host is on screen in {len(hosted)}/{len(self.beats)} beats; aim for at least '
+                          f'{int(CHARACTER_TARGET * 100)}% (the host tells the story)')
+        for b in self.beats:
+            if b.shot.host is None:
+                err(b.id, 'shot.host is missing: say where the host is in this beat')
+                continue
+            if b.shot.host.where != 'off' and 'lead' not in b.shot.cast:
+                err(b.id, 'the host is on screen: put "lead" in shot.cast with a pose in staging')
+            if 'friend' in b.shot.cast and b.shot.visual == 'character' and b.shot.staging and b.shot.staging.setting in ('cafe', 'living-room'):
+                warn(b.id, 'the friend chatting at a cafe or on a sofa: keep the friend for moments the story needs')
 
     @staticmethod
     def _check_staging(b, spoken, err, warn):
@@ -511,6 +727,15 @@ class Episode(Strict):
                 err(where, 'reaction_anchor needs the reacting cast in shot.cast (and their poses in staging)')
             if sh.reaction_anchor.casefold() not in spoken:
                 err(where, f'reaction_anchor "{sh.reaction_anchor}" is not in the narration')
+
+
+STOP = {'the', 'a', 'an', 'and', 'or', 'but', 'so', 'is', 'it', 'its', "it's", 'you', 'your', 'to', 'of', 'in', 'on',
+        'at', 'why', 'what', 'how', 'did', 'do', 'does', 'i', 'me', 'my', 'we', 'this', 'that', 'same', 'next', 'time'}
+
+
+def _shares_word(a: str, b: str) -> bool:
+    words = lambda t: {w for w in re.findall(r"[a-z0-9']+", t.lower()) if w not in STOP and len(w) > 2}
+    return bool(words(a) & words(b))
 
 
 @dataclass

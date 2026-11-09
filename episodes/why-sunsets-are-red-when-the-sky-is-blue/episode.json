@@ -1,766 +1,922 @@
 {
- "schema_version": 1,
- "slug": "why-sunsets-are-red-when-the-sky-is-blue",
- "topic": "Why sunsets are red when the sky is blue",
- "niche": "science",
- "audience": "curious adults",
- "style": "cozy",
- "aspect": "9:16",
- "target_length": 45,
- "voice": {
-  "provider": "kokoro",
-  "voice_id": ""
- },
- "title": "Why Sunsets Are Red When the Sky Is Blue",
- "hook_promise": "Why the same sky is blue at noon and red at sunset: at sunset the light takes a longer path through the air, and the blue is scattered away.",
- "beats": [
-  {
-   "id": "b01",
-   "role": "hook",
-   "narration": "Blue all day, then red at sunset? What changed?",
-   "on_screen_text": "Blue, then red?",
-   "visual_intent": "Two friends at a café table look through a tall window where the sky glows blue on one side and orange on the other.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "cafe",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
+  "schema_version": 1,
+  "slug": "why-sunsets-are-red-when-the-sky-is-blue",
+  "topic": "Why sunsets are red when the sky is blue",
+  "niche": "science",
+  "audience": "curious adults",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "Why Sunsets Are Red When the Sky Is Blue",
+  "hook_promise": "The sky is blue all day, so why does the sunset turn red?",
+  "hook_options": [
+    {
+      "line": "Blue sky. So why red sunsets?",
+      "frame_one": "The host stands in a sunlit park, snapping fingers as the sky above splits half blue, half glowing red.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The same scattering that makes the sky blue strips the blue out of the long sunset beam, leaving red.",
+      "loop_line": "That's how a blue sky ends up making red sunsets."
     },
-    "image_prompt": "Sunlit café, wide shot. Lead and friend sit at the round wooden table facing a tall window. Through the glass the sky is deep blue at the top and glows orange near the rooftops. Green coffee cups on the table, ivy, terracotta tiles, warm dappled light. Both look curious and a little puzzled.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "text_slam",
-      "anchor": "red",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "insert",
-    "insert": {
-     "key": "street-noon",
-     "scene": "a quiet painted street corner at noon: brick shopfronts, a lamp post, a tree with dappled shade, a wide clear bright blue sky above the rooftops, the sun out of view",
-     "effects": [
+    {
+      "line": "Sky's blue. Why's the sunset red?",
+      "frame_one": "The host stands at the edge of a park, looking up at a sky that fades from deep blue to fiery orange.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "Blue light is scattered away over a long sunset path, so mostly red reaches you.",
+      "loop_line": "Now you know why a blue sky gives a red sunset."
+    },
+    {
+      "line": "Where does the sky's blue go?",
+      "frame_one": "The host stands in a park at dusk, hands out, staring up at a sky where the blue has drained to red.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The blue is scattered out of the sunlight's long path through air, leaving red.",
+      "loop_line": "That's where it goes, and that's where the sky's blue goes."
+    }
+  ],
+  "hook_pick": 0,
+  "subject_settings": [],
+  "beats": [
+    {
+      "id": "b01",
+      "role": "hook",
+      "narration": "Blue sky. So why red sunsets?",
+      "on_screen_text": "Blue sky, red sunset",
+      "visual_intent": "The host snaps their fingers in a park and the sky above flips from blue to red.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "snaps fingers in the park as the sky flips from blue to red",
+          "to_camera": true
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "park-sky-blue-to-red",
+          "scene": "A wide sunlit park with a path and trees under a sky that is clear blue on one side and glowing red-orange on the other, golden low light.",
+          "effects": [
+            {
+              "kind": "grade",
+              "anchor": "sunsets",
+              "at": "sky",
+              "detail": "blue -> red"
+            }
+          ]
+        },
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "snap",
+              "target": "",
+              "anchor": "So"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "red",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "whoosh",
+          "anchor": "So"
+        }
+      ],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b02",
+      "role": "promise",
+      "narration": "Let me show you where the blue goes.",
+      "on_screen_text": "",
+      "visual_intent": "The host turns to camera in the park under a blue sky and gestures for the viewer to follow.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "points toward the viewer with a warm, inviting look",
+          "to_camera": true
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "camera",
+              "anchor": "show"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "punch_in",
+            "anchor": "blue",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b03",
+      "role": "story",
+      "narration": "Air bounces sunlight around. Scientists call it Rayleigh scattering.",
+      "on_screen_text": "Rayleigh scattering",
+      "visual_intent": "A painted diagram of sunbeams hitting air and bouncing in many directions while the host pops in to point.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "centre",
+          "doing": "pops in at the frame edge and points at beams bouncing off air",
+          "to_camera": false
+        },
+        "visual": "graphic",
+        "insert": null,
+        "graphic": {
+          "kind": "scatter",
+          "items": [
+            "Sunlight",
+            "Air"
+          ],
+          "anchors": [
+            "sunlight",
+            "Air"
+          ],
+          "detail": ""
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "around"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "arrow_draw",
+            "anchor": "bounces",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "Rayleigh",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b04",
+      "role": "story",
+      "narration": "It bounces short wavelengths, like blue, far more than long ones, like red.",
+      "on_screen_text": "",
+      "visual_intent": "A bar diagram where the blue bar towers over the short red bar, the host pointing at the difference.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "centre",
+          "doing": "pops in beside the bars and points at the tall blue bar",
+          "to_camera": false
+        },
+        "visual": "graphic",
+        "insert": null,
+        "graphic": {
+          "kind": "bars",
+          "items": [
+            "Blue",
+            "Red"
+          ],
+          "anchors": [
+            "blue",
+            "red"
+          ],
+          "detail": "5 | 1"
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "blue"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "split_compare",
+            "anchor": "blue",
+            "detail": "Blue | Red"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "far"
+        }
+      ],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b05",
+      "role": "story",
+      "narration": "By day, that scattered blue fills the whole sky above me.",
+      "on_screen_text": "Blue fills the sky",
+      "visual_intent": "The host looks up at a bright midday sky washed in scattered blue.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "looks up at the bright blue sky overhead, hand shading eyes",
+          "to_camera": false
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "noon-park-blue-sky",
+          "scene": "A park at midday with a high sun and a wide, deep blue sky with soft light on green grass and a few trees.",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "blue",
+              "at": "sky",
+              "detail": "Scattered blue"
+            }
+          ]
+        },
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "look_up",
+              "target": "",
+              "anchor": "above"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "fills",
+            "detail": ""
+          },
+          {
+            "recipe": "breathe",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b06",
+      "role": "story",
+      "narration": "Violet scatters too, but our eyes respond more to blue.",
+      "on_screen_text": "Eyes favor blue",
+      "visual_intent": "A close, friendly shot of the host pointing at their own eyes in the park.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "points at their own eyes, smiling to camera",
+          "to_camera": true
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "camera",
+              "anchor": "eyes"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "blue",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "eyes",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b07",
+      "role": "story",
+      "narration": "Now the sun sinks low. Its light must cross about 38 times more air.",
+      "on_screen_text": "38 times more air",
+      "visual_intent": "A diagram with two paths of sunlight: a short one overhead and a much longer slanting one through the atmosphere at sunset.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "centre",
+          "doing": "pops in at the edge and traces the long slanting path",
+          "to_camera": false
+        },
+        "visual": "graphic",
+        "insert": null,
+        "graphic": {
+          "kind": "two_paths",
+          "items": [
+            "Low sun",
+            "More air"
+          ],
+          "anchors": [
+            "low",
+            "air"
+          ],
+          "detail": "long"
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "cross"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "number_counter",
+            "anchor": "38",
+            "detail": "0 -> 38"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4",
+        "s5"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b08",
+      "role": "story",
+      "narration": "Along the way, the blue gets scattered out. Mostly red is left to reach me.",
+      "on_screen_text": "",
+      "visual_intent": "The host stands in the park as the low sun sets and the sky around it dims from blue to deep red.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "gazes at the low sun as the sky turns red around them",
+          "to_camera": false
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "park-sunset-red-sky",
+          "scene": "A park at sunset with a low orange sun on the horizon, long shadows on the grass, and the sky shifting from blue to deep red.",
+          "effects": [
+            {
+              "kind": "dim",
+              "anchor": "scattered",
+              "at": "sky",
+              "detail": ""
+            },
+            {
+              "kind": "grade",
+              "anchor": "red",
+              "at": "sky",
+              "detail": "blue -> red"
+            }
+          ]
+        },
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "",
+              "anchor": "reach"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "punch_in",
+            "anchor": "red",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b09",
+      "role": "payoff",
+      "narration": "So here's your answer. Sunsets are red because the daytime sky is blue. The same scattering that paints it blue strips blue from the beam.",
+      "on_screen_text": "Blue removed, red remains",
+      "visual_intent": "The host faces the camera in front of a glowing red sunset, nodding as the answer lands.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "nods to camera in front of the red sunset sky",
+          "to_camera": true
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "red-sunset-over-park",
+          "scene": "A glowing red and orange sunset sky over a quiet park, the sun low on the horizon, warm light on the grass and trees.",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "strips",
+              "at": "sky",
+              "detail": "Blue removed"
+            }
+          ]
+        },
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "answer"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "strips",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "answer"
+        }
+      ],
+      "source_ids": [
+        "s6",
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b10",
+      "role": "loop",
+      "narration": "That's how a blue sky ends up making red sunsets.",
+      "on_screen_text": "",
+      "visual_intent": "The host waves goodbye at the sunset as the red sky fades back toward blue, ready to loop.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "doing": "waves to camera as the red sky softly fades back toward blue",
+          "to_camera": true
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "park-dusk-fading-to-blue",
+          "scene": "The same park at dusk with the red sunset sky beginning to fade back toward soft blue, warm light on the path.",
+          "effects": [
+            {
+              "kind": "crossfade",
+              "anchor": "sunsets",
+              "at": "",
+              "detail": "blue sky returning at dawn"
+            }
+          ]
+        },
+        "graphic": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "park",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "wave",
+              "target": "camera",
+              "anchor": "sunsets"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "breathe",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s6"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "Air molecules scatter light by Rayleigh scattering, which depends inversely on wavelength to the fourth power, so short wavelengths are scattered far more than long ones.",
+      "url": "https://web.physics.ucsb.edu/~lecturedemonstrations/Composer/Pages/84.45.html",
+      "title": "84.45 -- Sunset",
+      "quote": "This type of scattering, in which the scattering centers are much smaller than the wavelength of the light, is known as *Rayleigh scattering*, and it ..."
+    },
+    {
+      "id": "s2",
+      "claim": "Blue light is scattered so much more than red that it fills the daytime sky with blue.",
+      "url": "https://web.physics.ucsb.edu/~lecturedemonstrations/Composer/Pages/84.45.html",
+      "title": "84.45 -- Sunset",
+      "quote": "This is why the sky is blue; blue light is scattered so much more greatly than red light that it gives the sky its blue color, and it leaves the light..."
+    },
+    {
+      "id": "s3",
+      "claim": "The human eye is more receptive to blue than to violet, so the sky looks blue even though violet is also scattered.",
+      "url": "https://www.timeanddate.com/astronomy/red-sunset.html",
+      "title": "red sunset",
+      "quote": "Blue Skies And Yellow Sun\n\nWhen you look up at the sky during the day, this scattered blue and violet light reaches your eyes, however, the human eye ..."
+    },
+    {
+      "id": "s4",
+      "claim": "At sunset, sunlight takes a much longer path through the atmosphere, so most of the blue light and other wavelengths shorter than red are scattered out, leaving mostly red light.",
+      "url": "https://web.physics.ucsb.edu/~lecturedemonstrations/Composer/Pages/84.45.html",
+      "title": "84.45 -- Sunset",
+      "quote": "At sunset, light from the sun takes a significantly longer path than during the day, so that most of the blue light, and light of other wavelengths sh..."
+    },
+    {
+      "id": "s5",
+      "claim": "Near the horizon, sunlight passes through roughly 38 times more air than when the Sun is overhead.",
+      "url": "https://physicstribune.com/questions/why-is-the-sky-red-at-sunset/",
+      "title": "Why Is the Sky Red at Sunset? Pink and Orange Skies",
+      "quote": "Orange Sun setting over a calm sea with pink and red clouds above, showing how a long path through air reddens sunlight\n\nSunsets are red because sunli..."
+    },
+    {
+      "id": "s6",
+      "claim": "NOAA's Storm Prediction Center notes that sunrises and sunsets are red because the daytime sky is blue, since the same scattering removes blue from the direct beam.",
+      "url": "https://www.spc.noaa.gov/publications/corfidi/sunset.html",
+      "title": "The Science of Sunsets - Storm Prediction Center - NOAA",
+      "quote": "**Figure 1**\n\nBecause of the substantial difference in the path length of sunlight between midday and sunrise or sunset, it can be said that sunrises ..."
+    }
+  ],
+  "approvals": {
+    "bases": "876f2883da69417e40130ebdf9c418b7e324b4e60824db475c8d16513d2e73f5"
+  },
+  "meta": {
+    "script": {
+      "model": "claude-sonnet-5-5",
+      "prompt_version": "script-v5",
+      "research": true,
+      "generated": "2026-11-08T22:55:22"
+    },
+    "bases": {
+      "plan": [
+        {
+          "beat": "b01",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        },
+        {
+          "beat": "b02",
+          "base": "lead-at-table",
+          "wanted": "cafe-insert"
+        },
+        {
+          "beat": "b03",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        },
+        {
+          "beat": "b04",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        },
+        {
+          "beat": "b05",
+          "base": null,
+          "wanted": "friend-lead-standing-street"
+        },
+        {
+          "beat": "b06",
+          "base": null,
+          "wanted": "lead-standing-street"
+        },
+        {
+          "beat": "b07",
+          "base": null,
+          "wanted": "friend-lead-seated-bench-street"
+        },
+        {
+          "beat": "b08",
+          "base": null,
+          "wanted": "friend-standing-street"
+        },
+        {
+          "beat": "b09",
+          "base": null,
+          "wanted": "friend-lead-standing-street"
+        },
+        {
+          "beat": "b10",
+          "base": "together",
+          "wanted": "friend-lead-seated-at-table"
+        }
+      ],
+      "candidates": {
+        "friend-lead-seated-bench-street": [
+          "renders/bases/flux/cand-together-seated-bench-street-p6f51-s657.png",
+          "renders/bases/flux/cand-together-seated-bench-street-p6f51-s658.png"
+        ]
+      },
+      "sheet": "renders/bases/candidates/why-sunsets-are-red-when-the-sky-is-blue-candidates.jpg",
+      "made": "2026-11-08T16:33:34",
+      "round": 1
+    },
+    "approval_log": [
       {
-       "kind": "crossfade",
-       "anchor": "red",
-       "at": "",
-       "detail": "at sunset, the whole sky glowing deep orange and red, long warm shadows"
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-08T17:16:58",
+        "digest": "64faa33fbae2"
       },
       {
-       "kind": "push",
-       "anchor": "",
-       "at": "",
-       "detail": ""
+        "gate": "bases",
+        "by": "user",
+        "at": "2026-11-08T17:18:37",
+        "picks": {
+          "friend-lead-seated-bench-street": "cand-together-seated-bench-street-p6f51-s658.png"
+        },
+        "rejects": [],
+        "digest": "876f2883da69"
       }
-     ]
-    },
-    "graphic": null,
-    "reaction_anchor": ""
-   },
-   "sfx": [
-    {
-     "name": "pop",
-     "anchor": "red"
-    }
-   ],
-   "source_ids": [],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b02",
-   "role": "setup",
-   "narration": "Sunlight hits the air, and molecules scatter it in every direction. That's called Rayleigh scattering.",
-   "on_screen_text": "Rayleigh scattering",
-   "visual_intent": "A sunbeam through the café window lights up drifting dust specks that bounce light in all directions.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "cafe",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Close insert of a golden sunbeam slanting through a tall café window, glowing specks of dust drifting and catching the light in every direction. Blurred green plant and wooden chair edge in the background. Warm, soft light.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "text_slam",
-      "anchor": "Rayleigh",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "graphic",
-    "insert": null,
-    "graphic": {
-     "kind": "scatter",
-     "items": [
-      "Sunlight",
-      "Air molecules"
-     ],
-     "anchors": [
-      "Sunlight",
-      "molecules"
-     ],
-     "detail": ""
-    },
-    "reaction_anchor": ""
-   },
-   "sfx": [
-    {
-     "name": "pop",
-     "anchor": "scatter"
-    }
-   ],
-   "source_ids": [
-    "s1"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b03",
-   "role": "setup",
-   "narration": "But colors scatter unequally. Short wavelengths get scattered far more than long ones.",
-   "on_screen_text": "",
-   "visual_intent": "On the table, a small blue ball bounces wildly with motion trails while a red ball just rolls straight.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "cafe",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Medium shot at the café round table. A small blue ball bounces and ricochets with curved painted motion trails; a red ball beside it rolls calmly in a straight line. Lead points at the blue ball, friend watches with raised brows. Warm golden light, green cups at the edge.",
-    "pose_variants": [
-     "Lead leans in with both mitten hands on the table, eyes on the blue ball, smiling."
-    ],
-    "motion": [
-     {
-      "recipe": "push_in",
-      "anchor": "",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "graphic",
-    "insert": null,
-    "graphic": {
-     "kind": "waves",
-     "items": [
-      "Short: blue",
-      "Long: red"
-     ],
-     "anchors": [
-      "Short",
-      "long"
-     ],
-     "detail": ""
-    },
-    "reaction_anchor": ""
-   },
-   "sfx": [],
-   "source_ids": [
-    "s2"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b04",
-   "role": "tension",
-   "narration": "So why not violet? The sun sends less violet, and our eyes are less sensitive to it, so we see blue.",
-   "on_screen_text": "Blue wins",
-   "visual_intent": "The friend shrugs at the violet question while the lead nods, with a blue ball sitting bigger than a violet ball between them.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "cafe",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Close shot of lead and friend at the café table. A large glowing blue ball and a much smaller violet ball sit between them. Friend looks quizzical with hands raised; lead has a knowing small smile. Soft golden light, ivy behind.",
-    "pose_variants": [
-     "Friend with open palms raised in a shrug, brows lifted.",
-     "Friend with a hand on chin, thinking."
-    ],
-    "motion": [
-     {
-      "recipe": "text_slam",
-      "anchor": "blue",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "graphic",
-    "insert": null,
-    "graphic": {
-     "kind": "bars",
-     "items": [
-      "Violet",
-      "Blue"
-     ],
-     "anchors": [
-      "sends",
-      "blue"
-     ],
-     "detail": "2 | 5"
-    },
-    "reaction_anchor": ""
-   },
-   "sfx": [
-    {
-     "name": "ding",
-     "anchor": "blue"
-    }
-   ],
-   "source_ids": [
-    "s3"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b05",
-   "role": "tension",
-   "narration": "At sunset, the sun sits low. Its light crosses much more air.",
-   "on_screen_text": "Longer path",
-   "visual_intent": "On a street corner at dusk, the low sun sends a long beam across a big stretch of hazy sky as the friends watch.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "street",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Wide street-corner scene in late-afternoon light. A big sun hangs low just above the rooftops, its beam stretching across a wide band of hazy golden sky toward the two figures. Lead and friend stand on the pavement; lead points up at the sun. Long soft shadows, warm dappled light.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "text_slam",
-      "anchor": "crosses",
-      "detail": ""
-     }
-    ],
-    "transition": "whip",
-    "layers": [],
-    "visual": "insert",
-    "insert": {
-     "key": "street-noon",
-     "scene": "a quiet painted street corner at noon: brick shopfronts, a lamp post, a tree with dappled shade, a wide clear bright blue sky above the rooftops, the sun out of view",
-     "effects": [
-      {
-       "kind": "sun_path",
-       "anchor": "",
-       "at": "",
-       "detail": "high -> low"
-      },
-      {
-       "kind": "grade",
-       "anchor": "low",
-       "at": "",
-       "detail": "blue -> red"
-      }
-     ]
-    },
-    "graphic": null,
-    "reaction_anchor": ""
-   },
-   "sfx": [
-    {
-     "name": "whoosh",
-     "anchor": "crosses"
-    }
-   ],
-   "source_ids": [
-    "s4"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b06",
-   "role": "reveal",
-   "narration": "On that long trip, most blue is scattered out. Mostly red is left.",
-   "on_screen_text": "Mostly red",
-   "visual_intent": "A close-up of the lead's face lit in deep orange as the blue drains out of the sky behind.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "street",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Close shot of the lead's round white head in profile, lit with deep orange-red glow from a low sun. Behind, the sky fades from faint blue at the top to rich red at the horizon. Quiet, wondering expression. Warm painterly light.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "text_slam",
-      "anchor": "red",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "graphic",
-    "insert": null,
-    "graphic": {
-     "kind": "two_paths",
-     "items": [
-      "Blue scattered",
-      "Red left"
-     ],
-     "anchors": [
-      "blue",
-      "red"
-     ],
-     "detail": "long"
-    },
-    "reaction_anchor": ""
-   },
-   "sfx": [],
-   "source_ids": [
-    "s5"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b07",
-   "role": "reveal",
-   "narration": "The red isn't added. The blue is taken away.",
-   "on_screen_text": "Subtracted, not added",
-   "visual_intent": "A glass jar of blue and red marbles sits on a bench; the lead reaches in and the blue ones are removed, leaving red.",
-   "shot": {
-    "framing": "medium",
-    "cast": [
-     "lead",
-     "friend"
-    ],
-    "staging": {
-     "setting": "street",
-     "setting_detail": "",
-     "poses": [
-      {
-       "who": "lead",
-       "pose": "seated-bench"
-      },
-      {
-       "who": "friend",
-       "pose": "seated-bench"
-      }
-     ],
-     "actions": [
-      {
-       "who": "lead",
-       "verb": "reach",
-       "target": "glass jar",
-       "anchor": "taken"
-      }
-     ],
-     "props": [
-      {
-       "name": "glass jar",
-       "held_by": "",
-       "where": "bench"
-      }
-     ]
-    },
-    "image_prompt": "Medium shot of lead and friend on a street bench in golden dusk light. Between them a glass jar holds mostly red marbles with a few blue ones left; lead reaches toward it, friend watches with interest. Warm light, soft shadows.",
-    "pose_variants": [
-     "Lead holds up a single blue marble between mitten fingers, examining it.",
-     "Lead sits back with hands in lap, smiling at the jar."
-    ],
-    "motion": [
-     {
-      "recipe": "pose_swap",
-      "anchor": "taken",
-      "detail": ""
-     },
-     {
-      "recipe": "text_slam",
-      "anchor": "added",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": []
-   },
-   "sfx": [
-    {
-     "name": "pop",
-     "anchor": "added"
-    }
-   ],
-   "source_ids": [
-    "s5"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b08",
-   "role": "reveal",
-   "narration": "Mars flips it. NASA rovers show a reddish day sky, and a blue-gray sunset.",
-   "on_screen_text": "Mars flips it",
-   "visual_intent": "The friend holds up a painted photograph of a rusty-orange Martian sky with a blue glow around the sun.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "street",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Insert shot: friend's mitten hands hold up a painted photo of an orange-red desert sky over rocky ground, with a cool blue-gray glow around a small sun near the horizon. Teal scarf in frame edge, blurred warm street behind.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "text_slam",
-      "anchor": "Mars",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "insert",
-    "insert": {
-     "key": "mars-day",
-     "scene": "a rocky Martian desert landscape in daytime: rust-red rocks and dunes, a distant crater rim, a hazy butterscotch-pink sky",
-     "effects": [
-      {
-       "kind": "grade",
-       "anchor": "blue-gray",
-       "at": "",
-       "detail": "butterscotch -> mars-dusk"
-      },
-      {
-       "kind": "sun_path",
-       "anchor": "blue-gray",
-       "at": "horizon",
-       "detail": "low -> low, small and pale with a blue glow"
-      },
-      {
-       "kind": "dust",
-       "anchor": "",
-       "at": "",
-       "detail": ""
-      },
-      {
-       "kind": "push",
-       "anchor": "",
-       "at": "",
-       "detail": ""
-      }
-     ]
-    },
-    "graphic": null,
-    "reaction_anchor": ""
-   },
-   "sfx": [
-    {
-     "name": "pop",
-     "anchor": "flips"
-    }
-   ],
-   "source_ids": [
-    "s6"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b09",
-   "role": "payoff",
-   "narration": "Short path, you see scattered blue. Long path, only red survives.",
-   "on_screen_text": "",
-   "visual_intent": "Both friends stand at the dusk street, lead pointing from the high blue sky down to the low red sun.",
-   "shot": {
-    "framing": "wide",
-    "cast": [],
-    "staging": {
-     "setting": "street",
-     "setting_detail": "",
-     "poses": [],
-     "actions": [],
-     "props": []
-    },
-    "image_prompt": "Wide street shot at dusk. The sky above is soft blue, shifting to deep red-orange around a low sun. Lead and friend stand side by side; lead points toward the red horizon, friend nods. Warm painterly light, long shadows.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "push_in",
-      "anchor": "",
-      "detail": ""
-     }
-    ],
-    "transition": "cut",
-    "layers": [],
-    "visual": "graphic",
-    "insert": null,
-    "graphic": {
-     "kind": "two_paths",
-     "items": [
-      "Short path",
-      "Long path"
-     ],
-     "anchors": [
-      "Short",
-      "Long"
-     ],
-     "detail": "both"
-    },
-    "reaction_anchor": ""
-   },
-   "sfx": [
-    {
-     "name": "ding",
-     "anchor": "survives"
-    }
-   ],
-   "source_ids": [
-    "s2",
-    "s4",
-    "s5"
-   ],
-   "illustrative_numbers": false,
-   "duration": null
-  },
-  {
-   "id": "b10",
-   "role": "ending",
-   "narration": "Next sunset, watch the blue leave. Blue all day, then red.",
-   "on_screen_text": "",
-   "visual_intent": "Back at the café, the friends sit quietly watching the window turn from blue to orange.",
-   "shot": {
-    "framing": "medium",
-    "cast": [
-     "lead",
-     "friend"
-    ],
-    "staging": {
-     "setting": "cafe",
-     "setting_detail": "",
-     "poses": [
-      {
-       "who": "lead",
-       "pose": "seated-at-table"
-      },
-      {
-       "who": "friend",
-       "pose": "seated-at-table"
-      }
-     ],
-     "actions": [
-      {
-       "who": "lead",
-       "verb": "nod",
-       "target": "",
-       "anchor": "day"
-      }
-     ],
-     "props": []
-    },
-    "image_prompt": "Medium shot in the sunlit café. Lead and friend sit at the round wooden table, green cups before them, gazing at the tall window where the sky glows orange-red over the rooftops. Calm, content expressions, dappled golden light, ivy and hanging lamp.",
-    "pose_variants": [],
-    "motion": [
-     {
-      "recipe": "punch_in",
-      "anchor": "leave",
-      "detail": ""
-     }
-    ],
-    "transition": "whip",
-    "layers": [],
-    "visual": "insert",
-    "insert": {
-     "key": "street-noon",
-     "scene": "a quiet painted street corner at noon: brick shopfronts, a lamp post, a tree with dappled shade, a wide clear bright blue sky above the rooftops, the sun out of view",
-     "effects": [
-      {
-       "kind": "grade",
-       "anchor": "leave",
-       "at": "",
-       "detail": "blue -> red"
-      },
-      {
-       "kind": "push",
-       "anchor": "",
-       "at": "",
-       "detail": ""
-      }
-     ]
-    },
-    "graphic": null,
-    "reaction_anchor": "day"
-   },
-   "sfx": [],
-   "source_ids": [],
-   "illustrative_numbers": false,
-   "duration": null
-  }
- ],
- "sources": [
-  {
-   "id": "s1",
-   "claim": "The colors we see in the sky come from sunlight that is scattered by molecules in the atmosphere, a process called Rayleigh scattering.",
-   "url": "https://scied.ucar.edu/learning-zone/atmosphere/appearance-sky",
-   "title": "The Appearance of the Sky",
-   "quote": "# The Appearance of the Sky\nThe colors we see in the sky come from sunlight that is scattered by molecules in the atmosphere. This process is called R..."
-  },
-  {
-   "id": "s2",
-   "claim": "Rayleigh scattering depends on the inverse fourth power of wavelength, so shorter wavelengths are scattered far more than longer ones.",
-   "url": "https://web.physics.ucsb.edu/~lecturedemonstrations/Composer/Pages/84.45.html",
-   "title": "84.45 -- Sunset",
-   "quote": "This type of scattering, in which the scattering centers are much smaller than the wavelength of the light, is known as *Rayleigh scattering*, and it ..."
-  },
-  {
-   "id": "s3",
-   "claim": "The sky is not violet because the sun puts out much more blue light than violet light, so most of the scattered light in the sky is blue.",
-   "url": "https://www.exploratorium.edu/snacks/blue-sky",
-   "title": "Blue Sky: Waves & Light Science Activity",
-   "quote": "The sun puts out much more blue light than violet light, so most of the scattered light in the sky is blue."
-  },
-  {
-   "id": "s4",
-   "claim": "At sunrise or sunset, when the Sun is close to the horizon, its light must travel through more of the atmosphere than when the Sun is overhead.",
-   "url": "https://scied.ucar.edu/learning-zone/atmosphere/appearance-sky",
-   "title": "The Appearance of the Sky",
-   "quote": "During sunrise or sunset, when the Sun is close to the horizon, the light must travel through more of the atmosphere than it does when the Sun is over..."
-  },
-  {
-   "id": "s5",
-   "claim": "On that longer path, most of the blue light and other wavelengths shorter than red are scattered out, leaving mostly red light.",
-   "url": "https://web.physics.ucsb.edu/~lecturedemonstrations/Composer/Pages/84.45.html",
-   "title": "84.45 -- Sunset",
-   "quote": "At sunset, light from the sun takes a significantly longer path than during the day, so that most of the blue light, and light of other wavelengths sh..."
-  },
-  {
-   "id": "s6",
-   "claim": "NASA rover photos show Mars does the opposite: the daytime sky is orange or reddish, but the sky around the Sun turns blue-gray at sunset.",
-   "url": "https://spaceplace.nasa.gov/blue-sky/en/",
-   "title": "Why Is the Sky Blue?",
-   "quote": "Photos from NASA’s rovers and landers on Mars have shown us that at sunset there is actually the opposite of what you’d experience on Earth. During th..."
-  }
- ],
- "approvals": {
-  "script": "64faa33fbae202f07b6f63a43d32c76b388f6e4186ed3d81848ab04293994b25",
-  "bases": "876f2883da69417e40130ebdf9c418b7e324b4e60824db475c8d16513d2e73f5"
- },
- "meta": {
-  "script": {
-   "model": "claude-sonnet-5-5",
-   "prompt_version": "script-v3",
-   "research": true,
-   "generated": "2026-11-08T14:22:43"
-  },
-  "bases": {
-   "plan": [
-    {
-     "beat": "b01",
-     "base": "together",
-     "wanted": "friend-lead-seated-at-table"
-    },
-    {
-     "beat": "b02",
-     "base": "lead-at-table",
-     "wanted": "cafe-insert"
-    },
-    {
-     "beat": "b03",
-     "base": "together",
-     "wanted": "friend-lead-seated-at-table"
-    },
-    {
-     "beat": "b04",
-     "base": "together",
-     "wanted": "friend-lead-seated-at-table"
-    },
-    {
-     "beat": "b05",
-     "base": null,
-     "wanted": "friend-lead-standing-street"
-    },
-    {
-     "beat": "b06",
-     "base": null,
-     "wanted": "lead-standing-street"
-    },
-    {
-     "beat": "b07",
-     "base": null,
-     "wanted": "friend-lead-seated-bench-street"
-    },
-    {
-     "beat": "b08",
-     "base": null,
-     "wanted": "friend-standing-street"
-    },
-    {
-     "beat": "b09",
-     "base": null,
-     "wanted": "friend-lead-standing-street"
-    },
-    {
-     "beat": "b10",
-     "base": "together",
-     "wanted": "friend-lead-seated-at-table"
-    }
-   ],
-   "candidates": {
-    "friend-lead-seated-bench-street": [
-     "renders/bases/flux/cand-together-seated-bench-street-p6f51-s657.png",
-     "renders/bases/flux/cand-together-seated-bench-street-p6f51-s658.png"
     ]
-   },
-   "sheet": "renders/bases/candidates/why-sunsets-are-red-when-the-sky-is-blue-candidates.jpg",
-   "made": "2026-11-08T16:33:34",
-   "round": 1
-  },
-  "approval_log": [
-   {
-    "gate": "script",
-    "by": "user",
-    "at": "2026-11-08T17:16:58",
-    "digest": "64faa33fbae2"
-   },
-   {
-    "gate": "bases",
-    "by": "user",
-    "at": "2026-11-08T17:18:37",
-    "picks": {
-     "friend-lead-seated-bench-street": "cand-together-seated-bench-street-p6f51-s658.png"
-    },
-    "rejects": [],
-    "digest": "876f2883da69"
-   }
-  ]
- }
+  }
 }

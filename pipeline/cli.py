@@ -395,11 +395,18 @@ def cmd_approve(args):
         store.save(episode, base)
         print(f'Approved bases for {episode.slug}. Build them with scripts/motion_test/build_bases.py, then render.')
         return 0
+    if args.gate == 'script' and episode.hook_options:
+        if not args.hook:
+            print(f'{episode.slug} has {len(episode.hook_options)} hook options: approve with --hook N (1-{len(episode.hook_options)}).')
+            return EXIT_GATE
+        episode.pick_hook(args.hook)
+        print(f'Hook {args.hook}: "{episode.hook_options[args.hook - 1].line}"')
     _, issues = check(episode)
     if errors_of(issues):
         for issue in errors_of(issues):
             print(issue)
         print('Fix these errors before approving.')
+        store.save(episode, base)
         return EXIT_CHECKS
     record_approval(episode, base, args.gate, args.by)
     print(f'Approved {args.gate} for {episode.slug} ({episode.approvals[args.gate][:12]}).')
@@ -465,6 +472,7 @@ def build_parser():
     a.add_argument('episode')
     a.add_argument('--gate', default='script', choices=GATES)
     a.add_argument('--by', default='cli', help='who approved (recorded in the approval log)')
+    a.add_argument('--hook', type=int, help='script gate, host format: the hook option to use (1-3)')
     a.add_argument('--pick', action='append', help='bases gate: <wanted base>=<candidate png>; bases may be picked over several calls')
     a.add_argument('--reject', action='append', help='bases gate: <wanted base>[=reason]; its candidates are rejected and the next '
                                                      '`stick bases --candidates` renders new ones')

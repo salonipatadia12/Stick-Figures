@@ -254,7 +254,7 @@ class Runner:
                     events.append((at, snd, gain))
         return events
 
-    def build_audio(self, tl, voice, events) -> Path:
+    def build_audio(self, tl, voice, events, music: bool = False) -> Path:
         clips = []
         for b in tl['beats']:
             a = self.voice_48k(voice, b['id'])
@@ -264,7 +264,7 @@ class Runner:
             seg[:ramp] *= np.linspace(0, 1, ramp)
             seg[-ramp:] *= np.linspace(1, 0, ramp)
             clips.append((b['start'], seg))
-        mix = sfx.mix(tl['duration'], clips, events)
+        mix = sfx.mix(tl['duration'], clips, events, music=music)
         raw = self.out / 'audio' / 'mix.wav'
         sfx.write_wav(raw, mix)
         mastered = self.out / 'audio' / 'master.wav'
@@ -277,6 +277,7 @@ class Runner:
         ap.add_argument('--voice', default=self.default_voice)
         ap.add_argument('--still', type=float, nargs='*')
         ap.add_argument('--workers', type=int, default=4)
+        ap.add_argument('--music', action='store_true', help='add the soft music bed (off by default)')
         ap.add_argument('--no-qa', action='store_true')
         args = ap.parse_args(argv)
         self.out.mkdir(parents=True, exist_ok=True)
@@ -318,7 +319,7 @@ class Runner:
         video = self.out / 'video.mp4'
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', str(listing), '-c', 'copy', str(video)], check=True)
         events = self.shot_events(plan, tl)
-        audio = self.build_audio(tl, args.voice, events)
+        audio = self.build_audio(tl, args.voice, events, music=args.music)
         final = self.out / f'{self.slug}.mp4'
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(video), '-i', str(audio), '-map', '0:v', '-map', '1:a',
                         '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-t', f"{tl['duration']:.3f}",

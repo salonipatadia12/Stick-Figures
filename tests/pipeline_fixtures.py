@@ -13,7 +13,7 @@ def staging(cast=('lead',), setting='cafe', pose='seated-at-table', actions=(), 
 def beat(role, narration, visual, motion, *, text='', cast=('lead',), framing='medium', poses=(), sfx=(),
          sources=(), example=False, transition='cut', stage=None, kind='character', insert=None, graphic=None, reaction=''):
     return dict(role=role, narration=narration, on_screen_text=text, visual_intent=visual,
-                shot=dict(visual=kind, insert=insert, graphic=graphic, reaction_anchor=reaction,
+                shot=dict(host=dict(where='off', side='centre', doing='', to_camera=False), visual=kind, insert=insert, graphic=graphic, reaction_anchor=reaction,
                           framing=framing, cast=list(cast), image_prompt=f'Painted frame: {visual}',
                           pose_variants=list(poses), motion=[dict(recipe=r, anchor=a, detail=d) for r, a, d in motion],
                           transition=transition, staging=stage or staging(cast)),
@@ -24,6 +24,7 @@ def salary_draft():
     return dict(
         title='Where Your Salary Goes',
         hook_promise='Why the money runs out before the month does',
+        hook_options=[], subject_settings=[],
         beats=[
             beat('hook', "Your salary didn't shrink. It leaked.", 'The lead holds a glass jar with coins trickling out of a crack.',
                  [('punch_in', 'leaked', '')], text='GONE BY THE 20TH', sfx=[('coin', 'leaked')]),

@@ -161,7 +161,8 @@ class StagingRules(unittest.TestCase):
 
 class Schemas(unittest.TestCase):
     def test_structured_output_schema_is_api_compatible(self):
-        schema = transform_schema(ScriptDraft)
+        from pipeline.models import wire_schema
+        schema = wire_schema(transform_schema(ScriptDraft))     # what is sent: every property required
 
         def objects(node):
             if isinstance(node, dict):

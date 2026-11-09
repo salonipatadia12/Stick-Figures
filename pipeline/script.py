@@ -18,16 +18,19 @@ from pathlib import Path
 
 from . import config
 from .cost import token_cost, usage_dict
-from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest
+from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest, from_wire, wire_schema
 
-PROMPT_VERSION = 'script-v4'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic)
+PROMPT_VERSION = 'script-v5'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic); v5: host format, three hook options
+# The research cache is keyed on its own version: a script-prompt change must never re-run (and re-pay) research.
+# Frozen at the value the 2026-11-08 research runs were cached under.
+RESEARCH_VERSION = 'script-v5'
 RESEARCH_MAX_SEARCHES = 4
 RESEARCH_MAX_TOKENS = 4096
 # Search results are billed as input tokens and can't be counted before the call. This is the
 # worst case reserved per research request; real usage is recorded afterwards.
 RESEARCH_RESULT_TOKENS_BOUND = 100_000
 MAX_CONTINUATIONS = 2  # pause_turn resumes of the server-side search loop, each budgeted
-SCRIPT_MAX_TOKENS = 16_000
+SCRIPT_MAX_TOKENS = 24_000  # v5 drafts carry three full hook beats
 CHARS_PER_TOKEN_ESTIMATE = 3.0  # offline estimate only (dry runs without a key); deliberately high
 
 RESEARCH_SYSTEM = """You gather facts for a 30-60 second explainer video. Use web search.
@@ -38,64 +41,71 @@ Prefer primary or reputable sources: government statistics offices, central bank
 universities, established research organisations and major news outlets.
 If a fact only holds for one country or period, name it in the sentence. Do not give advice."""
 
-SCRIPT_RULES = """You write scripts for faceless explainer Shorts: vertical videos of 30-60 seconds,
-told with painted stick-figure characters, a narrator and word-synced captions.
+SCRIPT_RULES = """You write scripts for explainer Shorts: vertical videos of 30-60 seconds, painted stick figures,
+a narrated voice and word-synced captions.
+
+FORMAT (every video): the lead stick figure is the HOST. The host talks to the viewer in first person or "you"
+(the narration IS the host speaking, lips moving, eyes to camera) and walks them through the topic end to end,
+acting the story out inside the pictures.
 
 Rules:
-1. HOOK. Beat 1 has role "hook". Its first sentence is at most 7 words and opens on a concrete
-   tension, a question or a surprising contrast. No greeting, no "in this video", no channel talk.
-2. STRUCTURE. One idea per beat. Roles in order: hook; then setup, tension and reveal beats;
-   one "payoff" beat that delivers exactly what the hook promised; and a final "ending" beat that
-   loops back to the opening line or teases a follow-up. Fill hook_promise with that promise.
-3. SHOW, DON'T TELL. Every beat's picture shows the idea through action, a visual metaphor or a
-   physical diagram (for money: coins draining from a jar). Never a talking head, never a
-   character just speaking to the viewer.
-4. NO INVENTED FACTS. Use only the numbered research facts provided, citing their ids in
-   source_ids. A number that is not from a fact must be framed as an example in the narration
-   ("say you take home 3,000 a month") with illustrative_numbers=true. Ordinal dates such as
-   "the 20th" are fine.
-5. VOICE. Conversational, second person where natural, short sentences, contractions.
-6. ON-SCREEN TEXT. 0-5 words that punch the key idea, often the number or the turn. Empty when
-   the picture already says it.
-7. MOTION. Each beat gets 1-2 recipes. The picture must change on a key word at least every
-   ~2.5 seconds, so most beats need one word-anchored recipe whose anchor appears verbatim in that
-   beat's narration. Continuous moves (push_in, pan_left, pan_right, parallax, breathe) take an
-   empty anchor. Guide: push_in or pan to establish; punch_in on a key word; pose_swap when a
-   character reacts (give 1-2 pose_variants: the same frame with a different arm/face pose);
-   enter_left/right and exit_left/right for arrivals and departures; impact_shake for a shock;
-   text_slam to land the on-screen text; number_counter when a quantity changes (detail
-   "0 -> 31"); underline_draw or arrow_draw to point at something; icon_pop for one object
-   appearing; checklist_tick for steps (detail "item | item"); split_compare for before/after
-   (detail "left | right").
-8. TRANSITIONS. "cut" by default. "whip" only for a jump in time or place; "match_cut" only when
-   two shots share a shape or object.
-9. SOUND. 0-2 sfx per beat from pop, whoosh, ding, coin, thud, paper, typing, each anchored to a
-   word in that beat's narration and placed on an action.
-10. IMAGE PROMPTS. Describe one painted frame for an image model: which cast ids appear, where,
-   pose, expression, props, light and framing. No text, letters or numbers inside the picture.
-   Keep recurring props and places consistent across beats. Do not restate the art style.
-11. STAGING. The video is built from libraries, so fill shot.staging exactly: setting from the list
-   (cafe, bedroom, office, kitchen, living-room, doorway (between living room and kitchen), street, park, classroom, gym, car; "other" only if
-   none fits, with setting_detail); one pose per cast id (seated-at-table, standing, bed-edge,
-   bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, passenger, walking); 0-3
-   actions from reach, point, shrug, facepalm, pick_up, put_down, throw, drink, type, write, wave,
-   nod, shake_head, slump, jolt, gaze, each on a word of this beat's narration; 0-4 props with
-   where they sit and who holds them. Use at most 2 settings and 2 characters per video; characters
-   hold one pose per beat. What the characters CANNOT do: walk across a room, run, jump, fall,
-   fight, dance; crowds; animals. A change of posture (lie_down, sit_up, stand_up, walk) is staged
-   as a cut to another beat or base, so put it on the first word of a new beat. Stage such moments
-   through the moment before or after, a prop, the far background, or a diagram.
-12. SHOW THE SUBJECT. Viewers must SEE the idea, not only watch two characters talk about it. Each
-   beat sets shot.visual: "character" (the characters act it out), "insert" (a full-frame painted
-   scene of the thing, place or process with NO characters, e.g. a volcano erupting, a frosted farm,
-   a street at sunset; fill shot.insert with a kebab-case key, the scene, and 0-4 effects such as
-   ash/snow/dust/embers/haze particles, a colour grade "blue -> red", sun_path "high -> low", a
-   crossfade to a changed version of the same place, push/pan, labels and arrows, each on a word)
-   or "graphic" (a drawn diagram: flow A -> B -> C, bounce, scatter, two_paths, waves, bars,
-   thermometer, cards, layers; fill shot.graphic). On explainer topics make at least half of the beats insert or graphic.
-   After an insert the characters may react: set reaction_anchor to a word and the picture cuts to
-   the cast (shot.cast and staging describe the reaction). Numbers drawn on screen (labels, split
-   labels, graphic items) must be numbers this beat says.
+1. STRUCTURE. Roles in order: "hook" (0-3 s) -> "promise" (one short "let me show you" line that says what the
+   viewer will get) -> "story" beats (one idea each, told as something the host does or sees) -> one "payoff" beat
+   that answers the hook -> one "loop" beat whose last words tie back to the hook line so the video can loop.
+   Fill hook_promise with the question the hook opens.
+2. HOOK. The hook beat's narration is ONLY the hook line: at most 8 words, a question or a bold claim the payoff
+   answers. It must be honest: never walked back or contradicted later. Frame 1 already shows the host in a
+   surprising situation that makes the line land (e.g. "It's June. Why is it snowing?" with the host in a t-shirt
+   beside snow on summer flowers; "Wait... why did I come in here?" as the host walks through a door and freezes;
+   "Same sun, same sky. So why red?" as the host snaps their fingers and the sky flips from blue to red).
+   No greeting, no "in this video". Write 3 genuinely different hook_options; option 1 is used in beats. Each
+   option carries its full hook_beat, how the payoff answers it, and its own loop_line.
+3. THE HOST IS IN THE STORY. Every beat fills shot.host (and puts "lead" in cast when the host is on screen). Put the host INSIDE the explainer scenes, full body,
+   acting out each line: on the beach watching the volcano, shivering in the frosted field, walking through the
+   doorway, looking up at the red sky. Diagrams may fill the frame briefly with the host popping in at the edge to
+   point (where "pop_in"). Aim for the host on screen in at least 70% of beats. The friend appears only when the
+   story needs a second person (someone to ask, to contrast with); no cafe or sofa chatter unless the story is set
+   there.
+4. NO INVENTED FACTS. Use only the numbered research facts provided, citing their ids in source_ids. A number
+   that is not from a fact must be framed as an example in the narration ("say you take home 3,000 a month") with
+   illustrative_numbers=true. Ordinal dates such as "the 20th" are fine.
+5. VOICE. The host talking: conversational, short sentences, contractions, "I" and "you".
+6. ON-SCREEN TEXT. 0-5 words that punch the key idea, often the number or the turn. Empty when the picture already
+   says it. Show it with a text_slam (or number_counter / split_compare / checklist_tick).
+7. MOTION. Each beat gets 1-2 recipes. The picture must change on a key word at least every ~2.5 seconds, so most
+   beats need one word-anchored change (a host action, an insert effect, a graphic item or a recipe) whose anchor
+   appears verbatim in that beat's narration. Continuous moves (push_in, pan_left, pan_right, parallax, breathe)
+   take an empty anchor. Guide: push_in or pan to establish; punch_in on a key word; impact_shake for a shock;
+   text_slam to land the on-screen text; number_counter when a quantity changes (detail "0 -> 31").
+8. TRANSITIONS. "cut" by default. "whip" only for a jump in time or place; "match_cut" only when two shots share a
+   shape or object.
+9. SOUND. No music, no ambience. At most 5-6 sound effects in the whole video, each meaningful (an eruption thud,
+   a door, a finger snap): 0-1 per beat, from pop, whoosh, ding, coin, thud, paper, typing, anchored to a word.
+   No sound for every label or diagram item.
+10. IMAGE PROMPTS. Describe one painted frame for an image model: which cast ids appear, where, pose, expression,
+   props, light and framing. No text, letters or numbers inside the picture. Keep recurring props and places
+   consistent across beats. Do not restate the art style.
+11. STAGING. The video is built from libraries, so fill shot.staging exactly: setting from the list (cafe, bedroom,
+   office, kitchen, living-room, doorway (between living room and kitchen), street, park, classroom, gym, car;
+   "other" only if none fits, with setting_detail); one pose per cast id (seated-at-table, standing, bed-edge,
+   bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, passenger, walking); 0-3 actions from
+   reach, point, shrug, facepalm, pick_up, put_down, throw, drink, type, write, wave, nod, shake_head, slump, jolt,
+   gaze, shiver, look_up, snap, freeze, each on a word of this beat's narration; 0-4 props with where they sit and
+   who holds them. When the host is on screen, "lead" is in shot.cast with its pose and verbs in staging. Use at most 2 characters per video; a
+   character holds one pose per beat. What the characters CANNOT do: run, jump, fall, fight, dance; crowds; animals.
+   Walking is a short walk-in or walk-through inside one picture, not across town. In an insert scene the host
+   stands or walks; seated poses need a setting.
+12. SHOW THE SUBJECT. Viewers must SEE the idea. Each beat sets shot.visual: "insert" (a full-frame painted scene
+   of the thing, place or process, e.g. a volcano erupting, a frosted farm, a street at sunset; fill the insert_* fields
+   of shot.picture with a kebab-case key, the scene painted WITHOUT any people (the host is added on top, matched to its light and
+   scale), and 0-4 effects in shot.picture such as ash/snow/dust/embers/haze particles, a colour grade "blue -> red", sun_path
+   "high -> low", a crossfade to a changed version of the same place, push/pan, labels and arrows, each on a word),
+   "graphic" (a drawn diagram in the painted style: flow A -> B -> C, bounce, scatter, two_paths, waves, bars,
+   thermometer, cards, layers; fill the graphic_* fields of shot.picture) or "character" (the host in a setting from the library, when the
+   setting is the story). Most beats are inserts with the host in them; at least 70% show the subject. When a
+   setting IS the subject (a doorway for a video about doorways), list it in subject_settings. Numbers drawn on
+   screen (labels, split labels, graphic items) must be numbers this beat says. reaction_anchor stays empty in
+   this format (the host is already in the picture).
 
 Visual style of this channel:
 """
@@ -143,7 +153,7 @@ def script_request(episode, style, facts):
             f'Target length: {episode.target_length} seconds: {lo}-{hi} beats and about {words} narration words '
             f'(the narrator reads about {style.words_per_second} words per second).\n'
             f'Aspect: {episode.aspect}\nCast ids: {", ".join(style.cast_ids) or "none"}\n\n{research}')
-    schema = transform_schema(ScriptDraft)
+    schema = wire_schema(transform_schema(ScriptDraft))
     return dict(model=config.SCRIPT_MODEL, max_tokens=SCRIPT_MAX_TOKENS, system=SCRIPT_RULES + style.script_brief,
                 messages=[{'role': 'user', 'content': user}], thinking={'type': 'adaptive'},
                 output_config={'format': {'type': 'json_schema', 'schema': schema}, 'effort': 'high'})
@@ -195,8 +205,12 @@ def _send(client, ledger, step, estimate, detail, request):
     except anthropic.APIStatusError as exc:
         # A rejected request (4xx) is not billed; a server error may have been.
         ledger.fail(entry, f'HTTP {exc.status_code}', billed=exc.status_code >= 500)
-        raise ScriptError(f'Anthropic returned HTTP {exc.status_code} ({exc.__class__.__name__}). '
-                          'No automatic retry was made.') from None
+        reason = ''
+        body = getattr(exc, 'body', None)
+        if isinstance(body, dict):
+            reason = str((body.get('error') or {}).get('message', ''))[:400]
+        raise ScriptError(f'Anthropic returned HTTP {exc.status_code} ({exc.__class__.__name__})'
+                          + (f': {reason}' if reason else '') + '. No automatic retry was made.') from None
     except anthropic.APIConnectionError as exc:
         ledger.fail(entry, exc.__class__.__name__, billed=True)
         raise ScriptError(f'Could not complete the request ({exc.__class__.__name__}). No automatic retry was made.') from None
@@ -274,7 +288,7 @@ def _plain(obj):
 
 def research(episode, base, ledger, client, regenerate=False):
     request = research_request(episode)
-    key = digest([PROMPT_VERSION, 'research', request['model'], request['system'], request['messages'], request['tools']])
+    key = digest([RESEARCH_VERSION, 'research', request['model'], request['system'], request['messages'], request['tools']])
     path = _cache(base, 'research', key)
     if path.exists() and not regenerate:
         return [Source.model_validate(f) for f in json.loads(path.read_text())['facts']], path, True
@@ -320,13 +334,14 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
         _write_json(failed, dict(reason='max_tokens', raw=text))
         raise ScriptError(f'The script hit the output limit before finishing. Partial output saved to {failed}.')
     try:
-        draft = ScriptDraft.model_validate(json.loads(text))
+        data, wire_notes = from_wire(json.loads(text))
+        draft = ScriptDraft.model_validate(data)
     except (ValueError, TypeError) as exc:
         _write_json(failed, dict(reason='invalid', error=str(exc)[:2000], raw=text))
         raise ScriptError(f'The script response did not match the schema. Saved to {failed} for repair; '
                           'no automatic retry was made.') from None
     _write_json(path, dict(draft=draft.model_dump(), created=time.strftime('%Y-%m-%dT%H:%M:%S'),
-                           model=request['model'], prompt_version=PROMPT_VERSION))
+                           model=request['model'], prompt_version=PROMPT_VERSION, wire_notes=wire_notes, raw=text))
     return draft, path, False
 
 
@@ -342,6 +357,7 @@ def generate(episode, style, base, ledger, client=None, use_research=True, regen
     notes.append(f'script: {len(draft.beats)} beats ({"cache" if cached else "new"}: {path.name})')
     updated = episode.model_copy(update=dict(
         title=draft.title, hook_promise=draft.hook_promise, sources=facts,
+        hook_options=draft.hook_options, hook_pick=0, subject_settings=draft.subject_settings,
         beats=[Beat.from_draft(i, b) for i, b in enumerate(draft.beats)],
         approvals={k: v for k, v in episode.approvals.items() if k != 'script'},
         meta=episode.meta | dict(script=dict(model=config.SCRIPT_MODEL, prompt_version=PROMPT_VERSION,
