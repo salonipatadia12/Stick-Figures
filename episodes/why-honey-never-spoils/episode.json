@@ -11,9 +11,37 @@
     "provider": "kokoro",
     "voice_id": ""
   },
-  "title": "",
-  "hook_promise": "",
-  "hook_options": [],
+  "title": "Honey Suspect Lineup: Who Stops the Germs?",
+  "hook_promise": "Honey never spoils, but which of its defenses really stops the germs?",
+  "hook_options": [
+    {
+      "line": "Which honey trick really stops germs?",
+      "frame_one": "The host stands at a sunlit kitchen counter with a magnifying glass, squinting at a golden honey jar like a detective.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The payoff says honey's main defenses are physical: lots of sugar and little free water, with acid as backup.",
+      "loop_line": "The real trick that stops germs? Starve them of water."
+    },
+    {
+      "line": "Why can't germs survive in honey?",
+      "frame_one": "The host peers into a honey jar on a kitchen counter while a tiny pale germ blob sits unhappily on the rim.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "Honey is so sugary and low in water that germ cells get dried out, and its acid makes things worse for them.",
+      "loop_line": "That's why germs can't survive in honey: no water, no chance."
+    },
+    {
+      "line": "I bet on the wrong honey defense.",
+      "frame_one": "The host proudly holds up a card with a peroxide spark drawing over a honey jar, looking smug.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The payoff reveals the main defenses are sugar, low water and acid, not the peroxide I backed.",
+      "loop_line": "So yes, I bet on the wrong honey defense."
+    }
+  ],
   "hook_pick": 0,
   "storylines": [
     {
@@ -87,55 +115,837 @@
       ]
     }
   ],
-  "storyline_pick": 0,
+  "storyline_pick": 3,
   "story_note": "",
   "subject_settings": [],
-  "beats": [],
+  "beats": [
+    {
+      "id": "b01",
+      "role": "hook",
+      "narration": "Which honey trick really stops germs?",
+      "on_screen_text": "Which trick?",
+      "visual_intent": "The host studies a honey jar through a magnifying glass like a detective, already puzzled.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "a magnifying glass",
+          "doing": "squints at the honey jar through a magnifying glass",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "honey-jar-sunlit-counter",
+          "scene": "A golden honey jar with a wooden dipper on a sunlit kitchen counter, fruit bowl behind it, warm morning light and drifting dust motes.",
+          "effects": [
+            {
+              "kind": "dust",
+              "anchor": "",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "honey jar",
+              "anchor": "honey"
+            }
+          ],
+          "props": [
+            {
+              "name": "magnifying glass",
+              "held_by": "lead",
+              "where": "right hand"
+            },
+            {
+              "name": "honey jar",
+              "held_by": "",
+              "where": "counter"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "germs",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b02",
+      "role": "setup",
+      "narration": "Honey never spoils. So I lined up three suspects.",
+      "on_screen_text": "",
+      "visual_intent": "The host stands at a kitchen table with the honey jar, gesturing at the empty spots where suspects will go.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "medium",
+          "holds": "",
+          "doing": "gestures at the table where the suspects will line up",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "honey jar",
+              "anchor": "suspects"
+            }
+          ],
+          "props": [
+            {
+              "name": "honey jar",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "spoils",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b03",
+      "role": "setup",
+      "narration": "One: hydrogen peroxide. Two: acid. Three: missing water.",
+      "on_screen_text": "Three suspects",
+      "visual_intent": "Three suspects on the kitchen table: a dropper bottle (peroxide), a halved lemon (acid) and an empty glass (missing water), ticked off one by one.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "stands beside the three suspects on the table and points along the row",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "honey-three-suspects-table",
+          "scene": "A wooden kitchen table in warm afternoon light with three small objects in a row: a brown dropper bottle, a halved lemon and an empty drinking glass.",
+          "effects": []
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "lineup tokens",
+              "anchor": "Two"
+            }
+          ],
+          "props": [
+            {
+              "name": "lineup tokens",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "checklist_tick",
+            "anchor": "One",
+            "detail": "Peroxide | Acid | Missing water"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "pop",
+          "anchor": "Three"
+        }
+      ],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b04",
+      "role": "problem",
+      "narration": "My bet? Peroxide. Honey's enzyme makes it while turning glucose into gluconic acid.",
+      "on_screen_text": "",
+      "visual_intent": "A close-up of honey drizzling from a dipper with tiny sparks showing the enzyme at work, the host watching.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "large",
+          "holds": "",
+          "doing": "leans in, watching honey drip with tiny sparks",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "honey-dipper-sparks-closeup",
+          "scene": "Close-up of thick golden honey dripping from a wooden dipper into a jar, tiny glowing sparks in the honey, warm backlight.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "enzyme",
+              "at": "centre",
+              "detail": ""
+            },
+            {
+              "kind": "label",
+              "anchor": "Peroxide",
+              "at": "top",
+              "detail": "Peroxide"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "honey jar",
+              "anchor": "glucose"
+            }
+          ],
+          "props": [
+            {
+              "name": "honey jar",
+              "held_by": "",
+              "where": "counter"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b05",
+      "role": "stakes",
+      "narration": "I'm putting all my faith in it. The famous germ fighter.",
+      "on_screen_text": "All in on peroxide",
+      "visual_intent": "A confident close-up of the host nodding, sure of the pick.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "close",
+          "holds": "",
+          "doing": "nods confidently with a small smile",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "faith"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "faith",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "famous",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b06",
+      "role": "twist",
+      "narration": "But the research says honey's main defenses are physical. Sugar, low water, acid.",
+      "on_screen_text": "Physical defenses win",
+      "visual_intent": "Split screen: my bet, the peroxide sparks, against the result, sugar and a nearly empty water drop in the honey.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "stares at the result with a shocked look",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "split",
+        "insert": {
+          "key": "honey-peroxide-sparks-bet",
+          "scene": "A honey jar with glowing spark shapes floating above it on a sunlit counter, warm light.",
+          "effects": []
+        },
+        "graphic": null,
+        "split": {
+          "key": "honey-sugar-close-up",
+          "scene": "a close view of honey with amber sugar crystals glinting and one tiny water drop beside the jar, warm light",
+          "labels": [
+            "Prediction",
+            "Result"
+          ],
+          "anchors": [
+            "But",
+            "research"
+          ]
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "jolt",
+              "target": "",
+              "anchor": "physical"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "split_compare",
+            "anchor": "research",
+            "detail": "My bet | The research"
+          },
+          {
+            "recipe": "impact_shake",
+            "anchor": "physical",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "thud",
+          "anchor": "physical"
+        }
+      ],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b07",
+      "role": "reveal",
+      "narration": "Honey is so sugary that osmotic pressure sucks the water out of germ cells.",
+      "on_screen_text": "Sugar sucks them dry",
+      "visual_intent": "A painted close-up where a pale germ cell shrivels beside amber sugar, the host watching small.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "watches a germ cell shrivel in the honey",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "germ-cell-shrivel-in-honey",
+          "scene": "A close painted view of a golden honey surface with a small round pale cell beside glinting amber sugar crystals, soft warm light.",
+          "effects": [
+            {
+              "kind": "crossfade",
+              "anchor": "sucks",
+              "at": "centre",
+              "detail": "the cell shrunken and wrinkled"
+            },
+            {
+              "kind": "arrow",
+              "anchor": "water",
+              "at": "centre",
+              "detail": "centre -> ground"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "",
+              "anchor": "cells"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "sucks",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b08",
+      "role": "reveal",
+      "narration": "And the acid? Honey's pH sits between 3.2 and 4.5. Most pathogens hate that.",
+      "on_screen_text": "pH 3.2 to 4.5",
+      "visual_intent": "The host holds a colour test strip beside the honey jar, a sour-faced germ blob in the background.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "medium",
+          "holds": "a test strip",
+          "doing": "holds up a test strip beside the honey jar and points",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "honey-ph-strip-counter",
+          "scene": "A honey jar on a sunlit counter beside a paper test strip with an orange-to-yellow colour gradient, no text, warm light.",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "3.2",
+              "at": "top",
+              "detail": "pH 3.2 to 4.5"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "test strip",
+              "anchor": "pH"
+            }
+          ],
+          "props": [
+            {
+              "name": "test strip",
+              "held_by": "lead",
+              "where": "left hand"
+            },
+            {
+              "name": "honey jar",
+              "held_by": "",
+              "where": "counter"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "3.2",
+            "detail": ""
+          },
+          {
+            "recipe": "punch_in",
+            "anchor": "hate",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b09",
+      "role": "payoff",
+      "narration": "So what stops germs? Mostly dry sugar, with acid and a little peroxide backing it up.",
+      "on_screen_text": "Sugar + acid",
+      "visual_intent": "The host holds up the honey jar in golden window light, satisfied, as the scene warms.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "large",
+          "holds": "a jar of honey",
+          "doing": "holds up the honey jar proudly in warm light",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "honey-jar-window-glow",
+          "scene": "A honey jar on a window sill in golden window light, one thin drop catching the sun, warm kitchen behind.",
+          "effects": [
+            {
+              "kind": "grade",
+              "anchor": "stops",
+              "at": "centre",
+              "detail": "cold -> warm"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "Mostly"
+            }
+          ],
+          "props": [
+            {
+              "name": "honey jar",
+              "held_by": "lead",
+              "where": "right hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "acid",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "stops"
+        }
+      ],
+      "source_ids": [
+        "s1",
+        "s2",
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b10",
+      "role": "loop",
+      "narration": "The real trick that stops germs? Starve them of water.",
+      "on_screen_text": "Starve them.",
+      "visual_intent": "The host sets the jar down with a knowing shrug and a small smile.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "",
+          "doing": "puts the honey jar down with a knowing smile",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "put_down",
+              "target": "honey jar",
+              "anchor": "Starve"
+            }
+          ],
+          "props": [
+            {
+              "name": "honey jar",
+              "held_by": "lead",
+              "where": "right hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "Starve",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    }
+  ],
   "sources": [
     {
       "id": "s1",
-      "claim": "0.562 to 0.62, leaves too little available water to support the growth of any microorganisms.",
-      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6589292/",
-      "title": "Antibacterial Potency of Honey - PMC - NIH",
-      "quote": "Low Water Activity\nThe water activity (*a*_w) of honey ranges from 0.562 and 0.62, which means it provides a very low water availability to support th..."
+      "claim": "osmotic pressure dehydrates bacterial cells, and the high sugar content, low water activity and low pH value are the main physical defenses honey has against microbes.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12153394",
+      "title": "Selected honey as a multifaceted antimicrobial agent: review of compounds, mechanisms, and research challenges - PMC",
+      "quote": "# Selected honey as a multifaceted antimicrobial agent: review of compounds, mechanisms, and research challenges\n\nSelected types of honey with notable..."
     },
     {
       "id": "s2",
-      "claim": "the water content of the modified nectar evaporates slowly from about 70 to 80% by weight to about 17 to 18% by weight, giving ripe honey.",
-      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9044489",
-      "title": "Medicinal compositions containing honey",
-      "quote": "After processing of the collected nectar by bees (including addition of various components one of the most important of which is diastase), the water ..."
+      "claim": "a natural pH of 3.2 to 4.5 that creates an inhospitable environment for most pathogens.",
+      "url": "https://www.mdpi.com/2079-6382/14/3/255",
+      "title": "Honey as a Natural Antimicrobial",
+      "quote": "Mechanisms of Honey’s Antimicrobial Action\n\n| Acidic pH | Honey’s natural acidic pH (3.2 to 4.5) creates an inhospitable environment for most pathogen..."
     },
     {
       "id": "s3",
-      "claim": "honey is hygroscopic, so it can draw moisture out of the environment and dehydrate bacteria.",
-      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3609166/",
-      "title": "Honey: its medicinal property and antibacterial activity - PMC",
-      "quote": "In addition, honey is hygroscopic, which means that it can draw moisture out of the environment and dehydrate bacteria, and its high sugar content and..."
-    },
-    {
-      "id": "s4",
-      "claim": "Gluconic acid is the primary acid in honey responsible for most of its acidity and low pH, which adds a second barrier to microbes.",
-      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10500235",
-      "title": "Wound healing compositions comprising buckwheat honey and methylglyoxal and methods of use",
-      "quote": "Gluconic acid is the primary acid in honey responsible for most of honey's acidity and low pH, and hydrogen peroxide is the primary antibacterial agen..."
-    },
-    {
-      "id": "s5",
-      "claim": "The main antimicrobial agent in honey is hydrogen peroxide, whose concentration depends on glucose oxidase made by the bee and catalase from flower pollen.",
-      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3609166/",
-      "title": "Honey: its medicinal property and antibacterial activity - PMC",
-      "quote": "The antimicrobial agents in honey are predominantly hydrogen peroxide, of which the concentration is determined by relative levels of glucose oxidase,..."
-    },
-    {
-      "id": "s6",
-      "claim": "Hydrogen peroxide production is very slow in mature honey because high osmotic pressure depresses glucose oxidase activity and the reaction needs water, which ripe honey lacks.",
-      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10500235",
-      "title": "Wound healing compositions comprising buckwheat honey and methylglyoxal and methods of use",
-      "quote": "Second, the production of hydrogen peroxide is very slow in mature honey for two reasons: i) the activity of glucose oxidase is depressed by high osmo..."
+      "claim": "catalyzes glucose oxidation to gluconic acid and simultaneously generates hydrogen peroxide, producing an antimicrobial effect.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10215533/",
+      "title": "Assessing the Antimicrobial Properties of Honey Protein Components through In Silico Comparative Peptide Composition and Distribution Analysis - PMC",
+      "quote": "It is an enzyme of bee origin that catalyzes glucose oxidation to gluconic acid, and simultaneously generates H_2O_2, producing an antimicrobial effec..."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "storyline": "ea48f8a8ee856eb56977e7e72c2a539735d5b0f73a2549028dd0d71203c48dd1"
+  },
   "meta": {
     "story": {
       "allowed": [
@@ -146,6 +956,29 @@
       ],
       "version": "story-v1",
       "generated": "2026-11-09T18:02:23"
-    }
+    },
+    "approval_log": [
+      {
+        "gate": "storyline",
+        "by": "user",
+        "at": "2026-11-09T18:14:20",
+        "pick": 3,
+        "format": "experiment",
+        "digest": "ea48f8a8ee85"
+      }
+    ],
+    "script": {
+      "model": "claude-sonnet-5-5",
+      "prompt_version": "script-v6",
+      "research": true,
+      "generated": "2026-11-09T18:22:13"
+    },
+    "edits": [
+      {
+        "at": "2026-11-09",
+        "by": "claude",
+        "what": "b03: graphic with no diagram -> insert of three suspect objects (the script error at the gate); waiting for the user"
+      }
+    ]
   }
 }

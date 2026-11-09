@@ -909,7 +909,8 @@
     }
   ],
   "approvals": {
-    "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8"
+    "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8",
+    "script": "78c49143fb777a1966f76f11dafe75da39e7b70b99b5f3e68cf82b504f0ad230"
   },
   "meta": {
     "script": {
@@ -1055,6 +1056,12 @@
         "by": "claude",
         "at": "2026-11-09T17:59:13",
         "reason": "user rule 2026-11-09: never approve a script or base on the user's behalf; waiting for the user"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T18:14:20",
+        "digest": "78c49143fb77"
       }
     ]
   }

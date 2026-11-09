@@ -106,9 +106,15 @@ class VariantsTest(unittest.TestCase):
     def test_a_split_picture_comes_back_from_the_wire(self):
         shot = dict(visual='split', picture=dict(insert_key='honey-tomb', insert_scene='a tomb', insert_effects='',
                                                  graphic_kind='', graphic_items='', graphic_detail='',
-                                                 split_key='honey-jar-lab', split_scene='a lab bench',
-                                                 split_labels='Myth@says | Fact@actually'))
-        data, notes = from_wire(dict(beats=[dict(shot=shot)]))
+                                                 split='honey-jar-lab | a lab bench | Myth@says | Fact@actually'),
+                    host=dict(where='scene', placement='right large watching holding a jar of honey', doing='x'),
+                    staging=dict(setting='other: castle ruins', poses=[], actions=[], props=[]))
+        data, notes = from_wire(dict(beats=[dict(role='suspense', shot=shot)]))
+        host = data['beats'][0]['shot']['host']
+        self.assertEqual((host['side'], host['size'], host['to_camera'], host['holds']), ('right', 'large', False, 'a jar of honey'))
+        self.assertEqual(data['beats'][0]['shot']['staging']['setting'], 'other')
+        self.assertEqual(data['beats'][0]['shot']['staging']['setting_detail'], 'castle ruins')
+        self.assertEqual(data['beats'][0]['role'], 'story')
         sp = data['beats'][0]['shot']['split']
         self.assertEqual(sp['labels'], ['Myth', 'Fact'])
         self.assertEqual(sp['anchors'], ['says', 'actually'])

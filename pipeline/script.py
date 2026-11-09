@@ -33,14 +33,18 @@ MAX_CONTINUATIONS = 2  # pause_turn resumes of the server-side search loop, each
 SCRIPT_MAX_TOKENS = 24_000  # v5 drafts carry three full hook beats
 CHARS_PER_TOKEN_ESTIMATE = 3.0  # offline estimate only (dry runs without a key); deliberately high
 
+# Never searched (2026-11-09: the Pisa results were mostly ResearchGate/academia.edu copies, written up uncited).
+BLOCKED_DOMAINS = ('wikipedia.org', 'researchgate.net', 'academia.edu', 'slideshare.net', 'scribd.com', 'medium.com',
+                   'quora.com', 'reddit.com', 'youtube.com', 'pinterest.com', 'coursehero.com', 'studocu.com', 'intechopen.com')
+
 RESEARCH_SYSTEM = """You gather facts for a 30-60 second explainer video. Use web search.
 Write 3 to 6 facts. Each fact is one plain sentence on its own line, with no bullets, numbering,
 introduction or conclusion. State only what a search result directly supports.
 Prefer facts that explain the mechanism behind the topic, plus at most three statistics.
-Use only reputable sources (user rule, 2026-11-09): government agencies and statistics offices, central banks,
-regulators, universities, peer-reviewed journals, museums, established research organisations and major science or
-news outlets. Never Wikipedia, personal or company blogs, forums or content farms; if only those support a claim,
-leave the claim out.
+Use only government, university or peer-reviewed sources (user rule, 2026-11-09): government agencies and
+statistics offices, universities and their research pages, peer-reviewed journals (publisher pages, PubMed Central,
+DOI links). Never Wikipedia, news sites, blogs, company pages, patents, forums or content farms; if only those
+support a claim, leave the claim out.
 If a fact only holds for one country or period, name it in the sentence. Do not give advice."""
 
 SCRIPT_RULES = """You write scripts for explainer Shorts: vertical videos of 30-60 seconds, painted stick figures,
@@ -68,10 +72,10 @@ Rules:
 3. THE HOST IS IN THE STORY. Every beat fills shot.host (and puts "lead" in cast when the host is on screen). Put the host INSIDE the explainer scenes, full body,
    acting out each line: on the beach watching the volcano, shivering in the frosted field, walking through the
    doorway, looking up at the red sky. Diagrams may fill the frame briefly with the host popping in at the edge to
-   point (where "pop_in"). Aim for the host on screen in at least 70% of beats. Set host.side (left, centre, right)
-   and host.size (small: the place dominates; medium: full body; large: knees up, near the camera; close: head and
-   shoulders, for a reaction or an aside) and VARY them beat to beat. host.holds names an object the host holds up or
-   uses ("jar of honey", "old map") when the story has a key object. The friend appears only when the
+   point (where "pop_in"). Aim for the host on screen in at least 70% of beats. Set host.placement: side (left,
+   centre, right) and size (small: the place dominates; medium: full body; large: knees up, near the camera; close:
+   head and shoulders, for a reaction or an aside), VARIED beat to beat; add "watching" when the host watches the scene
+   instead of talking to the viewer, and "holding <thing>" when it holds up or uses a key object ("jar of honey"). The friend appears only when the
    story needs a second person (someone to ask, to contrast with); no cafe or sofa chatter unless the story is set
    there.
 4. NO INVENTED FACTS. Use only the numbered research facts provided, citing their ids in source_ids. A number
@@ -95,7 +99,7 @@ Rules:
    consistent across beats. Do not restate the art style.
 11. STAGING. The video is built from libraries, so fill shot.staging exactly: setting from the list (cafe, bedroom,
    office, kitchen, living-room, doorway (between living room and kitchen), street, park, classroom, gym, car;
-   "other" only if none fits, with setting_detail); one pose per cast id (seated-at-table, standing, bed-edge,
+   "other: <the place in 3-6 words>" only if none fits); one pose per cast id (seated-at-table, standing, bed-edge,
    bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, passenger, walking); 0-3 actions from
    reach, point, shrug, facepalm, pick_up, put_down, throw, drink, type, write, wave, nod, shake_head, slump, jolt,
    gaze, shiver, look_up, snap, freeze, each on a word of this beat's narration; 0-4 props with where they sit and
@@ -114,7 +118,7 @@ Rules:
    setting IS the subject (a doorway for a video about doorways), list it in subject_settings. Numbers drawn on
    screen (labels, split labels, graphic items) must be numbers this beat says. reaction_anchor stays empty in
    this format (the host is already in the picture).
-   More tools: "split" (two painted scenes stacked, top = insert_*, bottom = split_*, each labelled: myth vs fact, then
+   More tools: "split" (two painted scenes stacked, top = insert_*, bottom = picture.split, each labelled: myth vs fact, then
    vs now, here vs there); a painted map is an insert whose scene is an illustrated map ("illustrated map of Italy,
    no text"), with "pin" effects on regions and arrows for routes; "focus" pushes into one region of a scene for a
    close-up of a detail; push, pan and shake move the camera.
@@ -152,7 +156,7 @@ def research_request(episode):
     return dict(model=config.SCRIPT_MODEL, max_tokens=RESEARCH_MAX_TOKENS, system=RESEARCH_SYSTEM,
                 messages=[{'role': 'user', 'content': user}],
                 tools=[{'type': 'web_search_20260209', 'name': 'web_search', 'max_uses': RESEARCH_MAX_SEARCHES,
-                        'allowed_callers': ['direct']}],
+                        'allowed_callers': ['direct'], 'blocked_domains': list(BLOCKED_DOMAINS)}],
                 thinking={'type': 'between_tools'}, output_config={'effort': 'medium'})
 
 
@@ -175,7 +179,10 @@ def script_request(episode, style, facts):
         from .models import FORMATS
         user += (f'\n\nPICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nTitle: {sl.title}\nHook: {sl.hook}\n'
                  f'Pitch: {sl.pitch}\nConflict: {sl.conflict}\nStakes: {sl.stakes}\nTwist: {sl.twist}\nPayoff: {sl.payoff}\n'
-                 f'Picture ideas: {"; ".join(sl.visuals)}\nFacts: {", ".join(sl.fact_ids)}')
+                 f'Picture ideas: {"; ".join(sl.visuals)}\n'
+                 'The storyline was pitched from earlier research. Its fact ids no longer apply: cite only the research '
+                 'facts above. Any line of the storyline (a number, a date, an event) that those facts do not support is '
+                 'DROPPED or rewritten without it; never keep an unsourced claim to save the story.')
     schema = wire_schema(transform_schema(ScriptDraft))
     return dict(model=config.SCRIPT_MODEL, max_tokens=SCRIPT_MAX_TOKENS, system=SCRIPT_RULES + style.script_brief,
                 messages=[{'role': 'user', 'content': user}], thinking={'type': 'adaptive'},
@@ -309,6 +316,42 @@ def _plain(obj):
     return obj
 
 
+# Hosts of peer-reviewed publishers and indexes; plus any government (.gov, .gov.xx, .gouv.fr, .gob.xx) or university
+# (.edu, .edu.xx, .ac.xx, uni-*/univ-* hosts) domain. Patents are excluded even on government sites (a claim, not a
+# reviewed finding). Checked 2026-11-09 against the user's rule: government, university, peer-reviewed only.
+PEER_REVIEWED = ('pmc.ncbi.nlm.nih.gov', 'pubmed.ncbi.nlm.nih.gov', 'ncbi.nlm.nih.gov', 'doi.org', 'sciencedirect.com',
+                 'springer.com', 'link.springer.com', 'nature.com', 'science.org', 'wiley.com', 'tandfonline.com',
+                 'mdpi.com', 'frontiersin.org', 'plos.org', 'academic.oup.com', 'cambridge.org', 'royalsocietypublishing.org',
+                 'pnas.org', 'cell.com', 'bmj.com', 'thelancet.com', 'jstor.org', 'icevirtuallibrary.com', 'ascelibrary.org',
+                 'iopscience.iop.org', 'pubs.acs.org', 'annualreviews.org', 'biomedcentral.com', 'bmcpsychology.biomedcentral.com',
+                 'agu.org', 'agupubs.onlinelibrary.wiley.com', 'journals.ametsoc.org', 'copernicus.org', 'sagepub.com',
+                 'jamanetwork.com', 'nejm.org', 'elifesciences.org', 'europepmc.org', 'scielo.org', 'ieeexplore.ieee.org')
+NOT_REVIEWED = ('patent', 'uspto', 'ppubs', 'espacenet', 'wikipedia.org', 'blog', 'medium.com', 'academia.edu',
+                'researchgate.net', 'slideshare.net', 'scribd.com', 'intechopen.com', 'coursehero.com', 'studocu.com')
+
+
+def reputable(url: str) -> bool:
+    """Government, university or peer-reviewed (user rule, 2026-11-09)."""
+    import re as _re
+    from urllib.parse import urlparse
+    u = urlparse(url)
+    host = (u.hostname or '').lower()
+    if any(x in host or x in u.path.lower() for x in NOT_REVIEWED):
+        return False
+    if _re.search(r'(\.gov|\.gov\.[a-z]{2}|\.gouv\.[a-z]{2}|\.gob\.[a-z]{2}|\.mil|\.edu|\.edu\.[a-z]{2}|\.ac\.[a-z]{2})$', host):
+        return True
+    if _re.search(r'(^|\.)(uni|univ)[a-z-]*\.[a-z.]+$', host) or '.europa.eu' in host or host.endswith('europa.eu'):
+        return True
+    return any(host == h or host.endswith('.' + h) for h in PEER_REVIEWED)
+
+
+def keep_reputable(facts):
+    """(kept facts renumbered s1.., dropped facts). A dropped fact's line cannot be written (user: drop it)."""
+    kept = [f for f in facts if reputable(f.url)]
+    dropped = [f for f in facts if not reputable(f.url)]
+    return [f.model_copy(update=dict(id=f's{i}')) for i, f in enumerate(kept, 1)], dropped
+
+
 def research(episode, base, ledger, client, regenerate=False):
     request = research_request(episode)
     key = digest([RESEARCH_VERSION, 'research', request['model'], request['system'], request['messages'], request['tools']])
@@ -379,6 +422,12 @@ def generate(episode, style, base, ledger, client=None, use_research=True, regen
     if use_research:
         facts, path, cached = research(episode, base, ledger, client, 'research' in regenerate)
         notes.append(f'research: {len(facts)} cited facts ({"cache" if cached else "new"}: {path.name})')
+        facts, dropped = keep_reputable(facts)
+        for f in dropped:
+            notes.append(f'  dropped (not government, university or peer-reviewed): {f.url}')
+        if not facts:
+            raise ScriptError('No fact came from a government, university or peer-reviewed source, so no script was '
+                              'written. Re-run research, or pick a topic with better sources.')
     draft, path, cached = write(episode, style, facts, base, ledger, client, 'script' in regenerate)
     notes.append(f'script: {len(draft.beats)} beats ({"cache" if cached else "new"}: {path.name})')
     updated = episode.model_copy(update=dict(

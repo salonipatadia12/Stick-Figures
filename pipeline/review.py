@@ -13,11 +13,20 @@ def script_view(episode, style=None, issues=()):
            f'style {episode.style} · {episode.aspect} · target {episode.target_length}s · '
            f'{len(episode.beats)} beats · {words} words ≈ {words / wps:.0f}s at {wps} w/s · script {approved}',
            f'Hook promise: {episode.hook_promise}', '']
+    sl = episode.storyline
+    if sl:
+        out.append(f'STORYLINE {episode.storyline_pick} [{sl.format}] {sl.title}')
+        out.append(f'  {sl.pitch}')
+        if episode.host_format and episode.beats:
+            out.append('STORY CHECK')
+            for item, ok, detail in episode.story_report():
+                out.append(f'  {"pass" if ok else "FAIL"}  {item}: {detail}')
+        out.append('')
     wrap = lambda text, indent: textwrap.fill(text, 96, initial_indent=indent, subsequent_indent=' ' * len(indent))
     if episode.hook_options:
         n = len(episode.beats)
         hosted = sum(1 for b in episode.beats if b.shot.host and b.shot.host.where != 'off')
-        subject = sum(1 for b in episode.beats if b.shot.visual in ('insert', 'graphic')
+        subject = sum(1 for b in episode.beats if b.shot.visual in ('insert', 'graphic', 'split')
                       or (b.shot.staging and b.shot.staging.setting in episode.subject_settings))
         out.append(f'Planned: host on screen {hosted}/{n} beats ({round(100 * hosted / n)}%), subject on screen {subject}/{n} '
                    f'({round(100 * subject / n)}%); targets 70% each.')
@@ -38,11 +47,17 @@ def script_view(episode, style=None, issues=()):
         out.append(wrap(b.visual_intent, '    SHOW  '))
         host = getattr(b.shot, 'host', None)
         if host is not None:
-            out.append(wrap(f'{host.where} · {host.side} · {host.doing}' + (' · to camera' if host.to_camera else ''), '    HOST  '))
+            look = f'{host.where} · {host.side}' + (f' · {host.size}' if episode.storyline_pick else '')
+            look += f' · holds {host.holds}' if getattr(host, 'holds', '') else ''
+            out.append(wrap(f'{look} · {host.doing}' + (' · to camera' if host.to_camera else ''), '    HOST  '))
         if b.shot.visual == 'insert' and b.shot.insert:
             fx = ', '.join(e.kind + (f'@"{e.anchor}"' if e.anchor else '') + (f' ({e.detail})' if e.detail else '')
                            for e in b.shot.insert.effects)
             out.append(wrap(f'{b.shot.insert.key}: {b.shot.insert.scene}' + (f' · {fx}' if fx else ''), '    SCENE '))
+        if b.shot.visual == 'split' and b.shot.split:
+            sp = b.shot.split
+            out.append(wrap(f'{b.shot.insert.key if b.shot.insert else "?"} over {sp.key}: {sp.scene} · labels '
+                            + ' | '.join(f'{lab}@"{a}"' for lab, a in zip(sp.labels, sp.anchors + [''] * 2)), '    SPLIT '))
         elif b.shot.visual == 'graphic' and b.shot.graphic:
             g = b.shot.graphic
             out.append(wrap(f'{g.kind}: ' + ' | '.join(g.items) + (f' ({g.detail})' if g.detail else ''), '    DRAW  '))

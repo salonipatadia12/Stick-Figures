@@ -275,18 +275,10 @@ PICTURE = {
             'changed scene in a few words; sun_path "high -> low"; label 1-3 words; arrow "from -> to" regions; else '
             'empty; focus: a close-up push into the region; pin: a map pin on the region, detail its 1-3 word label. '
             'Example: "ash | | | ; shake | erupted | | ; label | sulfur | sky | Sulfur". No ";" inside a field.'},
-        'split_key': {'type': 'string', 'description': 'visual "split" only: kebab-case name of the BOTTOM scene (the top '
-                                                       'scene is insert_key); else empty.'},
-        'split_scene': {'type': 'string', 'description': 'visual "split" only: the bottom scene painted without people, '
-                                                         '10-30 words; else empty.'},
-        'split_labels': {'type': 'string', 'description': 'visual "split" only: "Top label@word | Bottom label@word", 1-3 '
-                                                          'words each ("Myth@myth | Fact@actually"); else empty.'},
-        'graphic_kind': {'type': 'string', 'description': 'flow, bounce, scatter, two_paths, waves, bars, thermometer, '
-                                                          'cards or layers; empty unless visual is graphic.'},
-        'graphic_items': {'type': 'string', 'description': '1-4 labels of 1-3 words in reading order, each with the '
-                                                           'narration word where it appears: "Sunlight@sun | Sulfur veil@veil".'},
-        'graphic_detail': {'type': 'string', 'description': 'bars: relative heights "3 | 5"; two_paths: both, long or short; '
-                                                            'thermometer: "from -> to" or falls/rises; else empty.'},
+        'split': {'type': 'string', 'description': 'visual "split" only: "bottom-scene-key | the bottom scene painted '
+                                                   'without people, 10-30 words | Top label@word | Bottom label@word" (the '
+                                                   'top scene is insert_*), e.g. "honey-lab-bench | a lab bench with jars | '
+                                                   'Myth@says | Fact@actually"; else empty.'},
     },
 }
 PICTURE['required'] = list(PICTURE['properties'])
@@ -304,8 +296,34 @@ def wire_schema(schema: dict) -> dict:
                 if f in d.get('required', []):
                     d['required'].remove(f)
     host = defs.get('HostCue')
-    if host:                                           # v6: side, size and holds are asked of the writer (all required)
-        host['required'] = list(host.get('properties', {}))
+    if host:                                           # v6: side and size travel as one string (a smaller grammar)
+        props = {}
+        for k, val in host.get('properties', {}).items():
+            if k == 'side':
+                props['placement'] = {'type': 'string', 'description': '"<side> <size>", then "watching" when the host '
+                                      'watches the scene instead of talking to the viewer, then "holding <thing>" when it '
+                                      'holds a prop. side: left, centre or right; size: small (the place dominates), medium '
+                                      '(full body), large (knees up, near the camera) or close (head and shoulders). E.g. '
+                                      '"left medium", "right large holding a jar of honey", "centre small watching". Vary '
+                                      'it beat to beat.'}
+            elif k not in ('size', 'holds', 'to_camera'):
+                props[k] = val
+        host['properties'] = props
+        host['required'] = list(props)
+    stg = defs.get('Staging')
+    if stg and 'setting_detail' in stg.get('properties', {}):   # setting and its detail as one string
+        stg['properties'].pop('setting_detail')
+        stg['properties']['setting'] = {'type': 'string', 'description': 'The place from the list (cafe, bedroom, office, '
+                                        'kitchen, living-room, doorway, street, park, classroom, gym, car), or "other: <the '
+                                        'place in 3-6 words>".'}
+        stg['required'] = list(stg['properties'])
+        defs.pop('Setting', None)
+    beat = defs.get('DraftBeat')
+    if beat and 'role' in beat.get('properties', {}):  # the role as a plain string: 14 enum values compiled too large
+        beat['properties']['role'] = {'type': 'string', 'description': 'What the beat does: hook (beat 1), then setup, '
+                                      'problem, stakes, clue, reason, twist, reveal or promise, then payoff, then loop '
+                                      '(last).'}
+        defs.pop('BeatRole', None)
     shot = defs.get('DraftShot')
     if shot and 'insert' in shot['properties']:
         props = {}
@@ -332,8 +350,28 @@ def from_wire(data: dict) -> tuple[dict, list]:
     from typing import get_args
     notes = []
     kinds, regions, gkinds = set(get_args(InsertEffect)), set(get_args(Region)), set(get_args(GraphicKind))
+    roles = set(get_args(BeatRole))
     for n, beat in enumerate(data.get('beats', []), 1):
         shot = beat.get('shot', {})
+        if beat.get('role') is not None and beat['role'] not in roles:
+            notes.append(f'b{n:02d}: role "{beat["role"]}" unknown; read as "story"')
+            beat['role'] = 'story'
+        host = shot.get('host')
+        if isinstance(host, dict) and 'placement' in host:
+            text = (host.pop('placement') or '').strip()
+            head, _, held = text.partition('holding ')
+            words = head.lower().replace(',', ' ').split()
+            host['side'] = next((w for w in words if w in ('left', 'centre', 'center', 'right')), 'centre').replace('center', 'centre')
+            host['size'] = next((w for w in words if w in ('small', 'medium', 'large', 'close')), 'medium')
+            host['to_camera'] = 'watching' not in words
+            host['holds'] = held.strip().strip('."')
+        stg = shot.get('staging')
+        if isinstance(stg, dict) and 'setting_detail' not in stg:
+            place, _, detail = (stg.get('setting') or 'other').partition(':')
+            place = place.strip().lower()
+            if place not in get_args(Setting):
+                detail, place = (detail or place).strip(), 'other'
+            stg['setting'], stg['setting_detail'] = place, detail.strip() if place == 'other' else ''
         pic = shot.pop('picture', None)
         if pic is None:
             continue
@@ -363,10 +401,11 @@ def from_wire(data: dict) -> tuple[dict, list]:
             elif kind:
                 notes.append(f'b{n:02d}: graphic kind "{kind}" is not in the library; dropped')
         split = None
-        if pic.get('split_key'):
-            pairs = [x.split('@', 1) + [''] for x in _split(pic.get('split_labels', ''), '|') if x]
-            split = dict(key=pic['split_key'], scene=pic.get('split_scene', ''), labels=[a.strip() for a, b, *_ in pairs][:2],
-                         anchors=[b.strip() for a, b, *_ in pairs][:2])
+        parts = _split(pic.get('split', ''), '|')
+        if len(parts) >= 3 and parts[0]:
+            pairs = [x.split('@', 1) + [''] for x in parts[2:4]]
+            split = dict(key=parts[0], scene=parts[1], labels=[a.strip() for a, b, *_ in pairs],
+                         anchors=[b.strip() for a, b, *_ in pairs])
         elif shot.get('visual') == 'split':
             notes.append(f'b{n:02d}: a split with no second scene; shown as the top scene alone')
             shot['visual'] = 'insert'
@@ -675,14 +714,11 @@ class Episode(Strict):
         """Script v5 (user 2026-11-08): the lead hosts and tells the story; hook -> promise -> story -> payoff -> loop;
         a hook of at most 8 words with the host in frame 1, answered in the payoff; the last line ties back."""
         roles = [b.role for b in self.beats]
-        if self.storyline_pick:
-            roles = ['promise' if i == 1 and r in STORY_ROLES else 'story' if r in STORY_ROLES else r for i, r in enumerate(roles)]
-        if any(r not in HOST_ROLES for r in roles):
+        story = bool(self.storyline_pick)              # v6: the shape and the middle roles are checked by story_report
+        if not story and any(r not in HOST_ROLES for r in roles):
             err('beats', f'host format roles are {"/".join(HOST_ROLES)}; got {sorted(set(roles) - set(HOST_ROLES))}')
-        if self.storyline_pick:                        # v6: story roles in the middle, checked by story_report
-            roles = ['story' if r in STORY_ROLES else r for r in roles]
         order = [r for r in roles if r in HOST_ROLES]
-        if len(roles) >= 4 and (roles[1] != 'promise' or roles[-1] != 'loop' or 'payoff' not in roles
+        if not story and len(roles) >= 4 and (roles[1] != 'promise' or roles[-1] != 'loop' or 'payoff' not in roles
                                 or roles.index('payoff') != len(roles) - 2 or any(r != 'story' for r in roles[2:-2])):
             err('beats', f'order must be hook, promise, story..., payoff, loop; got {", ".join(order)}')
         if len(self.hook_options) != HOOK_OPTIONS:

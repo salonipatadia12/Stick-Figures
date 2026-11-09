@@ -41,7 +41,7 @@ class ScriptEngine(unittest.TestCase):
         episode, notes = self.run_generate(client)
         self.assertEqual(len(episode.beats), 8)
         self.assertEqual([s.id for s in episode.sources], ['s1', 's2'])
-        self.assertTrue(episode.sources[0].url.startswith('https://www.example.org/'))
+        self.assertTrue(episode.sources[0].url.startswith('https://www.example.edu/'))
         self.assertEqual([e['step'] for e in self.ledger.entries], ['research', 'script'])
         self.assertTrue(all(e['status'] == 'ok' for e in self.ledger.entries))
         research_cost = self.ledger.entries[0]['actual_usd']
@@ -50,6 +50,16 @@ class ScriptEngine(unittest.TestCase):
         self.assertEqual(episode.check(self.style.cast_ids), [i for i in episode.check(self.style.cast_ids)
                                                               if i.severity == 'warning'])
 
+    def test_facts_from_unreviewed_sources_are_dropped(self):
+        from pipeline_fixtures import SALARY_FACTS_TEXT
+        facts = SALARY_FACTS_TEXT + [('Some blog says honey lasts forever if you keep it in a cupboard.',
+                                      'https://en.wikipedia.org/wiki/Honey', 'Honey')]
+        client = FakeClient([research_response(facts=facts), script_response()])
+        episode, notes = self.run_generate(client)
+        self.assertEqual([s.id for s in episode.sources], ['s1', 's2'])
+        self.assertTrue(any('wikipedia' in n for n in notes))
+        self.assertNotIn('wikipedia', client.messages.created[1]['messages'][0]['content'])
+
     def test_request_shapes(self):
         client = FakeClient([research_response(), script_response()])
         self.run_generate(client)
@@ -57,6 +67,8 @@ class ScriptEngine(unittest.TestCase):
         self.assertEqual(research_req['model'], 'claude-sonnet-5-5')
         self.assertEqual(research_req['tools'][0]['type'], 'web_search_20260209')
         self.assertEqual(research_req['tools'][0]['max_uses'], script.RESEARCH_MAX_SEARCHES)
+        self.assertIn('researchgate.net', research_req['tools'][0]['blocked_domains'])
+        self.assertFalse(script.reputable('https://www.academia.edu/50199544/Stabilising'))
         self.assertNotIn('output_config', {k: v for k, v in research_req.items() if k == 'output_config' and 'format' in v})
         fmt = script_req['output_config']['format']
         self.assertEqual(fmt['type'], 'json_schema')

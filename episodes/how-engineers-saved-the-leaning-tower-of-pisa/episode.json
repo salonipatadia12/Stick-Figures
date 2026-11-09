@@ -19,11 +19,11 @@
     {
       "format": "mystery",
       "title": "The Fix That Never Touched the Low Side",
-      "hook": "How do you fix a tower without touching it?",
+      "hook": "How do you fix a tower you can't touch?",
       "pitch": "By 1990 the tower leaned 5.5 degrees, and the experts ruled out any work under its low south side. So what did they do? They dug out soil on the opposite, north side, and the tower settled back toward vertical.",
       "conflict": "The tilt had to be reduced, but any disturbance to the ground under the south side was judged too dangerous.",
       "stakes": "Each clue rules out another normal fix: first underpinning, then grouting, until the only move left is a risky one, and cables are added to guard against it.",
-      "twist": "The ccure was to remove small amounts of soil from beneath the north side, the high side, so that it sank.",
+      "twist": "The cure was to remove small amounts of soil from beneath the north side, the high side, so that it sank.",
       "payoff": "The answer to the hook: by digging away the high side, the engineers straightened the tower by 38 cm without disturbing the south.",
       "visuals": [
         "Painted tower tilting at dusk, camera tilts with it",
@@ -88,7 +88,7 @@
       ]
     }
   ],
-  "storyline_pick": 0,
+  "storyline_pick": 1,
   "story_note": "",
   "subject_settings": [],
   "beats": [],
@@ -136,7 +136,9 @@
       "quote": "[[4]](./Leaning_Tower_of_Pisa#cite_note-4) [[5]](./Leaning_Tower_of_Pisa#cite_note-5) [[6]](./Leaning_Tower_of_Pisa#cite_note-6) The structure was sta..."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "storyline": "b19f91d131058b531ea18b6254f5f46e4d29cbaad6124c0d17505409f76a16f9"
+  },
   "meta": {
     "story": {
       "allowed": [
@@ -150,6 +152,23 @@
       ],
       "version": "story-v1",
       "generated": "2026-11-09T18:01:05"
-    }
+    },
+    "edits": [
+      {
+        "at": "2026-11-09",
+        "by": "user request",
+        "what": "storyline 1 hook -> \"How do you fix a tower you can't touch?\" (the original was not accurate: cables and weights were added); typo ccure -> cure"
+      }
+    ],
+    "approval_log": [
+      {
+        "gate": "storyline",
+        "by": "user",
+        "at": "2026-11-09T18:14:20",
+        "pick": 1,
+        "format": "mystery",
+        "digest": "b19f91d13105"
+      }
+    ]
   }
 }

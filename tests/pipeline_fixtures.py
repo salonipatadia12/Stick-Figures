@@ -56,7 +56,7 @@ def salary_draft():
 
 SALARY_FACTS_TEXT = [
     ('Household spending tends to rise as income rises, a pattern often called lifestyle inflation.',
-     'https://www.example.org/lifestyle-inflation', 'Lifestyle inflation explained'),
+     'https://www.example.edu/lifestyle-inflation', 'Lifestyle inflation explained'),
     ('Paying yourself first means moving savings out before discretionary spending.',
      'https://www.example.gov/pay-yourself-first', 'Saving basics'),
 ]
