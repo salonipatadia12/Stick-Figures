@@ -622,6 +622,9 @@ HOST_HEAD_BASE = 'lead-standing-doorway'
 HOST_H = 0.44                 # the host's height (head top to feet) as a share of the frame, standing in a scene
 POP_H = 0.40                  # popping in under a diagram: head and shoulders below the captions, the rest off-frame
 HOST_X = {'left': 0.15, 'centre': 0.50, 'right': 0.85}   # off-centre by default: the captions run across the middle
+HOST_SIZES = {'small': (0.30, 0.86), 'medium': (0.44, 0.93), 'large': (0.62, 1.06), 'close': (0.83, 1.23)}
+# (height as a share of the frame, feet line): small stands further back; large and close are cut by the bottom edge on
+# purpose (knees up; head and shoulders), like a pop-in (user 2026-11-09: vary the host's position and size per beat)
 HOST_MARGIN = 14              # px: the whole host, arms included, stays this far inside the frame (a pop-in excepted)
 HOST_REST = {'l': (-0.47, 0.93), 'r': (0.47, 0.93)}   # body space: arms relaxed at the sides, not hands on the hips
 TINT_MAX = 0.06               # the scene's colour on the host, per channel (user 2026-11-09: white everywhere, tint <= 10-15 %)
@@ -776,8 +779,18 @@ class HostLayer:
         self.top, self.feet, self.cx, self.D = (meta['head'][1] - 0.62 * D) * s, meta['feet_y'] * s, meta['head'][0] * s, D * s
         cue = spec['shot'].get('host') or {}
         self.where, self.side, self.to_camera = cue.get('where', 'scene'), cue.get('side', 'centre'), cue.get('to_camera', True)
-        if self.side == 'centre':                       # alternate sides beat to beat, facing in, clear of the captions
-            self.side = 'left' if int(re.sub(r'\D', '', spec['id']) or 0) % 2 else 'right'
+        self.size = cue.get('size') or 'medium'
+        if self.side == 'centre' and not spec.get('v6'):  # v5 scripts: alternate sides beat to beat, facing in
+            self.side = host_side(spec)
+        self.note = ''
+        self.held, self.hold_side = None, lead.near
+        if cue.get('holds'):                            # a prop from the props library, held up in the near hand
+            entry = prop_library().get(prop_key(cue['holds']))
+            if entry and (ROOT / entry['sprite']).exists():
+                spr = Image.open(ROOT / entry['sprite']).convert('RGBA')
+                self.held = Held(spr, (spr.width * 0.5, spr.height * 0.62), max(0.6, 1.5 * entry.get('width', 0.4)))
+            else:
+                self.note = f'host holds "{cue["holds"]}": not in the props library (stick props --generate)'
         self.cut_at = word_time(T, cue.get('cut_on', ''), None) if cue.get('cut_on') else None
         self.t0 = t0
         self.starts = sorted(v for v in T.values() if t0 - 0.05 <= v <= t1)
@@ -799,7 +812,12 @@ class HostLayer:
         if self.to_camera:                              # eyes to the viewer, except while looking at the thing
             look = max((a.weight(t) for a in self.c.perfs['lead'].actions if a.name.split()[0] in LOOKS), default=0.0)
             pose = replace(pose, gaze_x=pose.gaze_x * (0.2 + 0.8 * look), turn=pose.turn * (0.55 + 0.45 * look))
-        frame = self.c.stage.compose(self.cam, [self.c.p['lead']], [pose], [{}])
+        held = {}
+        if self.held is not None:                       # the holding hand stays up at the chest; the other one acts
+            s = self.hold_side
+            pose = replace(pose, **{s + 'h': (0.40 if s == 'r' else -0.40, 0.16), s + '_shape': 'grip', s + '_rot': 0.0})
+            held = {s: self.held}
+        frame = self.c.stage.compose(self.cam, [self.c.p['lead']], [pose], [held])
         x0, x1 = int(self.cx - 1.7 * self.D), int(self.cx + 1.7 * self.D)
         return frame.crop((max(0, x0), int(self.top), min(W, x1), int(self.feet) + 4)), self.cx - max(0, x0)
 
@@ -825,15 +843,17 @@ class HostLayer:
             side = 'left' if t < self.cut_at else 'right'
         tilt, grow, rise = self.body_motion(t)
         pop = self.where == 'pop_in'
-        if pop:
+        share, feet = HOST_SIZES.get(self.size, HOST_SIZES['medium'])
+        crop_ok = pop or self.size in ('large', 'close')     # cut by the bottom edge on purpose
+        if pop:                                        # from the bottom-left or bottom-right corner, facing in
             k = POP_H * H / sp.height
-            fx = 0.2 * W
+            fx = (0.8 if side == 'right' else 0.2) * W
             fy = 1.17 * H + 0.3 * H * (1 - ease((t - self.t0) / 0.35))
-            flip = self.facing < 0
+            flip = self.facing > 0 if side == 'right' else self.facing < 0
         else:
-            k = HOST_H * H * zoom * grow / sp.height
+            k = share * H * zoom * grow / sp.height
             fx = W / 2 + (HOST_X.get(side, 0.5) * W - W / 2 - dx) * zoom
-            fy = H / 2 + (0.93 * H - H / 2 - dy) * zoom - rise * H
+            fy = H / 2 + (feet * H - H / 2 - dy) * zoom - rise * H
             flip = (side == 'right' and self.facing > 0) or (side == 'left' and self.facing < 0)
         for at in self.shivers:
             if 0 <= t - at <= 2.2:
@@ -854,25 +874,28 @@ class HostLayer:
         x, y = int(fx - foot), int(fy - sp.height)
         if not pop:                                    # fully inside the frame (user 2026-11-09), however the camera moves
             x = min(max(x, HOST_MARGIN - bb[0]), W - HOST_MARGIN - bb[2])
-            y = max(min(y, H - HOST_MARGIN - bb[3]), HOST_MARGIN - bb[1])    # feet in frame too when the camera zooms
+            if not crop_ok:                            # feet in frame too when the camera zooms
+                y = min(y, H - HOST_MARGIN - bb[3])
+            y = max(y, HOST_MARGIN - bb[1])
         fx = x + foot
         rgb_ratio = [1.0, 1.0, 1.0]
         if not pop:                                    # the scene's light on the host: a capped tint, a rim light, a shadow
             box = (max(0, x), max(0, y), min(W, x + sp.width), min(H, y + sp.height))
             if box[2] > box[0] and box[3] > box[1]:
                 sp, rgb_ratio = light_match(sp, frame, box)
-            sh = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-            w0 = bb[2] - bb[0]
-            ImageDraw.Draw(sh).ellipse((fx - 0.42 * w0, fy - 0.03 * sp.height, fx + 0.42 * w0, fy + 0.03 * sp.height),
-                                       fill=(20, 16, 24, 90))
-            frame.alpha_composite(sh.filter(ImageFilter.GaussianBlur(10)))
+            if fy < H:                                 # a contact shadow when the feet are in frame
+                sh = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+                w0 = bb[2] - bb[0]
+                ImageDraw.Draw(sh).ellipse((fx - 0.42 * w0, fy - 0.03 * sp.height, fx + 0.42 * w0, fy + 0.03 * sp.height),
+                                           fill=(20, 16, 24, 90))
+                frame.alpha_composite(sh.filter(ImageFilter.GaussianBlur(10)))
         frame.alpha_composite(sp, (x, y))
         a = np.asarray(sp.getchannel('A')) >= 128
         self.last = (x, y, a)
         ab = (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
         in_frame = ab[0] >= 0 and ab[1] >= 0 and ab[2] <= W and ab[3] <= H
         O.note_box('character', (max(0, ab[0]), max(0, ab[1]), min(W, ab[2]), min(H, ab[3])), host=True, pop_in=pop,
-                   in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio])
+                   crop_ok=crop_ok, in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio])
 
     def hit(self, box) -> int:
         """How many of the host's pixels (last frame drawn) fall inside `box` (x0, y0, x1, y1)."""
@@ -882,6 +905,29 @@ class HostLayer:
         x0, y0 = max(0, int(box[0]) - x), max(0, int(box[1]) - y)
         x1, y1 = min(a.shape[1], int(box[2]) - x), min(a.shape[0], int(box[3]) - y)
         return int(a[y0:y1, x0:x1].sum()) if x1 > x0 and y1 > y0 else 0
+
+
+def host_side(spec: dict) -> str:
+    """Where the host stands: the script's side (v6, marked by host_episode), or for v5 scripts left/right
+    alternating by beat number."""
+    cue = spec['shot'].get('host') or {}
+    side = cue.get('side', 'centre')
+    if side == 'centre' and not spec.get('v6'):
+        return 'left' if int(re.sub(r'\D', '', spec['id']) or 0) % 2 else 'right'
+    return side
+
+
+def layout_token(spec: dict) -> str:
+    """One beat's layout for the QA note on repeated patterns: picture kind | host where | side | size."""
+    sh = spec['shot']
+    kind = {'graphic': 'diagram', 'split': 'split'}.get(sh.get('visual'), 'scene')
+    if kind == 'scene' and any(e.get('kind') == 'focus' for e in (sh.get('insert') or {}).get('effects', [])):
+        kind = 'close-up'
+    cue = sh.get('host') or {}
+    where = cue.get('where', 'off')
+    if where == 'off':
+        return f'{kind}|off'
+    return f'{kind}|{where}|{host_side(spec)}|{cue.get("size") or "medium"}'
 
 
 def light_match(sp: Image.Image, frame: Image.Image, box) -> tuple:
@@ -1051,8 +1097,68 @@ class GraphicShot(VisualShot):
         return self.graphic.frame(t)
 
 
+class SplitShot(VisualShot):
+    """Two painted scenes stacked (myth vs fact, then vs now): the top scene fills the frame, then on the bottom
+    label's word the frame splits and the bottom scene wipes up into the lower half. Labels sit at the seam."""
+    visual = 'split'
+
+    def setup(self, load_art):
+        from pipeline import inserts as INS
+        from pipeline.rig.inserts import Effect, InsertScene, settle_effects
+        ins, sp = self.spec['shot']['insert'], self.spec['shot']['split']
+        anchors = list(sp.get('anchors') or []) + ['', '']
+        at = [self.tw(anchors[0]) if anchors[0] else self.t0 + 0.2,
+              self.tw(anchors[1]) if anchors[1] else self.t0 + 0.45 * (self.t1 - self.t0)]
+        self.label_at = O.settle(at, self.t0, self.t1)
+        self.labels = list(sp.get('labels') or [])[:2]
+        effects = [Effect(e['kind'], self.tw(e['anchor']) if e.get('anchor') else None, e.get('at', ''), e.get('detail', ''), seed=11 + k)
+                   for k, e in enumerate(ins.get('effects', []))]
+        settle_effects(effects, self.t0, self.t1)
+        if not load_art:
+            return
+        lib = INS.library()
+        for key in (ins['key'], sp['key']):
+            if key not in lib:
+                raise RuntimeError(f'{self.spec["id"]}: split scene "{key}" is not in the library; run stick inserts --generate')
+        seed = sum(map(ord, self.spec['id']))
+        self.top = InsertScene(Image.open(ROOT / lib[ins['key']]['file']), effects, self.t0, self.t1, seed=seed)
+        self.bottom = InsertScene(Image.open(ROOT / lib[sp['key']]['file']), [Effect('push', None)], self.t0, self.t1, seed=seed + 1)
+
+    def draw(self, t):
+        from PIL import ImageDraw
+        a = self.top.frame(t)
+        q = ease((t - self.label_at[1] + 0.25) / 0.5) if len(self.label_at) > 1 else 0.0
+        seam = H
+        if q <= 0:
+            frame = a
+        else:
+            b = self.bottom.frame(t)
+            seam = int(H - q * H / 2)
+            frame = Image.new('RGBA', (W, H))
+            off = int(H * 0.25 * q)                     # the top scene slides up as the seam rises
+            frame.paste(a.crop((0, off, W, off + seam)), (0, 0))
+            frame.paste(b.crop((0, int(H * 0.25), W, int(H * 0.25) + H - seam)), (0, seam))
+            d = ImageDraw.Draw(frame)
+            d.rectangle((0, seam - 7, W, seam + 7), fill=(250, 244, 230), outline=(34, 30, 52), width=3)
+        if self.host is not None:
+            self.host.draw(frame, t)
+        for k, (label, at) in enumerate(zip(self.labels, self.label_at)):
+            if t < at or (k == 1 and q <= 0):
+                continue
+            g = back_out(min(1.0, (t - at) / 0.32), 1.6)
+            im = O.tag_label(label, 64)
+            if g < 0.999:
+                im = im.resize((max(1, int(im.width * g)), max(1, int(im.height * g))), Image.BICUBIC)
+            y = (seam - 40 - im.height if k == 0 else seam + 40) if q > 0 else 0.55 * H
+            xy = (int(W - 90 - im.width), int(y))
+            frame.alpha_composite(im, xy)
+            if g > 0.9:
+                O.note_text(label, 64, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))
+        return frame
+
+
 def make_visual_class(spec: dict):
-    cls = InsertShot if spec['shot'].get('visual') == 'insert' else GraphicShot
+    cls = {'insert': InsertShot, 'split': SplitShot}.get(spec['shot'].get('visual'), GraphicShot)
     return type(f'{cls.__name__}_{spec["id"]}', (cls,), dict(spec=spec))
 
 
@@ -1190,16 +1296,18 @@ def host_episode(episode, specs: dict, lib: dict, slug: str):
     scene_of = [(i, b.shot.staging.setting, b.shot.insert.key) for i, b in enumerate(episode.beats)
                 if b.shot.visual == 'insert' and b.shot.insert and b.shot.staging]
     for i, b in enumerate(episode.beats):
+        specs[b.id] = dict(specs[b.id], v6=bool(episode.storyline_pick))   # v6: the script's host side/size are literal
         spec, cue, st = specs[b.id], b.shot.host, b.shot.staging
         on = bool(cue and cue.where != 'off')
         used = [m.recipe for m in b.shot.motion]
         verbs = [f'{a.who} {a.verb}' for a in st.actions] if st else []
         notes = []
-        subject = b.shot.visual in ('insert', 'graphic') or bool(st and st.setting in episode.subject_settings)
-        if b.shot.visual in ('insert', 'graphic'):
+        subject = b.shot.visual in ('insert', 'graphic', 'split') or bool(st and st.setting in episode.subject_settings)
+        if b.shot.visual in ('insert', 'graphic', 'split'):
             cls = make_visual_class(spec)
-            what = f'insert {b.shot.insert.key}' if b.shot.visual == 'insert' else f'graphic {b.shot.graphic.kind}'
-            effects = [e.kind for e in b.shot.insert.effects] if b.shot.visual == 'insert' else []
+            what = (f'insert {b.shot.insert.key}' if b.shot.visual == 'insert' else f'graphic {b.shot.graphic.kind}'
+                    if b.shot.visual == 'graphic' else f'split {b.shot.insert.key} / {b.shot.split.key}')
+            effects = [e.kind for e in b.shot.insert.effects] if b.shot.visual in ('insert', 'split') else []
             lib_used = [what] + effects + used
         else:
             want = dict(setting=st.setting if st else 'other', pose='standing', view='eye-level', cast=['lead'], poses={'lead': 'standing'})
@@ -1258,6 +1366,8 @@ def host_episode(episode, specs: dict, lib: dict, slug: str):
         pick = episode.hook_options[(episode.hook_pick or 1) - 1] if episode.hook_options else None
         words = len(re.findall(r"[\w'’]+", first.narration))
         shared = sorted(_keywords(pick.answer) & _keywords(payoff.narration)) if pick and payoff else []
+        out['layout'] = [layout_token(specs[b.id]) for b in episode.beats]
+        out['format'] = episode.story_format or 'explainer'
         out['hook'] = dict(line=first.narration, words=words, max_words=8, host_in_frame_one=flags[first.id][1],
                            answer=pick.answer if pick else '', payoff=payoff.narration if payoff else '', shared_words=shared,
                            answered_in_payoff=len(shared) >= 2,

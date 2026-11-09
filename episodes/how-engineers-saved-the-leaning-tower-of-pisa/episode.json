@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "slug": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "topic": "How engineers saved the Leaning Tower of Pisa",
+  "niche": "engineering history",
+  "audience": "",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "",
+  "hook_promise": "",
+  "hook_options": [],
+  "hook_pick": 0,
+  "storylines": [
+    {
+      "format": "mystery",
+      "title": "The Fix That Never Touched the Low Side",
+      "hook": "How do you fix a tower without touching it?",
+      "pitch": "By 1990 the tower leaned 5.5 degrees, and the experts ruled out any work under its low south side. So what did they do? They dug out soil on the opposite, north side, and the tower settled back toward vertical.",
+      "conflict": "The tilt had to be reduced, but any disturbance to the ground under the south side was judged too dangerous.",
+      "stakes": "Each clue rules out another normal fix: first underpinning, then grouting, until the only move left is a risky one, and cables are added to guard against it.",
+      "twist": "The ccure was to remove small amounts of soil from beneath the north side, the high side, so that it sank.",
+      "payoff": "The answer to the hook: by digging away the high side, the engineers straightened the tower by 38 cm without disturbing the south.",
+      "visuals": [
+        "Painted tower tilting at dusk, camera tilts with it",
+        "Close-up of a crossed-out 'underpinning' and 'grouting' on a clipboard",
+        "Host points at the south side and shakes head",
+        "Cutaway of the foundation with soil removed from the north side",
+        "Split screen: 5.5 degrees vs 3.97 degrees"
+      ],
+      "fact_ids": [
+        "s2",
+        "s3",
+        "s4",
+        "s6"
+      ]
+    },
+    {
+      "format": "myth_vs_fact",
+      "title": "Myth: They Propped Up the Low Side",
+      "hook": "Everyone thinks they propped it up. Wrong.",
+      "pitch": "Most people assume engineers saved the tower by strengthening the side that sinks. In fact the south side was too risky to disturb, so they removed soil from the north side and let it sink. Cables stood guard the whole time, and the tower ended up 38 cm straighter.",
+      "conflict": "The obvious fix, reinforcing the low south side, was judged too dangerous.",
+      "stakes": "The myth sounds sensible, but the real job was riskier, so cables had to be installed before any digging started.",
+      "twist": "The tower was straightened by taking soil away from the north side, not by adding support to the south.",
+      "payoff": "The real fix was cleverer than the myth: it let the tower pull itself back toward vertical.",
+      "visuals": [
+        "Split screen: 'Myth' with host holding a prop under the south side, 'Fact' with soil removed from the north",
+        "Painted tower on soft ground with a buried riverbed below",
+        "Close-up of cables tightened one by one",
+        "Host holds a small scoop of soil and points at the north side"
+      ],
+      "fact_ids": [
+        "s1",
+        "s3",
+        "s4",
+        "s5",
+        "s6"
+      ]
+    },
+    {
+      "format": "pov",
+      "title": "You're One of the 13 Experts",
+      "hook": "You're one of 13 experts. Fix this tower.",
+      "pitch": "It's 1990 and the tower leans 5.5 degrees, built on soft silt since 1173. You can't touch the south side, so you must take soil out from the north side. You rig cables first, dig carefully for years, and the tower ends up 38 cm straighter.",
+      "conflict": "You have to reduce the tilt, but any disturbance to the ground under the south side is too dangerous.",
+      "stakes": "The usual fixes are off the table, the only plan is risky, and you must install cables to stop any unwanted movement before you start.",
+      "twist": "The plan is to remove soil under the high north side, so the tower settles back toward vertical.",
+      "payoff": "From 1993 to 2001 the work cuts the tilt to 3.97 degrees, answering the call to fix the tower.",
+      "visuals": [
+        "Host in a committee room, camera pushes in on a drawing of the tower",
+        "Painted map pin on Pisa with 1173 and 1990 labels",
+        "Host holds a cable and tightens it",
+        "Close-up of the foundation with small amounts of soil removed from the north side",
+        "Final scene: host stands small beside the tower, 38 cm label"
+      ],
+      "fact_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6"
+      ]
+    }
+  ],
+  "storyline_pick": 0,
+  "story_note": "",
+  "subject_settings": [],
+  "beats": [],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "Construction began in 1173, and the tower leaned almost from the start because it was built on the soft silt of a buried riverbed.",
+      "url": "https://www.smithsonianmag.com/travel/the-leaning-tower-straightens-up-75064764/",
+      "title": "The Leaning Tower Straightens Up",
+      "quote": "Construction began in 1173, and the tower leaned almost from the outset. It was unwittingly built on the soft silt of a buried riverbed in three diffe..."
+    },
+    {
+      "id": "s2",
+      "claim": "By 1990 the tilt had reached 5.5 degrees, and the Italian government appointed a committee of 13 experts, led by British engineer John Burland, to find a way to save it.",
+      "url": "https://en.wikipedia.org/wiki/Leaning_Tower_of_Pisa",
+      "title": "Leaning Tower of Pisa",
+      "quote": "By 1990, the tilt had reached 5.5 degrees."
+    },
+    {
+      "id": "s3",
+      "claim": "Any disturbance to the ground beneath the south side was judged too dangerous, so conventional fixes like underpinning or grouting there were ruled out.",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0038080620307502",
+      "title": "The Stabilisation of the Leaning Tower of Pisa - ScienceDirect",
+      "quote": "Any disturbance to the ground beneath the south side of the foundation is very dangerous ; therefore the use of conventional geotechnical processes at..."
+    },
+    {
+      "id": "s4",
+      "claim": "Instead, the committee adopted underexcavation, the controlled removal of small volumes of soil from beneath the north side of the foundation, which let the north side settle slightly and pulled the tower back toward vertical.",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0038080620307502",
+      "title": "The Stabilisation of the Leaning Tower of Pisa - ScienceDirect",
+      "quote": "After a careful consideration of a number of possible approaches, the Committee adopted a controlled removal of small volumes of soil from beneath the..."
+    },
+    {
+      "id": "s5",
+      "claim": "Because of the risks, the engineers first installed a safeguard system of cables that could be tightened individually to stop any unwanted movement.",
+      "url": "https://practical.engineering/blog/2023/12/19/how-engineers-straightened-the-leaning-tower-of-pisa",
+      "title": "How Engineers Straightened the Leaning Tower of Pisa — Practical Engineering",
+      "quote": "Knowing the risks and uncertainties involved, the engineers first designed a safeguard system for the tower if things started to go awry.\n\nThe cables ..."
+    },
+    {
+      "id": "s6",
+      "claim": "The remedial work between 1993 and 2001 reduced the tilt to 3.97 degrees, and the tower was straightened by 38 cm.",
+      "url": "https://en.wikipedia.org/wiki/Leaning_Tower_of_Pisa",
+      "title": "Leaning Tower of Pisa",
+      "quote": "[[4]](./Leaning_Tower_of_Pisa#cite_note-4) [[5]](./Leaning_Tower_of_Pisa#cite_note-5) [[6]](./Leaning_Tower_of_Pisa#cite_note-6) The structure was sta..."
+    }
+  ],
+  "approvals": {},
+  "meta": {
+    "story": {
+      "allowed": [
+        "mini_story",
+        "myth_vs_fact",
+        "what_if",
+        "countdown",
+        "mystery",
+        "pov",
+        "experiment"
+      ],
+      "version": "story-v1",
+      "generated": "2026-11-09T18:01:05"
+    }
+  }
+}

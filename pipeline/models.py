@@ -20,8 +20,22 @@ Aspect = Literal['9:16', '1:1', '16:9']
 ASPECT_SIZES = {'9:16': (1080, 1920), '1:1': (1080, 1080), '16:9': (1920, 1080)}
 
 # script v5 (host format): hook -> promise -> story... -> payoff -> loop; v1-v4 roles stay valid for old episodes
-BeatRole = Literal['hook', 'promise', 'story', 'setup', 'tension', 'reveal', 'payoff', 'loop', 'ending']
+BeatRole = Literal['hook', 'promise', 'story', 'setup', 'tension', 'reveal', 'payoff', 'loop', 'ending',
+                   'problem', 'stakes', 'clue', 'reason', 'twist']
 HOST_ROLES = ('hook', 'promise', 'story', 'payoff', 'loop')
+# Script v6 (user 2026-11-09): a storyline is picked before the script, and the middle beats say what they do for the
+# story, so the script gate can check for a conflict, rising stakes, a twist and a payoff that answers the hook.
+STORY_ROLES = ('promise', 'setup', 'problem', 'stakes', 'clue', 'reason', 'twist', 'reveal', 'story')
+StoryFormat = Literal['mini_story', 'myth_vs_fact', 'what_if', 'countdown', 'mystery', 'pov', 'experiment']
+FORMATS = {
+    'mini_story': 'the host has a problem and solves it (setup, problem, attempts that raise the stakes, a twist, the fix)',
+    'myth_vs_fact': 'a belief everyone holds, tested and overturned; the real story is better than the myth',
+    'what_if': '"What if...": a counterfactual played out step by step, each step bigger, then back to what really happens',
+    'countdown': '"3 reasons..." counting down to the biggest or most surprising one; the last reason is the twist',
+    'mystery': 'a puzzle in the hook; one clue per beat, each narrowing it down; the reveal at the end answers it',
+    'pov': '"You\'re a farmer in 1816...": the viewer lives it in second person, the stakes rising, then the reveal of why',
+    'experiment': 'the host runs an experiment on screen: a question, a setup, a prediction, a surprising result, why',
+}
 Framing = Literal['wide', 'medium', 'close', 'insert', 'top_down']
 Transition = Literal['cut', 'whip', 'match_cut']
 SfxName = Literal['pop', 'whoosh', 'ding', 'coin', 'thud', 'paper', 'typing']
@@ -58,16 +72,16 @@ STAGING_VERBS = {'lie_down', 'sit_up', 'stand_up', 'walk'}
 # ---- visual types (script v4). A beat is acted by the characters, or it SHOWS the subject: a painted scene with
 # no characters (insert) or a code-drawn diagram (graphic). Explainer topics aim for at least half of the beats
 # showing the subject; characters react to an insert by a cut on `reaction_anchor`.
-VisualType = Literal['character', 'insert', 'graphic']
+VisualType = Literal['character', 'insert', 'graphic', 'split']
 InsertEffect = Literal[
     # particles over the scene
     'ash', 'snow', 'dust', 'embers', 'rain', 'haze',
     # light and colour
     'grade', 'dim', 'flash', 'sun_path', 'crossfade',
-    # camera
-    'push', 'pan', 'shake',
-    # annotation
-    'label', 'arrow',
+    # camera ('focus': a close-up push into one region of the painting)
+    'push', 'pan', 'shake', 'focus',
+    # annotation ('pin': a map pin drops on a region, with a 1-3 word label)
+    'label', 'arrow', 'pin',
 ]
 Region = Literal['', 'sky', 'top', 'centre', 'ground', 'left', 'right', 'peak', 'horizon']
 GraphicKind = Literal['flow', 'bounce', 'scatter', 'two_paths', 'waves', 'bars', 'thermometer', 'cards', 'layers']
@@ -77,6 +91,7 @@ PEOPLE = re.compile(r'\b(people|person|man|woman|men|women|child|children|kids?|
                     r'character|characters|someone|somebody|family|families|workers?|he|she|they)\b', re.I)
 MAX_ACTIONS, MAX_PROPS, MAX_CAST = 3, 4, 2
 HostWhere = Literal['scene', 'pop_in', 'off']
+HostSize = Literal['small', 'medium', 'large', 'close']
 HOOK_MAX_WORDS, HOOK_OPTIONS = 8, 3
 CHARACTER_TARGET = 0.7                  # script v5: the host is on screen in at least 70 % of the beats
 # Things the approach cannot stage well; the script gate warns and suggests simpler staging (user item 8).
@@ -165,6 +180,15 @@ class GraphicCue(Strict):
                                     'heights with no axis); thermometer: "from -> to"; otherwise empty string.')
 
 
+class SplitCue(Strict):
+    """Two painted scenes stacked, top and bottom (myth vs fact, before vs after, here vs there), each labelled; the
+    bottom one wipes in on its label's word."""
+    key: str = Field(description='Kebab-case name of the second (bottom) scene; the top scene is shot.insert.')
+    scene: str = Field(description='The second scene, painted WITHOUT people, 10-30 words.')
+    labels: list[str] = Field(description='Two labels of 1-3 words: top, bottom ("Myth", "Fact").')
+    anchors: list[str] = Field(default_factory=list, description='Narration word where each label (and the bottom scene) appears.')
+
+
 class Staging(Strict):
     """What the beat needs from the libraries: which painted base (setting + pose per character), which verbs
     on which words, which props. The base planner and the composer read these fields, not the prose."""
@@ -183,7 +207,13 @@ class HostCue(Strict):
     output grammar stays small)."""
     where: HostWhere = Field(description='scene: full-body inside this beat\'s picture (the insert scene or the setting); '
                                          'pop_in: pops in at a frame edge to point at the diagram; off: not on screen.')
-    side: Literal['left', 'centre', 'right'] = 'centre'
+    side: Literal['left', 'centre', 'right'] = Field('centre', description='Where the host stands (or pops in): left, '
+                                                         'centre or right. Vary it from beat to beat.')
+    size: HostSize = Field('medium', description='small (far, the place dominates), medium (full body), large (knees up, '
+                                                 'close to camera) or close (head and shoulders: a reaction or a confession). '
+                                                 'Vary it from beat to beat.')
+    holds: str = Field('', description='A prop the host holds up or uses in this beat ("jar of honey", "old map"), or '
+                                       'empty string.')
     doing: str = Field(description='What the host does in the picture, 4-15 words ("shivers in a t-shirt, staring at '
                                    'snow on the roses").')
     to_camera: bool = Field(description='True when the host talks to the viewer (eyes to camera, lips moving); false '
@@ -200,6 +230,7 @@ class DraftShot(Strict):
                                            'half of the beats are insert or graphic.')
     insert: InsertCue | None = Field(description='Required when visual is insert, else null.')
     graphic: GraphicCue | None = Field(description='Required when visual is graphic, else null.')
+    split: SplitCue | None = None
     reaction_anchor: str = Field('', description='insert/graphic beats: a narration word where the picture cuts to the '
                                                  'cast reacting; empty string for no reaction cut.')
     framing: Framing = 'medium'
@@ -226,7 +257,7 @@ class DraftBeat(Strict):
 
 
 WIRE_OMIT = {'DraftShot': ('image_prompt', 'pose_variants', 'transition', 'reaction_anchor', 'framing'),
-             'HostCue': ('side', 'cut_on'), 'HookOption': ('host_doing', 'scene_key', 'scene')}
+             'HostCue': ('cut_on',), 'HookOption': ('host_doing', 'scene_key', 'scene')}
 # The writer fills a flat "picture" of plain strings instead of the nested insert/graphic objects: with them the
 # compiled output grammar was too large for the API (HTTP 400, measured 2026-11-08); from_wire() rebuilds them.
 PICTURE = {
@@ -242,7 +273,14 @@ PICTURE = {
             'rain, haze, grade, dim, flash, sun_path, crossfade, push, pan, shake, label, arrow. region: sky, top, centre, '
             'ground, left, right, peak, horizon or empty. detail: grade "blue -> red" or "warm -> cold"; crossfade the '
             'changed scene in a few words; sun_path "high -> low"; label 1-3 words; arrow "from -> to" regions; else '
-            'empty. Example: "ash | | | ; shake | erupted | | ; label | sulfur | sky | Sulfur". No ";" inside a field.'},
+            'empty; focus: a close-up push into the region; pin: a map pin on the region, detail its 1-3 word label. '
+            'Example: "ash | | | ; shake | erupted | | ; label | sulfur | sky | Sulfur". No ";" inside a field.'},
+        'split_key': {'type': 'string', 'description': 'visual "split" only: kebab-case name of the BOTTOM scene (the top '
+                                                       'scene is insert_key); else empty.'},
+        'split_scene': {'type': 'string', 'description': 'visual "split" only: the bottom scene painted without people, '
+                                                         '10-30 words; else empty.'},
+        'split_labels': {'type': 'string', 'description': 'visual "split" only: "Top label@word | Bottom label@word", 1-3 '
+                                                          'words each ("Myth@myth | Fact@actually"); else empty.'},
         'graphic_kind': {'type': 'string', 'description': 'flow, bounce, scatter, two_paths, waves, bars, thermometer, '
                                                           'cards or layers; empty unless visual is graphic.'},
         'graphic_items': {'type': 'string', 'description': '1-4 labels of 1-3 words in reading order, each with the '
@@ -265,18 +303,21 @@ def wire_schema(schema: dict) -> dict:
                 d.get('properties', {}).pop(f, None)
                 if f in d.get('required', []):
                     d['required'].remove(f)
+    host = defs.get('HostCue')
+    if host:                                           # v6: side, size and holds are asked of the writer (all required)
+        host['required'] = list(host.get('properties', {}))
     shot = defs.get('DraftShot')
     if shot and 'insert' in shot['properties']:
         props = {}
         for k, val in shot['properties'].items():          # keep the field order, picture where insert was
             if k == 'insert':
                 props['picture'] = {'$ref': '#/$defs/Picture'}
-            elif k != 'graphic':
+            elif k not in ('graphic', 'split'):
                 props[k] = val
         shot['properties'] = props
         shot['required'] = list(props)
         defs['Picture'] = PICTURE
-        for unused in ('InsertCue', 'EffectCue', 'GraphicCue'):
+        for unused in ('InsertCue', 'EffectCue', 'GraphicCue', 'SplitCue'):
             defs.pop(unused, None)
     return schema
 
@@ -321,7 +362,15 @@ def from_wire(data: dict) -> tuple[dict, list]:
                                detail=pic.get('graphic_detail', ''))
             elif kind:
                 notes.append(f'b{n:02d}: graphic kind "{kind}" is not in the library; dropped')
-        shot['insert'], shot['graphic'] = insert, graphic
+        split = None
+        if pic.get('split_key'):
+            pairs = [x.split('@', 1) + [''] for x in _split(pic.get('split_labels', ''), '|') if x]
+            split = dict(key=pic['split_key'], scene=pic.get('split_scene', ''), labels=[a.strip() for a, b, *_ in pairs][:2],
+                         anchors=[b.strip() for a, b, *_ in pairs][:2])
+        elif shot.get('visual') == 'split':
+            notes.append(f'b{n:02d}: a split with no second scene; shown as the top scene alone')
+            shot['visual'] = 'insert'
+        shot['insert'], shot['graphic'], shot['split'] = insert, graphic, split
     return data, notes
 
 
@@ -339,6 +388,29 @@ class HookOption(Strict):
     answer: str = Field(description='One sentence: how the payoff beat answers this hook.')
     loop_line: str = Field(description='The narration of the final loop beat for this hook: its last words tie back to '
                                        'the hook line.')
+
+
+class Storyline(Strict):
+    """One way to tell the topic as a story (script v6): the user picks one of three before any script is written."""
+    format: StoryFormat
+    title: str = Field(description='Working title, at most 60 characters.')
+    hook: str = Field(description=f'The opening line, at most {HOOK_MAX_WORDS} words, honest, answered by the payoff.')
+    pitch: str = Field(description='The story in 2-3 short sentences: the setup and conflict, the twist, the payoff.')
+    conflict: str = Field(description='The problem or tension that drives it, one sentence.')
+    stakes: str = Field(description='How the stakes rise along the way, one sentence.')
+    twist: str = Field(description='The surprise or turn, one sentence. It must be true (from the research).')
+    payoff: str = Field(description='How the ending answers the hook, one sentence.')
+    visuals: list[str] = Field(description='3-5 picture ideas in order, each a few words, mixing tools: a scene that '
+                                           'animates, a close-up, a split screen, a map, an object the host holds or uses, '
+                                           'a camera move, a diagram (at most one).')
+    fact_ids: list[str] = Field(description='Research fact ids the story stands on.')
+
+
+class StoryPitch(Strict):
+    story_supported: bool = Field(description='False when the facts cannot carry a real story (conflict, rising stakes, '
+                                              'a true twist) without inventing things.')
+    note: str = Field(description='When story_supported is false: why, in one or two sentences. Else empty string.')
+    storylines: list[Storyline] = Field(description='Exactly 3 storylines, each in a DIFFERENT allowed format.')
 
 
 class ScriptDraft(Strict):
@@ -385,7 +457,7 @@ class Beat(Strict):
         return cls(id=f'b{index + 1:02d}', **draft.model_dump())
 
 
-V4_DEFAULTS = dict(visual='character', insert=None, graphic=None, reaction_anchor='', host=None)
+V4_DEFAULTS = dict(visual='character', insert=None, graphic=None, reaction_anchor='', host=None, split=None)
 
 
 class Source(Strict):
@@ -416,6 +488,9 @@ class Episode(Strict):
     hook_promise: str = ''
     hook_options: list[HookOption] = Field(default_factory=list)   # script v5: three hooks for the user to choose from
     hook_pick: int = 0                                             # 1-3 once the user picked; 0 = not yet
+    storylines: list[Storyline] = Field(default_factory=list)      # script v6: three pitches before the script
+    storyline_pick: int = 0                                        # 1-3 once the user picked; 0 = not yet
+    story_note: str = ''                                           # the writer's note when a topic cannot carry a story
     subject_settings: list[str] = Field(default_factory=list)
     beats: list[Beat] = Field(default_factory=list)
     sources: list[Source] = Field(default_factory=list)
@@ -429,6 +504,10 @@ class Episode(Strict):
         for k, default in V4_DEFAULTS.items():          # script-v4 fields at their defaults: same digest as before v4
             if d.get(k) == default:
                 d.pop(k, None)
+        if isinstance(d.get('host'), dict):             # v6 host fields at their defaults: same digest as v5
+            for k, default in (('size', 'medium'), ('holds', '')):
+                if d['host'].get(k) == default:
+                    d['host'].pop(k, None)
         return d
 
     def script_digest(self):
@@ -438,7 +517,17 @@ class Episode(Strict):
         if self.hook_options:                          # script v5 only: earlier digests stay the same
             content |= dict(hook_options=[h.model_dump() for h in self.hook_options], hook_pick=self.hook_pick,
                             subject_settings=list(self.subject_settings))
+        if self.storyline_pick:                        # script v6: the picked storyline is part of what was approved
+            content |= dict(storyline=self.storyline.model_dump())
         return digest(content)
+
+    @property
+    def storyline(self):
+        return self.storylines[self.storyline_pick - 1] if self.storyline_pick else None
+
+    @property
+    def story_format(self) -> str:
+        return self.storyline.format if self.storyline else ''
 
     @property
     def host_format(self) -> bool:
@@ -503,6 +592,10 @@ class Episode(Strict):
             err(self.beats[0].id, 'the first beat must be the hook')
         if self.host_format:
             self._check_host_format(err, warn)
+        if self.host_format and self.storyline_pick:    # script v6: written from a picked storyline
+            for item, ok, detail in self.story_report():
+                if not ok:
+                    err('story', f'{item}: {detail}')
         if not any(b.role == 'payoff' for b in self.beats):
             err('beats', 'no payoff beat: the hook promise is never delivered')
         if self.beats[-1].role == 'payoff':           # a payoff that closes the video (user cut the ending, 2026-11-08)
@@ -582,8 +675,12 @@ class Episode(Strict):
         """Script v5 (user 2026-11-08): the lead hosts and tells the story; hook -> promise -> story -> payoff -> loop;
         a hook of at most 8 words with the host in frame 1, answered in the payoff; the last line ties back."""
         roles = [b.role for b in self.beats]
+        if self.storyline_pick:
+            roles = ['promise' if i == 1 and r in STORY_ROLES else 'story' if r in STORY_ROLES else r for i, r in enumerate(roles)]
         if any(r not in HOST_ROLES for r in roles):
             err('beats', f'host format roles are {"/".join(HOST_ROLES)}; got {sorted(set(roles) - set(HOST_ROLES))}')
+        if self.storyline_pick:                        # v6: story roles in the middle, checked by story_report
+            roles = ['story' if r in STORY_ROLES else r for r in roles]
         order = [r for r in roles if r in HOST_ROLES]
         if len(roles) >= 4 and (roles[1] != 'promise' or roles[-1] != 'loop' or 'payoff' not in roles
                                 or roles.index('payoff') != len(roles) - 2 or any(r != 'story' for r in roles[2:-2])):
@@ -614,6 +711,44 @@ class Episode(Strict):
                 err(b.id, 'the host is on screen: put "lead" in shot.cast with a pose in staging')
             if 'friend' in b.shot.cast and b.shot.visual == 'character' and b.shot.staging and b.shot.staging.setting in ('cafe', 'living-room'):
                 warn(b.id, 'the friend chatting at a cafe or on a sofa: keep the friend for moments the story needs')
+
+    def story_report(self) -> list:
+        """The story check at the script gate (user 2026-11-09): [(item, passed, detail)] for a clear conflict, rising
+        stakes, a twist or surprise, and a payoff that answers the hook."""
+        roles = [b.role for b in self.beats]
+        fmt = self.story_format
+        out = []
+        if len(roles) < 5 or roles[-1] != 'loop' or roles[-2] != 'payoff':
+            out.append(('shape', False, f'hook ... payoff, loop expected; got {", ".join(roles)}'))
+        bad = sorted({r for r in roles[1:-2] if r not in STORY_ROLES})
+        if bad:
+            out.append(('roles', False, f'middle beats use {bad}; use {", ".join(STORY_ROLES)}'))
+        first = next((i for i, r in enumerate(roles) if r == 'problem'), None)
+        out.append(('conflict', first is not None and first <= 3,
+                    f'problem stated in {self.beats[first].id}' if first is not None and first <= 3 else
+                    'no "problem" beat in the first beats: the story needs a clear conflict early'))
+        pay = len(roles) - 2
+        start = first if first is not None else 1
+        rising = [self.beats[i].id for i in range(start + 1, pay) if roles[i] in ('stakes', 'clue', 'reason')]
+        need = 2 if fmt in ('mystery', 'countdown') else 1
+        out.append(('rising stakes', len(rising) >= need,
+                    f'{", ".join(rising)} raise the stakes' if len(rising) >= need else
+                    f'{len(rising)} beat(s) raise the stakes after the problem; a {fmt or "story"} needs at least {need} '
+                    '("stakes", or "clue"/"reason" beats)'))
+        twists = [self.beats[i].id for i in range(start + 1, pay + 1) if roles[i] in ('twist', 'reveal')]
+        out.append(('twist', bool(twists), f'twist in {", ".join(twists)}' if twists else
+                    'no "twist" or "reveal" beat before the payoff: add the surprise'))
+        answer = ''
+        if self.hook_options:
+            answer = self.hook_options[(self.hook_pick or 1) - 1].answer
+        if self.storyline:
+            answer += ' ' + self.storyline.payoff
+        payoff = self.beats[pay].narration if 0 <= pay < len(self.beats) else ''
+        shared = sorted(_keywords(answer) & _keywords(payoff))
+        out.append(('payoff answers the hook', len(shared) >= 2,
+                    f'shares {", ".join(shared)}' if len(shared) >= 2 else
+                    f'the payoff "{payoff}" does not say the promised answer ("{answer.strip()}")'))
+        return out
 
     @staticmethod
     def _check_staging(b, spoken, err, warn):
@@ -706,6 +841,17 @@ class Episode(Strict):
             for e in sh.insert.effects:
                 if e.anchor and e.anchor.casefold() not in spoken:
                     err(where, f'insert effect {e.kind} anchor "{e.anchor}" is not in the narration')
+        if sh.visual == 'split':
+            if sh.insert is None or sh.split is None:
+                err(where, 'visual is split: give the top scene (insert) and the bottom scene (split)')
+                return
+            if len(sh.split.labels) != 2 or any(len(x.split()) > 3 for x in sh.split.labels):
+                err(where, f'split needs two labels of 1-3 words; got {sh.split.labels}')
+            if not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.split.key or ''):
+                err(where, f'split key "{sh.split.key}" must be kebab-case')
+            for a in sh.split.anchors:
+                if a and a.casefold() not in spoken:
+                    err(where, f'split anchor "{a}" is not in the narration')
         if sh.visual == 'graphic':
             if sh.graphic is None:
                 err(where, 'visual is graphic but shot.graphic is empty')
@@ -732,6 +878,10 @@ class Episode(Strict):
 
 STOP = {'the', 'a', 'an', 'and', 'or', 'but', 'so', 'is', 'it', 'its', "it's", 'you', 'your', 'to', 'of', 'in', 'on',
         'at', 'why', 'what', 'how', 'did', 'do', 'does', 'i', 'me', 'my', 'we', 'this', 'that', 'same', 'next', 'time'}
+
+
+def _keywords(text: str) -> set:
+    return {w for w in re.findall(r"[a-z0-9']+", text.lower()) if w not in STOP and len(w) > 2}
 
 
 def _shares_word(a: str, b: str) -> bool:

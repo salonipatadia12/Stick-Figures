@@ -380,6 +380,30 @@ script (user), bases when a setting is missing (user, sheet), props only on QA f
 can't be composed, it is written by hand and counted; the report gives each video's library %. If a
 video scores under 80 %, the missing verbs or components go into the libraries before the next one.
 
+### 8. Storytelling (user 2026-11-09)
+
+The proof videos all used one template (hook -> "let me show you" -> paper diagram with the host popping up
+bottom-left -> bar chart -> loop) and told thin facts in order. Built 2026-11-09:
+- **Story before script** (`pipeline/story.py`, gate `storyline`): research, then three storylines in three different
+  formats (mini_story, myth_vs_fact, what_if, countdown, mystery, pov, experiment), each with a hook, a 2-3 line
+  pitch, conflict, stakes, twist, payoff, picture ideas and its facts. The user picks one (`stick approve --gate
+  storyline --story N`); only then is the script written around it (script-v6). If the facts cannot carry a real
+  story the pitch says so (`story_note`) instead of forcing one.
+- **Formats rotate:** never the format of the video picked last; topics waiting at their storyline gate are offered
+  disjoint formats, so two videos picked together differ. The gate refuses a repeat.
+- **Story check at the script gate** (`Episode.story_report`): an early "problem" beat, rising stakes ("stakes",
+  or two "clue"/"reason" beats for a mystery or countdown), a "twist"/"reveal" before the payoff, and a payoff that
+  answers the hook. Failures are errors.
+- **Visual variety:** host `side` (left/centre/right) and `size` (small/medium/large/close) per beat, a held prop
+  (`host.holds`, from the props library), pop-ins from either bottom corner; `split` (two painted scenes stacked
+  with labels, the second wiping in on its word); `focus` (a close-up push into one region); `pin` (a map pin on a
+  painted map); at most two diagrams per video. QA `layout` notes (does not fail) a video whose format or layout
+  pattern repeats the previous one (`renders/sample/layouts.json`).
+
+### Backlog
+
+- Character polish: fingers and hands (user 2026-11-09: later, not now).
+
 ## Definition of done
 
 One request produces a 30–60 s vertical Short on an arbitrary topic, with:

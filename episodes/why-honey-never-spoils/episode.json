@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "slug": "why-honey-never-spoils",
+  "topic": "Why honey never spoils",
+  "niche": "food science",
+  "audience": "",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "",
+  "hook_promise": "",
+  "hook_options": [],
+  "hook_pick": 0,
+  "storylines": [
+    {
+      "format": "countdown",
+      "title": "3 Shields Guarding Every Jar of Honey",
+      "hook": "Three shields keep honey from spoiling.",
+      "pitch": "Microbes want a feast, but honey has three defenses. Shield 3 is acid. Shield 2 is the bees' hydrogen peroxide, which barely works in ripe honey. Shield 1, the twist, is that honey is so dry it pulls water out of bacteria.",
+      "conflict": "Sugary food should be a feast for microbes, yet honey stays safe.",
+      "stakes": "Each shield counted down is stronger or stranger than the last, and the peroxide turns out to be nearly switched off.",
+      "twist": "The bees' main germ-killer, hydrogen peroxide, is very slow in ripe honey, because that reaction needs water and ripe honey has almost none.",
+      "payoff": "The top shield is dryness: honey is hygroscopic, so it dehydrates bacteria, and that is why the jar never spoils.",
+      "visuals": [
+        "Host beside a painted honey jar with a big number 3",
+        "Close-up of the label gluconic acid on the jar",
+        "Split screen: the bee's hydrogen peroxide with a faded, dimmed switch",
+        "Host holding the jar, camera pushing in for the number 1",
+        "Painted scene of a bacterium shrinking beside a drop of honey"
+      ],
+      "fact_ids": [
+        "s4",
+        "s5",
+        "s6",
+        "s3",
+        "s1"
+      ]
+    },
+    {
+      "format": "what_if",
+      "title": "What If Bacteria Moved Into Your Honey?",
+      "hook": "What if bacteria moved into honey?",
+      "pitch": "Picture one microbe landing in a jar of honey, ready to settle in. First it meets a sticky, acidic wall. Then honey pulls the water right out of it, and there is too little water left for any microbe to grow. Back in real life, the jar stays fine.",
+      "conflict": "A hungry microbe lands in a jar full of sugar and wants to move in.",
+      "stakes": "Each step is worse for the microbe: first the acid, then the water being pulled out, then no water left to grow on.",
+      "twist": "Honey is hygroscopic, so instead of the microbe taking what it needs, honey draws the moisture out of the microbe.",
+      "payoff": "Back to reality: with so little available water, no microorganism can grow, so honey does not spoil.",
+      "visuals": [
+        "Giant painted jar with a tiny microbe landing on top",
+        "Close-up of the microbe in the acidic honey, gluconic acid label",
+        "Camera zoom as a water drop leaves the microbe and flows into the honey",
+        "Host holding a magnifying glass and shaking their head: nothing grows",
+        "Split screen: what if the microbe moved in vs what really happens"
+      ],
+      "fact_ids": [
+        "s3",
+        "s4",
+        "s1"
+      ]
+    },
+    {
+      "format": "experiment",
+      "title": "Honey Suspect Lineup: Who Stops the Germs?",
+      "hook": "Which honey trick really stops germs?",
+      "pitch": "The host lines up suspects: the bees' hydrogen peroxide, the acid, and the missing water. Our prediction: the peroxide is the star, since it is honey's main antimicrobial agent. The result is a twist: in ripe honey the peroxide is made very slowly, because the reaction needs water and honey has dried from about 70-80% water to about 17-18%.",
+      "conflict": "Honey never spoils, but which of its defenses actually does the work?",
+      "stakes": "The host puts all the faith in the peroxide, the best-known defender, then finds out it is almost switched off.",
+      "twist": "The main antimicrobial agent, hydrogen peroxide, is produced very slowly in mature honey because ripe honey lacks the water the reaction needs.",
+      "payoff": "The answer: drying honey down to 17-18% water leaves too little available water for any microbe, with acid as a second barrier.",
+      "visuals": [
+        "Host at a painted table with three suspects labeled peroxide, acid, water",
+        "Host holding a jar of nectar and a jar of honey, 70-80% vs 17-18%",
+        "Close-up of a bee-made enzyme at work, then dimmed as the water level drops",
+        "Split screen: prediction vs result",
+        "Host pointing at the almost-empty water drop on the honey jar"
+      ],
+      "fact_ids": [
+        "s2",
+        "s5",
+        "s6",
+        "s1",
+        "s4"
+      ]
+    }
+  ],
+  "storyline_pick": 0,
+  "story_note": "",
+  "subject_settings": [],
+  "beats": [],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "0.562 to 0.62, leaves too little available water to support the growth of any microorganisms.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6589292/",
+      "title": "Antibacterial Potency of Honey - PMC - NIH",
+      "quote": "Low Water Activity\nThe water activity (*a*_w) of honey ranges from 0.562 and 0.62, which means it provides a very low water availability to support th..."
+    },
+    {
+      "id": "s2",
+      "claim": "the water content of the modified nectar evaporates slowly from about 70 to 80% by weight to about 17 to 18% by weight, giving ripe honey.",
+      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9044489",
+      "title": "Medicinal compositions containing honey",
+      "quote": "After processing of the collected nectar by bees (including addition of various components one of the most important of which is diastase), the water ..."
+    },
+    {
+      "id": "s3",
+      "claim": "honey is hygroscopic, so it can draw moisture out of the environment and dehydrate bacteria.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3609166/",
+      "title": "Honey: its medicinal property and antibacterial activity - PMC",
+      "quote": "In addition, honey is hygroscopic, which means that it can draw moisture out of the environment and dehydrate bacteria, and its high sugar content and..."
+    },
+    {
+      "id": "s4",
+      "claim": "Gluconic acid is the primary acid in honey responsible for most of its acidity and low pH, which adds a second barrier to microbes.",
+      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10500235",
+      "title": "Wound healing compositions comprising buckwheat honey and methylglyoxal and methods of use",
+      "quote": "Gluconic acid is the primary acid in honey responsible for most of honey's acidity and low pH, and hydrogen peroxide is the primary antibacterial agen..."
+    },
+    {
+      "id": "s5",
+      "claim": "The main antimicrobial agent in honey is hydrogen peroxide, whose concentration depends on glucose oxidase made by the bee and catalase from flower pollen.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3609166/",
+      "title": "Honey: its medicinal property and antibacterial activity - PMC",
+      "quote": "The antimicrobial agents in honey are predominantly hydrogen peroxide, of which the concentration is determined by relative levels of glucose oxidase,..."
+    },
+    {
+      "id": "s6",
+      "claim": "Hydrogen peroxide production is very slow in mature honey because high osmotic pressure depresses glucose oxidase activity and the reaction needs water, which ripe honey lacks.",
+      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10500235",
+      "title": "Wound healing compositions comprising buckwheat honey and methylglyoxal and methods of use",
+      "quote": "Second, the production of hydrogen peroxide is very slow in mature honey for two reasons: i) the activity of glucose oxidase is depressed by high osmo..."
+    }
+  ],
+  "approvals": {},
+  "meta": {
+    "story": {
+      "allowed": [
+        "mini_story",
+        "what_if",
+        "countdown",
+        "experiment"
+      ],
+      "version": "story-v1",
+      "generated": "2026-11-09T18:02:23"
+    }
+  }
+}

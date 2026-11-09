@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 import subprocess
+import time
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -205,6 +206,36 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, prom
                 and not missing and not on_host)
 
 
+LAYOUTS = ROOT / 'renders/sample/layouts.json'
+SAME_LAYOUT = 0.6     # a layout pattern this similar to the previous video's gets a note
+
+
+def layout_report(summary: dict | None, slug: str) -> dict:
+    """A note, not a failure (user 2026-11-09): when this video shares its format, or most of its layout pattern
+    (picture kind and host placement beat by beat), with the video rendered before it. Every render is recorded in
+    renders/sample/layouts.json."""
+    import difflib
+    if not summary or 'layout' not in summary:
+        return dict(note='', layout=[])
+    reg = json.loads(LAYOUTS.read_text()) if LAYOUTS.exists() else {}
+    tokens, fmt = summary['layout'], summary.get('format', '')
+    out = dict(format=fmt, layout=tokens, note='')
+    prev = max((v for k, v in reg.items() if k != slug), key=lambda v: v['at'], default=None)
+    if prev:
+        coarse = lambda ts: ['|'.join(x.split('|')[:3]) for x in ts]      # kind, where, side
+        sim = difflib.SequenceMatcher(None, coarse(tokens), coarse(prev['layout'])).ratio()
+        notes = []
+        if fmt and fmt == prev['format']:
+            notes.append(f'same format as the previous video ({prev["slug"]}): {fmt}')
+        if sim >= SAME_LAYOUT:
+            notes.append(f'layout pattern {sim:.0%} like the previous video ({prev["slug"]})')
+        out |= dict(previous=prev['slug'], previous_format=prev['format'], similarity=round(sim, 2), note='; '.join(notes))
+    reg[slug] = dict(slug=slug, format=fmt, layout=tokens, at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    LAYOUTS.parent.mkdir(parents=True, exist_ok=True)
+    LAYOUTS.write_text(json.dumps(reg, indent=1))
+    return out
+
+
 HOST_TINT = 0.15      # the host's white may shift at most 15 % per channel (user 2026-11-09: white in every scene)
 
 
@@ -213,7 +244,7 @@ def host_check(text_sizes: list) -> dict:
     is deliberately cut by the bottom edge), and its body white within HOST_TINT of itself (no pink, orange or brown
     from the scene's light). Read from the per-frame host log (compose_beats.HostLayer)."""
     frames = [(d['t'], h) for d in text_sizes for h in d.get('host', [])]
-    cut = [(t, h) for t, h in frames if not h['pop_in'] and not h['in_frame']]
+    cut = [(t, h) for t, h in frames if not h.get('crop_ok', h['pop_in']) and not h['in_frame']]
     tinted = [(t, h) for t, h in frames if not h['pop_in'] and any(abs(v - 1) > HOST_TINT for v in h['body_rgb'])]
     worst = max((abs(v - 1) for _, h in frames if not h['pop_in'] for v in h['body_rgb']), default=0.0)
     return dict(frames=len(frames), standing_frames=sum(1 for _, h in frames if not h['pop_in']),
@@ -452,6 +483,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         subject=subject_report(library),
         character=character_report(library),
         hook=hook_report(library),
+        layout=layout_report(library, out_dir.name),
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())

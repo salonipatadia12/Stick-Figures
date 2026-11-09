@@ -20,7 +20,7 @@ from . import config
 from .cost import token_cost, usage_dict
 from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest, from_wire, wire_schema
 
-PROMPT_VERSION = 'script-v5'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic); v5: host format, three hook options
+PROMPT_VERSION = 'script-v6'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic); v5: host format, three hook options; v6: written from a picked storyline, story roles, visual variety
 # The research cache is keyed on its own version: a script-prompt change must never re-run (and re-pay) research.
 # Frozen at the value the 2026-11-08 research runs were cached under.
 RESEARCH_VERSION = 'script-v5'
@@ -37,8 +37,10 @@ RESEARCH_SYSTEM = """You gather facts for a 30-60 second explainer video. Use we
 Write 3 to 6 facts. Each fact is one plain sentence on its own line, with no bullets, numbering,
 introduction or conclusion. State only what a search result directly supports.
 Prefer facts that explain the mechanism behind the topic, plus at most three statistics.
-Prefer primary or reputable sources: government statistics offices, central banks, regulators,
-universities, established research organisations and major news outlets.
+Use only reputable sources (user rule, 2026-11-09): government agencies and statistics offices, central banks,
+regulators, universities, peer-reviewed journals, museums, established research organisations and major science or
+news outlets. Never Wikipedia, personal or company blogs, forums or content farms; if only those support a claim,
+leave the claim out.
 If a fact only holds for one country or period, name it in the sentence. Do not give advice."""
 
 SCRIPT_RULES = """You write scripts for explainer Shorts: vertical videos of 30-60 seconds, painted stick figures,
@@ -49,21 +51,27 @@ FORMAT (every video): the lead stick figure is the HOST. The host talks to the v
 acting the story out inside the pictures.
 
 Rules:
-1. STRUCTURE. Roles in order: "hook" (0-3 s) -> "promise" (one short "let me show you" line that says what the
-   viewer will get) -> "story" beats (one idea each, told as something the host does or sees) -> one "payoff" beat
-   that answers the hook -> one "loop" beat whose last words tie back to the hook line so the video can loop.
-   Fill hook_promise with the question the hook opens.
+1. STORY. Tell the PICKED STORYLINE below, in its format, as a story: a clear conflict or problem early, stakes that
+   rise, at least one true twist or surprise, and a payoff that answers the hook. Never a list of facts in order.
+   Roles: beat 1 "hook" -> middle beats, each tagged with what it does for the story: "setup", "problem" (the
+   conflict, by beat 2-4), "stakes" (the stakes rise), "clue" (a mystery's clues), "reason" (a countdown's reasons,
+   counting down), "twist" (the surprise), "reveal" -> one "payoff" beat that answers the hook -> one "loop" beat whose
+   last words tie back to the hook line. A "promise" beat is allowed only when the format needs it, and is never "let
+   me show you". Fill hook_promise with the question the hook opens.
 2. HOOK. The hook beat's narration is ONLY the hook line: at most 8 words, a question or a bold claim the payoff
    answers. It must be honest: never walked back or contradicted later. Frame 1 already shows the host in a
    surprising situation that makes the line land (e.g. "It's June. Why is it snowing?" with the host in a t-shirt
    beside snow on summer flowers; "Wait... why did I come in here?" as the host walks through a door and freezes;
    "Same sun, same sky. So why red?" as the host snaps their fingers and the sky flips from blue to red).
-   No greeting, no "in this video". Write 3 genuinely different hook_options; option 1 is used in beats. Each
-   option carries its full hook_beat, how the payoff answers it, and its own loop_line.
+   No greeting, no "in this video". Write 3 genuinely different hook_options; option 1 is the storyline's hook and is
+   used in beats. Each option carries its frame one, how the payoff answers it, and its own loop_line.
 3. THE HOST IS IN THE STORY. Every beat fills shot.host (and puts "lead" in cast when the host is on screen). Put the host INSIDE the explainer scenes, full body,
    acting out each line: on the beach watching the volcano, shivering in the frosted field, walking through the
    doorway, looking up at the red sky. Diagrams may fill the frame briefly with the host popping in at the edge to
-   point (where "pop_in"). Aim for the host on screen in at least 70% of beats. The friend appears only when the
+   point (where "pop_in"). Aim for the host on screen in at least 70% of beats. Set host.side (left, centre, right)
+   and host.size (small: the place dominates; medium: full body; large: knees up, near the camera; close: head and
+   shoulders, for a reaction or an aside) and VARY them beat to beat. host.holds names an object the host holds up or
+   uses ("jar of honey", "old map") when the story has a key object. The friend appears only when the
    story needs a second person (someone to ask, to contrast with); no cafe or sofa chatter unless the story is set
    there.
 4. NO INVENTED FACTS. Use only the numbered research facts provided, citing their ids in source_ids. A number
@@ -106,6 +114,15 @@ Rules:
    setting IS the subject (a doorway for a video about doorways), list it in subject_settings. Numbers drawn on
    screen (labels, split labels, graphic items) must be numbers this beat says. reaction_anchor stays empty in
    this format (the host is already in the picture).
+   More tools: "split" (two painted scenes stacked, top = insert_*, bottom = split_*, each labelled: myth vs fact, then
+   vs now, here vs there); a painted map is an insert whose scene is an illustrated map ("illustrated map of Italy,
+   no text"), with "pin" effects on regions and arrows for routes; "focus" pushes into one region of a scene for a
+   close-up of a detail; push, pan and shake move the camera.
+13. VARIETY (user 2026-11-09: every video looked like the same template). Paper diagrams are one tool, not the
+   default: at most 2 graphics per video, and never a bar chart unless the comparison IS the story. No two beats in a
+   row with the same visual type and the same host spot and size. Never the template hook -> "let me show you" ->
+   diagram -> bar chart -> loop. Use at least three different tools in a video (scene animation, close-up/focus,
+   split, map, a held object, camera moves, a diagram).
 
 Visual style of this channel:
 """
@@ -153,6 +170,12 @@ def script_request(episode, style, facts):
             f'Target length: {episode.target_length} seconds: {lo}-{hi} beats and about {words} narration words '
             f'(the narrator reads about {style.words_per_second} words per second).\n'
             f'Aspect: {episode.aspect}\nCast ids: {", ".join(style.cast_ids) or "none"}\n\n{research}')
+    sl = episode.storyline
+    if sl:
+        from .models import FORMATS
+        user += (f'\n\nPICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nTitle: {sl.title}\nHook: {sl.hook}\n'
+                 f'Pitch: {sl.pitch}\nConflict: {sl.conflict}\nStakes: {sl.stakes}\nTwist: {sl.twist}\nPayoff: {sl.payoff}\n'
+                 f'Picture ideas: {"; ".join(sl.visuals)}\nFacts: {", ".join(sl.fact_ids)}')
     schema = wire_schema(transform_schema(ScriptDraft))
     return dict(model=config.SCRIPT_MODEL, max_tokens=SCRIPT_MAX_TOKENS, system=SCRIPT_RULES + style.script_brief,
                 messages=[{'role': 'user', 'content': user}], thinking={'type': 'adaptive'},
@@ -347,6 +370,9 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
 
 def generate(episode, style, base, ledger, client=None, use_research=True, regenerate=()):
     """Fill episode.title, hook_promise, beats and sources. Returns (episode, notes)."""
+    if not episode.storyline:
+        raise ScriptError(f'No storyline picked for {episode.slug}: story before script (stick make --episode '
+                          f'{episode.slug} pitches three; stick approve --gate storyline --story N picks one).')
     client = client or make_client()
     notes = []
     facts = []

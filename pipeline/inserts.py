@@ -60,7 +60,10 @@ def needed(episode, lib: dict | None = None) -> dict:
     lib = library() if lib is None else lib
     out = {}
     for b in episode.beats:
-        ins = b.shot.insert if b.shot.visual == 'insert' else None
+        sp = b.shot.split if b.shot.visual == 'split' else None
+        if sp and sp.key and sp.key not in lib:                # a split's bottom scene
+            out.setdefault(sp.key, dict(scene=sp.scene, beats=[], base=None))['beats'].append(b.id)
+        ins = b.shot.insert if b.shot.visual in ('insert', 'split') else None
         if ins is None:
             continue
         if ins.key not in lib:

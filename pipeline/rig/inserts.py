@@ -31,6 +31,8 @@ REGION = {'': (0.5, 0.45), 'sky': (0.5, 0.22), 'top': (0.5, 0.15), 'centre': (0.
 LABEL_Y = {'': 860, 'sky': 520, 'top': 440, 'centre': 860, 'ground': 1010, 'left': 720, 'right': 720, 'peak': 640, 'horizon': 760}
 BAND = {'sky': (0.12, 0.30), 'top': (0.05, 0.2), 'horizon': (0.36, 0.48), 'centre': (0.38, 0.52), 'ground': (0.55, 0.7),
         '': (0.14, 0.30), 'peak': (0.2, 0.34), 'left': (0.14, 0.3), 'right': (0.14, 0.3)}
+FOCUS = {'': (0, 0), 'centre': (0, 0), 'sky': (0, -1), 'top': (0, -1), 'peak': (0, -0.7), 'horizon': (0, -0.2),
+         'ground': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
 TINT = {'blue': (95, 150, 235), 'red': (236, 84, 52), 'orange': (246, 140, 58), 'gold': (255, 200, 110), 'warm': (255, 196, 120),
         'cold': (140, 180, 235), 'grey': (150, 152, 162), 'gray': (150, 152, 162), 'night': (40, 52, 96), 'dusk': (150, 90, 120),
         'pink': (236, 150, 160), 'green': (110, 170, 110), 'noon': (200, 225, 255), 'violet': (150, 100, 210),
@@ -59,7 +61,7 @@ def _parse_pair(detail: str, default=('', '')):
 
 
 # How long each light/colour change takes to build (the ramps below); it must finish SETTLE seconds before the cut.
-RAMP = dict(grade=2.2, crossfade=1.4, haze=1.4, dim=1.2, sun_path=1.6)
+RAMP = dict(grade=2.2, crossfade=1.4, haze=1.4, dim=1.2, sun_path=1.6, focus=1.0)
 SETTLE = 0.6
 
 
@@ -138,6 +140,13 @@ class InsertScene:
                 d = -1 if 'left' in e.detail.lower() else 1
                 zoom = max(zoom, 1.08)
                 dx += d * 60 * (u - 0.5) * 2
+            elif e.kind == 'focus':                     # a close-up: push into one region of the painting
+                q = ease(_ramp(t, e.at if e.at is not None else self.t0, 1.0))
+                z = 1.0 + 0.45 * q
+                zoom = max(zoom, z)
+                rx, ry = FOCUS.get(e.region, (0.0, 0.0))
+                dx += rx * q * (W / 2) * (1 - 1 / z)
+                dy += ry * q * (H / 2) * (1 - 1 / z)
             elif e.kind == 'shake' and e.at is not None and 0 <= t - e.at <= 0.5:
                 k = (1 - (t - e.at) / 0.5) ** 2
                 dx += 16 * k * math.sin(2 * math.pi * 21 * (t - e.at))
@@ -186,6 +195,9 @@ class InsertScene:
         for e in self.effects:
             if e.kind in ('ash', 'snow', 'dust', 'embers', 'rain'):
                 self._draw_particles(frame, e, t)
+        for e in self.effects:
+            if e.kind == 'pin':
+                self._pin(frame, e, t)
         for e in self.effects:
             if e.kind == 'label':
                 self._label(frame, e, t)
@@ -329,6 +341,32 @@ class InsertScene:
         frame.alpha_composite(im, xy)
         if q > 0.9:
             O.note_text(e.detail, 60, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))
+
+    def _pin(self, frame, e, t):
+        """A map pin drops onto the region (with a bounce) and its label pops beside it."""
+        at = e.at if e.at is not None else self.t0 + 0.3
+        if t < at:
+            return
+        u = t - at
+        x, y = REGION.get(e.region, REGION[''])[0] * W, REGION.get(e.region, REGION[''])[1] * H
+        drop = 0.0 if u > 0.35 else (1 - back_out(u / 0.35, 1.2)) * 220
+        d = ImageDraw.Draw(frame, 'RGBA')
+        d.ellipse((x - 26, y - 8, x + 26, y + 8), fill=(30, 20, 20, 70))
+        tip = y - drop
+        d.polygon([(x - 26, tip - 60), (x + 26, tip - 60), (x, tip)], fill=(205, 52, 42), outline=(40, 22, 30))
+        d.ellipse((x - 34, tip - 112, x + 34, tip - 44), fill=(220, 60, 48), outline=(40, 22, 30), width=5)
+        d.ellipse((x - 12, tip - 90, x + 12, tip - 66), fill=(255, 240, 230))
+        if e.detail and u > 0.3:
+            q = back_out(min(1.0, (u - 0.3) / 0.3), 1.6)
+            im = O.tag_label(e.detail, 56)
+            if q < 0.999:
+                im = im.resize((max(1, int(im.width * q)), max(1, int(im.height * q))), Image.BICUBIC)
+            lx = x + 50 if x < W / 2 else x - 50 - im.width
+            lx = min(max(lx, 60), 1020 - im.width)
+            xy = (int(lx), int(tip - 100 - im.height / 2))
+            frame.alpha_composite(im, xy)
+            if q > 0.9:
+                O.note_text(e.detail, 56, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))
 
     def _arrow(self, frame, e, t):
         if e.at is None:

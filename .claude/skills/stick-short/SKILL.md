@@ -38,8 +38,16 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
    Pass `--niche` and `--audience` when the user gives them.
 2. **Show the cost before spending.** Run
    `.venv/bin/stick make "<topic>" [options] --dry-run` and tell the user the worst-case cost in one line.
-3. **Generate.** Run the same command without `--dry-run`. It researches, writes the script and
-   then stops at the script gate with exit code 3.
+3. **Storyline gate (story before script, user 2026-11-09).** Run the same command without `--dry-run`.
+   It researches, pitches **three storylines in three different formats** (mini_story, myth_vs_fact,
+   what_if, countdown, mystery, pov, experiment), and stops at the storyline gate with exit code 3.
+   Show the user all three exactly as printed (format, hook, pitch, conflict, stakes, twist, payoff,
+   pictures, facts). If it prints a NOTE that the topic may not carry a real story, say so plainly.
+   - Formats rotate automatically: never the last picked video's format, and topics waiting at their
+     storyline gate are offered different formats. The gate refuses a pick that repeats the last format.
+   - The USER picks: `.venv/bin/stick approve <slug> --gate storyline --story N --by user`, then
+     `.venv/bin/stick make --episode <slug>` writes the script around it (script-v6) and stops at the script gate.
+   - A fresh set of pitches: `--regenerate story` (a new paid call; mention the cost first).
 4. **Script gate.** Show the user the printed review. They may approve it or ask for changes.
    - **To make edits:** edit `episodes/<slug>/episode.json` directly. Keep the beat `id`s, and keep
      every `anchor` a word that appears in that beat's `narration`. Then run
@@ -48,7 +56,10 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
      printed at the gate with a simpler staging. They do not block; relay them so the user can decide.
    - **For a new draft:** if the user asks for a completely different script, run
      `stick make --episode <slug> --regenerate script`. This is a new paid call, so mention the cost first.
-   - **After approval:** run `.venv/bin/stick approve <slug> --by user`, then `.venv/bin/stick make --episode <slug>`.
+   - **Story check** (script-v6): the gate fails a script with no early "problem" beat, no rising stakes
+     ("stakes", or "clue"/"reason" beats), no "twist"/"reveal", or a payoff that does not answer the hook.
+   - **After the USER approves:** run `.venv/bin/stick approve <slug> --hook N --by user`, then
+     `.venv/bin/stick make --episode <slug>`.
 5. **Bases gate.** After the script is approved, `stick make --episode <slug>` prints the **base plan**:
    which painted base pose each beat uses. If a beat needs a setting or pose the library doesn't have,
    it stops at the `bases` gate (exit code 3). Then:
@@ -90,7 +101,10 @@ sheets and stop; the user picks with `stick pack starter --pick <base>=<file> ..
 
 ## Rules
 
+- **Never approve anything on the user's behalf** (user 2026-11-09): no storyline, script, hook or base,
+  not even when only the picture changed after their request. Make the change, then ASK them to approve.
 - **Never pass `--auto`.** It approves without asking. Use it only when the user explicitly asks to skip review.
+  (`--auto` never picks a storyline.)
 - **Never raise `--budget` on your own.** On exit code 4 (budget), tell the user the numbers and ask.
 - **No paid retries.** If a paid step fails, report the error and the ledger. Don't re-run it
   unless the user asks.

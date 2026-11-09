@@ -43,6 +43,9 @@
     }
   ],
   "hook_pick": 1,
+  "storylines": [],
+  "storyline_pick": 0,
+  "story_note": "",
   "subject_settings": [
     "doorway"
   ],
@@ -57,6 +60,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "The host steps through a doorway between living room and kitchen and freezes mid-stride, hand lifting to its head, looking baffled.",
           "to_camera": true,
           "cut_on": ""
@@ -64,6 +69,7 @@
         "visual": "character",
         "insert": null,
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -120,6 +126,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "stands beside the glowing doorway and points toward it",
           "to_camera": true,
           "cut_on": ""
@@ -138,6 +146,7 @@
           ]
         },
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -189,6 +198,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "stands at the doorframe and gazes up at it like a line on a map",
           "to_camera": false,
           "cut_on": ""
@@ -207,6 +218,7 @@
           ]
         },
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -260,6 +272,8 @@
         "host": {
           "where": "pop_in",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "pops in at the edge and points along the flow",
           "to_camera": true,
           "cut_on": ""
@@ -280,6 +294,7 @@
           ],
           "detail": ""
         },
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -333,6 +348,8 @@
         "host": {
           "where": "pop_in",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "pops in at the corner and taps the taller bar",
           "to_camera": true,
           "cut_on": ""
@@ -351,6 +368,7 @@
           ],
           "detail": "5 | 3"
         },
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -404,6 +422,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "stands at the first open door, then the picture cuts to the host at the next door (quick pan)",
           "to_camera": false,
           "cut_on": "returning"
@@ -428,6 +448,7 @@
           ]
         },
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -474,6 +495,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "tucks a small note into the filing drawer beside the doorway",
           "to_camera": true,
           "cut_on": ""
@@ -492,6 +515,7 @@
           ]
         },
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -556,6 +580,8 @@
         "host": {
           "where": "pop_in",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "pops in and shrugs between two identical rooms",
           "to_camera": true,
           "cut_on": ""
@@ -574,6 +600,7 @@
           ],
           "detail": ""
         },
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -627,6 +654,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "slumps beside the cluttered kitchen counter at home, looking worn out",
           "to_camera": true,
           "cut_on": ""
@@ -645,6 +674,7 @@
           ]
         },
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -704,6 +734,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "nods at the glowing doorway with a knowing smile",
           "to_camera": true,
           "cut_on": ""
@@ -722,6 +754,7 @@
           ]
         },
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -781,6 +814,8 @@
         "host": {
           "where": "scene",
           "side": "centre",
+          "size": "medium",
+          "holds": "",
           "doing": "points at the doorframe, then turns to camera looking puzzled",
           "to_camera": true,
           "cut_on": ""
@@ -788,6 +823,7 @@
         "visual": "character",
         "insert": null,
         "graphic": null,
+        "split": null,
         "reaction_anchor": "",
         "framing": "medium",
         "cast": [
@@ -873,8 +909,7 @@
     }
   ],
   "approvals": {
-    "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8",
-    "script": "78c49143fb777a1966f76f11dafe75da39e7b70b99b5f3e68cf82b504f0ad230"
+    "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8"
   },
   "meta": {
     "script": {
@@ -1010,9 +1045,16 @@
       },
       {
         "gate": "script",
-        "by": "user (2026-11-09 request: b09 kept inside the house; picture only, narration unchanged)",
+        "by": "claude, NOT the user (after the b09 picture edit the user asked for; recorded wrongly as \"user\")",
         "at": "2026-11-09T15:44:19",
         "digest": "78c49143fb77"
+      },
+      {
+        "gate": "script",
+        "action": "revoked",
+        "by": "claude",
+        "at": "2026-11-09T17:59:13",
+        "reason": "user rule 2026-11-09: never approve a script or base on the user's behalf; waiting for the user"
       }
     ]
   }

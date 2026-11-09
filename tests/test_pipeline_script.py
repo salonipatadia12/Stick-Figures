@@ -10,8 +10,8 @@ import httpx2
 
 from pipeline import script, styles
 from pipeline.cost import BudgetExceeded, Ledger
-from pipeline.models import Episode
-from pipeline_fixtures import FakeClient, research_response, script_response
+from pipeline.models import Episode, Storyline
+from pipeline_fixtures import FakeClient, research_response, script_response, storyline
 
 
 def api_error(status):
@@ -26,7 +26,8 @@ class ScriptEngine(unittest.TestCase):
         self.base = Path(self.dir.name)
         self.style = styles.load('cozy')
         self.episode = Episode(slug='salary', topic='Why your salary disappears by the 20th',
-                               niche='personal finance', target_length=45)
+                               niche='personal finance', target_length=45,
+                               storylines=[Storyline.model_validate(storyline())], storyline_pick=1)
         self.ledger = Ledger.open(self.base / 'ledger.json', 2.0)
 
     def tearDown(self):

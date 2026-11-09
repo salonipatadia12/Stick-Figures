@@ -359,3 +359,6 @@ class Runner:
                       f"target {ch['target_pct']}%)")
                 print(f"hook: {hk['words']} words, host in frame 1 {hk['host_in_frame_one']}, answered in payoff "
                       f"{hk['answered_in_payoff']} {hk['shared_words']} -> {'pass' if hk['pass_'] else 'FAIL'}")
+            lay = report.get('layout') or {}
+            if lay.get('note'):
+                print(f"QA NOTE (layout): {lay['note']}")

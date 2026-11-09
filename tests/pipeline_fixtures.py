@@ -62,6 +62,23 @@ SALARY_FACTS_TEXT = [
 ]
 
 
+def storyline(fmt='mini_story', title='The leaking jar'):
+    return dict(format=fmt, title=title, hook="Your salary didn't shrink. It leaked.",
+                pitch='Payday feels huge, then the jar is empty by the 20th. The twist: no big buy did it.',
+                conflict='The money runs out before the month does.', stakes='Each small buy drains a little more.',
+                twist='Spending rises with income: lifestyle creep.', payoff='Pay yourself first.',
+                visuals=['a jar of coins', 'a calendar close-up', 'a split screen'], fact_ids=['s1', 's2'])
+
+
+def story_pitch(formats=('mini_story', 'myth_vs_fact', 'mystery')):
+    return dict(story_supported=True, note='', storylines=[storyline(f, f'Story {k}') for k, f in enumerate(formats, 1)])
+
+
+def story_response(pitch=None, stop='end_turn'):
+    return NS(content=[NS(type='text', text=json.dumps(pitch or story_pitch()))], usage=usage(3000, 1200), stop_reason=stop,
+              stop_details=None)
+
+
 def usage(input=1000, output=500, searches=0):
     return NS(input_tokens=input, output_tokens=output, cache_read_input_tokens=0, cache_creation_input_tokens=0,
               cache_creation=None, server_tool_use=NS(web_search_requests=searches, web_fetch_requests=0))

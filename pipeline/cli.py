@@ -15,11 +15,11 @@ from pathlib import Path
 
 from . import config, store, styles
 from .cost import BudgetExceeded, PriceUnknown, usd
-from .models import Episode, Voice, episode_json_schema
+from .models import Episode, Voice, digest, episode_json_schema
 from .review import script_view
 
 EXIT_ERROR, EXIT_CHECKS, EXIT_GATE, EXIT_BUDGET = 1, 2, 3, 4
-GATES = ('script', 'bases')
+GATES = ('storyline', 'script', 'bases')
 
 
 def errors_of(issues):
@@ -121,7 +121,41 @@ def cmd_make(args):
           f'{episode.style} · {episode.aspect} · {episode.target_length}s')
     print(f'Budget ${usd(ledger.budget):.2f}, spent so far ${usd(ledger.spent()):.4f}')
 
+    needs_story = (not episode.beats and not episode.storyline_pick) or 'story' in regenerate
     needs_script = not episode.beats or bool(regenerate & {'script', 'research'})
+    if args.dry_run and needs_story:
+        from .script import Source, count_input_tokens, make_client, research_estimate, research_request
+        from .story import allowed_formats, story_estimate, story_request
+        client = make_client() if config.has_anthropic_key() else None
+        allowed, why = allowed_formats(episode.slug)
+        placeholder = [Source(id=f's{i}', claim='x' * 160, url='https://example.org/' + 'x' * 40) for i in range(1, 7)]
+        print('\nDry run: nothing paid is sent. Story before script: research, then three storylines.')
+        print(f'  formats offered: {", ".join(allowed)}' + ''.join(f'\n    ({w})' for w in why))
+        total = 0
+        for step, req, est in (('research', research_request(episode), research_estimate),
+                               ('storyline', story_request(episode, placeholder, allowed), story_estimate)):
+            n, how = count_input_tokens(client, req)
+            total += est(n)
+            print(f'  {step:9} input {n:>7,} tokens ({how}); reserve up to ${usd(est(n)):.4f}')
+        print(f'  worst case before the storyline gate: ${usd(total):.4f} of ${usd(ledger.remaining()):.4f} remaining '
+              '(research is skipped when it is already cached)')
+        return 0
+    if needs_story:                                  # a pitch is not an approval: --auto never picks a storyline
+        from .story import pitch, view
+        episode, notes = pitch(episode, base, ledger, regenerate='story' in regenerate)
+        store.save(episode, base)
+        for note in notes:
+            print('  ' + note)
+        print(f'  ledger: spent ${usd(ledger.spent()):.4f} of ${usd(ledger.budget):.2f}')
+    if not episode.beats and not episode.storyline_pick:
+        from .story import view
+        if not episode.storylines:
+            print('\nNo storylines yet: run stick make --episode ' + episode.slug)
+            return EXIT_GATE
+        print('\n' + view(episode))
+        print(f'\nWAITING AT GATE: storyline. Pick one:\n  stick approve {episode.slug} --gate storyline --story N --by <you>\n'
+              f'  stick make --episode {episode.slug}')
+        return EXIT_GATE
     if args.dry_run:
         from .script import plan
         client = None
@@ -395,6 +429,27 @@ def cmd_approve(args):
         store.save(episode, base)
         print(f'Approved bases for {episode.slug}. Build them with scripts/motion_test/build_bases.py, then render.')
         return 0
+    if args.gate == 'storyline':
+        from .story import last_picked_format
+        n = args.story or 0
+        if not episode.storylines or not 1 <= n <= len(episode.storylines):
+            print(f'{episode.slug}: pick a storyline with --story N (1-{len(episode.storylines)}).')
+            return EXIT_GATE
+        fmt = episode.storylines[n - 1].format
+        last, last_slug = last_picked_format(episode.slug)
+        if fmt == last:
+            print(f'Storyline {n} is a {fmt}, the same format as the last video ({last_slug}); never the same format twice '
+                  'in a row. Pick another, or re-pitch with stick make --episode ' + episode.slug + ' --regenerate story.')
+            return EXIT_GATE
+        if episode.beats:
+            print(f'{episode.slug} already has a script; a new storyline needs --regenerate script after picking.')
+        episode.storyline_pick = n
+        episode.approvals['storyline'] = digest([s.model_dump() for s in episode.storylines] + [n])
+        episode.meta.setdefault('approval_log', []).append(dict(gate='storyline', by=args.by, at=time.strftime('%Y-%m-%dT%H:%M:%S'),
+                                                               pick=n, format=fmt, digest=episode.approvals['storyline'][:12]))
+        store.save(episode, base)
+        print(f'Storyline {n} [{fmt}] "{episode.storylines[n - 1].title}" picked for {episode.slug}. Next: stick make --episode {episode.slug}')
+        return 0
     if args.gate == 'script' and episode.hook_options:
         if not args.hook:
             print(f'{episode.slug} has {len(episode.hook_options)} hook options: approve with --hook N (1-{len(episode.hook_options)}).')
@@ -456,7 +511,7 @@ def build_parser():
     m.add_argument('--approve', help='comma-separated gates to stop at (default "script"; "none" to skip)')
     m.add_argument('--auto', action='store_true', help='skip all gates (still refuses scripts that fail checks)')
     m.add_argument('--no-research', action='store_true', help='skip web research; the script may then use no statistics')
-    m.add_argument('--regenerate', action='append', choices=['research', 'script'],
+    m.add_argument('--regenerate', action='append', choices=['research', 'story', 'script'],
                    help='ignore the cached result for this step (a new paid call)')
     m.add_argument('--dry-run', action='store_true', help='show the cost plan without sending paid requests')
     m.set_defaults(func=cmd_make)
@@ -473,6 +528,7 @@ def build_parser():
     a.add_argument('--gate', default='script', choices=GATES)
     a.add_argument('--by', default='cli', help='who approved (recorded in the approval log)')
     a.add_argument('--hook', type=int, help='script gate, host format: the hook option to use (1-3)')
+    a.add_argument('--story', type=int, help='storyline gate: the storyline to write (1-3)')
     a.add_argument('--pick', action='append', help='bases gate: <wanted base>=<candidate png>; bases may be picked over several calls')
     a.add_argument('--reject', action='append', help='bases gate: <wanted base>[=reason]; its candidates are rejected and the next '
                                                      '`stick bases --candidates` renders new ones')
