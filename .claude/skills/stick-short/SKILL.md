@@ -72,9 +72,13 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
 6. **Props.** `.venv/bin/stick props <slug> --generate` makes any script prop no library has (local FLUX,
    cut-out, QA). It prompts only when a prop fails QA on both seeds (exit 3 with a sheet under `renders/props/`):
    show the sheet and ask how the prop should look, or which stand-in to use.
+6b. **Inserts.** `.venv/bin/stick inserts <slug> --generate` paints the scenes the script's insert beats need
+   (local FLUX, about 80 s per candidate, two seeds, QA). It asks only when a scene fails on both seeds (exit 3 with
+   a sheet under `renders/inserts/`). Graphics are drawn in code and need no step.
 7. **Render.** `.venv/bin/python scripts/motion_test/episode_compose.py <slug> --voice am_michael` composes the
    beats from the script's staging fields and renders the Short to `renders/sample/<slug>/`. Report the file paths
-   at the very top of the reply, then the library percentage from `qa.json` (`library.library_pct`, target 80 %).
+   at the very top of the reply, then the library percentage (`library.library_pct`, target 80 %) and the
+   subject-on-screen percentage (`subject.subject_pct`, target 70 %) from `qa.json`.
 8. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
 
 **Starter base pack.** `.venv/bin/stick pack starter --candidates` renders candidates for eight common settings

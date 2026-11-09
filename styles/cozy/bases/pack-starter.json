@@ -204,7 +204,12 @@
   "friend-standing-gym": "renders/bases/flux/pack-gym-friend-s812.png",
   "together-gym": "renders/bases/flux/pack-gym-together-s644.png",
   "lead-driving-car": "renders/bases/flux/pack-car-lead-s461.png",
-  "together-car": "renders/bases/flux/pack-car-together-s621.png"
+  "together-car": "renders/bases/flux/pack-car-together-s621.png",
+  "lead-seated-desk-office": "renders/bases/flux/pack-office-lead-r2-s714.png",
+  "friend-seated-desk-office": "renders/bases/flux/pack-office-friend-r2-s940.png",
+  "together-office": "renders/bases/flux/pack-office-together-r2-s532.png",
+  "lead-seated-desk-classroom": "renders/bases/flux/pack-classroom-lead-r2-s573.png",
+  "friend-passenger-car": "renders/bases/flux/pack-car-friend-r2-s500.png"
  },
  "sheets": {
   "office": "renders/bases/candidates/pack-starter-office-candidates-r2.jpg",

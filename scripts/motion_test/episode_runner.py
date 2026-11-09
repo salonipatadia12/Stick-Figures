@@ -45,6 +45,7 @@ def text_summary(drawn: list) -> dict:
         far = max(boxed, key=lambda d: (d['box'][2] - 1080) + (d['box'][3] - 1440))      # the one nearest the right/bottom limits
         out['box'] = [left, min(d['box'][1] for d in boxed), far['box'][2], max(d['box'][3] for d in boxed)]
         out['box_label'] = far['label']
+        out['items'] = [d['box'] + [d['label']] for d in boxed]          # each text's own box, for the overlap checks
     return out
 LEAD_IN, GAP, TAIL = 0.35, 0.25, 1.0
 RIG_CODE = ['pipeline/rig/puppet.py', 'pipeline/rig/hands.py', 'pipeline/rig/props.py', 'pipeline/rig/actions.py',
@@ -91,8 +92,35 @@ class Runner:
         return dict(beats=len(rep), library_beats=lib, library_pct=round(100 * lib / len(rep)) if rep else 0, per_beat=rep)
 
     # ---- narration and the timeline --------------------------------------------------------------
+    def voice_stale(self, voice: str, beat: str) -> bool:
+        """True when the clip on disk was voiced from different words than the script has now. The clip is cached
+        by its text: a sidecar .text holds the narration it was made from (older clips: their words.json)."""
+        path = self.voice_dir / f'{voice}-{beat}.wav'
+        if not path.exists():
+            return False
+        narration = next(b['narration'] for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == beat)
+        side = path.with_suffix('.text')
+        if side.exists():
+            return side.read_text() != narration
+        words_file = self.voice_dir / f'{voice}-{beat}.words.json'
+        norm = lambda txt: [''.join(c for c in w.lower() if c.isalnum()) for w in txt.split()]
+        heard = ' '.join(w.get('word', w.get('w', '')) if isinstance(w, dict) else str(w[0]) for w in json.loads(words_file.read_text())) \
+            if words_file.exists() else ''
+        same = [w for w in norm(heard) if w] == [w for w in norm(narration) if w]
+        if same:
+            side.write_text(narration)
+        return not same
+
     def voice_clip(self, voice: str, beat: str):
         path = self.voice_dir / f'{voice}-{beat}.wav'
+        if self.voice_stale(voice, beat):                 # the line changed: archive the old take (never delete), voice again
+            arch = self.voice_dir / 'archive' / time.strftime('%Y%m%d-%H%M%S')
+            arch.mkdir(parents=True, exist_ok=True)
+            for f in self.voice_dir.glob(f'{voice}-{beat}.*'):
+                f.rename(arch / f.name)
+            for f in (self.out / 'audio').glob(f'{voice}-{beat}-48k.wav'):
+                f.rename(arch / f.name)
+            print(f'{beat}: narration changed; old take archived in {arch.relative_to(ROOT)}', flush=True)
         if not path.exists():
             subprocess.run([str(ROOT / '.venvs/torch/bin/python'), str(ROOT / 'scripts/motion_test/voice.py'), self.slug,
                             str(self.voice_dir), voice, beat], check=True)
@@ -100,6 +128,9 @@ class Runner:
             sr = f.getframerate()
             a = np.frombuffer(f.readframes(f.getnframes()), np.int16).astype(np.float32) / 32768
         words = json.loads((self.voice_dir / f'{voice}-{beat}.words.json').read_text())
+        side = path.with_suffix('.text')
+        if not side.exists():
+            side.write_text(next(b['narration'] for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == beat))
         return a, sr, words
 
     @staticmethod
@@ -182,8 +213,9 @@ class Runner:
             if line:
                 boxes.append(dict(t=round(t, 3), **C.draw(frame, line, t)))
             drawn = O.take_text_log()
+            chars = [b['box'] for b in O.take_box_log() if b['kind'] == 'character']
             if drawn:
-                texts.append(dict(t=round(t, 3), **text_summary(drawn)))
+                texts.append(dict(t=round(t, 3), **text_summary(drawn), chars=chars))
             proc.stdin.write(frame.convert('RGB').tobytes())
         proc.stdin.close()
         if proc.wait():
@@ -291,3 +323,6 @@ class Runner:
             print(json.dumps(report['summary'], indent=1))
             lib = report['library']
             print(f"library: {lib['library_beats']}/{lib['beats']} beats from the libraries alone = {lib['library_pct']}% (target {lib['target_pct']}%)")
+            sub = report['subject']
+            print(f"subject on screen: {sub['subject_beats']}/{sub['beats']} beats = {sub['subject_pct']}% "
+                  f"({sub['subject_time_pct']}% of the time; target {sub['target_pct']}%)")

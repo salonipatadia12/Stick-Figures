@@ -139,6 +139,11 @@ def plan(episode, lib: dict | None = None) -> list:
     lib = library() if lib is None else lib
     out = []
     for b in episode.beats:
+        visual = getattr(b.shot, 'visual', 'character')
+        if visual != 'character' and not b.shot.cast:     # a painted insert or a drawn graphic: no base pose
+            out.append(dict(beat=b.id, setting='-', pose=visual, view='-', cast=[], poses={}, source='visual',
+                            base=f'({visual})', wanted=f'({visual})'))
+            continue
         forced = next((l[5:] for l in b.shot.layers if l.startswith('base:')), None)
         d = describe(b)
         base = forced or match(d, lib)

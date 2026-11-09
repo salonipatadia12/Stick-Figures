@@ -524,5 +524,120 @@
   "by": "user",
   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
   "inserts": true
+ },
+ "lead-seated-desk-office": {
+  "status": "approved",
+  "setting": "office",
+  "pose": "seated-desk",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-office-lead-r2-s714.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-seated-desk-office": {
+  "status": "approved",
+  "setting": "office",
+  "pose": "seated-desk",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-office-friend-r2-s940.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "together-office": {
+  "status": "approved",
+  "setting": "office",
+  "pose": "seated-desk",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-office-together-r2-s532.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "lead-seated-desk-classroom": {
+  "status": "approved",
+  "setting": "classroom",
+  "pose": "seated-desk",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/pack-classroom-lead-r2-s573.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "friend-passenger-car": {
+  "status": "approved",
+  "setting": "car",
+  "pose": "passenger",
+  "view": "eye-level",
+  "cast": [
+   "friend"
+  ],
+  "source": "renders/bases/flux/pack-car-friend-r2-s500.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "pack": "starter",
+  "inserts": true
+ },
+ "lead-standing-doorway": {
+  "status": "built",
+  "setting": "doorway",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-standing-doorway-pe72b-s426.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "plates": {
+   "arms": "plate-lead-standing-doorway-arms-s56.png",
+   "empty": "plate-lead-standing-doorway-empty-s57.png"
+  },
+  "debug": "renders/bases/debug-lead-standing-doorway.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
+ },
+ "friend-lead-standing-living-room": {
+  "status": "built",
+  "setting": "living-room",
+  "pose": "standing",
+  "view": "eye-level",
+  "cast": [
+   "friend",
+   "lead"
+  ],
+  "source": "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s902.png",
+  "approved": "2026-11-08",
+  "by": "user",
+  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+  "plates": {
+   "arms": "plate-friend-lead-standing-living-room-arms-s59.png",
+   "empty": "plate-friend-lead-standing-living-room-empty-s60.png"
+  },
+  "debug": "renders/bases/debug-friend-lead-standing-living-room.jpg",
+  "spec": "derived (scripts/motion_test/spec_from_plates.py)"
  }
 }

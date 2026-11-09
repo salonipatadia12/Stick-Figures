@@ -251,6 +251,20 @@ def cmd_props(args):
     return 0
 
 
+def cmd_inserts(args):
+    """List the insert scenes no library has; with --generate, paint them (local FLUX), check them, ask only on failure."""
+    from . import inserts
+    episode, _ = store.load(args.episode)
+    result = inserts.run(episode, generate=args.generate)
+    print(inserts.view(result))
+    if result['failed']:
+        print(f'\nWAITING: {len(result["failed"])} scene(s) failed QA on both seeds. Tell me how each should look.')
+        return EXIT_GATE
+    if result['needed'] and not args.generate:
+        print('\nRun with --generate to paint them (local FLUX, about 80 s per candidate).')
+    return 0
+
+
 def cmd_pack(args):
     """The starter base pack: render candidates per setting and lay out one sheet per setting; record the user's
     picks and rejections."""
@@ -467,6 +481,11 @@ def build_parser():
     pr.add_argument('episode')
     pr.add_argument('--generate', action='store_true', help='render, cut and check the missing props (local FLUX)')
     pr.set_defaults(func=cmd_props)
+
+    ins = sub.add_parser('inserts', help='Paint the explainer insert scenes an episode needs (local FLUX, QA)')
+    ins.add_argument('episode')
+    ins.add_argument('--generate', action='store_true')
+    ins.set_defaults(func=cmd_inserts)
 
     pk = sub.add_parser('pack', help='The starter base pack: candidates per setting, one sheet each, then picks')
     pk.add_argument('pack', nargs='?', default='starter')

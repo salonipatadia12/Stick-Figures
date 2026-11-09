@@ -1,0 +1,89 @@
+{
+ "name": "lead-standing-doorway",
+ "source": "renders/bases/flux/cand-standing-doorway-pe72b-s426.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-lead-standing-doorway-arms-s56.png",
+  "empty": "plate-lead-standing-doorway-empty-s57.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    462.7,
+    547.0
+   ],
+   "D": 319.9,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     372.0,
+     730
+    ],
+    "r": [
+     504.0,
+     730
+    ]
+   },
+   "rest": {
+    "l": [
+     309,
+     1001
+    ],
+    "r": [
+     564,
+     1001
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 719.0,
+    "stroke": [
+     9,
+     4
+    ],
+    "left": [
+     0.0,
+     -0.4202,
+     373.3181
+    ],
+    "right": [
+     0.0,
+     0.4056,
+     501.4982
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     353,
+     703
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     176.7,
+     177.0
+    ],
+    "size": [
+     314.6,
+     325.1
+    ],
+    "angle": 80.8
+   }
+  }
+ ],
+ "places": {}
+}

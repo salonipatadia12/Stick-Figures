@@ -1634,5 +1634,71 @@
       62
     ],
     "prompt": "Edit this illustration. Remove both seated characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-standing-doorway-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-standing-doorway-pe72b-s426.png"
+    ],
+    "seeds": [
+      55,
+      56
+    ],
+    "prompt": "Edit this illustration. Delete the standing character's navy arms and both navy mitten hands entirely. Their torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the scene behind them where the arms were. Keep their round head and face, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-lead-standing-doorway-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-standing-doorway-pe72b-s426.png"
+    ],
+    "seeds": [
+      57
+    ],
+    "prompt": "Edit this illustration. Remove the standing character completely (head, torso, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-lead-standing-living-room-arms": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-together-standing-living-room-p2f7f-r2-s902.png"
+    ],
+    "seeds": [
+      58,
+      59
+    ],
+    "prompt": "Edit this illustration. Delete both standing characters' navy arms and navy mitten hands entirely. Each character's torso becomes one smooth white bulb shape with a single dark navy outline along each side: no arms, no sleeves, no shoulders sticking out and no lines inside the white torso. Show the scene behind them where the arms were. Keep their round heads and faces, the teal scarf, the navy legs and feet, the furniture and the scene exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "plate-friend-lead-standing-living-room-empty": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-together-standing-living-room-p2f7f-r2-s902.png"
+    ],
+    "seeds": [
+      60
+    ],
+    "prompt": "Edit this illustration. Remove both standing characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
   }
 }

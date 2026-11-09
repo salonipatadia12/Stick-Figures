@@ -11,9 +11,10 @@ def staging(cast=('lead',), setting='cafe', pose='seated-at-table', actions=(), 
 
 
 def beat(role, narration, visual, motion, *, text='', cast=('lead',), framing='medium', poses=(), sfx=(),
-         sources=(), example=False, transition='cut', stage=None):
+         sources=(), example=False, transition='cut', stage=None, kind='character', insert=None, graphic=None, reaction=''):
     return dict(role=role, narration=narration, on_screen_text=text, visual_intent=visual,
-                shot=dict(framing=framing, cast=list(cast), image_prompt=f'Painted frame: {visual}',
+                shot=dict(visual=kind, insert=insert, graphic=graphic, reaction_anchor=reaction,
+                          framing=framing, cast=list(cast), image_prompt=f'Painted frame: {visual}',
                           pose_variants=list(poses), motion=[dict(recipe=r, anchor=a, detail=d) for r, a, d in motion],
                           transition=transition, staging=stage or staging(cast)),
                 sfx=[dict(name=n, anchor=a) for n, a in sfx], source_ids=list(sources), illustrative_numbers=example)

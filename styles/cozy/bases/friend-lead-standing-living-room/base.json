@@ -1,0 +1,159 @@
+{
+ "name": "friend-lead-standing-living-room",
+ "source": "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s902.png",
+ "size": [
+  941,
+  1672
+ ],
+ "flux": {
+  "arms": "plate-friend-lead-standing-living-room-arms-s59.png",
+  "empty": "plate-friend-lead-standing-living-room-empty-s60.png"
+ },
+ "light": "right",
+ "wall": null,
+ "table": null,
+ "cover": null,
+ "layers": {},
+ "cups": [],
+ "props": {},
+ "seats": [
+  {
+   "name": "lead",
+   "head": [
+    265.7,
+    622.0
+   ],
+   "D": 302.1,
+   "facing": 1,
+   "accessory": "",
+   "shoulders": {
+    "l": [
+     221.0,
+     795
+    ],
+    "r": [
+     314.0,
+     795
+    ]
+   },
+   "rest": {
+    "l": [
+     155,
+     1050
+    ],
+    "r": [
+     396,
+     1050
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "join_y": 787.0,
+    "stroke": [
+     4,
+     4
+    ],
+    "left": [
+     -0.0006,
+     -0.2375,
+     220.0804
+    ],
+    "right": [
+     0.0,
+     0.9936,
+     309.2389
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-lead.png",
+    "xy": [
+     204,
+     775
+    ]
+   },
+   "head_art": {
+    "sprite": "head-lead.png",
+    "centre": [
+     166.7,
+     167.0
+    ],
+    "size": [
+     299.5,
+     304.7
+    ],
+    "angle": 123.3
+   }
+  },
+  {
+   "name": "friend",
+   "head": [
+    649.5,
+    610.7
+   ],
+   "D": 284.4,
+   "facing": 1,
+   "accessory": "scarf",
+   "shoulders": {
+    "l": [
+     583.5,
+     763
+    ],
+    "r": [
+     751.0,
+     763
+    ]
+   },
+   "rest": {
+    "l": [
+     566,
+     1014
+    ],
+    "r": [
+     793,
+     1014
+    ]
+   },
+   "hip": null,
+   "neck": {
+    "scarf": [
+     [
+      599,
+      865
+     ],
+     [
+      611,
+      727
+     ],
+     [
+      735,
+      727
+     ],
+     [
+      747,
+      865
+     ]
+    ]
+   },
+   "occluder": {
+    "sprite": "occluder-friend.png",
+    "xy": [
+     578,
+     720
+    ]
+   },
+   "head_art": {
+    "sprite": "head-friend.png",
+    "centre": [
+     162.5,
+     162.7
+    ],
+    "size": [
+     271.9,
+     297.0
+    ],
+    "angle": 84.0
+   }
+  }
+ ],
+ "places": {}
+}

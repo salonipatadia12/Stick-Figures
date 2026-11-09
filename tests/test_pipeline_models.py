@@ -81,8 +81,10 @@ class EpisodeRules(unittest.TestCase):
     def test_structure_hook_payoff_ending_and_beat_count(self):
         ep = mutate(lambda d: d['beats'][6].update(role='reveal'))
         self.assertTrue(any('no payoff' in e for e in errors(ep)))
-        ep = mutate(lambda d: d['beats'][-1].update(role='payoff'))
+        ep = mutate(lambda d: d['beats'][-1].update(role='reveal'))
         self.assertTrue(any('last beat must be the ending' in e for e in errors(ep)))
+        ep = mutate(lambda d: d['beats'][-1].update(role='payoff'))     # a payoff may close the video: a warning only
+        self.assertFalse(any('last beat must be the ending' in e for e in errors(ep)))
         ep = mutate(lambda d: d.update(beats=d['beats'][:2] + d['beats'][6:]))
         self.assertTrue(any('needs 7-14' in e for e in errors(ep)))
         self.assertEqual(beat_range(45), (7, 14))

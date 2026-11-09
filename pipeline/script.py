@@ -20,7 +20,7 @@ from . import config
 from .cost import token_cost, usage_dict
 from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest
 
-PROMPT_VERSION = 'script-v3'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props)
+PROMPT_VERSION = 'script-v4'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic)
 RESEARCH_MAX_SEARCHES = 4
 RESEARCH_MAX_TOKENS = 4096
 # Search results are billed as input tokens and can't be counted before the call. This is the
@@ -85,6 +85,17 @@ Rules:
    fight, dance; crowds; animals. A change of posture (lie_down, sit_up, stand_up, walk) is staged
    as a cut to another beat or base, so put it on the first word of a new beat. Stage such moments
    through the moment before or after, a prop, the far background, or a diagram.
+12. SHOW THE SUBJECT. Viewers must SEE the idea, not only watch two characters talk about it. Each
+   beat sets shot.visual: "character" (the characters act it out), "insert" (a full-frame painted
+   scene of the thing, place or process with NO characters, e.g. a volcano erupting, a frosted farm,
+   a street at sunset; fill shot.insert with a kebab-case key, the scene, and 0-4 effects such as
+   ash/snow/dust/embers/haze particles, a colour grade "blue -> red", sun_path "high -> low", a
+   crossfade to a changed version of the same place, push/pan, labels and arrows, each on a word)
+   or "graphic" (a drawn diagram: flow A -> B -> C, bounce, scatter, two_paths, waves, bars,
+   thermometer, cards, layers; fill shot.graphic). On explainer topics make at least half of the beats insert or graphic.
+   After an insert the characters may react: set reaction_anchor to a word and the picture cuts to
+   the cast (shot.cast and staging describe the reaction). Numbers drawn on screen (labels, split
+   labels, graphic items) must be numbers this beat says.
 
 Visual style of this channel:
 """

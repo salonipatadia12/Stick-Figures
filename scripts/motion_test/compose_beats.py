@@ -97,6 +97,71 @@ def parse_counter(detail: str):
     return a, b, (pre.group(1) if pre else ''), ('%' if '%' in detail else '')
 
 
+def word_time(T: dict, anchor: str, default: float) -> float:
+    if not anchor:
+        return default
+    first = ''.join(c for c in anchor.split()[0].lower() if c.isalnum() or c in "'$,").strip(',')
+    return T.get(first, default)
+
+
+def text_items(spec: dict, tw) -> list:
+    """(kind, time, payload) for the on-screen text a beat's motion recipes ask for."""
+    out = []
+    for m in spec['shot'].get('motion', []):
+        r, anchor, detail = m['recipe'], m.get('anchor', ''), m.get('detail', '')
+        at = tw(anchor)
+        if r == 'text_slam' and (spec.get('on_screen_text') or detail):
+            out.append(('slam', at, spec.get('on_screen_text') or detail))
+        elif r == 'number_counter' and parse_counter(detail):
+            out.append(('counter', at, parse_counter(detail)))
+        elif r == 'checklist_tick' and detail:
+            out.append(('checklist', at, [s.strip() for s in detail.split('|') if s.strip()]))
+        elif r == 'split_compare' and '|' in detail:
+            out.append(('split', at, [s.strip() for s in detail.split('|', 1)]))
+        elif r == 'underline_draw':
+            out.append((r, at, detail))
+    return out
+
+
+def draw_text_items(frame, t, items, centre, spec, t_min=None):
+    """The text slot shows one item at a time: each one stays until the next one arrives (no two texts ever stack
+    on each other, user 2026-11-08). Items before t_min (the first half of a split beat) are not repeated."""
+    items = sorted((it for it in items if t_min is None or it[1] >= t_min - 0.05), key=lambda it: it[1])
+    for i, (kind, at, payload) in enumerate(items):
+        until = items[i + 1][1] - 0.2 if i + 1 < len(items) else None
+        if t < at or (until is not None and t > until + 0.25):
+            continue
+        if kind == 'slam':
+            words = payload.split()
+            if len(words) > 3:
+                im = O.stacked((' '.join(words[:len(words) // 2]), ' '.join(words[len(words) // 2:])), (88, 78))
+            else:
+                im = O.text_layer(payload, 96 if len(payload) <= 12 else 80)
+            O.slam(frame, im, t, at, centre=centre, until=until)
+        elif kind == 'counter':
+            a, b, pre, suf = payload
+            if until is None or t <= until:
+                counter(frame, t, at, a, b, centre=centre, prefix=pre, suffix=suf)
+        elif kind == 'checklist':
+            if until is None or t <= until:
+                rows = [(item, '', at + 0.5 * k) for k, item in enumerate(payload)]
+                O.checklist(frame, t, rows, at - 0.1, centre=centre)
+        elif kind == 'split':
+            if until is None or t <= until:
+                O.split_compare(frame, t, payload[0], payload[1], at, at + 0.8, centre=centre)
+        elif kind == 'underline_draw' and spec.get('on_screen_text') and t >= at:
+            q = ease((t - at) / 0.35)
+            O._ink(O.ImageDraw.Draw(frame), [(centre[0] - 300, centre[1] + 70), (centre[0] - 300 + 600 * q, centre[1] + 74)], 10)
+
+
+def boxes_overlap(a, b) -> float:
+    """Intersection area over the area of a."""
+    x0, y0, x1, y1 = max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3])
+    if x1 <= x0 or y1 <= y0:
+        return 0.0
+    return (x1 - x0) * (y1 - y0) / max(1.0, (a[2] - a[0]) * (a[3] - a[1]))
+
+
 class Composed(Beat):
     """A beat built from the script. Class attributes are set per beat by `make_class`."""
     spec: dict = {}          # beat dict from episode.json
@@ -369,6 +434,10 @@ class Composed(Beat):
     def cups_away(self, t):
         return {prop for kind, prop in self.away(t) if kind == 'cup'}
 
+    def standing(self) -> bool:
+        p = self.lead()
+        return p is not None and not p.s.get('hip') and 'table' not in self.base.layers
+
     def camera(self, t):
         p = self.lead()
         framing = self.spec['shot'].get('framing', 'medium')
@@ -379,6 +448,9 @@ class Composed(Beat):
             heads = [self.p[n].s['head'] for n in self.cast]
             cx = sum(h[0] for h in heads) / len(heads)
             cy = sum(h[1] for h in heads) / len(heads) + (0.35 if framing == 'close' else 0.9) * p.D
+            if self.standing():                          # never a body-filling close-up of a standing character
+                w = max(w, 860)
+                cy = sum(h[1] for h in heads) / len(heads) + 0.85 * p.D
             if len(self.cast) == 2:
                 w = max(w, 900)
         u = (t - self.t0) / max(0.1, self.t1 - self.t0)
@@ -444,33 +516,155 @@ class Composed(Beat):
                 self.place(frame, sprite, cam, p.world((bx, by)), width * p.D, angle=240 * u)
         return draw
 
+    def char_boxes(self, t, cam=None) -> list:
+        """Each character's head and body on screen (frame px): text must never sit on these."""
+        cam = cam or self.camera(t)
+        out = []
+        for n in self.cast:
+            p = self.p[n]
+            hx, hy = p.s['head']
+            rest_y = max(p.s['rest'][k][1] for k in ('l', 'r'))
+            bottom = (p.s['hip'][1] + 0.15 * p.D) if p.s.get('hip') else (hy + 3.3 * p.D if self.standing() else rest_y + 0.25 * p.D)
+            a = self.to_screen(cam, (hx - 0.62 * p.D, hy - 0.56 * p.D))
+            b = self.to_screen(cam, (hx + 0.62 * p.D, bottom))
+            out.append((a[0], a[1], b[0], b[1]))
+        return out
+
+    def text_centre(self):
+        """The text slot for this shot: the first of top, upper-middle, low that no character's head or body covers."""
+        if getattr(self, '_centre', None) is None:
+            mid = (self.t0 + self.t1) / 2
+            boxes = self.char_boxes(mid)
+            longest = max((len(str(p)) for _, _, p in self.text_items), default=12)
+            half = min(470, 28 * longest + 60)
+            self._centre = TEXT_TOP
+            for c in (TEXT_TOP, (540, 420), TEXT_LOW):
+                tb = (c[0] - half, c[1] - 62, c[0] + half, c[1] + 62)
+                if all(boxes_overlap(tb, b) < 0.04 for b in boxes):
+                    self._centre = c
+                    break
+        return self._centre
+
+    def frame(self, t):
+        frame = super().frame(t)
+        cam = self.camera(t)
+        for box in self.char_boxes(t, cam):
+            O.note_box('character', box)
+        return frame
+
     def overlay(self, frame, t):
-        framing = self.spec['shot'].get('framing', 'medium')
-        centre = TEXT_LOW if framing == 'close' else TEXT_TOP
+        centre = self.text_centre()
+        draw_text_items(frame, t, [it for it in self.text_items if it[0] != 'arrow_draw'], centre, self.spec,
+                        t_min=self.t0 if self.after_cut else None)
         for kind, at, payload in self.text_items:
-            if kind == 'slam':
-                words = payload.split()
-                if len(words) > 3:
-                    im = O.stacked((' '.join(words[:len(words) // 2]), ' '.join(words[len(words) // 2:])), (88, 78))
-                else:
-                    im = O.text_layer(payload, 96 if len(payload) <= 12 else 80)
-                O.slam(frame, im, t, at, centre=centre)
-            elif kind == 'counter':
-                a, b, pre, suf = payload
-                counter(frame, t, at, a, b, centre=centre, prefix=pre, suffix=suf)
-            elif kind == 'checklist':
-                rows = [(item, '', at + 0.5 * k) for k, item in enumerate(payload)]
-                O.checklist(frame, t, rows, at - 0.1, centre=centre)
-            elif kind == 'split':
-                O.split_compare(frame, t, payload[0], payload[1], at, at + 0.8, centre=centre)
-            elif kind == 'arrow_draw' and self.cast:
+            if kind == 'arrow_draw' and self.cast and (not self.after_cut or at >= self.t0):
                 cam = self.camera(t)
                 head = self.to_screen(cam, self.lead().s['head'])
                 O.arrow(frame, t, at, (centre[0], centre[1] + 80), (head[0], head[1] - 0.6 * self.lead().D * cam[2]))
-            elif kind == 'underline_draw' and self.spec.get('on_screen_text'):
-                if t >= at:
-                    q = ease((t - at) / 0.35)
-                    O._ink(O.ImageDraw.Draw(frame), [(centre[0] - 300, centre[1] + 70), (centre[0] - 300 + 600 * q, centre[1] + 74)], 10)
+
+
+class VisualShot:
+    """A beat (or the first part of one) that SHOWS the subject: a painted insert or a drawn graphic, full frame, no
+    characters. Same interface as a Beat for the runner: events, notes and frame(t)."""
+    spec: dict = {}
+    visual = 'insert'
+
+    def __init__(self, T, t0, t1, load_art=True):
+        self.T, self.t0, self.t1 = T, t0, t1
+        self.events, self.notes = [], []
+        self.text_items = text_items(self.spec, self.tw)
+        for snd in self.spec.get('sfx', []):
+            at = self.tw(snd['anchor'])
+            if at <= t1:
+                self.events.append((at, snd['name'], 0.6))
+        for kind, at, _ in self.text_items:
+            self.events.append((at, 'pop' if kind != 'counter' else 'ding', 0.5))
+        self.setup(load_art)
+
+    def tw(self, anchor, default=None):
+        return word_time(self.T, anchor, self.t0 + 0.4 if default is None else default)
+
+    def frame(self, t):
+        frame = self.draw(t)
+        draw_text_items(frame, t, self.text_items, TEXT_TOP, self.spec)
+        return frame
+
+
+class InsertShot(VisualShot):
+    visual = 'insert'
+
+    def setup(self, load_art):
+        from pipeline import inserts as INS
+        from pipeline.rig.inserts import Effect, InsertScene
+        ins = self.spec['shot']['insert']
+        effects = []
+        for k, e in enumerate(ins.get('effects', [])):
+            at = self.tw(e['anchor']) if e.get('anchor') else None
+            effects.append(Effect(e['kind'], at, e.get('at', ''), e.get('detail', ''), seed=11 + k))
+            if e['kind'] == 'shake' and at is not None:
+                self.events.append((at, 'thud', 0.6))
+            elif e['kind'] in ('label', 'arrow') and at is not None:
+                self.events.append((at, 'pop', 0.45))
+            elif e['kind'] == 'crossfade' and at is not None:
+                self.events.append((at, 'whoosh', 0.4))
+        for m in self.spec['shot'].get('motion', []):               # camera recipes act on the painting
+            r, at = m['recipe'], self.tw(m.get('anchor', ''))
+            if r == 'punch_in':
+                effects.append(Effect('push', at))
+                self.events.append((at, 'whoosh', 0.5))
+            elif r == 'push_in':
+                effects.append(Effect('push', None))
+            elif r in ('pan_left', 'pan_right'):
+                effects.append(Effect('pan', None, detail=r.split('_')[1]))
+            elif r == 'impact_shake':
+                effects.append(Effect('shake', at))
+                self.events.append((at, 'thud', 0.6))
+        self.key = ins['key']
+        if not load_art:
+            return
+        lib = INS.library()
+        if self.key not in lib:
+            raise RuntimeError(f'{self.spec["id"]}: insert scene "{self.key}" is not in the library; run stick inserts --generate')
+        scene = Image.open(ROOT / lib[self.key]['file'])
+        variants = {}
+        for e in ins.get('effects', []):
+            if e['kind'] == 'crossfade' and e.get('detail'):
+                vk = INS.variant_key(self.key, e['detail'])
+                if vk in lib:
+                    variants[e['detail']] = Image.open(ROOT / lib[vk]['file'])
+                else:
+                    self.notes.append(f'crossfade "{e["detail"]}" has no painted variant; it is skipped')
+        self.scene = InsertScene(scene, effects, self.t0, self.t1, variants, seed=sum(map(ord, self.spec['id'])))
+
+    def draw(self, t):
+        return self.scene.frame(t)
+
+
+class GraphicShot(VisualShot):
+    visual = 'graphic'
+
+    def setup(self, load_art):
+        from pipeline.rig.graphics import Graphic
+        g = self.spec['shot']['graphic']
+        items = g.get('items', [])
+        anchors = g.get('anchors') or []
+        span = max(0.6, self.t1 - self.t0)
+        times = []
+        for k, item in enumerate(items):
+            a = anchors[k] if k < len(anchors) else ''
+            default = self.t0 + 0.35 + k * (span * 0.6 / max(1, len(items)))
+            times.append(self.tw(a, default) if a else default)
+        for at in times:
+            self.events.append((at, 'pop', 0.45))
+        self.graphic = Graphic(g['kind'], items, times, g.get('detail', ''), self.t0, self.t1, seed=sum(map(ord, self.spec['id'])))
+
+    def draw(self, t):
+        return self.graphic.frame(t)
+
+
+def make_visual_class(spec: dict):
+    cls = InsertShot if spec['shot'].get('visual') == 'insert' else GraphicShot
+    return type(f'{cls.__name__}_{spec["id"]}', (cls,), dict(spec=spec))
 
 
 def make_class(spec: dict, row: dict, base_name: str, after_cut: bool = False):
@@ -491,12 +685,36 @@ def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = Non
     lib = BASES.library() if lib is None else lib
     overrides = overrides or {}
     beats, report, splits = {}, {}, {}
+    visuals = {}                                         # beat id -> 'insert' | 'graphic' (shown full frame)
     for b in episode.beats:
         row = rows[b.id]
         spec = specs[b.id]
         if b.id in overrides:
             beats[b.id] = overrides[b.id]
             report[b.id] = dict(library=[], hand_written=[overrides[b.id].__name__], props=[], notes=['hand-written override'])
+            continue
+        visual = b.shot.visual
+        if visual in ('insert', 'graphic'):
+            visuals[b.id] = visual
+            used = [m.recipe for m in b.shot.motion]
+            what = f'insert {b.shot.insert.key}' if visual == 'insert' else f'graphic {b.shot.graphic.kind}'
+            effects = [e.kind for e in b.shot.insert.effects] if visual == 'insert' else []
+            notes = []
+            base = row['base'] if not str(row['base']).startswith('(') else None
+            if b.shot.reaction_anchor and b.shot.cast:
+                if base is None:
+                    raise RuntimeError(f'{b.id}: no approved base for the reaction ({row["wanted"]}); run the bases gate first')
+                if ' + ' in base:
+                    base = base.split(' + ')[0]
+                splits[b.id] = (b.shot.reaction_anchor, base)
+                beats[b.id + 'a'] = make_visual_class(spec)
+                beats[b.id + 'b'] = make_class(spec, row, base, after_cut=True)
+                notes.append(f'cut to the reaction on "{b.shot.reaction_anchor}" ({base})')
+                verbs = [f'{a.who} {a.verb}' for a in b.shot.staging.actions] if b.shot.staging else []
+                report[b.id] = dict(library=[what] + effects + used + [f'base {base}'] + verbs, hand_written=[], props=[], notes=notes, visual=visual)
+            else:
+                beats[b.id] = make_visual_class(spec)
+                report[b.id] = dict(library=[what] + effects + used, hand_written=[], props=[], notes=notes, visual=visual)
             continue
         base = row['base']
         notes = []
@@ -528,9 +746,12 @@ def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = Non
             beats[b.id] = make_class(spec, row, base)
         report[b.id] = dict(library=[f'base {base}'] + used + verbs_used, hand_written=[], props=props_used, notes=notes)
 
+    subject = {}                                         # beat id -> (seconds the subject fills the frame, beat seconds)
+
     def shots(tl):
         out = []
         for bt in tl['beats']:
+            dur = bt['shot_end'] - bt['shot_start']
             if bt['id'] in splits:
                 anchor, _ = splits[bt['id']]
                 T = word_times(bt['words'])
@@ -538,13 +759,24 @@ def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = Non
                 cut = T.get(first, (bt['shot_start'] + bt['shot_end']) / 2) - 0.05
                 out.append((bt['id'] + 'a', bt['shot_start'], cut))
                 out.append((bt['id'] + 'b', cut, bt['shot_end']))
+                shown = cut - bt['shot_start'] if bt['id'] in visuals else bt['shot_end'] - cut
             else:
                 out.append((bt['id'], bt['shot_start'], bt['shot_end']))
+                shown = dur if bt['id'] in visuals else 0.0
+            subject[bt['id']] = (round(shown, 3), round(dur, 3))
         return out
 
     def summary():
         total = len(report)
         lib_beats = sum(1 for r in report.values() if not r['hand_written'])
-        return dict(beats=total, library_beats=lib_beats, library_pct=round(100 * lib_beats / total) if total else 0, per_beat=report)
+        out = dict(beats=total, library_beats=lib_beats, library_pct=round(100 * lib_beats / total) if total else 0, per_beat=report)
+        if subject:                                    # the topic itself on screen (an insert or a graphic), user 2026-11-08
+            on = [k for k, (s_, d_) in subject.items() if d_ and s_ / d_ >= 0.5]
+            secs = sum(s_ for s_, _ in subject.values())
+            dur = sum(d_ for _, d_ in subject.values())
+            out['subject'] = dict(beats=len(subject), subject_beats=len(on), subject_pct=round(100 * len(on) / len(subject)),
+                                  subject_time_pct=round(100 * secs / dur) if dur else 0,
+                                  per_beat={k: dict(shown_s=s_, beat_s=d_, visual=visuals.get(k, 'character')) for k, (s_, d_) in subject.items()})
+        return out
     return SimpleNamespace(BEATS=beats, shots=shots, word_times=word_times, LIBRARY_REPORT=report, library_summary=summary,
                            slug=slug)

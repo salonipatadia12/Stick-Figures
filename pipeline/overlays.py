@@ -38,6 +38,20 @@ def note_text(label: str, em_px: float, box=None):
     _text_log.append(d)
 
 
+_box_log: list = []
+
+
+def note_box(kind: str, box):
+    """A non-text box drawn this frame (kind 'character': a character's head and body on screen), for QA."""
+    _box_log.append(dict(kind=kind, box=[int(round(v)) for v in box]))
+
+
+def take_box_log() -> list:
+    out = list(_box_log)
+    _box_log.clear()
+    return out
+
+
 def _box(xy, im: Image.Image):
     return (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height)
 
@@ -236,6 +250,20 @@ def bubble(frame: Image.Image, t: float, t0: float, text: str, tail, offset=(60,
 
 
 @lru_cache(maxsize=16)
+def tag_label(text: str, size: int = 60, fill=CREAM, ink=NAVY) -> Image.Image:
+    """A paper tag with navy type, for labels on inserts and diagrams. Carries its type size for QA."""
+    f = font(FONT, size)
+    l, tp, r, b = f.getbbox(text)
+    pw, ph = int(size * 0.55), int(size * 0.32)
+    w, h = (r - l) + 2 * pw, (b - tp) + 2 * ph
+    im = Image.new('RGBA', (w + 12, h + 14), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((6, 8, w + 6, h + 8), radius=int(h * 0.3), fill=(0, 0, 0, 60))
+    d.rounded_rectangle((3, 3, w + 3, h + 3), radius=int(h * 0.3), fill=fill + (250,), outline=ink + (255,), width=5)
+    d.text((3 + pw - l, 3 + ph - tp), text, font=f, fill=ink + (255,))
+    return mark(im, text, size)
+
+
 def tag(text: str, width: int = 150, seed: int = 1) -> Image.Image:
     """A small paper label (painted finish), for jars."""
     em = int(width * 0.26)

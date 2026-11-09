@@ -1,851 +1,779 @@
 {
-  "schema_version": 1,
-  "slug": "the-1816-year-without-a-summer-how-one-volcano",
-  "topic": "The 1816 year without a summer: how one volcano cancelled summer across the world",
-  "niche": "history",
-  "audience": "curious adults",
-  "style": "cozy",
-  "aspect": "9:16",
-  "target_length": 45,
-  "voice": {
-    "provider": "kokoro",
-    "voice_id": ""
-  },
-  "title": "The Year Without a Summer, 1816",
-  "hook_promise": "How did one volcano make summer vanish in 1816? A sulfur veil in the sky bounced sunlight away and cooled the planet.",
-  "beats": [
-    {
-      "id": "b01",
-      "role": "hook",
-      "narration": "Imagine summer just never showing up. In 1816, it didn't.",
-      "on_screen_text": "1816",
-      "visual_intent": "Two friends at a cafe table gaze out at a pale, grey sky where summer sun should be, and one slumps in quiet disbelief.",
-      "shot": {
-        "framing": "medium",
-        "cast": [
-          "lead",
-          "friend"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            },
-            {
-              "who": "friend",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "gaze",
-              "target": "window",
-              "anchor": "Imagine"
-            },
-            {
-              "who": "friend",
-              "verb": "shrug",
-              "target": "",
-              "anchor": "never"
-            }
-          ],
-          "props": [
-            {
-              "name": "green coffee cup",
-              "held_by": "",
-              "where": "table"
-            }
-          ]
-        },
-        "image_prompt": "Medium shot of the sunlit cafe round table. The lead and the friend sit side by side, both looking toward the tall windows where the sky is flat, pale grey instead of golden. Plants and ivy look slightly dull, green coffee cups sit untouched on the wooden table, and the light is dim and cool. Expressions are puzzled and quiet.",
-        "pose_variants": [
-          "same frame, lead lowers head with brows tilted sadly, hands in lap, friend still looking at the window"
-        ],
-        "motion": [
-          {
-            "recipe": "text_slam",
-            "anchor": "1816",
-            "detail": ""
-          },
-          {
-            "recipe": "pose_swap",
-            "anchor": "didn't",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "thud",
-          "anchor": "1816"
-        }
-      ],
-      "source_ids": [
-        "s4"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
+ "schema_version": 1,
+ "slug": "the-1816-year-without-a-summer-how-one-volcano",
+ "topic": "The 1816 year without a summer: how one volcano cancelled summer across the world",
+ "niche": "history",
+ "audience": "curious adults",
+ "style": "cozy",
+ "aspect": "9:16",
+ "target_length": 45,
+ "voice": {
+  "provider": "kokoro",
+  "voice_id": ""
+ },
+ "title": "The Year Without a Summer, 1816",
+ "hook_promise": "How did one volcano make summer vanish in 1816? A sulfur veil in the sky bounced sunlight away and cooled the planet.",
+ "beats": [
+  {
+   "id": "b01",
+   "role": "hook",
+   "narration": "Imagine summer just never showing up. In 1816, it didn't.",
+   "on_screen_text": "1816",
+   "visual_intent": "Two friends at a cafe table gaze out at a pale, grey sky where summer sun should be, and one slumps in quiet disbelief.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
     },
-    {
-      "id": "b02",
-      "role": "setup",
-      "narration": "It started in April 1815, when Tambora erupted. In about a day, it threw out an estimated 53 to 58 million tonnes of sulfur dioxide.",
-      "on_screen_text": "53–58 million tonnes of SO₂",
-      "visual_intent": "A notebook sketch of a smoking volcano on the table, with the lead pointing at it as grey plumes are drawn rising from the peak.",
-      "shot": {
-        "framing": "medium",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "point",
-              "target": "notebook sketch",
-              "anchor": "Tambora"
-            }
-          ],
-          "props": [
-            {
-              "name": "notebook sketch",
-              "held_by": "",
-              "where": "table"
-            },
-            {
-              "name": "green coffee cup",
-              "held_by": "",
-              "where": "table"
-            }
-          ]
-        },
-        "image_prompt": "Medium shot at the cafe round table in warm golden light. The lead leans over an open notebook showing a painted pencil sketch of a volcano with a huge billowing grey plume. The lead points at the sketch with a mitten hand, expression serious and focused. A green coffee cup sits nearby and ivy hangs in the background.",
-        "pose_variants": [],
-        "motion": [
-          {
-            "recipe": "punch_in",
-            "anchor": "erupted",
-            "detail": ""
-          },
-          {
-            "recipe": "number_counter",
-            "anchor": "tonnes",
-            "detail": "0 -> 58"
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "thud",
-          "anchor": "erupted"
-        }
-      ],
-      "source_ids": [
-        "s1"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b03",
-      "role": "setup",
-      "narration": "The ash fell out within days. The sulfur didn't.",
-      "on_screen_text": "Ash falls. Sulfur stays.",
-      "visual_intent": "Two objects on the table: a jar of grey ash settling to the bottom, and a wisp of pale haze that stays floating above it.",
-      "shot": {
-        "framing": "close",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "shake_head",
-              "target": "",
-              "anchor": "didn't"
-            }
-          ],
-          "props": [
-            {
-              "name": "glass jar of ash",
-              "held_by": "",
-              "where": "table"
-            }
-          ]
-        },
-        "image_prompt": "Close shot of the cafe table. A clear glass jar with grey ash settled at the bottom and a thin pale haze floating in the upper part of the jar. The lead sits behind it, head slightly tilted, eyes on the jar, wearing a thoughtful look. Warm side light, wooden table grain visible.",
-        "pose_variants": [],
-        "motion": [
-          {
-            "recipe": "split_compare",
-            "anchor": "ash",
-            "detail": "Ash falls | Sulfur stays"
-          },
-          {
-            "recipe": "punch_in",
-            "anchor": "sulfur",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "thud",
-          "anchor": "fell"
-        }
-      ],
-      "source_ids": [
-        "s2"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b04",
-      "role": "tension",
-      "narration": "It turned into tiny droplets that hung in the stratosphere for a year or more.",
-      "on_screen_text": "",
-      "visual_intent": "Looking up through the cafe's tall windows at a sky where a thin hazy layer of droplets hangs high and doesn't leave.",
-      "shot": {
-        "framing": "wide",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "gaze",
-              "target": "window",
-              "anchor": "stratosphere"
-            }
-          ],
-          "props": []
-        },
-        "image_prompt": "Wide shot of the cafe with its tall windows. Through the glass, a high sky is covered by a thin, milky haze of tiny glittering droplets. The lead sits at the round table in the foreground, small in the frame, gazing up at the window, expression calm and uneasy. Dim, cool light on the terracotta floor.",
-        "pose_variants": [],
-        "motion": [
-          {
-            "recipe": "icon_pop",
-            "anchor": "droplets",
-            "detail": "glass droplet"
-          },
-          {
-            "recipe": "pan_right",
-            "anchor": "",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "pop",
-          "anchor": "droplets"
-        }
-      ],
-      "source_ids": [
-        "s2"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b05",
-      "role": "reveal",
-      "narration": "Together they formed a veil that bounced sunlight back to space.",
-      "on_screen_text": "A veil in the sky",
-      "visual_intent": "The friend points at the window as a thin veil hangs across the sky and sunbeams hit it and bounce away.",
-      "shot": {
-        "framing": "medium",
-        "cast": [
-          "lead",
-          "friend"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            },
-            {
-              "who": "friend",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "friend",
-              "verb": "point",
-              "target": "window",
-              "anchor": "veil"
-            },
-            {
-              "who": "lead",
-              "verb": "gaze",
-              "target": "window",
-              "anchor": "sunlight"
-            }
-          ],
-          "props": []
-        },
-        "image_prompt": "Medium shot at the cafe table. The friend with the teal scarf points at the tall window while the lead looks on. Outside, a sheer pale veil spreads across the sky and golden sunbeams strike it and bounce back upward. Little of the warm light reaches the room. Expressions are curious and awed.",
-        "pose_variants": [
-          "same frame, friend lowers the pointing arm and turns to the lead with a raised brow"
-        ],
-        "motion": [
-          {
-            "recipe": "push_in",
-            "anchor": "",
-            "detail": ""
-          },
-          {
-            "recipe": "arrow_draw",
-            "anchor": "bounced",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "whoosh",
-          "anchor": "bounced"
-        }
-      ],
-      "source_ids": [
-        "s3"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b06",
-      "role": "reveal",
-      "narration": "Global temperatures fell by roughly half a degree Celsius in 1816.",
-      "on_screen_text": "About 0.5 °C",
-      "visual_intent": "Two green coffee cups side by side: one steaming for the year before, one barely warm for 1816.",
-      "shot": {
-        "framing": "close",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "reach",
-              "target": "green coffee cup",
-              "anchor": "fell"
-            }
-          ],
-          "props": [
-            {
-              "name": "green coffee cup",
-              "held_by": "",
-              "where": "table left"
-            },
-            {
-              "name": "green coffee cup",
-              "held_by": "",
-              "where": "table right"
-            }
-          ]
-        },
-        "image_prompt": "Close shot of the cafe table with two green coffee cups side by side. The left cup steams warmly in golden light, the right cup has almost no steam and sits in cooler grey light. The lead reaches a mitten hand toward the cooler cup with a thoughtful expression.",
-        "pose_variants": [],
-        "motion": [
-          {
-            "recipe": "split_compare",
-            "anchor": "fell",
-            "detail": "1815 | 1816"
-          },
-          {
-            "recipe": "text_slam",
-            "anchor": "degree",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "ding",
-          "anchor": "degree"
-        }
-      ],
-      "source_ids": [
-        "s4"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b07",
-      "role": "tension",
-      "narration": "By mid-May, frost hit New England, reaching as far south as Virginia.",
-      "on_screen_text": "Frost in May",
-      "visual_intent": "In a kitchen, a window shows frost-covered garden plants and a wilted potted plant sits on the sill while two figures react.",
-      "shot": {
-        "framing": "medium",
-        "cast": [
-          "lead",
-          "friend"
-        ],
-        "staging": {
-          "setting": "kitchen",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "standing"
-            },
-            {
-              "who": "friend",
-              "pose": "standing"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "point",
-              "target": "window",
-              "anchor": "frost"
-            },
-            {
-              "who": "friend",
-              "verb": "jolt",
-              "target": "",
-              "anchor": "hit"
-            }
-          ],
-          "props": [
-            {
-              "name": "wilted plant",
-              "held_by": "",
-              "where": "windowsill"
-            },
-            {
-              "name": "wall calendar",
-              "held_by": "",
-              "where": "wall"
-            }
-          ]
-        },
-        "image_prompt": "Medium shot in a warm painted kitchen. The lead stands pointing at the window, where a garden outside is dusted with white frost. The friend with the teal scarf stands beside, startled. A wilted potted plant sits on the windowsill and a wall calendar with a circled day hangs on the wall. Pale cold light mixes with the warm interior.",
-        "pose_variants": [
-          "same frame, friend steps back with hands raised in surprise, lead still pointing"
-        ],
-        "motion": [
-          {
-            "recipe": "impact_shake",
-            "anchor": "frost",
-            "detail": ""
-          },
-          {
-            "recipe": "icon_pop",
-            "anchor": "Virginia",
-            "detail": "frosted leaf"
-          }
-        ],
-        "transition": "whip",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "pop",
-          "anchor": "Virginia"
-        }
-      ],
-      "source_ids": [
-        "s5"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b08",
-      "role": "reveal",
-      "narration": "Up to 105,000 deaths worldwide are estimated from the eruption.",
-      "on_screen_text": "Up to 105,000",
-      "visual_intent": "A lone empty chair beside the lead at a quiet cafe table, showing loss with restraint.",
-      "shot": {
-        "framing": "medium",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "slump",
-              "target": "",
-              "anchor": "deaths"
-            }
-          ],
-          "props": [
-            {
-              "name": "empty chair",
-              "held_by": "",
-              "where": "beside table"
-            }
-          ]
-        },
-        "image_prompt": "Medium shot of the cafe in soft late light. The lead sits slumped at the round table with a lowered gaze, beside an empty wooden chair pulled slightly out. A single green cup sits untouched. The mood is quiet, gentle and sad, not dramatic.",
-        "pose_variants": [],
-        "motion": [
-          {
-            "recipe": "number_counter",
-            "anchor": "105,000",
-            "detail": "0 -> 105000"
-          },
-          {
-            "recipe": "push_in",
-            "anchor": "",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [],
-      "source_ids": [
-        "s6"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b09",
-      "role": "payoff",
-      "narration": "So that's how one volcano cancelled summer: a veil of sulfur, high above everyone.",
-      "on_screen_text": "Volcano. Veil. Cold.",
-      "visual_intent": "The lead and friend review a notebook sketch showing the volcano, the veil and a cooler sun, ticking off the chain of cause and effect.",
-      "shot": {
-        "framing": "top_down",
-        "cast": [
-          "lead",
-          "friend"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            },
-            {
-              "who": "friend",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "point",
-              "target": "notebook sketch",
-              "anchor": "veil"
-            },
-            {
-              "who": "friend",
-              "verb": "nod",
-              "target": "",
-              "anchor": "cancelled"
-            }
-          ],
-          "props": [
-            {
-              "name": "notebook sketch",
-              "held_by": "",
-              "where": "table"
-            }
-          ]
-        },
-        "image_prompt": "Top-down view of the cafe round table. An open notebook shows a painted sketch of a volcano, a hazy veil above it and a small sun with bent rays. The lead points at the veil with a mitten hand while the friend with the teal scarf nods beside. Warm light and green coffee cups at the table edge. Expressions are satisfied and clear.",
-        "pose_variants": [],
-        "motion": [
-          {
-            "recipe": "checklist_tick",
-            "anchor": "volcano",
-            "detail": "Eruption | Sulfur veil | Cooler planet"
-          },
-          {
-            "recipe": "punch_in",
-            "anchor": "veil",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [
-        {
-          "name": "ding",
-          "anchor": "cancelled"
-        }
-      ],
-      "source_ids": [
-        "s1",
-        "s2",
-        "s3",
-        "s4"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b10",
-      "role": "ending",
-      "narration": "Next time the sun's out, remember: it's never guaranteed.",
-      "on_screen_text": "Never guaranteed",
-      "visual_intent": "Golden sun finally pours through the cafe windows as the lead drinks coffee and the friend gazes out at it.",
-      "shot": {
-        "framing": "wide",
-        "cast": [
-          "lead",
-          "friend"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "seated-at-table"
-            },
-            {
-              "who": "friend",
-              "pose": "seated-at-table"
-            }
-          ],
-          "actions": [
-            {
-              "who": "friend",
-              "verb": "gaze",
-              "target": "window",
-              "anchor": "sun's"
-            },
-            {
-              "who": "lead",
-              "verb": "drink",
-              "target": "green coffee cup",
-              "anchor": "remember"
-            }
-          ],
-          "props": [
-            {
-              "name": "green coffee cup",
-              "held_by": "lead",
-              "where": "right hand"
-            }
-          ]
-        },
-        "image_prompt": "Wide shot of the cafe bathed in warm golden sunshine streaming through the tall windows, dappled shadows on the terracotta floor and ivy glowing. The lead holds a green coffee cup, the friend with the teal scarf gazes at the window. Both look peaceful and grateful.",
-        "pose_variants": [
-          "same frame, lead lowers the cup and looks up at the sun with a small smile, friend still gazing"
-        ],
-        "motion": [
-          {
-            "recipe": "push_in",
-            "anchor": "",
-            "detail": ""
-          },
-          {
-            "recipe": "pose_swap",
-            "anchor": "never",
-            "detail": ""
-          }
-        ],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [],
-      "source_ids": [],
-      "illustrative_numbers": false,
-      "duration": null
-    }
-  ],
-  "sources": [
-    {
-      "id": "s1",
-      "claim": "Tambora released an estimated 53–58 teragrams of sulfur dioxide within about 24 hours on 10–11 April 1815.",
-      "url": "https://www.researchgate.net/publication/259534331_Climate_and_carbon_cycle_response_to_the_1815_Tambora_volcanic_eruption",
-      "title": "Climate and carbon cycle response to the 1815 Tambora volcanic eruption",
-      "quote": "By measuring pre- and post-eruption sulfur concentrations in 1815 ejecta, we estimate that Tambora released 53–58 Tg (5.3–5.8 × 1013 g) of SO2 within ..."
-    },
-    {
-      "id": "s2",
-      "claim": "Ash falls out of the sky within days, but sulfur converted to sulfate aerosols lingers in the stratosphere for a year or more and does the climate damage.",
-      "url": "https://volcanodb.com/mount-tambora-eruption",
-      "title": "Mount Tambora 1815 Eruption: The Largest in Recorded History",
-      "quote": "Why sulfur, not ash, cools the planet\n\nAsh falls out of the sky within days. It is the sulfur — converted to sulfate aerosols that linger in the strat..."
-    },
-    {
-      "id": "s3",
-      "claim": "These sulfate aerosols formed a veil that reflected incoming sunlight back to space.",
-      "url": "https://www.factsmate.com/fact/tambora-1815-largest-eruption-in-recorded-history",
-      "title": "Tambora's 1815 eruption was the largest in recorded history — and cooled the whole planet",
-      "quote": "Tambora flung roughly **60 megatons of sulfur** into the stratosphere, where it formed a veil of **sulfate aerosols** that reflected incoming sunlight..."
-    },
-    {
-      "id": "s4",
-      "claim": "Average global temperatures fell by roughly 0.4–0.7 °C in 1816.",
-      "url": "https://en.wikipedia.org/wiki/Year_Without_a_Summer",
-      "title": "Year Without a Summer",
-      "quote": "- 1816 summer temperature anomaly (°C) in Europe compared with average temperatures from 1971 to 2000\n- Volcano: Mount Tambora\n- Start date: Eruption ..."
-    },
-    {
-      "id": "s5",
-      "claim": "In mid-May 1816, summer frost struck New England and reached as far south as Virginia.",
-      "url": "https://www.smithsonianmag.com/history/blast-from-the-past-65102374/",
-      "title": "Blast from the Past",
-      "quote": "In the northeastern United States, the weather in mid-May of 1816 turned “backward,” as locals put it, with summer frost striking New England and as f..."
-    },
-    {
-      "id": "s6",
-      "claim": "Up to 105,000 deaths worldwide are estimated to have resulted from the eruption.",
-      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5663761/",
-      "title": "The amplifying influence of increased ocean stratification on a future year without a summer",
-      "quote": "Globally, up to 105,000 deaths are estimated to have occurred as a result of the eruption^[6]^."
-    }
-  ],
-  "approvals": {
-    "script": "8556f4ae352c1dd6eeb2212cc441c1b73e73830c898d7eca689b9473975a3b14"
-  },
-  "meta": {
-    "script": {
-      "model": "claude-sonnet-5-5",
-      "prompt_version": "script-v3",
-      "research": true,
-      "generated": "2026-11-08T14:22:45"
-    },
-    "bases": {
-      "plan": [
-        {
-          "beat": "b01",
-          "base": "together",
-          "wanted": "friend-lead-seated-at-table"
-        },
-        {
-          "beat": "b02",
-          "base": "lead-at-table",
-          "wanted": "lead-seated-at-table"
-        },
-        {
-          "beat": "b03",
-          "base": "lead-at-table",
-          "wanted": "lead-seated-at-table"
-        },
-        {
-          "beat": "b04",
-          "base": "lead-at-table",
-          "wanted": "lead-seated-at-table"
-        },
-        {
-          "beat": "b05",
-          "base": "together",
-          "wanted": "friend-lead-seated-at-table"
-        },
-        {
-          "beat": "b06",
-          "base": "lead-at-table",
-          "wanted": "lead-seated-at-table"
-        },
-        {
-          "beat": "b07",
-          "base": null,
-          "wanted": "friend-lead-standing-kitchen"
-        },
-        {
-          "beat": "b08",
-          "base": "lead-at-table",
-          "wanted": "lead-seated-at-table"
-        },
-        {
-          "beat": "b09",
-          "base": "together",
-          "wanted": "friend-lead-seated-at-table"
-        },
-        {
-          "beat": "b10",
-          "base": "together",
-          "wanted": "friend-lead-seated-at-table"
-        }
-      ],
-      "candidates": {
-        "friend-lead-standing-kitchen": [
-          "renders/bases/flux/cand-standing-kitchen-s394.png",
-          "renders/bases/flux/cand-standing-kitchen-s395.png"
-        ]
-      },
-      "sheet": "renders/bases/candidates/the-1816-year-without-a-summer-how-one-volcano-candidates.jpg",
-      "made": "2026-11-08T15:54:28",
-      "round": 1
-    },
-    "approval_log": [
+    "image_prompt": "Medium shot of the sunlit cafe round table. The lead and the friend sit side by side, both looking toward the tall windows where the sky is flat, pale grey instead of golden. Plants and ivy look slightly dull, green coffee cups sit untouched on the wooden table, and the light is dim and cool. Expressions are puzzled and quiet.",
+    "pose_variants": [
+     "same frame, lead lowers head with brows tilted sadly, hands in lap, friend still looking at the window"
+    ],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "1816",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "summer-village",
+     "scene": "a small New England village green on a bright summer afternoon: a white wooden church with a steeple, picket fences, leafy maple trees, a dirt road, warm sunshine",
+     "effects": [
       {
-        "gate": "script",
-        "by": "user",
-        "at": "2026-11-08T17:16:58",
-        "digest": "8556f4ae352c"
+       "kind": "crossfade",
+       "anchor": "didn't",
+       "at": "",
+       "detail": "under a heavy cold grey sky in summer, the leaves pale and limp, a thin white frost on the grass"
+      },
+      {
+       "kind": "push",
+       "anchor": "",
+       "at": "",
+       "detail": ""
       }
-    ]
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "1816"
+    }
+   ],
+   "source_ids": [
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b02",
+   "role": "setup",
+   "narration": "In April 1815, Tambora erupted. Within a day, it released an estimated 53 to 58 million tonnes of sulfur dioxide.",
+   "on_screen_text": "53–58 million tonnes of SO₂",
+   "visual_intent": "A notebook sketch of a smoking volcano on the table, with the lead pointing at it as grey plumes are drawn rising from the peak.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Medium shot at the cafe round table in warm golden light. The lead leans over an open notebook showing a painted pencil sketch of a volcano with a huge billowing grey plume. The lead points at the sketch with a mitten hand, expression serious and focused. A green coffee cup sits nearby and ivy hangs in the background.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "number_counter",
+      "anchor": "tonnes",
+      "detail": "0 -> 58"
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "volcano-erupting",
+     "scene": "a tall volcano on a tropical island erupting at dusk, a huge billowing grey ash column rising into the sky, glowing orange at the crater, palm trees and the sea in the foreground",
+     "effects": [
+      {
+       "kind": "shake",
+       "anchor": "erupted",
+       "at": "",
+       "detail": ""
+      },
+      {
+       "kind": "embers",
+       "anchor": "erupted",
+       "at": "peak",
+       "detail": ""
+      },
+      {
+       "kind": "ash",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      },
+      {
+       "kind": "push",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      }
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "erupted"
+    }
+   ],
+   "source_ids": [
+    "s1"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b03",
+   "role": "setup",
+   "narration": "The ash fell out within days. The sulfur didn't.",
+   "on_screen_text": "",
+   "visual_intent": "Two objects on the table: a jar of grey ash settling to the bottom, and a wisp of pale haze that stays floating above it.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Close shot of the cafe table. A clear glass jar with grey ash settled at the bottom and a thin pale haze floating in the upper part of the jar. The lead sits behind it, head slightly tilted, eyes on the jar, wearing a thoughtful look. Warm side light, wooden table grain visible.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "punch_in",
+      "anchor": "sulfur",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "ash-falling-coast",
+     "scene": "a tropical coast just after a great eruption: grey ash drifting down onto palm trees, a beach and a calm sea, a darkened sky, a faint pale haze layer high above the clouds",
+     "effects": [
+      {
+       "kind": "ash",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      },
+      {
+       "kind": "haze",
+       "anchor": "sulfur",
+       "at": "sky",
+       "detail": ""
+      },
+      {
+       "kind": "label",
+       "anchor": "ash",
+       "at": "ground",
+       "detail": "Ash"
+      },
+      {
+       "kind": "label",
+       "anchor": "sulfur",
+       "at": "sky",
+       "detail": "Sulfur"
+      }
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "fell"
+    }
+   ],
+   "source_ids": [
+    "s2"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b04",
+   "role": "tension",
+   "narration": "It turned into tiny droplets that hung in the stratosphere for a year or more.",
+   "on_screen_text": "",
+   "visual_intent": "Looking up through the cafe's tall windows at a sky where a thin hazy layer of droplets hangs high and doesn't leave.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Wide shot of the cafe with its tall windows. Through the glass, a high sky is covered by a thin, milky haze of tiny glittering droplets. The lead sits at the round table in the foreground, small in the frame, gazing up at the window, expression calm and uneasy. Dim, cool light on the terracotta floor.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "earth-haze-layer",
+     "scene": "the curved edge of the Earth seen from very high up, the blue atmosphere glowing along the horizon, a thin pale yellow-white haze layer floating above it, black space with a few stars, sunlight from the left",
+     "effects": [
+      {
+       "kind": "haze",
+       "anchor": "droplets",
+       "at": "horizon",
+       "detail": ""
+      },
+      {
+       "kind": "label",
+       "anchor": "stratosphere",
+       "at": "sky",
+       "detail": "Stratosphere"
+      },
+      {
+       "kind": "push",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      }
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "droplets"
+    }
+   ],
+   "source_ids": [
+    "s2"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b05",
+   "role": "reveal",
+   "narration": "Together they formed a veil that bounced sunlight back to space.",
+   "on_screen_text": "",
+   "visual_intent": "The friend points at the window as a thin veil hangs across the sky and sunbeams hit it and bounce away.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Medium shot at the cafe table. The friend with the teal scarf points at the tall window while the lead looks on. Outside, a sheer pale veil spreads across the sky and golden sunbeams strike it and bounce back upward. Little of the warm light reaches the room. Expressions are curious and awed.",
+    "pose_variants": [
+     "same frame, friend lowers the pointing arm and turns to the lead with a raised brow"
+    ],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "bounce",
+     "items": [
+      "Sunlight",
+      "Sulfur veil",
+      "Back to space"
+     ],
+     "anchors": [
+      "sunlight",
+      "veil",
+      "space"
+     ],
+     "detail": ""
+    },
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "whoosh",
+     "anchor": "bounced"
+    }
+   ],
+   "source_ids": [
+    "s3"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b06",
+   "role": "reveal",
+   "narration": "Global temperatures fell by roughly half a degree Celsius in 1816.",
+   "on_screen_text": "About 0.5 °C",
+   "visual_intent": "Two green coffee cups side by side: one steaming for the year before, one barely warm for 1816.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "seated-at-table"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "slump",
+       "target": "",
+       "anchor": "1816"
+      }
+     ],
+     "props": []
+    },
+    "image_prompt": "Close shot of the cafe table with two green coffee cups side by side. The left cup steams warmly in golden light, the right cup has almost no steam and sits in cooler grey light. The lead reaches a mitten hand toward the cooler cup with a thoughtful expression.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "degree",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "thermometer",
+     "items": [
+      "1816"
+     ],
+     "anchors": [
+      "fell"
+     ],
+     "detail": "falls"
+    },
+    "reaction_anchor": "1816"
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "degree"
+    }
+   ],
+   "source_ids": [
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b07",
+   "role": "tension",
+   "narration": "By mid-May, frost hit New England, reaching as far south as Virginia.",
+   "on_screen_text": "Frost in May",
+   "visual_intent": "In a kitchen, a window shows frost-covered garden plants and a wilted potted plant sits on the sill while two figures react.",
+   "shot": {
+    "framing": "wide",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "kitchen",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      },
+      {
+       "who": "friend",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "jolt",
+       "target": "",
+       "anchor": "Virginia"
+      },
+      {
+       "who": "friend",
+       "verb": "shrug",
+       "target": "",
+       "anchor": "Virginia"
+      }
+     ],
+     "props": []
+    },
+    "image_prompt": "Medium shot in a warm painted kitchen. The lead stands pointing at the window, where a garden outside is dusted with white frost. The friend with the teal scarf stands beside, startled. A wilted potted plant sits on the windowsill and a wall calendar with a circled day hangs on the wall. Pale cold light mixes with the warm interior.",
+    "pose_variants": [
+     "same frame, friend steps back with hands raised in surprise, lead still pointing"
+    ],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "frost",
+      "detail": ""
+     }
+    ],
+    "transition": "whip",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "frosted-farm-may",
+     "scene": "a New England farm in late spring: rows of young green crops and blossoming apple trees covered in white frost, a red barn, a split-rail fence, a pale cold early-morning sky",
+     "effects": [
+      {
+       "kind": "grade",
+       "anchor": "frost",
+       "at": "",
+       "detail": "warm -> cold"
+      },
+      {
+       "kind": "snow",
+       "anchor": "frost",
+       "at": "",
+       "detail": ""
+      },
+      {
+       "kind": "push",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      }
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": "Virginia"
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "Virginia"
+    }
+   ],
+   "source_ids": [
+    "s5"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b08",
+   "role": "reveal",
+   "narration": "Up to 105,000 deaths worldwide are estimated from the eruption.",
+   "on_screen_text": "Up to 105,000",
+   "visual_intent": "A lone empty chair beside the lead at a quiet cafe table, showing loss with restraint.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "seated-at-table"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "slump",
+       "target": "",
+       "anchor": "deaths"
+      }
+     ],
+     "props": [
+      {
+       "name": "empty chair",
+       "held_by": "",
+       "where": "beside table"
+      }
+     ]
+    },
+    "image_prompt": "Medium shot of the cafe in soft late light. The lead sits slumped at the round table with a lowered gaze, beside an empty wooden chair pulled slightly out. A single green cup sits untouched. The mood is quiet, gentle and sad, not dramatic.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "number_counter",
+      "anchor": "105,000",
+      "detail": "0 -> 105000"
+     },
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [
+    "s6"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b09",
+   "role": "payoff",
+   "narration": "So that's how one volcano cancelled summer: a veil of sulfur, high above everyone.",
+   "on_screen_text": "",
+   "visual_intent": "The lead and friend review a notebook sketch showing the volcano, the veil and a cooler sun, ticking off the chain of cause and effect.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "cafe",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "seated-at-table"
+      },
+      {
+       "who": "friend",
+       "pose": "seated-at-table"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "nod",
+       "target": "",
+       "anchor": "everyone"
+      }
+     ],
+     "props": []
+    },
+    "image_prompt": "Top-down view of the cafe round table. An open notebook shows a painted sketch of a volcano, a hazy veil above it and a small sun with bent rays. The lead points at the veil with a mitten hand while the friend with the teal scarf nods beside. Warm light and green coffee cups at the table edge. Expressions are satisfied and clear.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "flow",
+     "items": [
+      "Eruption",
+      "Sulfur veil",
+      "Cold summer"
+     ],
+     "anchors": [
+      "volcano",
+      "veil",
+      "above"
+     ],
+     "detail": ""
+    },
+    "reaction_anchor": "everyone"
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "cancelled"
+    }
+   ],
+   "source_ids": [
+    "s1",
+    "s2",
+    "s3",
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
   }
+ ],
+ "sources": [
+  {
+   "id": "s1",
+   "claim": "Tambora released an estimated 53–58 teragrams of sulfur dioxide within about 24 hours on 10–11 April 1815.",
+   "url": "https://www.researchgate.net/publication/259534331_Climate_and_carbon_cycle_response_to_the_1815_Tambora_volcanic_eruption",
+   "title": "Climate and carbon cycle response to the 1815 Tambora volcanic eruption",
+   "quote": "By measuring pre- and post-eruption sulfur concentrations in 1815 ejecta, we estimate that Tambora released 53–58 Tg (5.3–5.8 × 1013 g) of SO2 within ..."
+  },
+  {
+   "id": "s2",
+   "claim": "Ash falls out of the sky within days, but sulfur converted to sulfate aerosols lingers in the stratosphere for a year or more and does the climate damage.",
+   "url": "https://volcanodb.com/mount-tambora-eruption",
+   "title": "Mount Tambora 1815 Eruption: The Largest in Recorded History",
+   "quote": "Why sulfur, not ash, cools the planet\n\nAsh falls out of the sky within days. It is the sulfur — converted to sulfate aerosols that linger in the strat..."
+  },
+  {
+   "id": "s3",
+   "claim": "These sulfate aerosols formed a veil that reflected incoming sunlight back to space.",
+   "url": "https://www.factsmate.com/fact/tambora-1815-largest-eruption-in-recorded-history",
+   "title": "Tambora's 1815 eruption was the largest in recorded history — and cooled the whole planet",
+   "quote": "Tambora flung roughly **60 megatons of sulfur** into the stratosphere, where it formed a veil of **sulfate aerosols** that reflected incoming sunlight..."
+  },
+  {
+   "id": "s4",
+   "claim": "Average global temperatures fell by roughly 0.4–0.7 °C in 1816.",
+   "url": "https://en.wikipedia.org/wiki/Year_Without_a_Summer",
+   "title": "Year Without a Summer",
+   "quote": "- 1816 summer temperature anomaly (°C) in Europe compared with average temperatures from 1971 to 2000\n- Volcano: Mount Tambora\n- Start date: Eruption ..."
+  },
+  {
+   "id": "s5",
+   "claim": "In mid-May 1816, summer frost struck New England and reached as far south as Virginia.",
+   "url": "https://www.smithsonianmag.com/history/blast-from-the-past-65102374/",
+   "title": "Blast from the Past",
+   "quote": "In the northeastern United States, the weather in mid-May of 1816 turned “backward,” as locals put it, with summer frost striking New England and as f..."
+  },
+  {
+   "id": "s6",
+   "claim": "Up to 105,000 deaths worldwide are estimated to have resulted from the eruption.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5663761/",
+   "title": "The amplifying influence of increased ocean stratification on a future year without a summer",
+   "quote": "Globally, up to 105,000 deaths are estimated to have occurred as a result of the eruption^[6]^."
+  }
+ ],
+ "approvals": {
+  "script": "8556f4ae352c1dd6eeb2212cc441c1b73e73830c898d7eca689b9473975a3b14"
+ },
+ "meta": {
+  "script": {
+   "model": "claude-sonnet-5-5",
+   "prompt_version": "script-v3",
+   "research": true,
+   "generated": "2026-11-08T14:22:45"
+  },
+  "bases": {
+   "plan": [
+    {
+     "beat": "b01",
+     "base": "together",
+     "wanted": "friend-lead-seated-at-table"
+    },
+    {
+     "beat": "b02",
+     "base": "lead-at-table",
+     "wanted": "lead-seated-at-table"
+    },
+    {
+     "beat": "b03",
+     "base": "lead-at-table",
+     "wanted": "lead-seated-at-table"
+    },
+    {
+     "beat": "b04",
+     "base": "lead-at-table",
+     "wanted": "lead-seated-at-table"
+    },
+    {
+     "beat": "b05",
+     "base": "together",
+     "wanted": "friend-lead-seated-at-table"
+    },
+    {
+     "beat": "b06",
+     "base": "lead-at-table",
+     "wanted": "lead-seated-at-table"
+    },
+    {
+     "beat": "b07",
+     "base": null,
+     "wanted": "friend-lead-standing-kitchen"
+    },
+    {
+     "beat": "b08",
+     "base": "lead-at-table",
+     "wanted": "lead-seated-at-table"
+    },
+    {
+     "beat": "b09",
+     "base": "together",
+     "wanted": "friend-lead-seated-at-table"
+    },
+    {
+     "beat": "b10",
+     "base": "together",
+     "wanted": "friend-lead-seated-at-table"
+    }
+   ],
+   "candidates": {
+    "friend-lead-standing-kitchen": [
+     "renders/bases/flux/cand-standing-kitchen-s394.png",
+     "renders/bases/flux/cand-standing-kitchen-s395.png"
+    ]
+   },
+   "sheet": "renders/bases/candidates/the-1816-year-without-a-summer-how-one-volcano-candidates.jpg",
+   "made": "2026-11-08T15:54:28",
+   "round": 1
+  },
+  "approval_log": [
+   {
+    "gate": "script",
+    "by": "user",
+    "at": "2026-11-08T17:16:58",
+    "digest": "8556f4ae352c"
+   }
+  ]
+ }
 }

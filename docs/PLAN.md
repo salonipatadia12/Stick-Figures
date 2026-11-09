@@ -256,6 +256,22 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   prints it. Video 2 scored 0 % (all beats hand-written), the salary episode composes at 100 % (untested on
   screen).
 - E and F: not started.
+- H (2026-11-08, user: the proof videos were 100 % library but talking heads; viewers must SEE the idea):
+  script v4 gives every beat a visual type: `character`, `insert` (a full-frame painted scene of the subject with
+  no characters) or `graphic` (a code-drawn diagram), and an optional `reaction_anchor` that cuts from the insert
+  to the cast reacting. Explainers aim for at least half of the beats showing the subject; numbers drawn on screen
+  must be numbers the beat says. Inserts: `stick inserts <slug> --generate` (`pipeline/inserts.py`,
+  `scripts/motion_test/flux_scenes.py`, `scene_qa.py`) paints each scene as a FLUX.2 klein edit against an Empty
+  Chair frame used as a style reference (closer to the look than text-to-image, tested on one scene), two seeds,
+  QA (detail, exposure, no character head, picks the better seed), a question only when both fail; library
+  `styles/cozy/inserts/library.json`. Crossfade variants (the same place at sunset) are edits of the first scene.
+  Animation in code (`pipeline/rig/inserts.py`): ash/snow/dust/embers/rain particles, a drifting haze band, colour
+  grades, dim/flash, a moving sun, crossfades, push/pan/shake, labels and arrows. Graphics
+  (`pipeline/rig/graphics.py`): flow, bounce, scatter, waves, two_paths, bars, thermometer, cards, layers.
+  Second score in qa.json: `subject` (beats where the subject fills at least half of the beat; target 70 %), next to
+  `library`. QA also fails text over text, text over the caption, and text on a character's head or body; the text
+  slot shows one text at a time and moves off the characters; standing characters are never framed as body-filling
+  close-ups. Voice clips are cached by their text (a changed line is re-voiced, the old take archived).
 
 The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
 needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or

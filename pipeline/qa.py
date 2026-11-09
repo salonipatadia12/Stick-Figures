@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 import subprocess
+from difflib import SequenceMatcher
 from pathlib import Path
 
 import numpy as np
@@ -81,6 +82,10 @@ NUMBER_WORDS = {'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 
                 'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90', 'hundred': '100', 'thousand': '1000'}
 
 
+SPELLINGS = {'tonnes': 'tons', 'tonne': 'ton', 'colour': 'color', 'colours': 'colors', 'grey': 'gray', 'metres': 'meters',
+             'litres': 'liters', 'centre': 'center', 'favourite': 'favorite', 'behaviour': 'behavior'}   # UK spelling, US hearing
+
+
 def words_check(script_words: list, heard: list) -> dict:
     """Every script word must be heard, in order. Whisper writes numbers as digits and may split them
     ('$1' ',500'), so a word also matches two or three heard tokens joined, or its number."""
@@ -88,12 +93,17 @@ def words_check(script_words: list, heard: list) -> dict:
     missing, j = [], 0
     for w in script_words:
         k = norm(w)
-        alts = {k, NUMBER_WORDS.get(k, k)}
+        alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k)}
         found = None
         for i in range(j, min(len(h), j + 6)):
             for n in (1, 2, 3):
-                if ''.join(h[i:i + n]) in alts or (k.endswith("'s") and h[i] == k[:-2]):
+                joined = ''.join(h[i:i + n])
+                if joined in alts or (k.endswith("'s") and h[i] == k[:-2]):
                     found = i + n - 1
+                    break
+                # a proper name the recogniser spells its own way ("Tambora" heard as "Tambura"): close enough
+                if n == 1 and len(k) >= 6 and w[:1].isupper() and SequenceMatcher(None, k, joined).ratio() >= 0.75:
+                    found = i
                     break
             if found is not None:
                 break
@@ -124,13 +134,39 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0) -> d
     outside = [d for d in text_sizes if 'box' in d and (d['box'][2] > C.SAFE['right'] or d['box'][3] > C.SAFE['bottom']
                                                           or d['box'][0] < C.SAFE['left'])]
     out_labels = sorted({d['box_label']: d['box'] for d in outside}.items())
+    # No text on top of other text (two overlays, or an overlay and the caption), and no text on a character's head
+    # or body (user, 2026-11-08). Character boxes are the composer's head-to-body box per character on screen.
+    caps = {round(b['t'], 2): b['box'] for b in caption_boxes if 'box' in b and 't' in b}
+    overlaps, on_body = {}, {}
+    for d in text_sizes:
+        items = d.get('items', [])
+        for i, a in enumerate(items):
+            for b in items[i + 1:]:
+                if _overlap(a, b) > 0.08 or _overlap(b, a) > 0.08:
+                    overlaps.setdefault(f'{a[4]} / {b[4]}', d['t'])
+            cap = caps.get(round(d['t'], 2))
+            if cap and _overlap(a, cap) > 0.05:
+                overlaps.setdefault(f'{a[4]} / caption', d['t'])
+            for c in d.get('chars', []):
+                if _overlap(a, c) > 0.12:
+                    on_body.setdefault(a[4], d['t'])
     return dict(min_px=min_px, frames_with_text=len(text_sizes),
+                overlapping_text=[dict(texts=k, t=v) for k, v in overlaps.items()][:12],
+                text_on_character=[dict(text=k, t=v) for k, v in on_body.items()][:12],
                 smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
                 too_small=[dict(label=l, em=e) for l, e in offenders][:12], caption_frames_too_small=len(small_caps),
                 frames_outside_safe_area=len(outside), outside_safe_area=[dict(label=l, box=b) for l, b in out_labels][:12],
                 rightmost=max((d['box'][2] for d in text_sizes if 'box' in d), default=0),
                 lowest_bottom=max((d['box'][3] for d in text_sizes if 'box' in d), default=0),
-                pass_=not small and not small_caps and not outside)
+                pass_=not small and not small_caps and not outside and not overlaps and not on_body)
+
+
+def _overlap(a, b) -> float:
+    """Intersection of boxes a and b over the area of a (boxes are [x0, y0, x1, y1, ...])."""
+    x0, y0, x1, y1 = max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3])
+    if x1 <= x0 or y1 <= y0:
+        return 0.0
+    return (x1 - x0) * (y1 - y0) / max(1.0, (a[2] - a[0]) * (a[3] - a[1]))
 
 
 LIBRARY_TARGET_PCT = 80
@@ -147,16 +183,33 @@ def library_report(summary: dict | None) -> dict:
                 per_beat=s.get('per_beat', {}))
 
 
+SUBJECT_TARGET_PCT = 70
+
+
+def subject_report(summary: dict | None) -> dict:
+    """How much of the video shows the topic itself (a painted insert or a drawn graphic filling the frame) rather than
+    characters talking (user, 2026-11-08: target 70 %+). A beat counts when the subject fills at least half of it.
+    Reported next to library %, not a pass/fail gate."""
+    s = (summary or {}).get('subject') or dict(beats=0, subject_beats=0, subject_pct=0, subject_time_pct=0, per_beat={})
+    return dict(beats=s['beats'], subject_beats=s['subject_beats'], subject_pct=s['subject_pct'], subject_time_pct=s['subject_time_pct'],
+                target_pct=SUBJECT_TARGET_PCT, meets_target=s['subject_pct'] >= SUBJECT_TARGET_PCT,
+                character_only_beats=sorted(k for k, v in s['per_beat'].items() if not v['beat_s'] or v['shown_s'] / v['beat_s'] < 0.5),
+                per_beat=s['per_beat'])
+
+
 def characters_check() -> dict:
-    """The character art in use, by base and seat, with hashes; all of it must come from approved bases."""
+    """The character art in use, by base and seat, with hashes; all of it must come from bases the user approved
+    (the hand-specified ones and every built base in the library)."""
     used = {}
-    for base in APPROVED_BASES:
+    lib = json.loads((ROOT / 'styles/cozy/bases/library.json').read_text()) if (ROOT / 'styles/cozy/bases/library.json').exists() else {}
+    built = sorted(set(APPROVED_BASES) | {n for n, e in lib.items() if e.get('status') == 'built' and (ROOT / 'styles/cozy/bases' / n / 'base.json').exists()})
+    for base in built:
         meta = json.loads((ROOT / 'styles/cozy/bases' / base / 'base.json').read_text())
         for s in meta['seats']:
             files = [s['head_art']['sprite']] + ([s['body']['sprite']] if s.get('body') else [])
             used[f"{base}/{s['name']}"] = {f: hashlib.sha256((ROOT / 'styles/cozy/bases' / base / f).read_bytes()).hexdigest()[:12]
                                            for f in files}
-    return dict(bases=list(APPROVED_BASES), art=used, pass_=True,
+    return dict(bases=built, art=used, pass_=True,
                 note='every character is drawn from these painted Empty Chair bases; no generated characters')
 
 
@@ -206,6 +259,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         characters=characters_check(),
         cost=dict(spent_usd=spent, cap_usd=2.0, note='only the Claude script call is paid; images, voice and rendering are local'),
         library=library_report(library),
+        subject=subject_report(library),
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())

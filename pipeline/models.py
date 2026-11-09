@@ -50,6 +50,27 @@ Verb = Literal[
     'lie_down', 'sit_up', 'stand_up', 'walk',
 ]
 STAGING_VERBS = {'lie_down', 'sit_up', 'stand_up', 'walk'}
+
+# ---- visual types (script v4). A beat is acted by the characters, or it SHOWS the subject: a painted scene with
+# no characters (insert) or a code-drawn diagram (graphic). Explainer topics aim for at least half of the beats
+# showing the subject; characters react to an insert by a cut on `reaction_anchor`.
+VisualType = Literal['character', 'insert', 'graphic']
+InsertEffect = Literal[
+    # particles over the scene
+    'ash', 'snow', 'dust', 'embers', 'rain', 'haze',
+    # light and colour
+    'grade', 'dim', 'flash', 'sun_path', 'crossfade',
+    # camera
+    'push', 'pan', 'shake',
+    # annotation
+    'label', 'arrow',
+]
+Region = Literal['', 'sky', 'top', 'centre', 'ground', 'left', 'right', 'peak', 'horizon']
+GraphicKind = Literal['flow', 'bounce', 'scatter', 'two_paths', 'waves', 'bars', 'thermometer', 'cards', 'layers']
+MAX_EFFECTS, MAX_GRAPHIC_ITEMS = 4, 4
+SUBJECT_TARGET = 0.5                    # share of beats the writer aims to give an insert or a graphic
+PEOPLE = re.compile(r'\b(people|person|man|woman|men|women|child|children|kids?|farmers?|villagers?|crowd|figure|figures|'
+                    r'character|characters|someone|somebody|family|families|workers?|he|she|they)\b', re.I)
 MAX_ACTIONS, MAX_PROPS, MAX_CAST = 3, 4, 2
 # Things the approach cannot stage well; the script gate warns and suggests simpler staging (user item 8).
 CROWD = re.compile(r'\b(crowd|crowded|crowds|dozens of|hundreds of|a group of|audience|everyone in the|packed with people|queue of|line of people)\b', re.I)
@@ -105,6 +126,38 @@ class PropCue(Strict):
     where: str = Field(description='Where it sits: "nightstand", "table", "left hand", "wall", "floor"…')
 
 
+class EffectCue(Strict):
+    kind: InsertEffect
+    anchor: str = Field(description="Word of THIS beat's narration where the effect starts or peaks; empty string for the "
+                                    'whole beat.')
+    at: Region = Field(description='Where in the picture: sky, top, centre, ground, left, right, peak, horizon, or empty.')
+    detail: str = Field(description='grade: "blue -> red" or "warm -> cold"; crossfade: the second scene in a few words (same '
+                                    'place, changed); sun_path: "high -> low"; label: 1-3 words; arrow: "from -> to" regions; '
+                                    'otherwise empty string.')
+
+
+class InsertCue(Strict):
+    """A full-frame painted scene with NO characters, generated once and kept in the insert library, animated in code."""
+    key: str = Field(description='Short kebab-case name for the scene, reused across videos when it already exists '
+                                 '("volcano-erupting", "street-sunset").')
+    scene: str = Field(description='The place or thing, painted, 10-30 words: what is in frame, time of day, weather. '
+                                   'No people, no characters, no text.')
+    effects: list[EffectCue] = Field(description='0-4 code effects that animate the scene on narration words.')
+
+
+class GraphicCue(Strict):
+    """A code-drawn diagram on paper: flow (A -> B -> C), bounce (light hits a layer and bounces back), scatter (a beam
+    hits small particles and sprays in every direction), two_paths (light's short vs long path through the air), waves
+    (short wave scatters, long wave passes), bars (2-3 bars), thermometer (a value falls or rises), cards
+    (chapters/steps), layers (stacked bands: ground, air, haze)."""
+    kind: GraphicKind
+    items: list[str] = Field(description='1-4 labels, 1-3 words each, in reading order.')
+    anchors: list[str] = Field(description="Word of THIS beat's narration where each item appears (same length as items), "
+                                           'or empty list to reveal them in turn.')
+    detail: str = Field(description='bars: relative heights "3 | 5" (only numbers the narration says or illustrative '
+                                    'heights with no axis); thermometer: "from -> to"; otherwise empty string.')
+
+
 class Staging(Strict):
     """What the beat needs from the libraries: which painted base (setting + pose per character), which verbs
     on which words, which props. The base planner and the composer read these fields, not the prose."""
@@ -117,6 +170,14 @@ class Staging(Strict):
 
 
 class DraftShot(Strict):
+    visual: VisualType = Field(description='character: the characters act it out; insert: a painted scene of the subject '
+                                           'with no characters; graphic: a drawn diagram. On explainer topics at least '
+                                           'half of the beats are insert or graphic.')
+    insert: InsertCue | None = Field(description='Required when visual is insert, else null.')
+    graphic: GraphicCue | None = Field(description='Required when visual is graphic, else null.')
+    reaction_anchor: str = Field(description='insert/graphic beats: a narration word where the picture cuts to the cast '
+                                             'reacting (cast, staging and actions describe that reaction); empty string '
+                                             'for no reaction cut.')
     framing: Framing
     cast: list[str] = Field(description='Style cast ids visible in the frame; empty for object-only inserts.')
     staging: Staging
@@ -157,6 +218,10 @@ class Layer(Strict):
 
 class Shot(DraftShot):
     staging: Staging | None = None                     # None on episodes written before script v3 (keyword planning)
+    visual: VisualType = 'character'                   # script v4; earlier episodes are all character beats
+    insert: InsertCue | None = None
+    graphic: GraphicCue | None = None
+    reaction_anchor: str = ''
     layers: list[Layer] = Field(default_factory=list)  # filled by pipeline/layers.py (Phase 2)
 
 
@@ -176,6 +241,9 @@ class Beat(Strict):
     @classmethod
     def from_draft(cls, index, draft):
         return cls(id=f'b{index + 1:02d}', **draft.model_dump())
+
+
+V4_DEFAULTS = dict(visual='character', insert=None, graphic=None, reaction_anchor='')
 
 
 class Source(Strict):
@@ -210,16 +278,24 @@ class Episode(Strict):
     meta: dict = Field(default_factory=dict)
 
     # ---- content identity: approvals are bound to these digests
+    @staticmethod
+    def _shot_dump(shot):
+        d = shot.model_dump(exclude={'layers'})
+        for k, default in V4_DEFAULTS.items():          # script-v4 fields at their defaults: same digest as before v4
+            if d.get(k) == default:
+                d.pop(k, None)
+        return d
+
     def script_digest(self):
         content = dict(title=self.title, hook_promise=self.hook_promise, sources=[s.model_dump() for s in self.sources],
-                       beats=[b.model_dump(exclude={'duration'}, exclude_none=True) | {'shot': b.shot.model_dump(exclude={'layers'})}
+                       beats=[b.model_dump(exclude={'duration'}, exclude_none=True) | {'shot': self._shot_dump(b.shot)}
                               for b in self.beats])
         return digest(content)
 
     def beat_digest(self, beat):
         """Per-beat identity so later stages regenerate only beats whose content changed."""
         return digest(dict(style=self.style, aspect=self.aspect,
-                           beat=beat.model_dump(exclude={'duration', 'id'}) | {'shot': beat.shot.model_dump(exclude={'layers'})}))
+                           beat=beat.model_dump(exclude={'duration', 'id'}) | {'shot': self._shot_dump(beat.shot)}))
 
     def is_approved(self, gate):
         if gate == 'script':
@@ -249,7 +325,9 @@ class Episode(Strict):
             err(self.beats[0].id, 'the first beat must be the hook')
         if not any(b.role == 'payoff' for b in self.beats):
             err('beats', 'no payoff beat: the hook promise is never delivered')
-        if self.beats[-1].role != 'ending':
+        if self.beats[-1].role == 'payoff':           # a payoff that closes the video (user cut the ending, 2026-11-08)
+            warn(self.beats[-1].id, 'the video ends on the payoff with no loop-back ending')
+        elif self.beats[-1].role != 'ending':
             err(self.beats[-1].id, 'the last beat must be the ending (loop back or tease a follow-up)')
         if not self.hook_promise:
             err('hook_promise', 'state what the hook promises so the payoff can be checked against it')
@@ -300,12 +378,19 @@ class Episode(Strict):
             if b.illustrative_numbers and not numbers:
                 warn(where, 'marked illustrative_numbers but contains no number')
             seconds = len(b.narration.split()) / words_per_second
-            anchored = any(m.recipe in ANCHORED_RECIPES for m in b.shot.motion)
+            anchored = (any(m.recipe in ANCHORED_RECIPES for m in b.shot.motion)
+                        or (b.shot.visual == 'insert' and b.shot.insert and any(e.anchor for e in b.shot.insert.effects))
+                        or (b.shot.visual == 'graphic' and b.shot.graphic is not None) or bool(b.shot.reaction_anchor))
             if seconds > 2.5 and not anchored:
                 warn(where, f'~{seconds:.1f}s of narration with no word-anchored change; the picture may sit static')
             if len(b.shot.cast) > MAX_CAST:
                 warn(where, f'{len(b.shot.cast)} characters in one frame; the bases hold at most {MAX_CAST}. Stage it as two shots')
             self._check_staging(b, spoken, err, warn)
+            self._check_visual(b, spoken, err, warn)
+        shows = sum(1 for b in self.beats if b.shot.visual in ('insert', 'graphic'))
+        if any(b.shot.visual != 'character' for b in self.beats) and shows < SUBJECT_TARGET * len(self.beats):
+            warn('beats', f'{shows}/{len(self.beats)} beats show the subject (insert or graphic); explainers aim for at least '
+                          f'{int(SUBJECT_TARGET * 100)}%. Suggest: turn a character beat about a thing, place or process into an insert')
         expected = self.target_length * words_per_second
         words = self.word_count()
         if not 0.75 * expected <= words <= 1.2 * expected:
@@ -360,6 +445,61 @@ class Episode(Strict):
         for p in st.props:
             if p.held_by and p.held_by not in b.shot.cast:
                 err(where, f'prop "{p.name}" held by "{p.held_by}", who is not in shot.cast')
+
+
+    @staticmethod
+    def _check_visual(b, spoken, err, warn):
+        """Visual type, insert and graphic cues are consistent; numbers drawn on screen are numbers the beat says."""
+        where, sh = b.id, b.shot
+        said = spoken + ' ' + b.on_screen_text.casefold()
+        drawn = [m.detail for m in sh.motion if m.recipe in ('split_compare', 'checklist_tick', 'text_slam')]
+        if sh.graphic:
+            drawn += sh.graphic.items
+        if sh.insert:
+            drawn += [e.detail for e in sh.insert.effects if e.kind == 'label']
+        for text in drawn:
+            for n in NUMBER.findall(text):
+                if n.strip().casefold() not in said:
+                    err(where, f'"{n}" is drawn on screen ("{text}") but this beat never says it; on-screen numbers must '
+                               'match the narration or on_screen_text')
+        if sh.visual == 'character' and not sh.cast:
+            warn(where, 'a character beat with no cast; make it an insert (a scene of the subject) or a graphic')
+        if sh.visual == 'insert':
+            if sh.insert is None:
+                err(where, 'visual is insert but shot.insert is empty: describe the scene')
+                return
+            if not sh.insert.key or not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.insert.key):
+                err(where, f'insert key "{sh.insert.key}" must be kebab-case')
+            if PEOPLE.search(sh.insert.scene):
+                warn(where, f'insert scene mentions people ("{PEOPLE.search(sh.insert.scene).group(0)}"): inserts are painted with '
+                            'no characters. Suggest: show the place, the thing or signs of people (smoke from a chimney, a cart)')
+            if len(sh.insert.effects) > MAX_EFFECTS:
+                err(where, f'{len(sh.insert.effects)} insert effects; at most {MAX_EFFECTS}')
+            for e in sh.insert.effects:
+                if e.anchor and e.anchor.casefold() not in spoken:
+                    err(where, f'insert effect {e.kind} anchor "{e.anchor}" is not in the narration')
+        if sh.visual == 'graphic':
+            if sh.graphic is None:
+                err(where, 'visual is graphic but shot.graphic is empty')
+                return
+            g = sh.graphic
+            if not 1 <= len(g.items) <= MAX_GRAPHIC_ITEMS:
+                err(where, f'graphic has {len(g.items)} items; 1-{MAX_GRAPHIC_ITEMS}')
+            for it in g.items:
+                if len(it.split()) > 3:
+                    err(where, f'graphic label "{it}" is over 3 words')
+            if g.anchors and len(g.anchors) != len(g.items):
+                err(where, 'graphic anchors must match the items one to one (or be empty)')
+            for a in g.anchors:
+                if a and a.casefold() not in spoken:
+                    err(where, f'graphic anchor "{a}" is not in the narration')
+        if sh.reaction_anchor:
+            if sh.visual == 'character':
+                warn(where, 'reaction_anchor on a character beat does nothing; it cuts from an insert or graphic to the cast')
+            elif not sh.cast:
+                err(where, 'reaction_anchor needs the reacting cast in shot.cast (and their poses in staging)')
+            if sh.reaction_anchor.casefold() not in spoken:
+                err(where, f'reaction_anchor "{sh.reaction_anchor}" is not in the narration')
 
 
 @dataclass
