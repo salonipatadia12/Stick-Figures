@@ -1,0 +1,828 @@
+{
+ "schema_version": 1,
+ "slug": "why-you-forget-why-you-walked-into-a-room",
+ "topic": "Why you forget why you walked into a room",
+ "niche": "psychology",
+ "audience": "general adult audience",
+ "style": "cozy",
+ "aspect": "9:16",
+ "target_length": 45,
+ "voice": {
+  "provider": "kokoro",
+  "voice_id": ""
+ },
+ "title": "Why You Forget Why You Walked In",
+ "hook_promise": "Why do you forget your purpose the moment you walk into another room?",
+ "beats": [
+  {
+   "id": "b01",
+   "role": "hook",
+   "narration": "Why are you standing here? You walked in with a purpose. Now it's gone.",
+   "on_screen_text": "Why am I here?",
+   "visual_intent": "Lead stands blank in the middle of a sunlit living room with an empty open hand, the purpose visibly gone.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "doorway",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Medium shot of the lead standing in the middle of a warm sunlit living room, head tilted, eyebrows slightly raised in puzzled confusion, one mitten hand open and empty at chest height. Golden late-afternoon light with dappled shadows on the floor, a green door and a doorway visible behind.",
+    "pose_variants": [
+     "Lead with both hands raised in a small shrug, brows lifted, mouth soft"
+    ],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "Why",
+      "detail": ""
+     },
+     {
+      "recipe": "pose_swap",
+      "anchor": "gone",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "doorway-threshold",
+     "scene": "an open wooden doorway seen straight on between a warm living room with a rust-coloured sofa and a cozy kitchen with open shelves and jars, the threshold strip on the wooden floor clearly visible, soft daylight",
+     "effects": [
+      {
+       "kind": "push",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      }
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": "gone"
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "gone"
+    }
+   ],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b02",
+   "role": "setup",
+   "narration": "Blame the doorway. Psychologist Gabriel Radvansky says it acts like an event boundary.",
+   "on_screen_text": "",
+   "visual_intent": "Friend points at the doorway frame, which is painted like a glowing line dividing two spaces, while lead looks on.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "living-room",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Wide shot of a warm living room, lead and friend standing side by side near a wooden doorway frame with a soft golden glow along its threshold. Friend in the teal scarf points at the doorway, lead looks at it curiously. Late afternoon sun slanting across the floor.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "insert",
+    "insert": {
+     "key": "doorway-threshold",
+     "scene": "an open wooden doorway seen straight on between a warm living room with a rust-coloured sofa and a cozy kitchen with open shelves and jars, the threshold strip on the wooden floor clearly visible, soft daylight",
+     "effects": [
+      {
+       "kind": "arrow",
+       "anchor": "doorway",
+       "at": "",
+       "detail": "top -> centre"
+      },
+      {
+       "kind": "label",
+       "anchor": "boundary",
+       "at": "centre",
+       "detail": "Event boundary"
+      },
+      {
+       "kind": "push",
+       "anchor": "",
+       "at": "",
+       "detail": ""
+      }
+     ]
+    },
+    "graphic": null,
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "boundary"
+    }
+   ],
+   "source_ids": [
+    "s1"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b03",
+   "role": "setup",
+   "narration": "Your mind files activity into episodes, like chapters.",
+   "on_screen_text": "",
+   "visual_intent": "Top-down view of a notebook with separate tabbed chapters, each page holding a small painted scene of a day's activity.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "living-room",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Top-down insert of an open notebook on a wooden table, with colorful tabbed dividers separating several pages, each page showing a tiny painted sketch of an everyday scene. A green coffee cup sits at the corner. Warm golden light with soft shadows.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "cards",
+     "items": [
+      "Living room",
+      "Hallway",
+      "Kitchen"
+     ],
+     "anchors": [
+      "activity",
+      "episodes",
+      "chapters"
+     ],
+     "detail": ""
+    },
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "paper",
+     "anchor": "files"
+    }
+   ],
+   "source_ids": [
+    "s2"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b04",
+   "role": "tension",
+   "narration": "A new chapter starts. Your purpose stays in the old one.",
+   "on_screen_text": "",
+   "visual_intent": "Lead stands blank in the kitchen while through the doorway behind, the living room holds a glowing sticky note left behind.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "doorway",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "gaze",
+       "target": "away",
+       "anchor": "old"
+      }
+     ],
+     "props": []
+    },
+    "image_prompt": "Medium shot of the lead standing in a sunlit kitchen, looking blankly ahead, a wooden doorway behind showing the living room in the distance where a small glowing sticky note rests on a table. Golden light, plants on the counter.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "whip",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "cards",
+     "items": [
+      "Old room: purpose",
+      "New room"
+     ],
+     "anchors": [],
+     "detail": ""
+    },
+    "reaction_anchor": "old"
+   },
+   "sfx": [
+    {
+     "name": "whoosh",
+     "anchor": "new"
+    }
+   ],
+   "source_ids": [
+    "s2"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b05",
+   "role": "reveal",
+   "narration": "At Notre Dame, people forgot more after a doorway than crossing the same distance in one room.",
+   "on_screen_text": "",
+   "visual_intent": "Contrast: friend relaxed holding a note, lead blank with empty hands, to show doorway versus same-room forgetting.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "kitchen",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Medium shot in a warm kitchen: friend in a teal scarf stands calmly holding a small paper note, lead stands beside with empty hands and a puzzled face. A wooden doorway frame stands in the background. Golden sunlight and dappled shadows.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "bars",
+     "items": [
+      "Same room",
+      "Through a doorway"
+     ],
+     "anchors": [
+      "distance",
+      "doorway"
+     ],
+     "detail": "2 | 4"
+    },
+    "reaction_anchor": ""
+   },
+   "sfx": [],
+   "source_ids": [
+    "s3"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b06",
+   "role": "reveal",
+   "narration": "Even a virtual doorway did it, in younger and older adults.",
+   "on_screen_text": "",
+   "visual_intent": "Lead and friend on the sofa look at a laptop showing a painted doorway, showing the effect holds on screen and across ages.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "living-room",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "seated-sofa"
+      },
+      {
+       "who": "friend",
+       "pose": "seated-sofa"
+      }
+     ],
+     "actions": [
+      {
+       "who": "friend",
+       "verb": "point",
+       "target": "laptop",
+       "anchor": "virtual"
+      }
+     ],
+     "props": [
+      {
+       "name": "laptop",
+       "held_by": "lead",
+       "where": "lap"
+      }
+     ]
+    },
+    "image_prompt": "Medium shot of lead and friend sitting on a cozy sofa in a sunlit living room, a laptop open on lead's lap showing a small painted doorway on its screen. Friend in a teal scarf points at the screen, lead leans in with interest. Warm golden light.",
+    "pose_variants": [
+     "Lead leaning back with a gentle smile, eyes on the laptop screen"
+    ],
+    "motion": [
+     {
+      "recipe": "icon_pop",
+      "anchor": "virtual",
+      "detail": "laptop"
+     },
+     {
+      "recipe": "pose_swap",
+      "anchor": "older",
+      "detail": ""
+     }
+    ],
+    "transition": "whip",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "virtual"
+    }
+   ],
+   "source_ids": [
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b07",
+   "role": "tension",
+   "narration": "But here's the catch. Later studies found no clear effect.",
+   "on_screen_text": "Not so fast",
+   "visual_intent": "At the kitchen table, friend shakes head over a stack of study papers while lead looks doubtful.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "kitchen",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Close shot of lead and friend sitting at a round wooden kitchen table with a stack of papers between them and green coffee cups. Lead raises one brow, doubtful, friend in a teal scarf looks at the papers. Warm golden afternoon light.",
+    "pose_variants": [
+     "Friend with head tilted, hands open in a small shrug"
+    ],
+    "motion": [
+     {
+      "recipe": "text_slam",
+      "anchor": "catch",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "bars",
+     "items": [
+      "Same room",
+      "Doorway"
+     ],
+     "anchors": [
+      "studies",
+      "effect"
+     ],
+     "detail": "3 | 3"
+    },
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "catch"
+    }
+   ],
+   "source_ids": [
+    "s5"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b08",
+   "role": "reveal",
+   "narration": "One 2021 replication saw it only when memory was already overloaded.",
+   "on_screen_text": "Only when overloaded",
+   "visual_intent": "Lead at the table surrounded by an overflowing stack of sticky notes and a brimming cup, showing a loaded memory.",
+   "shot": {
+    "framing": "close",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "kitchen",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "seated-at-table"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "slump",
+       "target": "",
+       "anchor": "overloaded"
+      }
+     ],
+     "props": [
+      {
+       "name": "stack of sticky notes",
+       "held_by": "",
+       "where": "table"
+      },
+      {
+       "name": "coffee cup",
+       "held_by": "",
+       "where": "table"
+      }
+     ]
+    },
+    "image_prompt": "Close shot of the lead seated at a wooden kitchen table piled with a tall, wobbly stack of sticky notes and a brimming green coffee cup, lead looking weary with eyes drooping slightly. Warm light through the kitchen window.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     },
+     {
+      "recipe": "icon_pop",
+      "anchor": "overloaded",
+      "detail": "overflowing stack of notes"
+     }
+    ],
+    "transition": "cut",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "overloaded"
+    }
+   ],
+   "source_ids": [
+    "s6"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b09",
+   "role": "payoff",
+   "narration": "So you forget because your mind filed the plan in the last room, especially when it's already busy.",
+   "on_screen_text": "",
+   "visual_intent": "Lead stands in the kitchen with a hand on forehead while the glowing note sits far behind in the living room.",
+   "shot": {
+    "framing": "wide",
+    "cast": [],
+    "staging": {
+     "setting": "doorway",
+     "setting_detail": "",
+     "poses": [],
+     "actions": [],
+     "props": []
+    },
+    "image_prompt": "Medium shot of the lead standing in a sunlit kitchen with one mitten hand on forehead, eyes closed in a small rueful smile. Through the doorway behind, a glowing sticky note rests on a living room table. Warm golden light.",
+    "pose_variants": [],
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "transition": "cut",
+    "layers": [],
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "cards",
+     "items": [
+      "Plan: last room",
+      "Here: busy mind"
+     ],
+     "anchors": [
+      "plan",
+      "busy"
+     ],
+     "detail": ""
+    },
+    "reaction_anchor": ""
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "filed"
+    }
+   ],
+   "source_ids": [
+    "s2",
+    "s6"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b10",
+   "role": "ending",
+   "narration": "Next time you stand there blank, blame the doorway.",
+   "on_screen_text": "",
+   "visual_intent": "Back in the living room, lead shrugs with a laugh while friend nods knowingly, looping to the opening scene.",
+   "shot": {
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "living-room",
+     "setting_detail": "",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      },
+      {
+       "who": "friend",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "friend",
+       "verb": "nod",
+       "target": "",
+       "anchor": "blame"
+      },
+      {
+       "who": "lead",
+       "verb": "shrug",
+       "target": "",
+       "anchor": "blank"
+      }
+     ],
+     "props": []
+    },
+    "image_prompt": "Medium shot of lead and friend standing in the sunlit living room by the doorway. Lead shrugs with a warm smile, friend in a teal scarf nods and gestures kindly at the doorway. Golden light and dappled shadows.",
+    "pose_variants": [
+     "Lead laughing softly with a hand on forehead"
+    ],
+    "motion": [
+     {
+      "recipe": "breathe",
+      "anchor": "",
+      "detail": ""
+     },
+     {
+      "recipe": "pose_swap",
+      "anchor": "blame",
+      "detail": ""
+     }
+    ],
+    "transition": "whip",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "pop",
+     "anchor": "doorway"
+    }
+   ],
+   "source_ids": [
+    "s1"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  }
+ ],
+ "sources": [
+  {
+   "id": "s1",
+   "claim": "Psychologist Gabriel Radvansky of the University of Notre Dame says passing through a doorway acts as an \"event boundary\" in the mind, which separates episodes of activity and files them away.",
+   "url": "https://news.nd.edu/news/walking-through-doorways-causes-forgetting-new-research-shows/",
+   "title": "Walking through doorways causes forgetting, new research shows",
+   "quote": "“Entering or exiting through a doorway serves as an ‘event boundary’ in the mind, which separates episodes of activity and files them away,” Radvansky..."
+  },
+  {
+   "id": "s2",
+   "claim": "Researchers explain it in three parts: memories are divided into episodes, earlier episodes are harder to recall, and walking through a doorway creates a new episode, so your purpose stays stored in the previous one.",
+   "url": "https://www.sciencefocus.com/science/psychology-doorway-effect-memory",
+   "title": "The 'doorway effect': Why you lose your train of thought the moment you enter a new room",
+   "quote": "Theresearcherspropose a three-part explanation: our memories are divided into episodes; we find it trickier to recall information from earlier episode..."
+  },
+  {
+   "id": "s3",
+   "claim": "In Notre Dame experiments, people forgot more after walking through a doorway than after moving the same distance across a single room.",
+   "url": "https://news.nd.edu/news/walking-through-doorways-causes-forgetting-new-research-shows/",
+   "title": "Walking through doorways causes forgetting, new research shows",
+   "quote": "Radvansky found that the subjects forgot more after walking through a doorway compared to moving the same distance across a room, suggesting that the ..."
+  },
+  {
+   "id": "s4",
+   "claim": "The effect can occur even with a virtual doorway, and it appeared in both younger and older adults.",
+   "url": "https://memorylab.nd.edu/assets/259299/radvansky_pettijohn_kim_2015_psychology_and_aging_.pdf",
+   "title": "Walking Through Doorways Causes Forgetting: Younger and ...",
+   "quote": "Recent work has shown that the availability of information in manage retrieval interference (Radvansky, Zacks, & Hasher, 1996,\n\nWhat is especially rem..."
+  },
+  {
+   "id": "s5",
+   "claim": "A later series of experiments found no significant doorway effect, which calls into question how robust the effect is.",
+   "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7938580/",
+   "title": "Doorways do not always cause forgetting: a multimodal investigation",
+   "quote": "Across this series of experiments, we observed no significant effect of doorways on forgetting.\n\nOur findings call into question the generalisability ..."
+  },
+  {
+   "id": "s6",
+   "claim": "A 2021 replication attempt found no overall doorway effect except when people's memory was already loaded down.",
+   "url": "https://www.thebraindocs.com/articles/why-you-walk-into-a-room-and-forget",
+   "title": "Why You Walk Into a Room and Forget: The Doorway Effect",
+   "quote": "A well-designed 2021 study tried to reproduce the effect and found no overall doorway effect, except when people’s memory was already loaded down."
+  }
+ ],
+ "approvals": {
+  "script": "2fd0374cc98f40530a95caa23eebe0ee2035b09d206163a3c3bfc2da7b683930",
+  "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8"
+ },
+ "meta": {
+  "script": {
+   "model": "claude-sonnet-5-5",
+   "prompt_version": "script-v3",
+   "research": true,
+   "generated": "2026-11-08T14:22:37"
+  },
+  "bases": {
+   "plan": [
+    {
+     "beat": "b01",
+     "base": null,
+     "wanted": "lead-standing-doorway"
+    },
+    {
+     "beat": "b02",
+     "base": null,
+     "wanted": "friend-lead-standing-living-room"
+    },
+    {
+     "beat": "b03",
+     "base": "lead-seated-sofa-living-room",
+     "wanted": "living-room-insert"
+    },
+    {
+     "beat": "b04",
+     "base": null,
+     "wanted": "lead-standing-doorway"
+    },
+    {
+     "beat": "b05",
+     "base": "together-kitchen",
+     "wanted": "friend-lead-standing-kitchen"
+    },
+    {
+     "beat": "b06",
+     "base": "together-living-room",
+     "wanted": "friend-lead-seated-sofa-living-room"
+    },
+    {
+     "beat": "b07",
+     "base": "friend-lead-seated-at-table-kitchen",
+     "wanted": "friend-lead-seated-at-table-kitchen"
+    },
+    {
+     "beat": "b08",
+     "base": "lead-seated-at-table-kitchen",
+     "wanted": "lead-seated-at-table-kitchen"
+    },
+    {
+     "beat": "b09",
+     "base": null,
+     "wanted": "lead-standing-doorway"
+    },
+    {
+     "beat": "b10",
+     "base": null,
+     "wanted": "friend-lead-standing-living-room"
+    }
+   ],
+   "candidates": {
+    "lead-standing-doorway": [
+     "renders/bases/flux/cand-standing-doorway-pe72b-s425.png",
+     "renders/bases/flux/cand-standing-doorway-pe72b-s426.png"
+    ],
+    "friend-lead-standing-living-room": [
+     "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s902.png",
+     "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s903.png",
+     "renders/bases/flux/cand-together-standing-living-room-p2f7f-r2-s904.png"
+    ]
+   },
+   "sheet": "renders/bases/candidates/why-you-forget-why-you-walked-into-a-room-candidates-r2.jpg",
+   "made": "2026-11-08T17:49:28",
+   "round": 2,
+   "rejected": {
+    "friend-lead-standing-living-room": [
+     "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
+     "renders/bases/flux/cand-together-standing-living-room-p6d83-s803.png"
+    ]
+   },
+   "rejections": [
+    {
+     "base": "friend-lead-standing-living-room",
+     "files": [
+      "renders/bases/flux/cand-together-standing-living-room-p6d83-s802.png",
+      "renders/bases/flux/cand-together-standing-living-room-p6d83-s803.png"
+     ],
+     "reason": "only the friend wears the scarf",
+     "by": "user",
+     "at": "2026-11-08T17:19:04"
+    }
+   ],
+   "direction": {
+    "friend-lead-standing-living-room": "both now STANDING side by side in the living room, full bodies visible from head to feet, turned a little toward each other, arms relaxed at the sides. ONLY the character on the right wears the teal scarf; the character on the left has a plain bare white neck with NO scarf"
+   }
+  },
+  "approval_log": [
+   {
+    "gate": "script",
+    "by": "user",
+    "at": "2026-11-08T17:16:58",
+    "digest": "2fd0374cc98f"
+   },
+   {
+    "gate": "bases",
+    "by": "user",
+    "at": "2026-11-08T17:19:04",
+    "picks": {
+     "friend-lead-seated-at-table-kitchen": "cand-together-seated-at-table-kitchen-p3086-s102.png",
+     "lead-seated-at-table-kitchen": "cand-seated-at-table-kitchen-p80ed-s991.png"
+    },
+    "rejects": [
+     "friend-lead-standing-living-room"
+    ]
+   },
+   {
+    "gate": "bases",
+    "by": "user",
+    "at": "2026-11-08T19:49:01",
+    "picks": {
+     "lead-standing-doorway": "cand-standing-doorway-pe72b-s426.png",
+     "friend-lead-standing-living-room": "cand-together-standing-living-room-p2f7f-r2-s902.png"
+    },
+    "rejects": [],
+    "digest": "c9a5f13a2b04"
+   }
+  ]
+ }
+}

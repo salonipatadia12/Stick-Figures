@@ -102,9 +102,9 @@
    "renders/bases/flux/pack-car-together-s622.png"
   ],
   "friend-passenger-car": [
-   "renders/bases/flux/pack-car-friend-r2-s500.png",
-   "renders/bases/flux/pack-car-friend-r2-s501.png",
-   "renders/bases/flux/pack-car-friend-r2-s502.png"
+   "renders/bases/flux/pack-car-friend-r4-s700.png",
+   "renders/bases/flux/pack-car-friend-r4-s701.png",
+   "renders/bases/flux/pack-car-friend-r4-s702.png"
   ]
  },
  "rejected": {
@@ -130,7 +130,13 @@
   ],
   "friend-passenger-car": [
    "renders/bases/flux/pack-car-friend-s687.png",
-   "renders/bases/flux/pack-car-friend-s688.png"
+   "renders/bases/flux/pack-car-friend-s688.png",
+   "renders/bases/flux/pack-car-friend-r2-s500.png",
+   "renders/bases/flux/pack-car-friend-r2-s501.png",
+   "renders/bases/flux/pack-car-friend-r2-s502.png",
+   "renders/bases/flux/pack-car-friend-r3-s600.png",
+   "renders/bases/flux/pack-car-friend-r3-s601.png",
+   "renders/bases/flux/pack-car-friend-r3-s602.png"
   ]
  },
  "rejections": [
@@ -183,6 +189,28 @@
    "reason": "Rename to friend-passenger-car: friend alone in the passenger seat, scarf on, nobody in the driver's seat.",
    "by": "user",
    "at": "2026-11-08T17:15:01"
+  },
+  {
+   "base": "friend-passenger-car",
+   "files": [
+    "renders/bases/flux/pack-car-friend-r2-s500.png",
+    "renders/bases/flux/pack-car-friend-r2-s501.png",
+    "renders/bases/flux/pack-car-friend-r2-s502.png"
+   ],
+   "reason": "reads as the driver: the friend sits behind the steering wheel",
+   "by": "user",
+   "at": "2026-11-08T22:32:15"
+  },
+  {
+   "base": "friend-passenger-car",
+   "files": [
+    "renders/bases/flux/pack-car-friend-r3-s600.png",
+    "renders/bases/flux/pack-car-friend-r3-s601.png",
+    "renders/bases/flux/pack-car-friend-r3-s602.png"
+   ],
+   "reason": "r3: the friend sits on a wooden cafe chair in a car shell parked inside the cafe",
+   "by": "claude-review",
+   "at": "2026-11-08T22:39:48"
   }
  ],
  "picks": {
@@ -212,11 +240,9 @@
   "friend-passenger-car": "renders/bases/flux/pack-car-friend-r2-s500.png"
  },
  "sheets": {
-  "office": "renders/bases/candidates/pack-starter-office-candidates-r2.jpg",
-  "classroom": "renders/bases/candidates/pack-starter-classroom-candidates-r2.jpg",
-  "car": "renders/bases/candidates/pack-starter-car-candidates-r2.jpg"
+  "car": "renders/bases/candidates/pack-starter-car-candidates-r4.jpg"
  },
- "made": "2026-11-08T17:43:19",
+ "made": "2026-11-08T22:45:52",
  "renamed": {
   "friend-driving-car": "friend-passenger-car"
  },
@@ -224,6 +250,7 @@
   "lead-seated-desk-office": "now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere",
   "friend-seated-desk-office": "now SEATED AT THE RECTANGULAR WORK DESK on an office chair, in three-quarter view facing right, both navy mitten hands resting on the desktop beside the keyboard, full upper body and the chair visible, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere",
   "together-office": "both now SEATED SIDE BY SIDE AT ONE RECTANGULAR WORK DESK on office chairs, turned a little toward each other, hands on the desktop beside the keyboard, in a small home office: a RECTANGULAR wooden work desk with a monitor and a keyboard on it, an office chair, shelves with books behind, a window with soft daylight, a plant. There is NO round cafe pedestal table anywhere",
-  "lead-seated-desk-classroom": "now SEATED AT A RECTANGULAR WOODEN SCHOOL DESK on a wooden school chair, in three-quarter view facing right, both navy mitten hands resting on the desk, full upper body and the chair visible, in a classroom: the green chalkboard with nothing written on it behind, a window with daylight, a shelf with books and a globe. There is NO round cafe table anywhere"
+  "lead-seated-desk-classroom": "now SEATED AT A RECTANGULAR WOODEN SCHOOL DESK on a wooden school chair, in three-quarter view facing right, both navy mitten hands resting on the desk, full upper body and the chair visible, in a classroom: the green chalkboard with nothing written on it behind, a window with daylight, a shelf with books and a globe. There is NO round cafe table anywhere",
+  "friend-passenger-car": "now ALONE IN THE RIGHT-HAND FRONT PASSENGER SEAT OF A REAL CAR, sitting ON THE PADDED FABRIC CAR SEAT (no wooden chair, no cafe furniture), seat belt across the body, the teal scarf on, hands in the lap. Seen from inside the car through the windshield. The STEERING WHEEL and dashboard instruments are on the LEFT, in front of the EMPTY LEFT driver's seat. Outside the car windows: a quiet town street with trees and houses in afternoon light. Nothing from a cafe anywhere"
  }
 }

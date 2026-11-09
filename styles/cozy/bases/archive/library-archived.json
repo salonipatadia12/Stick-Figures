@@ -1,0 +1,22 @@
+[
+ {
+  "name": "friend-passenger-car",
+  "entry": {
+   "status": "approved",
+   "setting": "car",
+   "pose": "passenger",
+   "view": "eye-level",
+   "cast": [
+    "friend"
+   ],
+   "source": "renders/bases/flux/pack-car-friend-r2-s500.png",
+   "approved": "2026-11-08",
+   "by": "user",
+   "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
+   "pack": "starter",
+   "inserts": true
+  },
+  "archived": "2026-11-08T22:32:32",
+  "reason": "user 2026-11-08: reads as the driver; redo with the friend in the right seat and the wheel before the empty left seat"
+ }
+]

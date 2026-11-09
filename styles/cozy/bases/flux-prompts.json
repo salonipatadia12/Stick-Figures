@@ -1700,5 +1700,43 @@
       60
     ],
     "prompt": "Edit this illustration. Remove both standing characters completely (heads, torsos, the teal scarf, arms, hands, legs and feet), so the scene looks empty: show what is behind them, the furniture and the floor, exactly as painted. Keep the furniture, the scene and the light exactly the same. Same painterly illustration style, same camera and framing, same light and shadows. Do not redraw or move anything else."
+  },
+  "pack-car-friend-r3": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      600,
+      601,
+      602
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now ALONE IN THE RIGHT-HAND FRONT PASSENGER SEAT, seen from the front through the windshield, the teal scarf on, hands resting in the lap. The STEERING WHEEL is on the LEFT side of the car, in front of the EMPTY LEFT driver's seat; nobody sits behind the wheel and there is NO steering wheel in front of the character. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
+  },
+  "pack-car-friend-r4": {
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "images": [
+      "cand-friend-seated-s52.png",
+      "03-together.png"
+    ],
+    "seeds": [
+      700,
+      701,
+      702
+    ],
+    "prompt": "Using the character from these images: the same white round-headed character with a dark navy outline and a teal scarf, white bulb-shaped torso, dark navy limbs and mitten hands, now ALONE IN THE RIGHT-HAND FRONT PASSENGER SEAT OF A REAL CAR, sitting ON THE PADDED FABRIC CAR SEAT (no wooden chair, no cafe furniture), seat belt across the body, the teal scarf on, hands in the lap. Seen from inside the car through the windshield. The STEERING WHEEL and dashboard instruments are on the LEFT, in front of the EMPTY LEFT driver's seat. Outside the car windows: a quiet town street with trees and houses in afternoon light. Nothing from a cafe anywhere. Same proportions as the reference (very large round head, short torso, long thin navy legs), same painterly illustration style, portrait framing. No text."
   }
 }

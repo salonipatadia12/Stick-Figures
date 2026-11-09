@@ -112,8 +112,16 @@ class InsertSceneTest(unittest.TestCase):
 
 class ComposerVisualsTest(unittest.TestCase):
     def test_subject_on_screen_counts_inserts_graphics_and_reaction_splits(self):
+        import json, shutil
         import compose_beats as CB
-        c = CB.for_episode('why-you-forget-why-you-walked-into-a-room')
+        slug = 'zz-test-doorway-v4'                                    # the v4 doorway script, frozen as a fixture
+        d = ROOT / 'episodes' / slug
+        d.mkdir(exist_ok=True)
+        self.addCleanup(shutil.rmtree, d, True)
+        ep = json.loads((ROOT / 'tests/fixtures/doorway-v4-episode.json').read_text())
+        ep['slug'] = slug
+        (d / 'episode.json').write_text(json.dumps(ep))
+        c = CB.for_episode(slug)
         self.assertIn('b01a', c.BEATS)                                  # insert, then the reaction on "gone"
         self.assertIn('b01b', c.BEATS)
         self.assertTrue(c.BEATS['b03'].__name__.startswith('GraphicShot'))

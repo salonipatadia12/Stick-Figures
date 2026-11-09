@@ -607,21 +607,6 @@
   "pack": "starter",
   "inserts": true
  },
- "friend-passenger-car": {
-  "status": "approved",
-  "setting": "car",
-  "pose": "passenger",
-  "view": "eye-level",
-  "cast": [
-   "friend"
-  ],
-  "source": "renders/bases/flux/pack-car-friend-r2-s500.png",
-  "approved": "2026-11-08",
-  "by": "user",
-  "note": "approved candidate; build its layers with scripts/motion_test/build_bases.py (a spec per base)",
-  "pack": "starter",
-  "inserts": true
- },
  "lead-standing-doorway": {
   "status": "built",
   "setting": "doorway",
