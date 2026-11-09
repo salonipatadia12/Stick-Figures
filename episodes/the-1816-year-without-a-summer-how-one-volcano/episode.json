@@ -42,7 +42,7 @@
       "loop_line": "One volcano, one veil. That's how summer was cancelled."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "subject_settings": [],
   "beats": [
     {
@@ -50,13 +50,14 @@
       "role": "hook",
       "narration": "It's June. Why is it snowing?",
       "on_screen_text": "SNOW IN JUNE",
-      "visual_intent": "The host shivers in a t-shirt in a summer garden whose roses are dusted with snow.",
+      "visual_intent": "The host stands in a t-shirt in a green garden, shivering, with fresh snow and frost covering the summer roses.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
-          "doing": "shivers in a t-shirt, staring at snow on the summer roses",
-          "to_camera": true
+          "doing": "The host stands in a t-shirt in a green garden, shivering, with fresh snow and frost covering the summer roses.",
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -131,7 +132,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "stands on the beach and points toward the distant volcano",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -199,7 +201,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "watches from the beach, flinching, hand raised against the blast",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -291,7 +294,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the frame edge and points up at the stratosphere layer",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -366,7 +370,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the edge and sweeps a hand along the bouncing rays",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -446,7 +451,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "stands in a field and looks up at the pale veil spreading across the sky",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -527,7 +533,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the edge and points at the dropping thermometer",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -603,7 +610,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "shivers in a snowy field, arms wrapped around the body",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -684,7 +692,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the edge and points at the tall bar of grain prices",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -759,7 +768,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "stands on a farm road, turns to the viewer and gestures at the dimmed sun",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -841,7 +851,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "shrugs in the snowy garden and looks to camera as snow falls on the roses",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -931,7 +942,9 @@
       "quote": "Gloomy, cold rains fell throughout Europe."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "script": "7ed8369e8f562be9da4decc9462d39bdaed1a99aa43e373509fb249bba8da698"
+  },
   "meta": {
     "script": {
       "model": "claude-sonnet-5-5",
@@ -1008,6 +1021,12 @@
         "by": "user",
         "at": "2026-11-08T17:16:58",
         "digest": "8556f4ae352c"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T01:17:03",
+        "digest": "7ed8369e8f56"
       }
     ]
   }

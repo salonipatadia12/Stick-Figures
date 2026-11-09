@@ -18,7 +18,7 @@ from .actions import Action, back_out, ease, ease_out, keys
 from .skeleton import Pose
 
 IN_PLACE = ('reach', 'point', 'shrug', 'facepalm', 'pick_up', 'put_down', 'throw', 'drink', 'type', 'write', 'wave', 'nod',
-            'shake_head', 'slump', 'jolt', 'gaze')
+            'shake_head', 'slump', 'jolt', 'gaze', 'shiver', 'look_up', 'snap', 'freeze')
 STAGED = ('lie_down', 'sit_up', 'stand_up', 'walk')
 
 
@@ -296,5 +296,59 @@ def gaze(p, t0: float, target=None, direction: str = '', dur: float = 1.5) -> Mo
     return Move(Action(t0 - 0.05, t0 + dur, fn, 0.2, 0.3, 'gaze'), label='gaze')
 
 
+# ---- host verbs (script v5): the host acts the story out inside the scenes -----------------------------
+
+def shiver(p, t0: float, dur: float = 2.2) -> Move:
+    """Arms hugged across the chest, the body trembling, brows worried, mouth tight."""
+    lh, rh = (-0.28, 0.32), (0.28, 0.32)
+
+    def fn(t, pose):
+        u = t - t0
+        q = ease(u / 0.35)
+        k = q * (1 - ease((u - dur + 0.4) / 0.4))
+        return replace(pose, lean=1.6 * k * math.sin(u * 2 * math.pi * 9), head_dy=0.012 * k * math.sin(u * 2 * math.pi * 11 + 1),
+                       lh=_lerp(pose.lh, lh, q), rh=_lerp(pose.rh, rh, q), l_shape='fist', r_shape='fist', smile=-0.5,
+                       brow_worry=0.8 * q, eye_wide=0.2 * q)
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.15, 0.35, 'shiver'), label='shiver')
+
+
+def look_up(p, t0: float, dur: float = 2.0) -> Move:
+    """Head tipped back, eyes to the sky, mouth a little open in wonder."""
+    def fn(t, pose):
+        q = ease((t - t0) / 0.4)
+        return replace(pose, gaze_y=-1.0 * q, gaze_x=pose.gaze_x * (1 - q), head_dy=-0.03 * q, head_tilt=-8 * q * p.facing,
+                       brow_raise=0.5 * q, mouth_open=max(pose.mouth_open, 0.15 * q))
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.2, 0.35, 'look up'), label='look_up')
+
+
+def snap(p, t0: float, dur: float = 1.0, side: str = 'far') -> Move:
+    """The hand comes up beside the shoulder and flicks: a finger snap on the anchor word."""
+    s = _side(p, side)
+    head = p.body(p.s['head'])
+    up = (head[0] + (0.62 if s == 'r' else -0.62), head[1] + 0.55)
+
+    def fn(t, pose):
+        u = t - t0
+        q = back_out((u + 0.2) / 0.25, 1.4)
+        flick = 30 * math.exp(-max(0.0, u) * 9) if u >= 0 else 0.0
+        return replace(pose, **_hand(s, _lerp(p.rest(s), up, q), 'fist' if u < 0 else 'point', rot=flick, bend=1, front=1.0),
+                       smile=0.6, brow_raise=0.4 * q)
+    return Move(Action(t0 - 0.25, t0 + dur, fn, 0.1, 0.3, 'snap'), label='snap')
+
+
+def freeze(p, t0: float, dur: float = 1.8) -> Move:
+    """Stopped dead: eyes wide, a hand up at the side of the head, mouth open in a blank 'wait...'."""
+    s = _side(p, 'far')
+    head = p.body(p.s['head'])
+    temple = (head[0] + (0.55 if s == 'r' else -0.55), head[1] + 0.1)
+
+    def fn(t, pose):
+        q = ease((t - t0) / 0.3)
+        return replace(pose, **_hand(s, _lerp(p.rest(s), temple, q), 'open_palm', rot=-20, bend=1, front=1.0),
+                       eye_wide=0.8 * q, brow_raise=0.7 * q, brow_worry=0.4 * q, smile=-0.3, mouth_open=max(pose.mouth_open, 0.25 * q))
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.12, 0.35, 'freeze'), label='freeze')
+
+
 VERBS = dict(reach=reach, point=point, shrug=shrug, facepalm=facepalm, pick_up=pick_up, put_down=put_down, throw=throw,
-             drink=drink, type=type_, write=write, wave=wave, nod=nod, shake_head=shake_head, slump=slump, jolt=jolt, gaze=gaze)
+             drink=drink, type=type_, write=write, wave=wave, nod=nod, shake_head=shake_head, slump=slump, jolt=jolt, gaze=gaze,
+             shiver=shiver, look_up=look_up, snap=snap, freeze=freeze)

@@ -42,7 +42,7 @@
       "loop_line": "Next time you blank, remember: it might be the doorway's fault."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "subject_settings": [
     "doorway"
   ],
@@ -51,14 +51,15 @@
       "id": "b01",
       "role": "hook",
       "narration": "Wait... why did I come in here?",
-      "on_screen_text": "Why am I here?",
-      "visual_intent": "The host walks through the doorway between living room and kitchen and freezes mid-step, puzzled.",
+      "on_screen_text": "",
+      "visual_intent": "The host steps through a doorway between living room and kitchen and freezes mid-stride, hand lifting to its head, looking baffled.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
-          "doing": "walks through the doorway, then freezes with a puzzled face",
-          "to_camera": true
+          "doing": "The host steps through a doorway between living room and kitchen and freezes mid-stride, hand lifting to its head, looking baffled.",
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "character",
         "insert": null,
@@ -120,7 +121,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "stands beside the glowing doorway and points toward it",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -188,7 +190,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "stands at the doorframe and gazes up at it like a line on a map",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -258,7 +261,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the edge and points along the flow",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -330,7 +334,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the corner and taps the taller bar",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -470,7 +475,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "tucks a small note into the filing drawer beside the doorway",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -551,7 +557,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in and shrugs between two identical rooms",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -621,7 +628,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "slumps in a cluttered kitchen, looking worn out",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -697,7 +705,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "nods at the glowing doorway with a knowing smile",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -773,7 +782,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "points at the doorframe, then turns to camera looking puzzled",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "character",
         "insert": null,
@@ -863,7 +873,8 @@
     }
   ],
   "approvals": {
-    "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8"
+    "bases": "c9a5f13a2b042ad155f32ba16ec4e7d2a26b8562e46a482c8f2d0f782ed1c2a8",
+    "script": "33e93a5f3d4fecbcf2dc099adf835c5ab16c788abb977c4870d691daa6ea223b"
   },
   "meta": {
     "script": {
@@ -990,6 +1001,12 @@
         },
         "rejects": [],
         "digest": "c9a5f13a2b04"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T01:17:03",
+        "digest": "33e93a5f3d4f"
       }
     ]
   }

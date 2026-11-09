@@ -142,6 +142,7 @@ class InsertScene:
                 k = (1 - (t - e.at) / 0.5) ** 2
                 dx += 16 * k * math.sin(2 * math.pi * 21 * (t - e.at))
                 dy += 11 * k * math.sin(2 * math.pi * 27 * (t - e.at) + 1)
+        zoom = max(zoom, 1.0 / max(0.5, 1 - 2 * (abs(dx) + 4) / W), 1.0 / max(0.5, 1 - 2 * (abs(dy) + 4) / H))   # a pan never shows past the edge
         return zoom, dx, dy
 
     def base_frame(self, t):
@@ -158,14 +159,18 @@ class InsertScene:
         if ch > ph:
             ch = ph / zoom
             cw = ch * W / H
-        cx = pw / 2 + dx * pw / W
-        cy = ph / 2 + dy * ph / H
+        cx = min(max(pw / 2 + dx * pw / W, cw / 2), pw - cw / 2)
+        cy = min(max(ph / 2 + dy * ph / H, ch / 2), ph - ch / 2)
         box = (cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2)
         return img.resize((W, H), Image.BICUBIC, box=box).convert('RGBA')
 
     # -- effects -------------------------------------------------------------------------------------------
+    host = None                 # optional callable(frame, t, zoom, dx, dy): the host composited into the scene (script v5)
+
     def frame(self, t):
         frame = self.base_frame(t)
+        if self.host is not None:                       # before the colour effects, so a grade or dim lights the host too
+            self.host(frame, t, *self.camera(t))
         arr = None
         for e in self.effects:
             if e.kind in ('grade', 'dim', 'flash'):

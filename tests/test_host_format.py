@@ -67,5 +67,24 @@ class HostFormatTest(unittest.TestCase):
         self.assertNotIn('hook option', messages(ep))
 
 
+
+class HostRenderTest(unittest.TestCase):
+    def test_lip_sync_opens_only_while_a_word_is_spoken(self):
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/motion_test'))
+        import compose_beats as CB
+        starts = [1.0, 1.3, 2.5]
+        self.assertEqual(CB.talk_curve(starts, 0.5), 0.0)
+        self.assertGreater(CB.talk_curve(starts, 1.08), 0.3)
+        self.assertEqual(CB.talk_curve(starts, 2.2), 0.0)                 # a pause between words: closed
+
+    def test_new_host_verbs_are_in_the_library(self):
+        from pipeline.rig import verbs as V
+        for v in ('shiver', 'look_up', 'snap', 'freeze'):
+            self.assertIn(v, V.VERBS)
+            self.assertIn(v, V.IN_PLACE)
+
+
 if __name__ == '__main__':
     unittest.main()

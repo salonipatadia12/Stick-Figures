@@ -31,7 +31,8 @@ FLUX_OUT = ROOT / 'renders/inserts/flux'
 STYLE_REF = 'legacy/bespoke/the-empty-chair-source/assets/01-alone.png'
 STYLE = ('Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette '
          'and texture), but with none of its content and NO people, characters or animals: {scene}. Vertical portrait '
-         'composition with open sky or open space in the top third. No text, no letters, no signs, no logos.')
+         'composition with open sky or open space in the top third and clear, level open ground across the lower third (room '
+         'for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.')
 EDIT = ('Edit this painting: show the very same place, from the same viewpoint, with the same composition, but {change}. '
         'Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.')
 

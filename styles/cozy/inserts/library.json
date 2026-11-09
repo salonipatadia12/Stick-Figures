@@ -138,5 +138,271 @@
   },
   "made": "2026-11-08",
   "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "open-doorway-glow": {
+  "scene": "An open wooden doorway between a sunlit living room and a kitchen, warm golden light spilling through, dust motes floating in the air.",
+  "source": "renders/inserts/flux/scene-open-doorway-glow-s438.png",
+  "file": "styles/cozy/inserts/open-doorway-glow.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: An open wooden doorway between a sunlit living room and a kitchen, warm golden light spilling through, dust motes floating in the air. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0774,
+   "contrast": 57.6,
+   "mean": 135.0
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "doorway-two-rooms": {
+  "scene": "A wide wooden doorframe seen straight on, living room with a sofa on one side and a bright kitchen on the other, late-afternoon light on both.",
+  "source": "renders/inserts/flux/scene-doorway-two-rooms-s469.png",
+  "file": "styles/cozy/inserts/doorway-two-rooms.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wide wooden doorframe seen straight on, living room with a sofa on one side and a bright kitchen on the other, late-afternoon light on both. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1157,
+   "contrast": 55.2,
+   "mean": 126.8
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "hallway-several-doorways": {
+  "scene": "A warm hallway lined with several open wooden doorways, each showing a glimpse of a different room, golden afternoon light on terracotta floor tiles.",
+  "source": "renders/inserts/flux/scene-hallway-several-doorways-s487.png",
+  "file": "styles/cozy/inserts/hallway-several-doorways.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm hallway lined with several open wooden doorways, each showing a glimpse of a different room, golden afternoon light on terracotta floor tiles. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1016,
+   "contrast": 48.3,
+   "mean": 141.2
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "doorway-filing-cabinet": {
+  "scene": "A wooden filing cabinet with one drawer half open beside an open doorway, soft golden light, a faint glow inside the drawer.",
+  "source": "renders/inserts/flux/scene-doorway-filing-cabinet-s223.png",
+  "file": "styles/cozy/inserts/doorway-filing-cabinet.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wooden filing cabinet with one drawer half open beside an open doorway, soft golden light, a faint glow inside the drawer. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0584,
+   "contrast": 47.4,
+   "mean": 139.1
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "cluttered-kitchen-dim": {
+  "scene": "A kitchen counter piled with grocery bags, papers and a cold teapot, dim late-evening light through the window, messy and tired.",
+  "source": "renders/inserts/flux/scene-cluttered-kitchen-dim-s118.png",
+  "file": "styles/cozy/inserts/cluttered-kitchen-dim.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A kitchen counter piled with grocery bags, papers and a cold teapot, dim late-evening light through the window, messy and tired. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1032,
+   "contrast": 32.3,
+   "mean": 48.8
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "open-doorway-glow--doorway-with-a-note-tucked-in-a-drawer": {
+  "scene": "doorway with a note tucked in a drawer",
+  "source": "renders/inserts/flux/scene-open-doorway-glow--doorway-with-a-note-tucked-in-a-drawer-s693.png",
+  "file": "styles/cozy/inserts/open-doorway-glow--doorway-with-a-note-tucked-in-a-drawer.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but doorway with a note tucked in a drawer. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "open-doorway-glow",
+  "qa": {
+   "edges": 0.0705,
+   "contrast": 55.0,
+   "mean": 141.8
+  },
+  "made": "2026-11-09",
+  "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "frosted-summer-garden": {
+  "scene": "A green summer garden with rose bushes and a wooden fence, dusted with fresh snow and frost under pale grey morning light.",
+  "source": "renders/inserts/flux/scene-frosted-summer-garden-s139.png",
+  "file": "styles/cozy/inserts/frosted-summer-garden.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A green summer garden with rose bushes and a wooden fence, dusted with fresh snow and frost under pale grey morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1264,
+   "contrast": 55.8,
+   "mean": 180.7
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "volcano-island-dawn": {
+  "scene": "A tropical island volcano with a thin plume of smoke, calm sea and a sandy beach in golden morning light.",
+  "source": "renders/inserts/flux/scene-volcano-island-dawn-s606.png",
+  "file": "styles/cozy/inserts/volcano-island-dawn.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A tropical island volcano with a thin plume of smoke, calm sea and a sandy beach in golden morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0774,
+   "contrast": 42.9,
+   "mean": 183.4
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "tambora-erupting": {
+  "scene": "A huge island volcano erupting, a towering dark ash column, glowing lava on the slopes, dusk light over the sea and a beach in the foreground.",
+  "source": "renders/inserts/flux/scene-tambora-erupting-s365.png",
+  "file": "styles/cozy/inserts/tambora-erupting.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A huge island volcano erupting, a towering dark ash column, glowing lava on the slopes, dusk light over the sea and a beach in the foreground. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0877,
+   "contrast": 40.2,
+   "mean": 84.5
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "veil-over-earth-sky": {
+  "scene": "A calm high sky at dusk with a thin pale haze veil spreading across the whole horizon above distant hills and an open field.",
+  "source": "renders/inserts/flux/scene-veil-over-earth-sky-s586.png",
+  "file": "styles/cozy/inserts/veil-over-earth-sky.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A calm high sky at dusk with a thin pale haze veil spreading across the whole horizon above distant hills and an open field. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0238,
+   "contrast": 54.7,
+   "mean": 147.5
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "snowy-june-farm": {
+  "scene": "A New England farm field with green crop rows covered in fresh snow and frost, a red barn in the distance, grey cold sky.",
+  "source": "renders/inserts/flux/scene-snowy-june-farm-s223.png",
+  "file": "styles/cozy/inserts/snowy-june-farm.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A New England farm field with green crop rows covered in fresh snow and frost, a red barn in the distance, grey cold sky. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1313,
+   "contrast": 50.4,
+   "mean": 161.6
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "dimmed-sun-over-fields": {
+  "scene": "A pale dim sun behind a thin haze veil over green fields and a farm road, cool soft light.",
+  "source": "renders/inserts/flux/scene-dimmed-sun-over-fields-s176.png",
+  "file": "styles/cozy/inserts/dimmed-sun-over-fields.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A pale dim sun behind a thin haze veil over green fields and a farm road, cool soft light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0374,
+   "contrast": 57.5,
+   "mean": 139.1
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "dimmed-sun-over-fields--sun-hidden-behind-pale-veil": {
+  "scene": "sun hidden behind pale veil",
+  "source": "renders/inserts/flux/scene-dimmed-sun-over-fields--sun-hidden-behind-pale-veil-s777.png",
+  "file": "styles/cozy/inserts/dimmed-sun-over-fields--sun-hidden-behind-pale-veil.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but sun hidden behind pale veil. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "dimmed-sun-over-fields",
+  "qa": {
+   "edges": 0.0339,
+   "contrast": 56.8,
+   "mean": 156.9
+  },
+  "made": "2026-11-09",
+  "episode": "the-1816-year-without-a-summer-how-one-volcano"
+ },
+ "park-sky-blue-to-red": {
+  "scene": "A wide sunlit park with a path and trees under a sky that is clear blue on one side and glowing red-orange on the other, golden low light.",
+  "source": "renders/inserts/flux/scene-park-sky-blue-to-red-s619.png",
+  "file": "styles/cozy/inserts/park-sky-blue-to-red.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wide sunlit park with a path and trees under a sky that is clear blue on one side and glowing red-orange on the other, golden low light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0937,
+   "contrast": 45.3,
+   "mean": 119.8
+  },
+  "made": "2026-11-09",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "noon-park-blue-sky": {
+  "scene": "A park at midday with a high sun and a wide, deep blue sky with soft light on green grass and a few trees.",
+  "source": "renders/inserts/flux/scene-noon-park-blue-sky-s474.png",
+  "file": "styles/cozy/inserts/noon-park-blue-sky.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A park at midday with a high sun and a wide, deep blue sky with soft light on green grass and a few trees. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0646,
+   "contrast": 38.5,
+   "mean": 106.3
+  },
+  "made": "2026-11-09",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "park-sunset-red-sky": {
+  "scene": "A park at sunset with a low orange sun on the horizon, long shadows on the grass, and the sky shifting from blue to deep red.",
+  "source": "renders/inserts/flux/scene-park-sunset-red-sky-s597.png",
+  "file": "styles/cozy/inserts/park-sunset-red-sky.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A park at sunset with a low orange sun on the horizon, long shadows on the grass, and the sky shifting from blue to deep red. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0714,
+   "contrast": 24.5,
+   "mean": 49.8
+  },
+  "made": "2026-11-09",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "red-sunset-over-park": {
+  "scene": "A glowing red and orange sunset sky over a quiet park, the sun low on the horizon, warm light on the grass and trees.",
+  "source": "renders/inserts/flux/scene-red-sunset-over-park-s699.png",
+  "file": "styles/cozy/inserts/red-sunset-over-park.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A glowing red and orange sunset sky over a quiet park, the sun low on the horizon, warm light on the grass and trees. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0956,
+   "contrast": 32.3,
+   "mean": 89.1
+  },
+  "made": "2026-11-09",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "park-dusk-fading-to-blue": {
+  "scene": "The same park at dusk with the red sunset sky beginning to fade back toward soft blue, warm light on the path.",
+  "source": "renders/inserts/flux/scene-park-dusk-fading-to-blue-s318.png",
+  "file": "styles/cozy/inserts/park-dusk-fading-to-blue.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The same park at dusk with the red sunset sky beginning to fade back toward soft blue, warm light on the path. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0649,
+   "contrast": 36.8,
+   "mean": 93.6
+  },
+  "made": "2026-11-09",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
+ },
+ "park-dusk-fading-to-blue--blue-sky-returning-at-dawn": {
+  "scene": "blue sky returning at dawn",
+  "source": "renders/inserts/flux/scene-park-dusk-fading-to-blue--blue-sky-returning-at-dawn-s183.png",
+  "file": "styles/cozy/inserts/park-dusk-fading-to-blue--blue-sky-returning-at-dawn.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but blue sky returning at dawn. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "park-dusk-fading-to-blue",
+  "qa": {
+   "edges": 0.0661,
+   "contrast": 35.8,
+   "mean": 99.3
+  },
+  "made": "2026-11-09",
+  "episode": "why-sunsets-are-red-when-the-sky-is-blue"
  }
 }

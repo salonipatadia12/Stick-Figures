@@ -245,5 +245,347 @@
       1680
     ],
     "mode": "edit"
+  },
+  "scene-open-doorway-glow": {
+    "seeds": [
+      438,
+      439
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: An open wooden doorway between a sunlit living room and a kitchen, warm golden light spilling through, dust motes floating in the air. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-doorway-two-rooms": {
+    "seeds": [
+      469,
+      470
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wide wooden doorframe seen straight on, living room with a sofa on one side and a bright kitchen on the other, late-afternoon light on both. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-hallway-several-doorways": {
+    "seeds": [
+      486,
+      487
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm hallway lined with several open wooden doorways, each showing a glimpse of a different room, golden afternoon light on terracotta floor tiles. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-doorway-filing-cabinet": {
+    "seeds": [
+      222,
+      223
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wooden filing cabinet with one drawer half open beside an open doorway, soft golden light, a faint glow inside the drawer. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-cluttered-kitchen-dim": {
+    "seeds": [
+      118,
+      119
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A kitchen counter piled with grocery bags, papers and a cold teapot, dim late-evening light through the window, messy and tired. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-open-doorway-glow--doorway-with-a-note-tucked-in-a-drawer": {
+    "seeds": [
+      692,
+      693
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but doorway with a note tucked in a drawer. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/open-doorway-glow.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-frosted-summer-garden": {
+    "seeds": [
+      139,
+      140
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A green summer garden with rose bushes and a wooden fence, dusted with fresh snow and frost under pale grey morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-volcano-island-dawn": {
+    "seeds": [
+      605,
+      606
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A tropical island volcano with a thin plume of smoke, calm sea and a sandy beach in golden morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tambora-erupting": {
+    "seeds": [
+      365,
+      366
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A huge island volcano erupting, a towering dark ash column, glowing lava on the slopes, dusk light over the sea and a beach in the foreground. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-veil-over-earth-sky": {
+    "seeds": [
+      586,
+      587
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A calm high sky at dusk with a thin pale haze veil spreading across the whole horizon above distant hills and an open field. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-snowy-june-farm": {
+    "seeds": [
+      222,
+      223
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A New England farm field with green crop rows covered in fresh snow and frost, a red barn in the distance, grey cold sky. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-dimmed-sun-over-fields": {
+    "seeds": [
+      176,
+      177
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A pale dim sun behind a thin haze veil over green fields and a farm road, cool soft light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-dimmed-sun-over-fields--sun-hidden-behind-pale-veil": {
+    "seeds": [
+      776,
+      777
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but sun hidden behind pale veil. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/dimmed-sun-over-fields.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-park-sky-blue-to-red": {
+    "seeds": [
+      619,
+      620
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wide sunlit park with a path and trees under a sky that is clear blue on one side and glowing red-orange on the other, golden low light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-noon-park-blue-sky": {
+    "seeds": [
+      474,
+      475
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A park at midday with a high sun and a wide, deep blue sky with soft light on green grass and a few trees. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-park-sunset-red-sky": {
+    "seeds": [
+      597,
+      598
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A park at sunset with a low orange sun on the horizon, long shadows on the grass, and the sky shifting from blue to deep red. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-red-sunset-over-park": {
+    "seeds": [
+      698,
+      699
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A glowing red and orange sunset sky over a quiet park, the sun low on the horizon, warm light on the grass and trees. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-park-dusk-fading-to-blue": {
+    "seeds": [
+      317,
+      318
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The same park at dusk with the red sunset sky beginning to fade back toward soft blue, warm light on the path. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-park-dusk-fading-to-blue--blue-sky-returning-at-dawn": {
+    "seeds": [
+      183,
+      184
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but blue sky returning at dawn. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/park-dusk-fading-to-blue.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
   }
 }

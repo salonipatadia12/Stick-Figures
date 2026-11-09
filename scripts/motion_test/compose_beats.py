@@ -18,9 +18,11 @@ hand-written in the report. Everything else counts as built from the libraries.
 """
 from __future__ import annotations
 
+import copy
 import json
 import math
 import re
+from bisect import bisect_right
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -35,7 +37,7 @@ from pipeline.rig import verbs as V
 from pipeline.rig.actions import Action, Idle, Performance, back_out, ease, keys
 from pipeline.rig.skeleton import Held
 
-from beat_base import PROPS, Beat, punch, shake, word_times  # noqa: F401
+from beat_base import H, PROPS, W, Beat, punch, shake, word_times  # noqa: F401
 
 ROOT = Path(__file__).resolve().parents[2]
 PROP_LIBRARY = ROOT / 'styles/cozy/props/library.json'
@@ -190,6 +192,7 @@ class Composed(Beat):
     spec: dict = {}          # beat dict from episode.json
     plan_row: dict = {}
     after_cut: bool = False  # second shot of a beat split by a posture verb
+    host_format: bool = False  # script v5: the lead is the host (lip-sync, eyes to camera, script sounds only)
 
     def __init__(self, T, t0, t1, load_art=True):
         self.notes = []
@@ -211,6 +214,17 @@ class Composed(Beat):
                 self.stage = Stage(dc_replace(self.base, plate=soft, bodies={}, occluders={}), (self.stage.W, self.stage.H))
             else:
                 self.notes.append(f'insert on {self.base_name}: no empty plate, the painted character stays in frame')
+
+    def pose(self, name, t):
+        pose = super().pose(name, t)
+        cue = self.spec['shot'].get('host') or {}
+        if self.host_format and name == 'lead' and cue.get('where', 'off') != 'off':
+            if not hasattr(self, '_starts'):
+                self._starts = sorted(v for v in self.T.values() if self.t0 - 0.05 <= v <= self.t1)
+            pose = replace(pose, mouth_open=max(pose.mouth_open, talk_curve(self._starts, t)))
+            if cue.get('to_camera'):
+                pose = replace(pose, gaze_x=pose.gaze_x * 0.2, turn=pose.turn * 0.55)
+        return pose
 
     # -- helpers -----------------------------------------------------------------------------------
     def lead(self):
@@ -398,6 +412,8 @@ class Composed(Beat):
         for r, at in self.cam_moves:
             if r in ('punch_in', 'impact_shake'):
                 self.events.append((at, 'thud' if r == 'impact_shake' else 'whoosh', 0.5))
+        if self.host_format:
+            self.events = [(self.tw(x['anchor']), x['name'], 0.6) for x in spec.get('sfx', [])]
         for who, mvs in moves.items():
             for mv in mvs:
                 if mv.label == 'throw':
@@ -601,15 +617,138 @@ class Composed(Beat):
                 O.arrow(frame, t, at, (centre[0], centre[1] + 80), (head[0], head[1] - 0.6 * self.lead().D * cam[2]))
 
 
+HOST_DIR = ROOT / 'styles/cozy/host/lead-standing'
+HOST_HEAD_BASE = 'lead-standing-doorway'
+HOST_H = 0.44                 # the host's height (head top to feet) as a share of the frame, standing in a scene
+POP_H = 0.40                  # popping in under a diagram: head and shoulders below the captions, the rest off-frame
+HOST_X = {'left': 0.15, 'centre': 0.50, 'right': 0.85}   # off-centre by default: the captions run across the middle
+MAX_SFX = 6                   # user 2026-11-08: at most 5-6 meaningful sounds per video
+
+
+def talk_curve(starts: list, t: float) -> float:
+    """Lip-sync from word start times: the mouth opens and closes about every 0.17 s while a word is spoken."""
+    i = bisect_right(starts, t) - 1
+    if i < 0:
+        return 0.0
+    w = starts[i]
+    nxt = starts[i + 1] if i + 1 < len(starts) else w + 0.45
+    dur = min(0.5, max(0.12, nxt - w - 0.05))
+    u = t - w
+    return 0.0 if u > dur else 0.12 + 0.5 * abs(math.sin(math.pi * u / 0.17))
+
+
+def host_spec(spec: dict) -> dict:
+    """The beat as the host performs it: lead alone, standing, its verbs; no text, no camera moves, no sounds."""
+    s = copy.deepcopy(spec)
+    st = s['shot'].get('staging') or {}
+    s['shot']['cast'] = ['lead']
+    s['shot']['staging'] = dict(setting=st.get('setting', 'other'), setting_detail='', poses=[dict(who='lead', pose='standing')],
+                                actions=[a for a in st.get('actions', []) if a['who'] == 'lead' and a['verb'] not in V.STAGED],
+                                props=[])
+    s['shot']['motion'], s['on_screen_text'], s['sfx'] = [], '', []
+    return s
+
+
+class HostLayer:
+    """The host, full body on a transparent canvas, animated by the same verbs, idle motion and live face as a painted
+    base (its body cut once from a standing base: scripts/motion_test/host_cutout.py), with lip-sync. `draw` puts it
+    into a scene frame: standing on the ground with a contact shadow and the scene's light, or popping in at the
+    bottom-left edge of a diagram."""
+
+    def __init__(self, spec: dict, T: dict, t0: float, t1: float):
+        from dataclasses import replace as dc_replace
+        from pipeline.rig.puppet import Stage
+        meta = json.loads((HOST_DIR / 'host.json').read_text())
+        self.c = make_class(host_spec(spec), {}, meta['base'])(T, t0, t1)
+        body = Image.open(HOST_DIR / 'body.png').convert('RGBA')
+        self.c.base = dc_replace(self.c.base, plate=body)
+        self.c.stage = Stage(self.c.base, (W, H))
+        self.cam = self.c.stage.camera(body.width / 2, body.height / 2, body.width)
+        from pipeline.rig.puppet import Puppet, load_base
+        lead = self.c.p['lead']                         # the head painted on the approved doorway base (s426): a clean rim, no
+        clean = Puppet(load_base(HOST_HEAD_BASE), 'lead')      # ring of brick from the street base the body was cut from
+        k = lead.D / clean.D
+        lead.head_sprite = clean.head_sprite.resize((round(clean.head_sprite.width * k), round(clean.head_sprite.height * k)), Image.LANCZOS)
+        lead.head_centre = (clean.head_centre[0] * k, clean.head_centre[1] * k)
+        lead._head_cache.clear()
+        s = self.cam[2]
+        D = meta['D']
+        self.top, self.feet, self.cx, self.D = (meta['head'][1] - 0.62 * D) * s, meta['feet_y'] * s, meta['head'][0] * s, D * s
+        cue = spec['shot'].get('host') or {}
+        self.where, self.side, self.to_camera = cue.get('where', 'scene'), cue.get('side', 'centre'), cue.get('to_camera', True)
+        if self.side == 'centre':                       # alternate sides beat to beat, facing in, clear of the captions
+            self.side = 'left' if int(re.sub(r'\D', '', spec['id']) or 0) % 2 else 'right'
+        self.cut_at = word_time(T, cue.get('cut_on', ''), None) if cue.get('cut_on') else None
+        self.t0 = t0
+        self.starts = sorted(v for v in T.values() if t0 - 0.05 <= v <= t1)
+        self.shivers = [self.c.tw(a['anchor']) for a in (spec['shot'].get('staging') or {}).get('actions', []) if a['verb'] == 'shiver']
+        self.facing = self.c.p['lead'].facing
+
+    def sprite(self, t: float) -> Image.Image:
+        pose = self.c.pose('lead', t)
+        pose = replace(pose, mouth_open=max(pose.mouth_open, talk_curve(self.starts, t)))
+        if self.to_camera:
+            pose = replace(pose, gaze_x=pose.gaze_x * 0.2, turn=pose.turn * 0.55)
+        frame = self.c.stage.compose(self.cam, [self.c.p['lead']], [pose], [{}])
+        x0, x1 = int(self.cx - 1.7 * self.D), int(self.cx + 1.7 * self.D)
+        return frame.crop((max(0, x0), int(self.top), min(W, x1), int(self.feet) + 4)), self.cx - max(0, x0)
+
+    def draw(self, frame: Image.Image, t: float, zoom: float = 1.0, dx: float = 0.0, dy: float = 0.0):
+        import numpy as np
+        from PIL import ImageDraw, ImageFilter
+        sp, foot_x = self.sprite(t)
+        side = self.side
+        if self.cut_at is not None:                    # the host is at one spot, then (a cut) at the next one
+            side = 'left' if t < self.cut_at else 'right'
+        if self.where == 'pop_in':
+            k = POP_H * H / sp.height
+            fx = 0.2 * W
+            fy = 1.17 * H + 0.3 * H * (1 - ease((t - self.t0) / 0.35))
+            flip = self.facing < 0
+        else:
+            k = HOST_H * H * zoom / sp.height
+            fx = W / 2 + (HOST_X.get(side, 0.5) * W - W / 2 - dx) * zoom
+            fy = H / 2 + (0.93 * H - H / 2 - dy) * zoom
+            flip = (side == 'right' and self.facing > 0) or (side == 'left' and self.facing < 0)
+        for at in self.shivers:
+            if 0 <= t - at <= 2.2:
+                fx += 4 * math.sin((t - at) * 2 * math.pi * 9)
+        sp = sp.resize((max(1, int(sp.width * k)), max(1, int(sp.height * k))), Image.BICUBIC)
+        foot = foot_x * k
+        if flip:
+            sp = sp.transpose(Image.FLIP_LEFT_RIGHT)
+            foot = sp.width - foot
+        x, y = int(fx - foot), int(fy - sp.height)
+        if self.where != 'pop_in':                     # the scene's light on the host, and a soft contact shadow
+            box = (max(0, x), max(0, y), min(W, x + sp.width), min(H, y + sp.height))
+            if box[2] > box[0] and box[3] > box[1]:
+                env = np.asarray(frame.crop(box).convert('RGB')).reshape(-1, 3).astype(np.float32).mean(0)
+                a = np.asarray(sp).astype(np.float32)
+                tint = 0.82 + 0.18 * env / max(1.0, float(env.mean()))
+                light = min(1.05, max(0.62, float(env.mean()) / 150))
+                a[..., :3] *= (tint * (0.55 + 0.45 * light))[None, None, :]
+                sp = Image.fromarray(a.clip(0, 255).astype(np.uint8), 'RGBA')
+            sh = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+            ImageDraw.Draw(sh).ellipse((fx - 0.32 * sp.width, fy - 0.03 * sp.height, fx + 0.32 * sp.width, fy + 0.03 * sp.height),
+                                       fill=(20, 16, 24, 90))
+            frame.alpha_composite(sh.filter(ImageFilter.GaussianBlur(10)))
+        frame.alpha_composite(sp, (x, y))
+        O.note_box('character', (x + 0.15 * sp.width, y, x + 0.85 * sp.width, min(H, y + sp.height)))
+
+
 class VisualShot:
     """A beat (or the first part of one) that SHOWS the subject: a painted insert or a drawn graphic, full frame, no
     characters. Same interface as a Beat for the runner: events, notes and frame(t)."""
     spec: dict = {}
     visual = 'insert'
 
+    host_format = False
+
     def __init__(self, T, t0, t1, load_art=True):
         self.T, self.t0, self.t1 = T, t0, t1
         self.events, self.notes = [], []
+        cue = self.spec['shot'].get('host') or {}
+        self.host = HostLayer(self.spec, T, t0, t1) if self.host_format and cue.get('where', 'off') != 'off' and load_art else None
         self.text_items = finish_text_items(self.spec, self.tw, text_items(self.spec, self.tw), t0, t1)
         for snd in self.spec.get('sfx', []):
             at = self.tw(snd['anchor'])
@@ -618,12 +757,16 @@ class VisualShot:
         for kind, at, _ in self.text_items:
             self.events.append((at, 'pop' if kind != 'counter' else 'ding', 0.5))
         self.setup(load_art)
+        if self.host_format:                           # only the script's own sounds (user: at most 5-6 per video)
+            self.events = [(self.tw(x['anchor']), x['name'], 0.6) for x in self.spec.get('sfx', [])]
 
     def tw(self, anchor, default=None):
         return word_time(self.T, anchor, self.t0 + 0.4 if default is None else default)
 
     def frame(self, t):
         frame = self.draw(t)
+        if self.host is not None and self.visual == 'graphic':
+            self.host.draw(frame, t)
         draw_text_items(frame, t, self.text_items, TEXT_TOP, self.spec)
         return frame
 
@@ -678,6 +821,8 @@ class InsertShot(VisualShot):
                 else:
                     self.notes.append(f'crossfade "{e["detail"]}" has no painted variant; it is skipped')
         self.scene = InsertScene(scene, effects, self.t0, self.t1, variants, seed=sum(map(ord, self.spec['id'])))
+        if self.host is not None:
+            self.scene.host = self.host.draw
 
     def draw(self, t):
         return self.scene.frame(t)
@@ -725,8 +870,10 @@ def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = Non
     episode, _ = store.load(slug)
     raw = json.loads((ROOT / 'episodes' / slug / 'episode.json').read_text())
     specs = {b['id']: b for b in raw['beats']}
-    rows = {r['beat']: r for r in BASES.plan(episode, lib)}
     lib = BASES.library() if lib is None else lib
+    if episode.host_format:
+        return host_episode(episode, specs, lib, slug)
+    rows = {r['beat']: r for r in BASES.plan(episode, lib)}
     overrides = overrides or {}
     beats, report, splits = {}, {}, {}
     visuals = {}                                         # beat id -> 'insert' | 'graphic' (shown full frame)
@@ -821,6 +968,95 @@ def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = Non
             out['subject'] = dict(beats=len(subject), subject_beats=len(on), subject_pct=round(100 * len(on) / len(subject)),
                                   subject_time_pct=round(100 * secs / dur) if dur else 0,
                                   per_beat={k: dict(shown_s=s_, beat_s=d_, visual=visuals.get(k, 'character')) for k, (s_, d_) in subject.items()})
+        return out
+    return SimpleNamespace(BEATS=beats, shots=shots, word_times=word_times, LIBRARY_REPORT=report, library_summary=summary,
+                           slug=slug)
+
+
+HOOK_STOP = {'the', 'a', 'an', 'and', 'or', 'but', 'so', 'is', 'it', 'its', "it's", 'you', 'your', 'to', 'of', 'in', 'on', 'at', 'why',
+             'what', 'how', 'did', 'do', 'does', 'i', 'me', 'my', 'we', 'this', 'that', 'same', 'one', 'from', 'with', 'out'}
+
+
+def _keywords(text: str) -> set:
+    return {w for w in re.findall(r"[a-z0-9']+", text.lower()) if w not in HOOK_STOP and len(w) > 2}
+
+
+def host_episode(episode, specs: dict, lib: dict, slug: str):
+    """Script v5, the host format: every beat is a painted scene or a diagram with the host in it (HostLayer), or the
+    host on an approved standing base of the beat's setting (the doorway s426 base); a setting with no such base
+    puts the host in the nearest painted scene of that setting in the same video. Scores: library, subject on screen,
+    character (host) on screen, and the hook check."""
+    beats, report, flags = {}, {}, {}
+    scene_of = [(i, b.shot.staging.setting, b.shot.insert.key) for i, b in enumerate(episode.beats)
+                if b.shot.visual == 'insert' and b.shot.insert and b.shot.staging]
+    for i, b in enumerate(episode.beats):
+        spec, cue, st = specs[b.id], b.shot.host, b.shot.staging
+        on = bool(cue and cue.where != 'off')
+        used = [m.recipe for m in b.shot.motion]
+        verbs = [f'{a.who} {a.verb}' for a in st.actions] if st else []
+        notes = []
+        subject = b.shot.visual in ('insert', 'graphic') or bool(st and st.setting in episode.subject_settings)
+        if b.shot.visual in ('insert', 'graphic'):
+            cls = make_visual_class(spec)
+            what = f'insert {b.shot.insert.key}' if b.shot.visual == 'insert' else f'graphic {b.shot.graphic.kind}'
+            effects = [e.kind for e in b.shot.insert.effects] if b.shot.visual == 'insert' else []
+            lib_used = [what] + effects + used
+        else:
+            want = dict(setting=st.setting if st else 'other', pose='standing', view='eye-level', cast=['lead'], poses={'lead': 'standing'})
+            base = BASES.match(want, lib) if st else None
+            if base:
+                cls = make_class(spec, {}, base)
+                lib_used = [f'base {base}'] + used
+            else:
+                near = sorted(scene_of, key=lambda r: (r[1] != (st.setting if st else None), abs(r[0] - i), -r[0]))
+                if not near:
+                    raise RuntimeError(f'{b.id}: no standing base for {want["setting"]} and no painted scene to stand the host in')
+                key = near[0][2]
+                s2 = copy.deepcopy(spec)
+                s2['shot']['visual'], s2['shot']['insert'] = 'insert', dict(key=key, scene='', effects=[])
+                cls = make_visual_class(s2)
+                notes.append(f'no standing {want["setting"]} base: the host stands in the {key} scene')
+                lib_used = [f'insert {key}'] + used
+        cls.host_format = True
+        beats[b.id] = cls
+        report[b.id] = dict(library=lib_used + ([f'host {cue.where}'] if on else []) + verbs, hand_written=[], props=[],
+                            notes=notes, visual=b.shot.visual)
+        flags[b.id] = (subject, on)
+    timing = {}
+
+    def shots(tl):
+        out = []
+        for bt in tl['beats']:
+            out.append((bt['id'], bt['shot_start'], bt['shot_end']))
+            timing[bt['id']] = round(bt['shot_end'] - bt['shot_start'], 3)
+        return out
+
+    def score(index: int):
+        ids = list(timing) or list(flags)
+        on = [k for k in ids if flags[k][index]]
+        secs = sum(timing.get(k, 0) for k in on)
+        dur = sum(timing.get(k, 0) for k in ids)
+        return dict(beats=len(ids), on_beats=len(on), pct=round(100 * len(on) / len(ids)) if ids else 0,
+                    time_pct=round(100 * secs / dur) if dur else 0, off=[k for k in ids if not flags[k][index]])
+
+    def summary():
+        total = len(report)
+        lib_beats = sum(1 for r in report.values() if not r['hand_written'])
+        out = dict(beats=total, library_beats=lib_beats, library_pct=round(100 * lib_beats / total) if total else 0, per_beat=report)
+        sub, cha = score(0), score(1)
+        out['subject'] = dict(beats=sub['beats'], subject_beats=sub['on_beats'], subject_pct=sub['pct'], subject_time_pct=sub['time_pct'],
+                              per_beat={k: dict(shown_s=timing.get(k, 0) if flags[k][0] else 0.0, beat_s=timing.get(k, 0),
+                                                visual=report[k]['visual']) for k in flags})
+        out['character'] = dict(beats=cha['beats'], host_beats=cha['on_beats'], host_pct=cha['pct'], host_time_pct=cha['time_pct'],
+                                host_off_beats=cha['off'])
+        first, payoff = episode.beats[0], next((b for b in episode.beats if b.role == 'payoff'), None)
+        pick = episode.hook_options[(episode.hook_pick or 1) - 1] if episode.hook_options else None
+        words = len(re.findall(r"[\w'’]+", first.narration))
+        shared = sorted(_keywords(pick.answer) & _keywords(payoff.narration)) if pick and payoff else []
+        out['hook'] = dict(line=first.narration, words=words, max_words=8, host_in_frame_one=flags[first.id][1],
+                           answer=pick.answer if pick else '', payoff=payoff.narration if payoff else '', shared_words=shared,
+                           answered_in_payoff=len(shared) >= 2,
+                           pass_=words <= 8 and flags[first.id][1] and len(shared) >= 2)
         return out
     return SimpleNamespace(BEATS=beats, shots=shots, word_times=word_times, LIBRARY_REPORT=report, library_summary=summary,
                            slug=slug)

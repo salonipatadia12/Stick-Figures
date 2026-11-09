@@ -93,6 +93,15 @@ def heard_words(path: Path, tl: dict | None = None) -> list:
     return json.loads(out.stdout.strip().splitlines()[-1])
 
 
+def merge_heard(a: list, b: list) -> list:
+    """Two transcripts of the same audio as one, in time order; a word heard in either pass is kept once."""
+    out = list(a)
+    for w in b:
+        if not any(norm(x['w']) == norm(w['w']) and abs(x['s'] - w['s']) < 0.4 for x in a):
+            out.append(w)
+    return sorted(out, key=lambda w: w['s'])
+
+
 def norm(word: str) -> str:
     w = word.lower().replace('$', '').replace(',', '')
     return re.sub(r"[^a-z0-9']", '', w)
@@ -104,7 +113,8 @@ NUMBER_WORDS = {'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 
 
 
 SPELLINGS = {'tonnes': 'tons', 'tonne': 'ton', 'cancelled': 'canceled', 'travelled': 'traveled', 'modelling': 'modeling', 'colour': 'color', 'colours': 'colors', 'grey': 'gray', 'metres': 'meters',
-             'litres': 'liters', 'centre': 'center', 'favourite': 'favorite', 'behaviour': 'behavior'}   # UK spelling, US hearing
+             'litres': 'liters', 'centre': 'center', 'favourite': 'favorite', 'behaviour': 'behavior',   # UK spelling, US hearing
+             'veil': 'vale', 'cue': 'queue'}                                                               # homophones Whisper picks
 
 
 def words_check(script_words: list, heard: list) -> dict:
@@ -116,7 +126,8 @@ def words_check(script_words: list, heard: list) -> dict:
         k = norm(w)
         alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k)}
         found = None
-        for i in range(j, min(len(h), j + 6)):
+        reach = 2 if k in ('a', 'an', 'the') else 6       # a dropped article must not match one further on and skip words
+        for i in range(j, min(len(h), j + reach)):
             for n in (1, 2, 3):
                 joined = ''.join(h[i:i + n])
                 if joined in alts or (k.endswith("'s") and h[i] == k[:-2]):
@@ -173,9 +184,13 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, prom
             for c in d.get('chars', []):
                 if _overlap(a, c) > 0.12:
                     on_body.setdefault(a[4], d['t'])
+    chars_at = {round(d['t'], 2): d.get('chars', []) for d in text_sizes if d.get('chars')}
+    cap_on_body = sum(1 for b in caption_boxes if 'box' in b and 't' in b
+                      and any(_overlap(b['box'], c) > 0.25 for c in chars_at.get(round(b['t'], 2), [])))
     brief = brief_texts(text_sizes)
     missing = missing_texts(text_sizes, promised or [])
     return dict(min_px=min_px, frames_with_text=len(text_sizes), brief_text=brief[:12], missing_text=missing[:12],
+                caption_on_character_s=round(cap_on_body / 30, 1),
                 overlapping_text=[dict(texts=k, t=v) for k, v in overlaps.items()][:12],
                 text_on_character=[dict(text=k, t=v) for k, v in on_body.items()][:12],
                 smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
@@ -298,6 +313,24 @@ def library_report(summary: dict | None) -> dict:
                 per_beat=s.get('per_beat', {}))
 
 
+CHARACTER_TARGET_PCT = 70
+
+
+def character_report(summary: dict | None) -> dict:
+    """Script v5: the share of beats (and time) with the host on screen (user 2026-11-08: target 70 %+). Reported."""
+    c = (summary or {}).get('character')
+    if not c:
+        return dict(note='not a host-format video')
+    return c | dict(target_pct=CHARACTER_TARGET_PCT, meets_target=c['host_pct'] >= CHARACTER_TARGET_PCT)
+
+
+def hook_report(summary: dict | None) -> dict:
+    """Script v5 hook check: the host in frame 1, at most 8 words, answered in the payoff (the chosen hook's answer
+    shares key words with the payoff line). Fails the video when it does not hold."""
+    h = (summary or {}).get('hook')
+    return h if h else dict(note='not a host-format video', pass_=True)
+
+
 SUBJECT_TARGET_PCT = 70
 
 
@@ -358,6 +391,11 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
     target = float(tl.get('target', 45))
     loud = sfx.loudness(video)
     heard = heard_words(video, tl)
+    if words_check([w for b in tl['beats'] for w, _ in b['words']], heard)['missing']:
+        # Whisper on CPU can drop a phrase that is clearly in the audio (2026-11-09: seven doorway words missing in one
+        # pass, all heard in the next). A second pass with the windows cut at other beats; a word heard in either counts.
+        alt = dict(tl, beats=tl['beats'][1:])
+        heard = merge_heard(heard, heard_words(video, alt))
     script = [w for b in tl['beats'] for w, _ in b['words']]
     spent = None
     if ledger and ledger.exists():
@@ -377,6 +415,8 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         cost=dict(spent_usd=spent, cap_usd=2.0, note='only the Claude script call is paid; images, voice and rendering are local'),
         library=library_report(library),
         subject=subject_report(library),
+        character=character_report(library),
+        hook=hook_report(library),
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())

@@ -42,7 +42,7 @@
       "loop_line": "That's where it goes, and that's where the sky's blue goes."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "subject_settings": [],
   "beats": [
     {
@@ -50,13 +50,14 @@
       "role": "hook",
       "narration": "Blue sky. So why red sunsets?",
       "on_screen_text": "Blue sky, red sunset",
-      "visual_intent": "The host snaps their fingers in a park and the sky above flips from blue to red.",
+      "visual_intent": "The host stands in a sunlit park, snapping fingers as the sky above splits half blue, half glowing red.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
-          "doing": "snaps fingers in the park as the sky flips from blue to red",
-          "to_camera": true
+          "doing": "The host stands in a sunlit park, snapping fingers as the sky above splits half blue, half glowing red.",
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -134,7 +135,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "points toward the viewer with a warm, inviting look",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "character",
         "insert": null,
@@ -196,7 +198,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the frame edge and points at beams bouncing off air",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -271,7 +274,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in beside the bars and points at the tall blue bar",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -346,7 +350,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "looks up at the bright blue sky overhead, hand shading eyes",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -421,7 +426,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "points at their own eyes, smiling to camera",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "character",
         "insert": null,
@@ -485,7 +491,8 @@
           "where": "pop_in",
           "side": "centre",
           "doing": "pops in at the edge and traces the long slanting path",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "graphic",
         "insert": null,
@@ -556,7 +563,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "gazes at the low sun as the sky turns red around them",
-          "to_camera": false
+          "to_camera": false,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -637,7 +645,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "nods to camera in front of the red sunset sky",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -718,7 +727,8 @@
           "where": "scene",
           "side": "centre",
           "doing": "waves to camera as the red sky softly fades back toward blue",
-          "to_camera": true
+          "to_camera": true,
+          "cut_on": ""
         },
         "visual": "insert",
         "insert": {
@@ -828,7 +838,8 @@
     }
   ],
   "approvals": {
-    "bases": "876f2883da69417e40130ebdf9c418b7e324b4e60824db475c8d16513d2e73f5"
+    "bases": "876f2883da69417e40130ebdf9c418b7e324b4e60824db475c8d16513d2e73f5",
+    "script": "00f3af47ce2bd9e38c097280884ad890e58376a9561fd5b1879dcf38742bc6d7"
   },
   "meta": {
     "script": {
@@ -916,6 +927,12 @@
         },
         "rejects": [],
         "digest": "876f2883da69"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T01:17:03",
+        "digest": "00f3af47ce2b"
       }
     ]
   }

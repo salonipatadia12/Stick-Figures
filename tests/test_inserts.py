@@ -204,6 +204,11 @@ class TextTimingQaTest(unittest.TestCase):
                               graphic=dict(kind='cards', items=['Plan: last room']), insert=None))])
         self.assertEqual([p['text'] for p in qa.promised_texts(ep)], ['Frost in May', 'Plan', 'last room'])
 
+    def test_a_dropped_article_does_not_skip_the_words_after_it(self):
+        heard = [dict(w=w) for w in 'people forgot more after doorway than after crossing a room even after'.split()]
+        r = qa.words_check('People forgot more after a doorway than after crossing a room. Even after'.split(), heard)
+        self.assertEqual(r['missing'], [])
+
     def test_transcription_windows_cut_in_beat_pauses(self):
         tl = {'beats': [dict(words=[['x', t]]) for t in [0.1, 4.4, 10.2, 14.0, 17.7, 23.6, 27.7, 31.5, 37.6, 43.7]]}
         windows = qa.chunks(tl)

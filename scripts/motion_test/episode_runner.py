@@ -222,6 +222,8 @@ class Runner:
             chars = [b['box'] for b in O.take_box_log() if b['kind'] == 'character']
             if drawn:
                 texts.append(dict(t=round(t, 3), **text_summary(drawn), chars=chars))
+            elif chars:                                 # character boxes on every frame (captions over a body are counted)
+                texts.append(dict(t=round(t, 3), label='', em=999.0, chars=chars))
             proc.stdin.write(frame.convert('RGB').tobytes())
         proc.stdin.close()
         if proc.wait():
@@ -252,7 +254,9 @@ class Runner:
                 if t0 - 0.05 <= at < t1 and key not in seen:
                     seen.add(key)
                     events.append((at, snd, gain))
-        return events
+        import importlib
+        cap = getattr(importlib.import_module(self.beats_name), 'MAX_SFX', None)     # compose_beats: at most 6 per video
+        return sorted(events)[:cap] if cap else events
 
     def build_audio(self, tl, voice, events, music: bool = False) -> Path:
         clips = []
@@ -345,3 +349,9 @@ class Runner:
             sub = report['subject']
             print(f"subject on screen: {sub['subject_beats']}/{sub['beats']} beats = {sub['subject_pct']}% "
                   f"({sub['subject_time_pct']}% of the time; target {sub['target_pct']}%)")
+            ch, hk = report.get('character', {}), report.get('hook', {})
+            if 'host_pct' in ch:
+                print(f"character on screen: {ch['host_beats']}/{ch['beats']} beats = {ch['host_pct']}% ({ch['host_time_pct']}% of the time; "
+                      f"target {ch['target_pct']}%)")
+                print(f"hook: {hk['words']} words, host in frame 1 {hk['host_in_frame_one']}, answered in payoff "
+                      f"{hk['answered_in_payoff']} {hk['shared_words']} -> {'pass' if hk['pass_'] else 'FAIL'}")

@@ -280,6 +280,18 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   (`text.missing_text`). Subscript digits (SO₂, CO₂) are drawn by hand (the UI font has none). Shot clips are cached
   on their beat's script entry and the insert/prop libraries too. The words check transcribes in windows of at most
   20 s cut in the pauses before beats (Whisper skipped a whole sentence at a 30 s window edge of a clean mix).
+- Host format (script v5, user 2026-11-08/09): the lead HOSTS every video (michael voice, lip-sync from word timings,
+  eyes to camera) and tells it end to end: hook (<= 8 words, host in frame 1, answered in the payoff) -> promise ->
+  story -> payoff -> loop; three hook options picked at the script gate (`stick approve --hook N`). The host is
+  composited full-body into every painted scene (`HostLayer` in compose_beats: a body cut once from a standing base,
+  `scripts/motion_test/host_cutout.py` -> `styles/cozy/host/`, the clean s426 head, the scene's light, a contact
+  shadow, off-centre so captions stay clear) or pops in under a diagram to point; character beats use an approved
+  standing base of the setting, else the nearest painted scene of that setting. Host verbs: shiver, look_up, snap,
+  freeze; a host `cut_on` word moves the host to the next spot by a cut (no walk cycles). Diagrams are drawn on
+  watercolour paper with a hand-drawn wobble. Sound: no music by default (`--music` adds the soft bed), only the
+  script's own cues, at most 6. QA adds `character` (host on screen, target 70 %), `hook` (pass/fail), `fill`
+  (no near-empty frames) and `text.caption_on_character_s`. The writer's schema is sent with a flat `picture`
+  (a nested insert/graphic schema compiled to a grammar the API rejects).
 
 The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
 needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or

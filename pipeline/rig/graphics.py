@@ -43,18 +43,51 @@ TOP, BOTTOM = 430, 1250                  # clear of the text slot above and the 
 _paper_cache: dict = {}
 
 
+def _noise(rng, cells_y: int, cells_x: int, blur: float = 0.0) -> np.ndarray:
+    """Smooth value noise in [-1, 1] at full frame size from a coarse random grid."""
+    g = rng.normal(0, 1, (cells_y, cells_x)).astype(np.float32)
+    im = Image.fromarray(((g * 40) + 128).clip(0, 255).astype(np.uint8)).resize((W, H), Image.BICUBIC)
+    if blur:
+        im = im.filter(ImageFilter.GaussianBlur(blur))
+    return (np.asarray(im).astype(np.float32) - 128) / 40
+
+
 def paper() -> Image.Image:
+    """Warm watercolour paper in the cozy palette (user 2026-11-08: no flat clip-art on blank beige): a mottled
+    wash in peach, ochre and grey-teal at several scales, paper granulation, a few soft blooms, and darker deckled
+    edges like a painted page."""
     if 'p' not in _paper_cache:
         rng = np.random.default_rng(7)
-        base = np.ones((H, W, 3), np.float32) * np.array(PAPER, np.float32)
-        grain = rng.normal(0, 1, (H // 4, W // 4)).astype(np.float32)
-        grain = np.asarray(Image.fromarray(((grain * 18) + 128).clip(0, 255).astype(np.uint8)).resize((W, H), Image.BICUBIC)
-                           .filter(ImageFilter.GaussianBlur(2))).astype(np.float32) - 128
-        yy, xx = np.mgrid[0:H, 0:W]
-        vig = 1 - 0.10 * (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
-        img = (base + grain[..., None] * 0.35) * vig[..., None]
+        img = np.ones((H, W, 3), np.float32) * np.array(PAPER, np.float32)
+        tints = [np.array(c, np.float32) for c in ((236, 196, 160), (222, 196, 140), (178, 196, 190))]
+        for (cy, cx, amp), tint in zip(((5, 3, 0.9), (11, 6, 0.8), (22, 13, 0.6)), tints):
+            n = np.clip(_noise(rng, cy, cx, 8), 0, None)[..., None]
+            img = img * (1 - amp * 0.4 * n) + tint * (amp * 0.4 * n)
+        gran = _noise(rng, H // 22, W // 22, 3)[..., None]            # soft granulation pooling in the wash
+        fib = _noise(rng, H // 4, W // 4, 1.0)[..., None]
+        img = img * (1 + gran * 0.035) + fib * 2.5
+        img = img * np.array((1.0, 0.985, 0.95), np.float32)          # warm, never grey
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        edge = np.minimum.reduce([xx, W - 1 - xx, yy, H - 1 - yy]) + _noise(rng, 40, 24, 2) * 18
+        rim = np.clip(1 - edge / 70, 0, 1) ** 2                      # deckled, darker painted edge
+        vig = 1 - 0.13 * (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
+        img = img * vig[..., None] * (1 - 0.22 * rim[..., None]) + np.array((120, 80, 50), np.float32) * 0.22 * rim[..., None]
         _paper_cache['p'] = Image.fromarray(img.clip(0, 255).astype(np.uint8)).convert('RGBA')
     return _paper_cache['p'].copy()
+
+
+def hand_drawn(layer: Image.Image, seed: int = 3) -> Image.Image:
+    """Give a code-drawn layer the wobble of a hand-inked line: a smooth displacement of up to ~3 px and a soft edge."""
+    key = ('warp', seed)
+    if key not in _paper_cache:
+        rng = np.random.default_rng(seed)
+        dx = (_noise(rng, H // 70, W // 70, 3) * 2.6).round().astype(np.int32)
+        dy = (_noise(rng, H // 70, W // 70, 3) * 2.6).round().astype(np.int32)
+        yy, xx = np.mgrid[0:H, 0:W]
+        _paper_cache[key] = (np.clip(yy + dy, 0, H - 1), np.clip(xx + dx, 0, W - 1))
+    ys, xs = _paper_cache[key]
+    a = np.asarray(layer)
+    return Image.fromarray(a[ys, xs], 'RGBA').filter(ImageFilter.GaussianBlur(0.6))
 
 
 def colour_for(label: str, k: int):
@@ -138,7 +171,13 @@ class Graphic:
 
     def frame(self, t: float) -> Image.Image:
         frame = paper()
-        getattr(self, '_' + self.kind, self._flow)(frame, t)
+        ink = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        getattr(self, '_' + self.kind, self._flow)(ink, t)
+        ink = hand_drawn(ink, self.seed)
+        a = np.asarray(ink).astype(np.float32)                     # the paper's texture shows through the fills: painted
+        tex = np.asarray(frame.convert('L')).astype(np.float32)
+        a[..., :3] *= (0.82 + 0.18 * tex / max(1.0, float(tex.mean())))[..., None]
+        frame.alpha_composite(Image.fromarray(a.clip(0, 255).astype(np.uint8), 'RGBA'))
         return frame
 
     def at(self, k):
@@ -345,6 +384,10 @@ class Graphic:
         if q > 0:
             arrow(d, (x + 150, mark_y), (x + 150, top), min(1, g * 1.2), width=10, fill=BLUE if falls else RED)
             text(frame, self.items[0] if self.items else '', (x + 200, (mark_y + top) / 2), anchor='lm', q=q)
+        if len(self.items) > 1:                         # a second label (where it happened) under the bulb
+            q2 = pop(t, self.at(1))
+            if q2 > 0:
+                text(frame, self.items[1], (x, y1 + 150), q=q2)
 
     def _cards(self, frame, t):
         d = ImageDraw.Draw(frame, 'RGBA')

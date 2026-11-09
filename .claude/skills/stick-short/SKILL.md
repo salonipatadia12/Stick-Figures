@@ -80,6 +80,8 @@ still have hand-written beats modules (`episode_salary.py`, `episode_sleep.py`).
    at the very top of the reply, then the library percentage (`library.library_pct`, target 80 %) and the
    subject-on-screen percentage (`subject.subject_pct`, target 70 %) from `qa.json`. Before reporting, look at two
    frames per shot (not only the contact sheet) and read `text.brief_text` and `text.missing_text`.
+   Host-format videos also report `character.host_pct` (target 70 %) and `hook.pass_`; the script gate shows three
+   hook options and is approved with `--hook N`. Add `--music` to render with the soft music bed (off by default).
 8. **Report.** Finish with `.venv/bin/stick cost <slug>`, and tell the user what was spent and what comes next.
 
 **Starter base pack.** `.venv/bin/stick pack starter --candidates` renders candidates for eight common settings
