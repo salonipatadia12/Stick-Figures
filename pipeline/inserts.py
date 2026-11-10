@@ -33,6 +33,11 @@ STYLE = ('Paint a completely new picture in exactly the painting style of this i
          'and texture), but with none of its content and NO people, characters or animals: {scene}. Vertical portrait '
          'composition with open sky or open space in the top third and clear, level open ground across the lower third (room '
          'for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.')
+# A scene in open space has no ground to stand on: the style prompt drops its "open ground" clause there (a lunar
+# module standing on sand, or a capsule parked on a desert, would mislead).
+SPACE = re.compile(r'\b(in (open |black |deep |outer )?space|outer space|in orbit|open space)\b', re.I)
+GROUND = (' and clear, level open ground across the lower third (room for a person to stand there later, eye-level '
+          'camera)')
 EDIT = ('Edit this painting: show the very same place, from the same viewpoint, with the same composition, but {change}. '
         'Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.')
 
@@ -105,7 +110,10 @@ def jobs(want: dict, rnd: int = 1, direction: dict | None = None) -> dict:
         if d.get('base'):
             out[key] = dict(job=name, seeds=[s0, s0 + 1], prompt=EDIT.format(change=scene), images=[str(DIR / f"{d['base']}.png")])
         else:
-            out[key] = dict(job=name, seeds=[s0, s0 + 1], prompt=STYLE.format(scene=scene.rstrip('.')), images=[STYLE_REF])
+            prompt = STYLE.format(scene=scene.rstrip('.'))
+            if SPACE.search(scene):
+                prompt = prompt.replace(GROUND, ', nothing below it: no ground, no horizon, no land')
+            out[key] = dict(job=name, seeds=[s0, s0 + 1], prompt=prompt, images=[STYLE_REF])
     return out
 
 

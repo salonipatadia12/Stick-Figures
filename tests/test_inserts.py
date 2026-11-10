@@ -256,3 +256,11 @@ class InsertRunTest(unittest.TestCase):
         self.assertEqual(set(result['made']), {'ok'})
         self.assertTrue(result['sheet'].endswith('t-inserts-failed.jpg'))
         self.assertEqual(sheet.call_count, 2)
+
+    def test_a_scene_in_space_is_not_asked_for_ground(self):
+        from pipeline import inserts
+        j = inserts.jobs({'s': dict(scene='A spacecraft drifting in open space, Earth behind it'),
+                          'p': dict(scene='A sunlit village street at noon')})
+        self.assertNotIn('open ground', j['s']['prompt'])
+        self.assertIn('no ground', j['s']['prompt'])
+        self.assertIn('open ground across the lower third', j['p']['prompt'])
