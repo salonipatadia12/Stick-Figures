@@ -176,7 +176,7 @@
 <div class="grid">
 {% for s in ep.scenes %}
 <div class="card stack">
-  {% if s.url %}<img class="thumb" src="{{ s.url }}" alt="{{ s.key }}" loading="lazy">{% endif %}
+  {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener"><img class="thumb" src="{{ s.url }}" alt="{{ s.key }}" loading="lazy"></a>{% endif %}
   <div class="spread"><strong>{{ s.key }}</strong><span class="badge {{ 'bad' if s.status == 'failed' else '' }}">{{ s.kind or 'scene' }}{% if s.status == 'failed' %} · failed{% endif %}</span></div>
   {% if s.why %}<p class="notice bad small">{{ s.why }}</p>{% endif %}
   {% if s.scene %}<p class="small">{{ s.scene }}</p>{% endif %}

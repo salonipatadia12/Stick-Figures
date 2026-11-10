@@ -71,8 +71,10 @@ label { display: block; font-weight: 600; margin: 12px 0 4px; }
 .choice { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid var(--line);
   border-radius: 12px; margin: 8px 0; cursor: pointer; font-weight: 400; }
 .choice input { width: 24px; height: 24px; margin-top: 2px; flex: none; }
-.thumb { width: 100%; border-radius: 10px; display: block; background: var(--line); aspect-ratio: 9 / 16; object-fit: cover; }
-.thumb.wide { aspect-ratio: auto; }
+.thumb { display: block; max-width: 100%; max-height: 52vh; width: auto; height: auto; margin: 0 auto;
+  border-radius: 10px; background: var(--line); }
+.thumb.wide { max-height: none; width: 100%; }
+.card > h2:first-child, .card > h3:first-child { margin-top: 0; }
 .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 620px) { .grid { grid-template-columns: 1fr 1fr; } }
 video { width: 100%; max-height: 80vh; border-radius: 12px; background: #000; display: block; }
