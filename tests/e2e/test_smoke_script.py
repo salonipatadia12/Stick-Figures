@@ -114,7 +114,7 @@ class SmokeScriptTest(unittest.TestCase):
 
     def test_usage_errors(self):
         self.assertEqual(self.smoke('--bogus')[0], 2)
-        self.assertEqual(self.smoke(PUBLIC_URL='')[0], 2)
+        self.assertEqual(self.smoke(PUBLIC_URL='ftp://example.invalid')[0], 2)     # never the production default
 
     def test_ssh_mode_healthy_host(self):
         (self.stubs / 'ps.txt').write_text('web|running|healthy\npostgres|running|healthy\ncaddy|running|\n')

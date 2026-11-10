@@ -114,7 +114,7 @@ class Stack:
         finally:
             probe.close()
         if self.runner_mod:                              # the mock web app double runs its own runner thread
-            self.runner = self.spawn('runner', [h.PYTHON, '-m', self.runner_mod])
+            self.runner = self.spawn('runner', [h.PYTHON, '-m', self.runner_mod, '--poll', '0.5'])
         return self
 
     def spawn(self, name, cmd):
@@ -148,15 +148,20 @@ class Flow:
         self.render_wait = render_wait or step
         self.picks = picks if picks is not None else {}
         self.html = {}            # state -> HTML status of /episodes/{slug} (phone user agent) when first seen
+        self.extra_bad = set()    # fake mode adds spend_approval: $0 fake spend must never ask
         self.log = log or (lambda *a: None)
         self.slug = None
 
     def on_state(self, state, ep):
         self.log(f'state: {state} (job: {json.dumps(ep.get("job"))[:160]})')
+        if state == 'spend_approval' and 'spend_approval' not in self.extra_bad:
+            print(f'\n>>> spend approval needed (spend: {ep.get("spend")!r}): allow it or not on your phone: '
+                  f'{self.api.base}/episodes/{self.slug} (this test never allows spending)\n', file=sys.stderr, flush=True)
         if state not in self.html:
             self.html[state] = self.api.get(f'/episodes/{self.slug}', headers={'User-Agent': h.PHONE_UA}).status_code
 
     def wait(self, want, timeout=None, bad=None):
+        bad = set(h.TERMINAL if bad is None else bad) | self.extra_bad
         return self.api.wait_state(self.slug, want, timeout or self.step, bad=bad, on_state=self.on_state)
 
     def human(self, gate, past, timeout):
@@ -230,6 +235,9 @@ class Flow:
         self.case.assertTrue(h.parse_srt(out[f'{self.slug}.srt'].read_text()))
         verdict = h.qa_all(json.loads(out['qa.json'].read_text()))
         self.case.assertIs(verdict, expect_pass, 'qa.json all')
+        render = ep.get('render') or {}
+        self.case.assertIs(render.get('qa_pass'), expect_pass, f'render: {render!r}')
+        self.case.assertGreater(render.get('duration') or 0, 1.0, f'render: {render!r}')
         r = self.api.get(f'/files/{self.slug}/{self.slug}.mp4', params={'dl': 1})
         self.case.assertEqual(r.status_code, 200)
         self.case.assertIn('attachment', r.headers.get('content-disposition', ''))
@@ -268,7 +276,7 @@ def check_refusals(case, base, slug, token):
             case.assertIn(r.status_code, h.REFUSED + h.REDIRECT, f'{path} without login: {r.status_code}')
             if r.status_code in h.REDIRECT:
                 case.assertIn('/login', r.headers.get('location', ''), path)
-        case.assertIn(anon.login('nobody', 'wrong-password').status_code, (400, 401, 403))
+        case.assertIn(anon.login('nobody', 'wrong-password').status_code, (400, 401, 403, 429))
         # the worker token is not a login, and no token or a bad one opens nothing
         bearer = {'Authorization': f'Bearer {token}'}
         case.assertIn(anon.get('/api/episodes', headers=bearer).status_code, h.REFUSED)
@@ -319,6 +327,7 @@ class FakeModeCase(unittest.TestCase):
         self.assertTrue(r.json().get('ok'))
         self.flow = Flow(self, self.api, picks={'story': 1, 'hook': 1, 'scenes': 'approve'},
                          log=lambda *a: print('  [e2e]', *a, file=sys.stderr) if os.getenv('E2E_VERBOSE') else None)
+        self.flow.extra_bad = {'spend_approval'}
 
     def fail_with_logs(self, msg):
         self.fail(f'{msg}\n{self.stack.tails()}')
@@ -356,10 +365,19 @@ class FakeFlowTest(FakeModeCase):
         self.addCleanup(anon.close)
         self.assertEqual(anon.get('/login', headers={'User-Agent': h.PHONE_UA}).status_code, 200)
 
+        for bad_body in ({}, {'topic': ''}, {'topic': '   '}):
+            r = api.post('/api/episodes', json=bad_body)
+            self.assertEqual(r.status_code, 400, f'create with {bad_body}: {r.status_code} {r.text}')
+        r = api.post('/episodes', data={'topic': 'cross-site'}, headers={'Origin': 'https://evil.example'})
+        self.assertEqual(r.status_code, 403, f'form post with a foreign Origin: {r.status_code}')
+
         flow.create(topic)
+        r = api.get(f'/api/episodes/{flow.slug}', params={'view': 'status'})
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('state', r.json())
         try:
             ep = flow.wait('storylines')
-            self.assertEqual(len(ep['storylines']), 3, ep['storylines'])
+            self.assertEqual(len(h.storyline_cards(ep)), 3, ep['storylines'])
             # wrong-state actions are refused and change nothing (the contract's 409 is for script errors; a gate
             # acted on in the wrong state should be refused the same way)
             for path, body in (('script/approve', {'hook': 1}), ('scenes/approve', {}),
@@ -405,8 +423,8 @@ class FakeFlowTest(FakeModeCase):
 
         check_refusals(self, stack.base, flow.slug, stack.token)
         self.assertNotIn(stack.password, (stack.logs / 'web.log').read_text(errors='replace'))
-        r = api.post('/logout')
-        self.assertLess(r.status_code, 400, f'logout: {r.status_code}')
+        r = api.post('/api/logout')
+        self.assertEqual(r.status_code, 200, f'logout: {r.status_code}')
         self.assertIn(api.get('/api/episodes').status_code, h.REFUSED, 'still logged in after logout')
 
 

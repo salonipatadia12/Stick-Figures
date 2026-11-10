@@ -146,7 +146,7 @@ def public(ep):
     out = {k: ep[k] for k in ('slug', 'topic', 'state', 'cost_usd', 'error', 'created_at')}
     out['job'] = j and {'kind': j['kind'], 'status': j['status'], 'progress': j['progress']}
     out['worker'] = worker_view()
-    for k in ('storylines', 'script', 'scenes', 'files'):
+    for k in ('storylines', 'script', 'scenes', 'files', 'render'):
         if ep.get(k) is not None:
             out[k] = ep[k]
     return out
@@ -171,6 +171,22 @@ async def api_login(request: Request):
     return resp
 
 
+@app.post('/api/logout')
+async def api_logout(request: Request):
+    db['sessions'].discard(request.cookies.get('session'))
+    resp = JSONResponse({'ok': True})
+    resp.delete_cookie('session')
+    return resp
+
+
+@app.post('/episodes')
+async def create_form(request: Request):
+    origin = request.headers.get('origin')
+    if origin and origin.rstrip('/') != os.getenv('PUBLIC_URL', '').rstrip('/'):
+        raise HTTPException(403, 'foreign origin')
+    raise HTTPException(501, 'the mock has no form create')
+
+
 @app.post('/logout')
 async def logout(request: Request):
     db['sessions'].discard(request.cookies.get('session'))
@@ -183,6 +199,8 @@ async def logout(request: Request):
 async def create(request: Request):
     need_session(request)
     body = await request.json()
+    if not str(body.get('topic') or '').strip():
+        raise HTTPException(400, 'topic required')
     with lock:
         base = re.sub(r'[^a-z0-9]+', '-', body['topic'].lower()).strip('-')[:40] or 'episode'
         slug = base
@@ -191,7 +209,7 @@ async def create(request: Request):
         db['episodes'][slug] = dict(slug=slug, topic=body['topic'], state='researching', cost_usd=0.0, error=None,
                                     created_at=now(), storylines=None, script=None, scenes=None, files=[])
         queue(slug, 'pitch')
-    return {'slug': slug}
+    return {'ok': True, 'slug': slug}
 
 
 @app.get('/api/episodes')
@@ -359,6 +377,8 @@ async def done(job_id: int, request: Request, authorization: str | None = Header
                 queue(ep['slug'], 'render', {})
         elif j['kind'] == 'render':
             ep['state'] = 'done' if result.get('qa_pass') else 'done_qa_failed'
+            ep['render'] = {'duration': result.get('duration'), 'qa_pass': result.get('qa_pass'),
+                            'qa_checks': result.get('qa_summary')}
     return {'ok': True}
 
 

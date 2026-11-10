@@ -1,14 +1,14 @@
 #!/bin/sh
 # Post-deploy smoke test for the Stick Figures web app (docs/WEBAPP.md). POSIX sh; never prints secrets.
 #
-#   PUBLIC_URL=https://187-127-179-129.sslip.io [SMOKE_USER=... SMOKE_PASSWORD=...] deploy/smoke_test.sh [--ssh root@host]
+#   [PUBLIC_URL=https://stick.srv1747356.hstgr.cloud] [SMOKE_USER=... SMOKE_PASSWORD=...] deploy/smoke_test.sh [--ssh root@host]
 #
 # Checks: TLS certificate (valid chain + days left), /api/health (ok, db), worker status, anonymous requests
 # refused, login (only when SMOKE_USER and SMOKE_PASSWORD are set), the history page after login, a static asset.
 # With --ssh user@host it also checks `docker compose ps` (all running and healthy), container restart counts, disk
 # free and memory on the host (read-only commands only).
 #
-# Environment (all optional except PUBLIC_URL):
+# Environment (all optional; PUBLIC_URL defaults to production, https://stick.srv1747356.hstgr.cloud behind nginx):
 #   SMOKE_USER, SMOKE_PASSWORD  the web login (the password goes to curl through a 0600 temp file, never argv)
 #   SMOKE_CA_FILE               a CA bundle for curl (tests with a self-signed certificate)
 #   SMOKE_TIMEOUT               seconds per HTTP request (default 15)
@@ -34,11 +34,12 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if [ -z "${PUBLIC_URL:-}" ]; then
-    echo "smoke: set PUBLIC_URL (e.g. https://187-127-179-129.sslip.io)" >&2
-    exit 2
-fi
-URL=${PUBLIC_URL%/}
+URL=${PUBLIC_URL:-https://stick.srv1747356.hstgr.cloud}
+URL=${URL%/}
+case "$URL" in
+    http://*|https://*) ;;
+    *) echo "smoke: PUBLIC_URL must start with http:// or https:// (got '$URL')" >&2; exit 2 ;;
+esac
 TIMEOUT=${SMOKE_TIMEOUT:-15}
 MIN_DAYS=${SMOKE_CERT_MIN_DAYS:-14}
 COMPOSE_DIR=${COMPOSE_DIR:-/srv/stick}

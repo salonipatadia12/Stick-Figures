@@ -240,6 +240,12 @@ def scene_keys(ep: dict) -> list:
     return out
 
 
+def storyline_cards(ep: dict) -> list:
+    """The storyline cards: webapp/ sends {cards: [...], pick, note, text}; a bare list is accepted too."""
+    sl = ep.get('storylines')
+    return (sl.get('cards') or []) if isinstance(sl, dict) else list(sl or [])
+
+
 def file_names(ep: dict) -> list:
     """Names in the episode's `files` (list of dicts with `name`, list of names, or dict keyed by name)."""
     fs = ep.get('files')
