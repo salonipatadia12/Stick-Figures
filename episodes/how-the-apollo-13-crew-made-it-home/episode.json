@@ -11,10 +11,38 @@
     "provider": "kokoro",
     "voice_id": ""
   },
-  "title": "",
-  "hook_promise": "",
-  "hook_options": [],
-  "hook_pick": 0,
+  "title": "You're 200,000 Miles From Home",
+  "hook_promise": "Something exploded nearly 200,000 miles from home. How do you get back?",
+  "hook_options": [
+    {
+      "line": "Something exploded nearly 200,000 miles from home.",
+      "frame_one": "The host stands in a small painted spacecraft cabin, jolting as a white flash fills the window behind them.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The lander's full oxygen tank and engine, a 35-second burn and a tape-and-cardboard fix get the crew home.",
+      "loop_line": "Tape, cardboard, and a lifeboat, nearly 200,000 miles from home."
+    },
+    {
+      "line": "Both oxygen tanks burst. Now what?",
+      "frame_one": "The host stands in a dim spacecraft cabin, hands up, as pale vapor streams past the round window behind them.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The lander Aquarius, with its full oxygen tank and engine, becomes the lifeboat that gets the crew home.",
+      "loop_line": "Both oxygen tanks burst. Now what? A lifeboat, and tape."
+    },
+    {
+      "line": "Could tape and cardboard help bring you home?",
+      "frame_one": "The host holds a roll of tape and a flat piece of cardboard in a cramped painted cabin, looking at the viewer.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "Mission control's fix of plastic bags, cardboard and tape joined the canisters to the lander's system.",
+      "loop_line": "So yes: tape and cardboard helped bring you home."
+    }
+  ],
+  "hook_pick": 1,
   "storylines": [
     {
       "format": "myth_vs_fact",
@@ -87,10 +115,927 @@
       ]
     }
   ],
-  "storyline_pick": 0,
+  "storyline_pick": 3,
   "story_note": "",
   "subject_settings": [],
-  "beats": [],
+  "beats": [
+    {
+      "id": "b01",
+      "role": "hook",
+      "narration": "Something exploded nearly 200,000 miles from home.",
+      "on_screen_text": "Nearly 200,000 miles",
+      "visual_intent": "The host stands in a small painted spacecraft cabin, jolting as a white flash fills the window behind them.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "medium",
+          "holds": "",
+          "doing": "The host stands in a small painted spacecraft cabin, jolting as a white flash fills the window behind them.",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "apollo-cabin-interior",
+          "scene": "Cramped painted spacecraft cabin with a control panel, small round window showing black space and stars, warm amber lamp light.",
+          "effects": [
+            {
+              "kind": "flash",
+              "anchor": "exploded",
+              "at": "centre",
+              "detail": ""
+            },
+            {
+              "kind": "shake",
+              "anchor": "exploded",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "Apollo command module cabin",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "jolt",
+              "target": "",
+              "anchor": "exploded"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "impact_shake",
+            "anchor": "exploded",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "200,000",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b02",
+      "role": "setup",
+      "narration": "You switch a fan on. A short circuit. Then, bang.",
+      "on_screen_text": "",
+      "visual_intent": "Close on the host's hand reaching for the panel, then a flash at the word bang.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "large",
+          "holds": "",
+          "doing": "reaches toward the switch panel, then flinches at the flash",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "apollo-switch-panel",
+          "scene": "Close view of a spacecraft switch panel with toggles and dials, warm amber light, a round window to one side showing stars.",
+          "effects": [
+            {
+              "kind": "flash",
+              "anchor": "bang",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "Apollo command module cabin",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "reach",
+              "target": "switch panel",
+              "anchor": "fan"
+            },
+            {
+              "who": "lead",
+              "verb": "jolt",
+              "target": "",
+              "anchor": "bang"
+            }
+          ],
+          "props": [
+            {
+              "name": "switch panel",
+              "held_by": "",
+              "where": "wall"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "bang",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "thud",
+          "anchor": "bang"
+        }
+      ],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b03",
+      "role": "problem",
+      "narration": "Both oxygen tanks rupture and vent into space.",
+      "on_screen_text": "",
+      "visual_intent": "The host watches from the edge as vapor streams out of the painted spacecraft in space.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "stands small and watches vapor stream away from the ship",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "spacecraft-venting-oxygen",
+          "scene": "Painted Apollo spacecraft floating in black space with pale vapor streaming from its side, distant Earth glowing small in the corner.",
+          "effects": [
+            {
+              "kind": "haze",
+              "anchor": "vent",
+              "at": "right",
+              "detail": ""
+            },
+            {
+              "kind": "label",
+              "anchor": "tanks",
+              "at": "centre",
+              "detail": "Both tanks"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "black space beside the spacecraft",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "",
+              "anchor": "vent"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "whoosh",
+          "anchor": "vent"
+        }
+      ],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b04",
+      "role": "stakes",
+      "narration": "Worse, you left your free-return course to aim for the Moon. Now you need to get back on it.",
+      "on_screen_text": "",
+      "visual_intent": "A drawn diagram of two paths, with the host popping in at the edge to point at the course they left.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "pops in at the frame edge and points at the path they left",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "graphic",
+        "insert": null,
+        "graphic": {
+          "kind": "two_paths",
+          "items": [
+            "Free-return",
+            "Moon landing"
+          ],
+          "anchors": [
+            "free-return",
+            "Moon"
+          ],
+          "detail": "both"
+        },
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "drawn diagram page",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "Moon"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "arrow_draw",
+            "anchor": "get back",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b05",
+      "role": "twist",
+      "narration": "So the Moon lander, Aquarius, becomes your lifeboat.",
+      "on_screen_text": "Lifeboat",
+      "visual_intent": "The painted lander stands in space with the host small beside it, reframing the Moon ship as a rescue ship.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "stands small beside the lander, looking up at it",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "lunar-module-aquarius",
+          "scene": "Painted lunar module with gold foil legs and a boxy cabin floating in black space, soft light from the side, Earth faint in the distance.",
+          "effects": [
+            {
+              "kind": "push",
+              "anchor": "lifeboat",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "black space beside the lunar module",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "look_up",
+              "target": "",
+              "anchor": "Aquarius"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "lifeboat",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b06",
+      "role": "reveal",
+      "narration": "Its full oxygen tank and descent engine keep you alive.",
+      "on_screen_text": "",
+      "visual_intent": "Close-up on the lander's tank and engine with the host large at the edge, pointing.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "large",
+          "holds": "",
+          "doing": "points at the oxygen tank and engine, then nods at the viewer",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "lander-tank-and-engine",
+          "scene": "Close painted view of the lunar module underside, a round oxygen tank in gold foil above a bell-shaped descent engine, warm side light.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "engine",
+              "at": "ground",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "beside the lunar module underside",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "engine"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "engine",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b07",
+      "role": "stakes",
+      "narration": "Ground controllers compute a 35-second burn.",
+      "on_screen_text": "35 seconds",
+      "visual_intent": "An illustrated map of Earth, the Moon and the ship, with an arrow showing the course correction.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "small",
+          "holds": "",
+          "doing": "stands small in the corner of the map, studying the route",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "earth-moon-route-map",
+          "scene": "Illustrated map of space with Earth on the left, the Moon on the right and a small spacecraft between them, no text.",
+          "effects": [
+            {
+              "kind": "arrow",
+              "anchor": "compute",
+              "at": "",
+              "detail": ""
+            },
+            {
+              "kind": "pin",
+              "anchor": "burn",
+              "at": "centre",
+              "detail": "Burn"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "illustrated map of Earth and Moon",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "",
+              "anchor": "compute"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "number_counter",
+            "anchor": "35-second",
+            "detail": "0 -> 35 seconds"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b08",
+      "role": "stakes",
+      "narration": "You fire it five hours after the explosion.",
+      "on_screen_text": "5 hours",
+      "visual_intent": "Inside the lander, the host pulls the control and the cabin shakes as the engine fires.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "medium",
+          "holds": "",
+          "doing": "pulls a control lever as the cabin rattles around them",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "lander-cabin-interior",
+          "scene": "Tight painted lunar module cabin with a small control panel, a triangular window showing stars, dim warm light.",
+          "effects": [
+            {
+              "kind": "shake",
+              "anchor": "fire",
+              "at": "",
+              "detail": ""
+            },
+            {
+              "kind": "flash",
+              "anchor": "fire",
+              "at": "ground",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lunar module cabin",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "reach",
+              "target": "control lever",
+              "anchor": "fire"
+            }
+          ],
+          "props": [
+            {
+              "name": "control lever",
+              "held_by": "",
+              "where": "wall"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "impact_shake",
+            "anchor": "fire",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "five hours",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "whoosh",
+          "anchor": "fire"
+        }
+      ],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b09",
+      "role": "stakes",
+      "narration": "Mission control's fix uses plastic bags, cardboard and tape from on board, joining canisters to the lander's system.",
+      "on_screen_text": "",
+      "visual_intent": "A top-down worktable with bags, cardboard and tape, the host holding the roll close to the camera.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "close",
+          "holds": "a roll of tape",
+          "doing": "holds up the roll of tape and tears off a strip",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "tape-bags-cardboard-table",
+          "scene": "Top-down view of a worktable with clear plastic bags, a sheet of cardboard, a roll of tape and a small canister, warm light.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "tape",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "worktable seen from above",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "pick_up",
+              "target": "roll of tape",
+              "anchor": "tape"
+            }
+          ],
+          "props": [
+            {
+              "name": "roll of tape",
+              "held_by": "lead",
+              "where": "left hand"
+            },
+            {
+              "name": "plastic bags",
+              "held_by": "",
+              "where": "table"
+            },
+            {
+              "name": "cardboard",
+              "held_by": "",
+              "where": "table"
+            },
+            {
+              "name": "canister",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "checklist_tick",
+            "anchor": "plastic bags",
+            "detail": "Plastic bags | Cardboard | Tape"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "paper",
+          "anchor": "cardboard"
+        }
+      ],
+      "source_ids": [
+        "s5"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b10",
+      "role": "payoff",
+      "narration": "Lander oxygen, a 35-second burn, and tape. That's how you get home.",
+      "on_screen_text": "",
+      "visual_intent": "Camera pulls back to show Earth in the distance with the host small and watching.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "watches Earth glow ahead, arms relaxed",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "earth-far-away",
+          "scene": "Painted view of space with Earth glowing blue and white in the distance, a small spacecraft in the foreground, soft light.",
+          "effects": [
+            {
+              "kind": "push",
+              "anchor": "home",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "black space with Earth ahead",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "",
+              "anchor": "home"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "home"
+        }
+      ],
+      "source_ids": [
+        "s2",
+        "s4",
+        "s5"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b11",
+      "role": "loop",
+      "narration": "Tape, cardboard, and a lifeboat, nearly 200,000 miles from home.",
+      "on_screen_text": "",
+      "visual_intent": "Back in the cabin, the host nods at the camera as the window now shows Earth.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "large",
+          "holds": "",
+          "doing": "nods at the viewer with a small smile beside the window",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "apollo-cabin-interior",
+          "scene": "Cramped painted spacecraft cabin with a control panel, small round window and warm amber lamp light.",
+          "effects": [
+            {
+              "kind": "crossfade",
+              "anchor": "home",
+              "at": "",
+              "detail": "cabin window now showing Earth"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "Apollo command module cabin",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "camera",
+              "anchor": "home"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "breathe",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1",
+        "s2",
+        "s5"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    }
+  ],
   "sources": [
     {
       "id": "s1",
@@ -128,7 +1073,10 @@
       "quote": "Mission control devised a way to attach the CM canisters to the LM system by using plastic bags, cardboard and to tape all materials carried on board...."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "storyline": "4e3c6a3338fa980cd605a868079a1bdac3678fe554325cb38f00d61cca9b79cb",
+    "script": "aa4fdf8e3bb625a35665caf68fec5f1dfe5f1d8a133e22057e6869e022e5aac3"
+  },
   "meta": {
     "story": {
       "allowed": [
@@ -144,7 +1092,34 @@
         "at": "2026-11-09T22:33:10",
         "by": "claude",
         "what": "research reused from research-003ab0c96a943d5c.json (paid run) under the new prompt key; storylines re-pitched from reputable facts only"
+      },
+      {
+        "at": "2026-11-09T23:09:06",
+        "by": "user (via chat)",
+        "what": "b10 \"one engine burn\" -> \"a 35-second burn\"; b07 counter reads \"35 seconds\""
       }
-    ]
+    ],
+    "approval_log": [
+      {
+        "gate": "storyline",
+        "by": "user",
+        "at": "2026-11-09T22:51:46",
+        "pick": 3,
+        "format": "pov",
+        "digest": "4e3c6a3338fa"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T23:09:08",
+        "digest": "aa4fdf8e3bb6"
+      }
+    ],
+    "script": {
+      "model": "claude-sonnet-5-5",
+      "prompt_version": "script-v6",
+      "research": true,
+      "generated": "2026-11-09T22:54:38"
+    }
   }
 }

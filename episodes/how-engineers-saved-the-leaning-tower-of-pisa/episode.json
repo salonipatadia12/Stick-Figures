@@ -42,7 +42,7 @@
       "loop_line": "One careful move at a time, and the tower stands."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "storylines": [
     {
       "format": "mystery",
@@ -121,14 +121,14 @@
       "role": "hook",
       "narration": "Touch it wrong, it falls. Now fix it.",
       "on_screen_text": "Now fix it",
-      "visual_intent": "The leaning tower at dusk; the host reaches toward it and freezes as the sky turns cold.",
+      "visual_intent": "The host stands at dusk before the leaning tower, one hand reaching out to touch it, frozen mid-reach with a worried look.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "left",
           "size": "medium",
           "holds": "",
-          "doing": "reaches a hand toward the tilting tower, then freezes mid-reach",
+          "doing": "The host stands at dusk before the leaning tower, one hand reaching out to touch it, frozen mid-reach with a worried look.",
           "to_camera": true,
           "cut_on": ""
         },
@@ -1036,7 +1036,8 @@
     }
   ],
   "approvals": {
-    "storyline": "b19f91d131058b531ea18b6254f5f46e4d29cbaad6124c0d17505409f76a16f9"
+    "storyline": "b19f91d131058b531ea18b6254f5f46e4d29cbaad6124c0d17505409f76a16f9",
+    "script": "2eeb88198d893f95a78f46a190ad511148efe90dab46cc5a776f683bc8aa08ba"
   },
   "meta": {
     "story": {
@@ -1087,6 +1088,12 @@
         "pick": 1,
         "format": "mystery",
         "digest": "b19f91d13105"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T22:51:43",
+        "digest": "2eeb88198d89"
       }
     ],
     "script": {

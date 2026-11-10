@@ -11,9 +11,37 @@
     "provider": "kokoro",
     "voice_id": ""
   },
-  "title": "",
-  "hook_promise": "",
-  "hook_options": [],
+  "title": "Why You Can't Tickle Yourself",
+  "hook_promise": "Why does your own touch never tickle, when someone else's does?",
+  "hook_options": [
+    {
+      "line": "I can't tickle myself. Here's why.",
+      "frame_one": "Host stands in a sunlit bedroom, poking own ribs with a puzzled frown while a flat gray cloud floats beside.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The brain predicts its own touch and turns it down, so there is no gap to feel.",
+      "loop_line": "Touch from someone else gets through. Me? I still can't tickle myself."
+    },
+    {
+      "line": "Why does my own touch feel like nothing?",
+      "frame_one": "Host pokes own ribs with a deadpan face in a bedroom while a small gray cloud hovers over the finger.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The brain predicts self-made touch from the movement and dials it down.",
+      "loop_line": "So that's why my own touch feels like nothing."
+    },
+    {
+      "line": "Your brain is cheating at tickling.",
+      "frame_one": "Host squints suspiciously at their own finger, an inch from their ribs, in a golden bedroom.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The brain predicts the touch from the movement and dulls it before it arrives.",
+      "loop_line": "Yep, my brain cheats. That's why I can't tickle myself."
+    }
+  ],
   "hook_pick": 0,
   "storylines": [
     {
@@ -83,10 +111,806 @@
       ]
     }
   ],
-  "storyline_pick": 0,
+  "storyline_pick": 1,
   "story_note": "",
   "subject_settings": [],
-  "beats": [],
+  "beats": [
+    {
+      "id": "b01",
+      "role": "hook",
+      "narration": "I can't tickle myself. Here's why.",
+      "on_screen_text": "No tickle?",
+      "visual_intent": "The host stands in a golden bedroom, poking own ribs with a puzzled frown while a flat gray cloud floats beside.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "medium",
+          "holds": "",
+          "doing": "pokes own ribs, then shrugs with a puzzled frown",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "shrug",
+              "target": "",
+              "anchor": "why"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "tickle",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b02",
+      "role": "setup",
+      "narration": "I poke my ribs. Nothing. Not even a giggle.",
+      "on_screen_text": "Nothing.",
+      "visual_intent": "Close on the host's finger against the ribs in a sunlit bedroom, a dull gray cloud appears.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "large",
+          "holds": "",
+          "doing": "pokes own ribs and stares blankly at the camera",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "bedroom-sunlit-floor",
+          "scene": "A warm sunlit bedroom with an unmade bed, wooden floor and dappled window light, morning, calm and still.",
+          "effects": [
+            {
+              "kind": "dim",
+              "anchor": "Nothing",
+              "at": "centre",
+              "detail": ""
+            },
+            {
+              "kind": "label",
+              "anchor": "Nothing",
+              "at": "top",
+              "detail": "Nothing"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "reach",
+              "target": "ribs",
+              "anchor": "poke"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "Nothing",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "pop",
+          "anchor": "Nothing"
+        }
+      ],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b03",
+      "role": "problem",
+      "narration": "So I try harder. Faster. Sneakier. Still nothing.",
+      "on_screen_text": "",
+      "visual_intent": "The host jabs at own ribs with growing effort, the same flat gray cloud refusing to change.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "",
+          "doing": "jabs at own ribs quickly, frowning harder each time",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "reach",
+              "target": "ribs",
+              "anchor": "Faster"
+            },
+            {
+              "who": "lead",
+              "verb": "slump",
+              "target": "",
+              "anchor": "nothing"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "Sneakier",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b04",
+      "role": "stakes",
+      "narration": "Okay, is my own brain working against me?",
+      "on_screen_text": "",
+      "visual_intent": "The host looks suspiciously up at the window light, as if at their own head, in the dim evening bedroom.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "close",
+          "holds": "",
+          "doing": "narrows eyes and glances up, suspecting own brain",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "bedroom-window-evening",
+          "scene": "A quiet bedroom corner at dusk with a window, soft golden light fading to cool blue, an empty bed and a small lamp.",
+          "effects": [
+            {
+              "kind": "dim",
+              "anchor": "brain",
+              "at": "top",
+              "detail": ""
+            },
+            {
+              "kind": "push",
+              "anchor": "brain",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "look_up",
+              "target": "",
+              "anchor": "brain"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b05",
+      "role": "twist",
+      "narration": "Kind of! When I move, my brain predicts how it'll feel, and turns that touch down.",
+      "on_screen_text": "Brain predicts, dials down",
+      "visual_intent": "A drawn flow shows movement leading to a prediction, which leads to a dimmed touch, with the host popping in to point.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "pops in at the edge and points along the diagram",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "graphic",
+        "insert": null,
+        "graphic": {
+          "kind": "flow",
+          "items": [
+            "Move",
+            "Prediction",
+            "Dimmed touch"
+          ],
+          "anchors": [
+            "move",
+            "predicts",
+            "down"
+          ],
+          "detail": ""
+        },
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "camera",
+              "anchor": "predicts"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "arrow_draw",
+            "anchor": "turns",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "predicts",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "predicts"
+        }
+      ],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b06",
+      "role": "clue",
+      "narration": "Scans show touch areas of the brain react less to my own touch than to someone else's.",
+      "on_screen_text": "",
+      "visual_intent": "Two stacked painted brains: one glowing dimly for own touch, one bright for touch from someone else.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "leans in at the frame edge, watching the glowing brains",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "split",
+        "insert": {
+          "key": "brain-glow-dim",
+          "scene": "A painted brain resting in a warm dark study, glowing only faintly, soft amber light.",
+          "effects": [
+            {
+              "kind": "dim",
+              "anchor": "own",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": {
+          "key": "brain-glow-bright",
+          "scene": "A painted brain in a warm dark study glowing bright gold, soft light spilling around",
+          "labels": [
+            "Own touch",
+            "Someone else's"
+          ],
+          "anchors": [
+            "own",
+            "someone"
+          ]
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "split_compare",
+            "anchor": "own",
+            "detail": "Own touch | Someone else's"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s2",
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b07",
+      "role": "reveal",
+      "narration": "And the bigger the gap between what it predicted and what I feel, the more ticklish it gets.",
+      "on_screen_text": "Bigger gap, more tickle",
+      "visual_intent": "The host holds up a feather on a stick, pointing at a growing gap, with an arrow drawn across the scene.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "large",
+          "holds": "a feather on a stick",
+          "doing": "holds the feather up with a small grin, pointing at the gap",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "feather-bedroom-bed",
+          "scene": "A sunlit bedroom with a rumpled bed, a wooden floor and a soft rug, golden afternoon light and long shadows.",
+          "effects": [
+            {
+              "kind": "arrow",
+              "anchor": "gap",
+              "at": "centre",
+              "detail": "left -> right"
+            },
+            {
+              "kind": "label",
+              "anchor": "ticklish",
+              "at": "top",
+              "detail": "Ticklish"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "feather on a stick",
+              "anchor": "gap"
+            }
+          ],
+          "props": [
+            {
+              "name": "feather on a stick",
+              "held_by": "lead",
+              "where": "right hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "bigger",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "ticklish",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s5"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b08",
+      "role": "reveal",
+      "narration": "In one experiment, people who kept getting a delayed touch learned to turn down that delayed touch too.",
+      "on_screen_text": "",
+      "visual_intent": "A painted wall clock on a bedroom wall, with the scene fading to a dulled gray as the delayed touch is learned away.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "watches the wall clock tick with raised brows",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "bedroom-wall-clock",
+          "scene": "A warm bedroom wall with a round wooden clock above a small desk, golden late-afternoon light, quiet and still.",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "delayed",
+              "at": "top",
+              "detail": "Delay"
+            },
+            {
+              "kind": "crossfade",
+              "anchor": "learned",
+              "at": "centre",
+              "detail": "the same wall in dull gray light"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "wall clock",
+              "anchor": "delayed"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "parallax",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s6"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b09",
+      "role": "payoff",
+      "narration": "So my brain predicts my own touch. No gap, no surprise, no tickle.",
+      "on_screen_text": "No gap, no tickle",
+      "visual_intent": "The camera pushes in on the host's head as a small painted note glows on the wall behind, the prediction.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "close",
+          "holds": "",
+          "doing": "taps own temple with a knowing smile",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "glowing-note-bedroom-wall",
+          "scene": "A warm bedroom corner with a small paper note pinned to the wall, glowing softly gold, dusk light through the window.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "predicts",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "predicts"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "gap",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1",
+        "s5"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b10",
+      "role": "loop",
+      "narration": "Touch from someone else gets through. Me? I still can't tickle myself.",
+      "on_screen_text": "",
+      "visual_intent": "The friend tickles the host with a feather on a stick; the host laughs, then shrugs at the camera.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "",
+          "doing": "flinches at the friend's feather, then shrugs at the camera",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead",
+          "friend"
+        ],
+        "staging": {
+          "setting": "bedroom",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            },
+            {
+              "who": "friend",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "friend",
+              "verb": "reach",
+              "target": "lead",
+              "anchor": "through"
+            },
+            {
+              "who": "lead",
+              "verb": "shrug",
+              "target": "camera",
+              "anchor": "myself"
+            }
+          ],
+          "props": [
+            {
+              "name": "feather on a stick",
+              "held_by": "friend",
+              "where": "right hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "enter_right",
+            "anchor": "someone",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "pop",
+          "anchor": "through"
+        }
+      ],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    }
+  ],
   "sources": [
     {
       "id": "s1",
@@ -138,7 +962,9 @@
       "quote": "Finally, recent evidence suggests that this predictive mechanism is abnormal in patients with auditory hallucinations and/or passivity experiences."
     }
   ],
-  "approvals": {},
+  "approvals": {
+    "storyline": "b2346d09028bf9db7279c3f038d6626c85fb81037fd34ad64c90945173a781bd"
+  },
   "meta": {
     "story": {
       "allowed": [
@@ -155,6 +981,22 @@
         "by": "claude",
         "what": "research reused from research-175de068421d6064.json (paid run) under the new prompt key; storylines re-pitched from reputable facts only"
       }
-    ]
+    ],
+    "approval_log": [
+      {
+        "gate": "storyline",
+        "by": "user",
+        "at": "2026-11-09T22:51:45",
+        "pick": 1,
+        "format": "mini_story",
+        "digest": "b2346d09028b"
+      }
+    ],
+    "script": {
+      "model": "claude-sonnet-5-5",
+      "prompt_version": "script-v6",
+      "research": true,
+      "generated": "2026-11-09T22:53:21"
+    }
   }
 }

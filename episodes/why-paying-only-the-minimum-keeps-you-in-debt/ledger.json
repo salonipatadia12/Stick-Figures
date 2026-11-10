@@ -1,0 +1,64 @@
+{
+  "budget_usd": 2.0,
+  "spent_usd": 0.354616,
+  "prices_verified": "2026-11-04",
+  "entries": [
+    {
+      "id": 1,
+      "step": "research",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.287684,
+      "actual_usd": 0.180132,
+      "status": "ok",
+      "detail": "web search \u22644 | stop=end_turn",
+      "usage": {
+        "input": 66166,
+        "output": 780,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 4
+      },
+      "at": "2026-11-09T22:52:22"
+    },
+    {
+      "id": 2,
+      "step": "storyline",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.085042,
+      "actual_usd": 0.017832,
+      "status": "ok",
+      "detail": "three storylines | stop=end_turn",
+      "usage": {
+        "input": 2521,
+        "output": 1279,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 0
+      },
+      "at": "2026-11-09T22:52:30"
+    },
+    {
+      "id": 3,
+      "step": "script",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.262122,
+      "actual_usd": 0.156652,
+      "status": "ok",
+      "detail": "structured script | stop=end_turn",
+      "usage": {
+        "input": 11061,
+        "output": 13453,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 0
+      },
+      "at": "2026-11-09T23:09:12"
+    }
+  ]
+}

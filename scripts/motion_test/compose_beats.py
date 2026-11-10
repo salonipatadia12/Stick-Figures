@@ -103,12 +103,16 @@ def counter(frame, t, t0, a: float, b: float, centre=TEXT_TOP, size: int = 110, 
 
 
 def parse_counter(detail: str):
-    nums = re.findall(r'-?[\d][\d,]*\.?\d*', detail)
-    if len(nums) < 2:
+    """'0 -> 35' / '$0 -> $3,000' / '0 -> 40%' / '0 -> 35 seconds': (from, to, prefix, suffix). A word after the last
+    number is shown after the counted number ("35 seconds", user 2026-11-10)."""
+    found = list(re.finditer(r'-?[\d][\d,]*\.?\d*', detail))
+    if len(found) < 2:
         return None
-    a, b = (float(n.replace(',', '')) for n in nums[:2])
+    a, b = (float(m.group(0).replace(',', '')) for m in found[:2])
     pre = re.match(r'\s*([$€£₹¥])', detail)
-    return a, b, (pre.group(1) if pre else ''), ('%' if '%' in detail else '')
+    tail = detail[found[1].end():].strip()
+    suffix = '%' if '%' in detail else (' ' + tail if re.fullmatch(r"[A-Za-z][A-Za-z' -]{0,20}", tail) else '')
+    return a, b, (pre.group(1) if pre else ''), suffix
 
 
 def word_time(T: dict, anchor: str, default: float) -> float:

@@ -1,0 +1,1174 @@
+{
+  "schema_version": 1,
+  "slug": "why-paying-only-the-minimum-keeps-you-in-debt",
+  "topic": "Why paying only the minimum keeps you in debt for years",
+  "niche": "personal finance",
+  "audience": "US adults",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "Two Ways to Pay Off the Same $3,000",
+  "hook_promise": "Why does the same $3,000 debt end in such different bills depending on the monthly payment?",
+  "hook_options": [
+    {
+      "line": "Same $3,000 debt. Wildly different bills.",
+      "frame_one": "The host stands in a sunlit kitchen holding up two paper bills, one thin and one long, eyebrows raised, looking at the viewer.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The payoff shows the minimum path takes 11 years and about $4,745, while $103 a month takes 3 years and $3,712.",
+      "loop_line": "Same debt, same card. Wildly different bills."
+    },
+    {
+      "line": "Why does paying less cost more?",
+      "frame_one": "The host sits at a cafe table holding a tiny coin in one hand and a heavy jar of coins in the other, looking puzzled.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The payoff shows the smaller minimum payment ends up costing about $4,745 versus $3,712 for $103 a month.",
+      "loop_line": "Now you know why paying less costs more."
+    },
+    {
+      "line": "Eleven years or three? Same card.",
+      "frame_one": "The host stands beside a huge stack of flipped calendar pages and a tiny stack, pointing at both with a surprised look.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The payoff shows the minimum takes 11 years while $103 a month finishes in 3 years on the same balance.",
+      "loop_line": "Eleven years or three. Same card."
+    }
+  ],
+  "hook_pick": 0,
+  "storylines": [
+    {
+      "format": "experiment",
+      "title": "Two Ways to Pay Off the Same $3,000",
+      "hook": "Same $3,000 debt. Wildly different bills.",
+      "pitch": "The host runs a side-by-side test on one $3,000 card balance at 14.4%. One payer pays only the minimum, the other pays $103 a month. The minimum path takes 11 years and about $4,745, while $103 a month finishes in 3 years for $3,712.",
+      "conflict": "The same $3,000 balance can end in two very different outcomes depending only on the monthly payment.",
+      "stakes": "The timeline stretches from 3 years to 11 years, and the total cost climbs from $3,712 to about $4,745.",
+      "twist": "The minimum payment looks smaller each month, yet it costs about $1,033 more in total and takes 8 more years.",
+      "payoff": "The hook is answered: the tiny monthly payment is the expensive one, and paying $103 a month wins on both time and money.",
+      "visuals": [
+        "Split screen: two painted $3,000 card balances",
+        "Host holds two bills, one labeled minimum, one $103",
+        "Calendar pages flip to 11 years versus 3 years",
+        "Close-up of totals: $4,745 versus $3,712",
+        "Host points at the gap between the two totals"
+      ],
+      "fact_ids": [
+        "s4"
+      ]
+    },
+    {
+      "format": "myth_vs_fact",
+      "title": "Minimum Payment Myth: The Safe Choice?",
+      "hook": "The minimum payment isn't the safe option.",
+      "pitch": "Most people think paying the minimum keeps them on track. The host tests that with the Fed's example of $3,000 at 14.4%: the minimum takes 11 years and about $4,745, but $103 a month clears it in 3 years. Your statement even tells you this.",
+      "conflict": "People believe the minimum payment is a responsible way to pay, but the numbers say it keeps them in debt far longer.",
+      "stakes": "Each step reveals more: first the 11-year timeline, then the extra cost, then the fact that the statement already shows the better option.",
+      "twist": "Your own monthly bill shows how long minimum-only payoff takes and the payment that would clear the balance in three years.",
+      "payoff": "The minimum is the slowest, costliest way out, and the better plan is printed right on your statement.",
+      "visuals": [
+        "Split screen: myth label versus fact label",
+        "Painted statement with the payoff estimate circled",
+        "Close-up: 11 years versus 3 years",
+        "Host holds the statement and points at the three-year payment",
+        "Camera pushes in on $4,745 versus $3,712"
+      ],
+      "fact_ids": [
+        "s3",
+        "s4"
+      ]
+    },
+    {
+      "format": "mystery",
+      "title": "Why Does $3,000 Take 11 Years to Pay?",
+      "hook": "Why does $3,000 take 11 years?",
+      "pitch": "The host asks why a $3,000 balance can take 11 years to pay when you pay every month. The clues: interest is charged daily at the APR divided by 365, on your average daily balance. Paying only the minimum leaves a big balance for interest to keep working on, so the debt drags to about $4,745.",
+      "conflict": "You pay every month, yet the debt barely seems to shrink.",
+      "stakes": "Each clue narrows the culprit: first the daily interest, then the daily rate, then the 11-year result.",
+      "twist": "Interest isn't charged once a month. It is calculated every day on your balance, based on the APR divided by 365.",
+      "payoff": "The mystery is solved: daily interest keeps working on a balance the minimum payment barely touches, so the payoff takes 11 years.",
+      "visuals": [
+        "Painted calendar with each day ticking by",
+        "Close-up of APR divided by 365 on a card",
+        "Host points at a $3,000 balance that stays large",
+        "Camera pull-back to the 11-year timeline",
+        "Host holds the statement that reveals the answer"
+      ],
+      "fact_ids": [
+        "s1",
+        "s2",
+        "s4"
+      ]
+    }
+  ],
+  "storyline_pick": 1,
+  "story_note": "",
+  "subject_settings": [],
+  "beats": [
+    {
+      "id": "b01",
+      "role": "hook",
+      "narration": "Same $3,000 debt. Wildly different bills.",
+      "on_screen_text": "Same debt. Different bills.",
+      "visual_intent": "The host holds two different paper bills at a sunlit table, one thin and one long, showing the contrast in frame one.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "large",
+          "holds": "two paper bills",
+          "doing": "holds up two bills, brows raised, glancing between them and the viewer",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "kitchen-table-two-bills",
+          "scene": "a sunlit wooden kitchen table with a green coffee cup and a small plant, warm golden morning light through a window, empty chairs",
+          "effects": [
+            {
+              "kind": "push",
+              "anchor": "",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "kitchen",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "shrug",
+              "target": "",
+              "anchor": "Wildly"
+            }
+          ],
+          "props": [
+            {
+              "name": "paper bill",
+              "held_by": "lead",
+              "where": "left hand"
+            },
+            {
+              "name": "long paper bill",
+              "held_by": "lead",
+              "where": "right hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "Wildly",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b02",
+      "role": "setup",
+      "narration": "Here's my test. One card. A $3,000 balance at 14.4% interest.",
+      "on_screen_text": "$3,000 at 14.4%",
+      "visual_intent": "A top-down painted cafe table with a single credit card and a jar of coins, the host leaning in close to point at the card.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "large",
+          "holds": "",
+          "doing": "leans over the table and points at the credit card",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "card-and-coin-jar-table",
+          "scene": "top-down view of a wooden cafe table with one credit card, a glass jar of coins and a green coffee cup at the edge, warm morning light",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "$3,000",
+              "at": "centre",
+              "detail": "$3,000"
+            },
+            {
+              "kind": "label",
+              "anchor": "14.4%",
+              "at": "right",
+              "detail": "14.4% interest"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "credit card",
+              "anchor": "card"
+            }
+          ],
+          "props": [
+            {
+              "name": "credit card",
+              "held_by": "",
+              "where": "table"
+            },
+            {
+              "name": "coin jar",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "number_counter",
+            "anchor": "$3,000",
+            "detail": "0 -> 3,000"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b03",
+      "role": "setup",
+      "narration": "Two payers. One pays only the minimum. The other pays $103 a month.",
+      "on_screen_text": "Minimum vs $103",
+      "visual_intent": "The host and the friend sit across the cafe table, each with their own bill, acting out the two payers.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "",
+          "doing": "gestures toward the friend while holding a bill at the table",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead",
+          "friend"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "seated-at-table"
+            },
+            {
+              "who": "friend",
+              "pose": "seated-at-table"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "friend",
+              "anchor": "other"
+            },
+            {
+              "who": "friend",
+              "verb": "nod",
+              "target": "",
+              "anchor": "$103"
+            }
+          ],
+          "props": [
+            {
+              "name": "bill",
+              "held_by": "lead",
+              "where": "left hand"
+            },
+            {
+              "name": "friend's bill",
+              "held_by": "friend",
+              "where": "right hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "minimum",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "$103",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b04",
+      "role": "problem",
+      "narration": "Many card companies figure interest daily, on your average daily balance.",
+      "on_screen_text": "Interest ticks daily",
+      "visual_intent": "A wall calendar with each day dotted in pencil beside a coin jar, the host watching the days fill in.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "watches pencil dots fill the calendar days, arms at sides",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "wall-calendar-daily-marks",
+          "scene": "a wall calendar with every day dotted in pencil beside a glass jar of coins on a shelf, afternoon sun through a cafe window",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "daily",
+              "at": "top",
+              "detail": "Daily interest"
+            },
+            {
+              "kind": "dust",
+              "anchor": "",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "wall calendar",
+              "anchor": "daily"
+            }
+          ],
+          "props": [
+            {
+              "name": "wall calendar",
+              "held_by": "",
+              "where": "wall"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "underline_draw",
+            "anchor": "average daily balance",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b05",
+      "role": "stakes",
+      "narration": "Take a guess. Who wins?",
+      "on_screen_text": "Who wins?",
+      "visual_intent": "The host faces the viewer in a reaction close-up, shrugging and inviting a guess.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "close",
+          "holds": "",
+          "doing": "shrugs with one raised brow, open hand toward the viewer",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "seated-at-table"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "shrug",
+              "target": "",
+              "anchor": "guess"
+            }
+          ],
+          "props": [
+            {
+              "name": "coffee cup",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "guess",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "wins",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b06",
+      "role": "stakes",
+      "narration": "Minimum only: 11 years. Paying $103 a month: 3 years.",
+      "on_screen_text": "",
+      "visual_intent": "Two calendars stacked: a tall pile of flipped pages above and a tiny pile below, with the host popping in to point.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "pops in at the edge and points at the tall stack of pages",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "split",
+        "insert": {
+          "key": "calendar-pages-many",
+          "scene": "a wall calendar with a tall stack of flipped pages piled beneath it, warm afternoon cafe wall",
+          "effects": []
+        },
+        "graphic": null,
+        "split": {
+          "key": "calendar-pages-few",
+          "scene": "a wall calendar with only a few flipped pages beside it, same warm cafe wall",
+          "labels": [
+            "11 years",
+            "3 years"
+          ],
+          "anchors": [
+            "11",
+            "3"
+          ]
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "wall calendar",
+              "anchor": "11"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "split_compare",
+            "anchor": "11 years",
+            "detail": "Minimum | $103"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "paper",
+          "anchor": "Minimum"
+        }
+      ],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b07",
+      "role": "stakes",
+      "narration": "And the cost? About $4,745 for the minimum. Just $3,712 at $103.",
+      "on_screen_text": "",
+      "visual_intent": "Two glass coin jars side by side, one nearly overflowing and one shorter, with the host pointing at the fuller one.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "large",
+          "holds": "",
+          "doing": "points at the fuller jar, eyebrows raised",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "two-coin-jars",
+          "scene": "two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "$4,745",
+              "at": "left",
+              "detail": "$4,745"
+            },
+            {
+              "kind": "label",
+              "anchor": "$3,712",
+              "at": "right",
+              "detail": "$3,712"
+            },
+            {
+              "kind": "focus",
+              "anchor": "Just",
+              "at": "right",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "coin jar",
+              "anchor": "$4,745"
+            }
+          ],
+          "props": [
+            {
+              "name": "coin jar",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "number_counter",
+            "anchor": "$4,745",
+            "detail": "0 -> 4,745"
+          },
+          {
+            "recipe": "punch_in",
+            "anchor": "Just",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "coin",
+          "anchor": "$4,745"
+        }
+      ],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b08",
+      "role": "twist",
+      "narration": "So the tiny payment is the pricey one. Eight more years, and about $1,033 extra.",
+      "on_screen_text": "Pricey minimum",
+      "visual_intent": "A two-path diagram showing the long minimum path against the short $103 path with the gap marked, the host popping in to point at the gap.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "pops in at the edge, hand on forehead, then points at the gap",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "graphic",
+        "insert": null,
+        "graphic": {
+          "kind": "two_paths",
+          "items": [
+            "Eight more years",
+            "$1,033 extra"
+          ],
+          "anchors": [
+            "Eight",
+            "$1,033"
+          ],
+          "detail": "both"
+        },
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "extra"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "pricey",
+            "detail": ""
+          },
+          {
+            "recipe": "arrow_draw",
+            "anchor": "Eight",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "thud",
+          "anchor": "pricey"
+        }
+      ],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b09",
+      "role": "reveal",
+      "narration": "Your monthly bill shows minimum-only payoff time, plus the payment that clears it in three years.",
+      "on_screen_text": "",
+      "visual_intent": "A close-up of a paper monthly statement on the table, the host reading it beside a coffee cup.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "medium",
+          "holds": "",
+          "doing": "reads the statement over a green coffee cup, nodding slowly",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "credit-card-statement-closeup",
+          "scene": "close-up of a paper monthly credit card statement lying on a cafe table beside a green coffee cup, warm light, lines of print blurred, no readable text",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "monthly",
+              "at": "centre",
+              "detail": ""
+            },
+            {
+              "kind": "label",
+              "anchor": "three years",
+              "at": "centre",
+              "detail": "Three-year payment"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "three years"
+            }
+          ],
+          "props": [
+            {
+              "name": "statement",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "icon_pop",
+            "anchor": "three years",
+            "detail": "calendar"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b10",
+      "role": "payoff",
+      "narration": "So the minimum costs more. $103 a month wins on time and money.",
+      "on_screen_text": "$103 wins",
+      "visual_intent": "The host and friend at the cafe table, the host holding up the $103 bill while the friend nods.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "large",
+          "holds": "a paper bill",
+          "doing": "holds up the bill with a calm smile while the friend nods",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead",
+          "friend"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "seated-at-table"
+            },
+            {
+              "who": "friend",
+              "pose": "seated-at-table"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "pick_up",
+              "target": "bill",
+              "anchor": "$103"
+            },
+            {
+              "who": "friend",
+              "verb": "nod",
+              "target": "",
+              "anchor": "wins"
+            }
+          ],
+          "props": [
+            {
+              "name": "bill",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "wins",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "wins"
+        }
+      ],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b11",
+      "role": "loop",
+      "narration": "Same debt, same card. Wildly different bills.",
+      "on_screen_text": "Same debt. Different bills.",
+      "visual_intent": "Two bills lie side by side on the sunlit table while the host waves goodbye, echoing the opening.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "",
+          "doing": "smiles and waves at the viewer beside the two bills",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "two-bills-side-by-side",
+          "scene": "two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light",
+          "effects": [
+            {
+              "kind": "pan",
+              "anchor": "",
+              "at": "",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "cafe",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "wave",
+              "target": "camera",
+              "anchor": "Wildly"
+            }
+          ],
+          "props": [
+            {
+              "name": "paper bill",
+              "held_by": "",
+              "where": "table"
+            },
+            {
+              "name": "long paper bill",
+              "held_by": "",
+              "where": "table"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "pan_right",
+            "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "Wildly",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s4"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "Many credit card companies calculate the interest you owe daily, based on your average daily account balance.",
+      "url": "https://www.consumerfinance.gov/ask-cfpb/how-does-my-credit-card-company-calculate-the-amount-of-interest-i-owe-en-51/",
+      "title": "How does my credit card company calculate the amount of interest I owe?",
+      "quote": ""
+    },
+    {
+      "id": "s2",
+      "claim": "The daily periodic rate is the APR divided by 365, and it is applied to each day's balance in the billing cycle.",
+      "url": "https://www.consumerfinance.gov/data-research/credit-card-data/know-you-owe-credit-cards/credit-card-contract-definitions/",
+      "title": "Credit card contract definitions",
+      "quote": ""
+    },
+    {
+      "id": "s3",
+      "claim": "The Federal Reserve notes that a monthly bill shows how long payoff takes on minimum payments only, plus the monthly payment that would pay off the balance in three years.",
+      "url": "https://www.federalreserve.gov/consumerinfo/wyntk/wyntk_ccrules.pdf",
+      "title": "The Federal Reserve Board www.federalreserve.gov WHAT YOU NEED TO KNOW:",
+      "quote": ""
+    },
+    {
+      "id": "s4",
+      "claim": "The Federal Reserve's example is a $3,000 balance at 14.4% interest, where paying only the minimum takes 11 years and about $4,745 in total, while $103 a month pays it off in 3 years for $3,712.",
+      "url": "https://www.federalreserve.gov/consumerinfo/wyntk/wyntk_ccrules.pdf",
+      "title": "The Federal Reserve Board www.federalreserve.gov WHAT YOU NEED TO KNOW:",
+      "quote": ""
+    },
+    {
+      "id": "s5",
+      "claim": "Federal rules require the statement's repayment estimate to be disclosed in months if it is under 2 years, and otherwise in years rounded to the nearest whole year.",
+      "url": "https://www.consumerfinance.gov/rules-policy/regulations/1026/7/",
+      "title": "§ 1026.7 Periodic statement.",
+      "quote": ""
+    }
+  ],
+  "approvals": {
+    "storyline": "46d611523c14e048793f6b95c0feabcaaa70a7e51e80cb1ddc62a30ca7605ebe"
+  },
+  "meta": {
+    "research_focus": {
+      "find": [
+        "how credit card interest is calculated on the balance you carry (daily, on the average daily balance)",
+        "how the minimum payment is calculated and why it shrinks as the balance shrinks",
+        "the Federal Reserve / CFPB statement disclosure: how long payoff takes on minimum payments only, and the payment that pays it off in 3 years",
+        "an official worked example of paying only the minimum (balance, rate, years, total paid)"
+      ],
+      "prefer": [
+        "Consumer Financial Protection Bureau (consumerfinance.gov)",
+        "Federal Reserve (federalreserve.gov)"
+      ]
+    },
+    "edits": [
+      {
+        "at": "2026-11-09T22:52:18",
+        "by": "user (via chat)",
+        "what": "finance topic swapped to this one; CFPB / Federal Reserve sources; keep within $0.50"
+      }
+    ],
+    "story": {
+      "allowed": [
+        "mini_story",
+        "myth_vs_fact",
+        "what_if",
+        "countdown",
+        "mystery",
+        "experiment"
+      ],
+      "version": "story-v1",
+      "generated": "2026-11-09T22:52:42"
+    },
+    "approval_log": [
+      {
+        "gate": "storyline",
+        "by": "user",
+        "at": "2026-11-09T23:09:09",
+        "pick": 1,
+        "format": "experiment",
+        "digest": "46d611523c14"
+      }
+    ],
+    "script": {
+      "model": "claude-sonnet-5-5",
+      "prompt_version": "script-v6",
+      "research": true,
+      "generated": "2026-11-09T23:10:42"
+    }
+  }
+}
