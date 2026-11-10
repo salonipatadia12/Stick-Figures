@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "slug": "why-you-can-t-tickle-yourself",
+  "topic": "Why you can't tickle yourself",
+  "niche": "psychology",
+  "audience": "",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "",
+  "hook_promise": "",
+  "hook_options": [],
+  "hook_pick": 0,
+  "storylines": [
+    {
+      "format": "mini_story",
+      "title": "I Tried to Tickle Myself and My Brain Said No",
+      "hook": "I can't tickle myself. Here's why.",
+      "pitch": "The host pokes their own ribs and feels nothing, then tries harder, but the touch stays dull. The twist: the brain predicts your own touch and turns it down, and the more a touch differs from the prediction, the more ticklish it feels. Add a delay and the tickle comes back, though with practice the brain even learns to dull the delayed touch.",
+      "conflict": "The host wants to tickle themself and every attempt feels like nothing.",
+      "stakes": "Each harder, faster, sneakier attempt fails, until the host suspects their own brain is working against them.",
+      "twist": "The brain predicts the touch from the motor command and dials it down, and a bigger gap between the prediction and the real touch feels more ticklish.",
+      "payoff": "The brain can't be surprised by its own touch, so it can't tickle you, and that is the answer to the hook.",
+      "visuals": [
+        "Host pokes own ribs in a painted bedroom, a flat gray 'nothing' cloud appears",
+        "Close-up of the host's finger and ribs, tries again with a frown",
+        "Split screen: own touch (dim) vs. touch from someone else (bright)",
+        "Host holds a feather on a stick, a delay clock ticks between the move and the touch",
+        "Camera pushes in on the host's head as a small 'prediction' note glows"
+      ],
+      "fact_ids": [
+        "s1",
+        "s5",
+        "s6"
+      ]
+    },
+    {
+      "format": "what_if",
+      "title": "What If Your Brain Stopped Predicting Your Own Touch?",
+      "hook": "What if your brain stopped predicting you?",
+      "pitch": "Imagine your brain stopped cancelling the touch you cause yourself. Your own touch would feel like it came from outside, and the bigger the gap between prediction and touch, the more ticklish it feels. In reality the brain's forward model quietly mutes your own touch, and when that mechanism is abnormal, it is linked to hallucinations and passivity experiences.",
+      "conflict": "The brain has to tell touch you cause apart from touch that comes from the world.",
+      "stakes": "Step by step: without the prediction, your touch isn't muted, it feels more ticklish, and then your own actions start to feel like someone else's.",
+      "twist": "Evidence links an abnormal predictive mechanism to auditory hallucinations and passivity experiences.",
+      "payoff": "Back to reality: your brain predicts your own touch and turns it down, which is why you can't tickle yourself.",
+      "visuals": [
+        "Host in a painted room switches off a glowing 'prediction' lamp",
+        "Close-up of the host's hand touching their arm, the touch drawn as a loud spark",
+        "Split screen: what if (spark) vs. what really happens (dim glow)",
+        "Host points at a painted head with a small 'forward model' note, then flips the lamp back on"
+      ],
+      "fact_ids": [
+        "s1",
+        "s5",
+        "s7"
+      ]
+    },
+    {
+      "format": "mystery",
+      "title": "The Case of the Tickle That Never Comes",
+      "hook": "Who's stopping you from tickling yourself?",
+      "pitch": "Your own touch barely registers, while the same touch from someone else lights up your brain. Clue by clue: the touch areas are quieter, the cerebellum is less active during a self-made touch, and the thalamus and touch cortices track the cerebellum only for self-touch. The culprit is a forward model that predicts the touch and mutes it.",
+      "conflict": "The same touch feels ticklish from someone else but not from you, and nobody knows what is blocking it.",
+      "stakes": "Each clue narrows the suspects from the whole brain to the touch cortex, the cerebellum, and finally one prediction.",
+      "twist": "The cerebellum was quieter during the movement that made the touch, yet its activity still tracked other touch areas only when the touch was self-produced.",
+      "payoff": "The culprit is the forward model, which predicts the touch from your own motor command and attenuates it.",
+      "visuals": [
+        "Host as a detective in a painted room, a 'case file' with a feather clipped to it",
+        "Close-up of a painted brain scan with the touch cortex glowing brighter for an outside touch",
+        "Split screen: touch from outside (bright) vs. self-made touch (dim)",
+        "Map-style painted brain with pins on the cerebellum, thalamus and touch cortex",
+        "Camera push-in as the host points at the 'prediction' pin and reveals it"
+      ],
+      "fact_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ]
+    }
+  ],
+  "storyline_pick": 0,
+  "story_note": "",
+  "subject_settings": [],
+  "beats": [],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "A forward model predicts the sensory consequences of a movement based on the motor command, and when a movement is self-produced, that prediction can be used to attenuate its sensory effects.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/10943682/",
+      "title": "Why can't you tickle yourself? - PubMed",
+      "quote": "A forward model predicts the sensory consequences of a movement based on the motor command. When a movement is self-produced, its sensory consequences..."
+    },
+    {
+      "id": "s2",
+      "claim": "Brain imaging shows the somatosensory cortex and anterior cingulate cortex are activated less by a self-produced touch than by the same touch applied externally.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/10943682/",
+      "title": "Why can't you tickle yourself? - PubMed",
+      "quote": "Functional neuroimaging studies have demonstrated that this sensory attenuation might be mediated by somatosensory cortex and anterior cingulate corte..."
+    },
+    {
+      "id": "s3",
+      "claim": "In a UCL fMRI study, the somatosensory cortex was more active when the stimulus was externally produced, and the cerebellum was less active during a movement that generated a touch than during one that did not.",
+      "url": "https://doi.org/10.1006/nimg.1999.0478",
+      "title": "Google Scholar",
+      "quote": "The somatosensory cortex showed increased levels of activity when the stimulus was externally produced. In the cerebellum there was less activity asso..."
+    },
+    {
+      "id": "s4",
+      "claim": "Activity in the thalamus and the primary and secondary somatosensory cortices tracked cerebellar activity when touches were self-produced but not when they were externally produced.",
+      "url": "https://doi.org/10.1006/nimg.1999.0478",
+      "title": "Google Scholar",
+      "quote": "Evidence in favor of this hypothesis was obtained by demonstrating that activity in the thalamus and primary and secondary somatosensory cortices sign..."
+    },
+    {
+      "id": "s5",
+      "claim": "As the gap between predicted and actual sensory feedback grows, the touch is attenuated less and feels more ticklish.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/10943682/",
+      "title": "Why can't you tickle yourself? - PubMed",
+      "quote": "Studies are reviewed that demonstrate that as the discrepancy between predicted and actual sensory feedback increases during self-produced tactile sti..."
+    },
+    {
+      "id": "s6",
+      "claim": "In a self-touch experiment, people who repeatedly experienced a systematic delay between their movement and the resulting touch learned to attenuate the delayed touch instead.",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6860990/",
+      "title": "Rapid learning and unlearning of predicted sensory delays in self-generated touch",
+      "quote": "Using a bimanual self-touch paradigm, we demonstrate that people can rapidly unlearn to attenuate touch immediately after their movement and learn to ..."
+    },
+    {
+      "id": "s7",
+      "claim": "Evidence suggests this predictive mechanism is abnormal in patients with auditory hallucinations or passivity experiences.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/10943682/",
+      "title": "Why can't you tickle yourself? - PubMed",
+      "quote": "Finally, recent evidence suggests that this predictive mechanism is abnormal in patients with auditory hallucinations and/or passivity experiences."
+    }
+  ],
+  "approvals": {},
+  "meta": {
+    "story": {
+      "allowed": [
+        "mini_story",
+        "what_if",
+        "mystery"
+      ],
+      "version": "story-v1",
+      "generated": "2026-11-09T22:33:31"
+    },
+    "edits": [
+      {
+        "at": "2026-11-09T22:33:10",
+        "by": "claude",
+        "what": "research reused from research-175de068421d6064.json (paid run) under the new prompt key; storylines re-pitched from reputable facts only"
+      }
+    ]
+  }
+}

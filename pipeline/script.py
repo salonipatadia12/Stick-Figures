@@ -12,6 +12,7 @@ Each call is: cache lookup -> free token count -> ledger.reserve(worst case) -> 
 from __future__ import annotations
 
 import json
+import re
 import os
 import time
 from pathlib import Path
@@ -23,7 +24,7 @@ from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest, from
 PROMPT_VERSION = 'script-v6'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic); v5: host format, three hook options; v6: written from a picked storyline, story roles, visual variety
 # The research cache is keyed on its own version: a script-prompt change must never re-run (and re-pay) research.
 # Frozen at the value the 2026-11-08 research runs were cached under.
-RESEARCH_VERSION = 'script-v5'
+RESEARCH_VERSION = 'research-v6'  # v6: fact lines straight from cited results; source filtering in code (keep_reputable)
 RESEARCH_MAX_SEARCHES = 4
 RESEARCH_MAX_TOKENS = 4096
 # Search results are billed as input tokens and can't be counted before the call. This is the
@@ -38,13 +39,14 @@ BLOCKED_DOMAINS = ('wikipedia.org', 'researchgate.net', 'academia.edu', 'slidesh
                    'quora.com', 'reddit.com', 'youtube.com', 'pinterest.com', 'coursehero.com', 'studocu.com', 'intechopen.com')
 
 RESEARCH_SYSTEM = """You gather facts for a 30-60 second explainer video. Use web search.
-Write 3 to 6 facts. Each fact is one plain sentence on its own line, with no bullets, numbering,
-introduction or conclusion. State only what a search result directly supports.
-Prefer facts that explain the mechanism behind the topic, plus at most three statistics.
-Use only government, university or peer-reviewed sources (user rule, 2026-11-09): government agencies and
-statistics offices, universities and their research pages, peer-reviewed journals (publisher pages, PubMed Central,
-DOI links). Never Wikipedia, news sites, blogs, company pages, patents, forums or content farms; if only those
-support a claim, leave the claim out.
+Write 4 to 8 facts. Each fact is one plain sentence on its own line, written directly from one search result so that
+it carries that result's citation, and ending with that result's URL in angle brackets: "<https://...>". No bullets, numbering, introduction, conclusion or notes, and never discuss which
+sources you used, chose or excluded: the answer is only the fact lines.
+State only what a search result directly supports. Prefer facts that explain the mechanism behind the topic, plus at
+most three statistics.
+Prefer government agencies and statistics offices, universities and their research pages, and peer-reviewed journals
+(publisher pages, PubMed Central, DOI links): facts from any other kind of source are discarded automatically, so take
+each fact from one of those when you can.
 If a fact only holds for one country or period, name it in the sentence. Do not give advice."""
 
 SCRIPT_RULES = """You write scripts for explainer Shorts: vertical videos of 30-60 seconds, painted stick figures,
@@ -297,20 +299,37 @@ def facts_from_content(content):
                 lines.append([])
             if part.strip():
                 lines[-1].append((part, cites))
+    results = {}                                  # url -> title of every result this search returned
+    for block in content:
+        if getattr(block, 'type', None) == 'web_search_tool_result' and isinstance(getattr(block, 'content', None), list):
+            for r in block.content:
+                if getattr(r, 'url', ''):
+                    results[r.url.rstrip('/')] = getattr(r, 'title', '') or ''
     facts, seen = [], set()
     for fragments in lines:
+        text = ' '.join(''.join(t for t, _ in fragments).split())
+        tail = TRAILING_URL.search(text)
         first = next((i for i, (_, cites) in enumerate(fragments) if cites), None)
-        if first is None:
+        if first is not None:                     # the API's own citation, with the quoted text: preferred
+            kept = fragments[first:]
+            claim = TRAILING_URL.sub('', ' '.join(''.join(t for t, _ in kept).split())).strip(' -•*')
+            c = kept[0][1][0]
+            url, title, quote = citation_url(c), getattr(c, 'title', '') or '', getattr(c, 'cited_text', '') or ''
+        elif tail and tail.group(1).rstrip('/') in results:
+            # no citation came back (it happens: 2026-11-10, 5 of 8 runs): the line names the result it came from,
+            # and that URL really was returned by this search; there is no quote to show for it
+            claim = TRAILING_URL.sub('', text).strip(' -•*')
+            url, title, quote = tail.group(1), results[tail.group(1).rstrip('/')], ''
+        else:
             continue
-        kept = fragments[first:]
-        claim = ' '.join(''.join(text for text, _ in kept).split()).strip(' -•*')
         if len(claim) < 20 or claim in seen:
             continue
         seen.add(claim)
-        c = kept[0][1][0]
-        facts.append(Source(id=f's{len(facts) + 1}', claim=claim, url=citation_url(c),
-                            title=getattr(c, 'title', '') or '', quote=getattr(c, 'cited_text', '') or ''))
+        facts.append(Source(id=f's{len(facts) + 1}', claim=claim, url=url, title=title, quote=quote))
     return facts[:8]
+
+
+TRAILING_URL = re.compile(r'\s*<?\(?(https?://[^\s<>()]+?)\)?>?\s*$')
 
 
 def citation_url(citation):
@@ -362,8 +381,17 @@ def reputable(url: str) -> bool:
     return any(host == h or host.endswith('.' + h) for h in PEER_REVIEWED)
 
 
+def doi_link(url: str) -> str:
+    """A search-engine lookup of a DOI (scholar.google.com/scholar_lookup?doi=...) is that DOI's own link."""
+    from urllib.parse import parse_qs, unquote, urlparse
+    u = urlparse(url)
+    doi = parse_qs(u.query).get('doi', [''])[0] if 'scholar' in u.netloc else ''
+    return f'https://doi.org/{unquote(doi)}' if doi.startswith('10.') else url
+
+
 def keep_reputable(facts):
     """(kept facts renumbered s1.., dropped facts). A dropped fact's line cannot be written (user: drop it)."""
+    facts = [f.model_copy(update=dict(url=doi_link(f.url))) for f in facts]
     kept = [f for f in facts if reputable(f.url)]
     dropped = [f for f in facts if not reputable(f.url)]
     return [f.model_copy(update=dict(id=f's{i}')) for i, f in enumerate(kept, 1)], dropped

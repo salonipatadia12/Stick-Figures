@@ -118,10 +118,15 @@ def story_estimate(input_tokens):
 def pitch(episode: Episode, base, ledger, client=None, regenerate=False):
     """Research (cached) -> three storylines. Returns (episode with storylines, notes). Stops the pipeline at the
     storyline gate; nothing else is written."""
-    from .script import ScriptError, _cache, _send, _write_json, count_input_tokens, make_client, research
+    from .script import ScriptError, _cache, _send, _write_json, count_input_tokens, keep_reputable, make_client, research
     client = client or make_client()
     facts, rpath, rcached = research(episode, base, ledger, client)
     notes = [f'research: {len(facts)} cited facts ({"cache" if rcached else "new"}: {rpath.name})']
+    facts, dropped = keep_reputable(facts)            # storylines stand only on facts the script may use
+    notes += [f'  dropped (not government, university or peer-reviewed): {f.url}' for f in dropped]
+    if not facts:
+        raise ScriptError('No fact came from a government, university or peer-reviewed source, so no storylines were '
+                          'pitched.')
     allowed, why = allowed_formats(episode.slug)
     notes += [f'formats: {", ".join(allowed)}'] + [f'  ({w})' for w in why]
     request = story_request(episode, facts, allowed)

@@ -1,0 +1,83 @@
+{
+  "budget_usd": 2.0,
+  "spent_usd": 0.187652,
+  "prices_verified": "2026-11-04",
+  "entries": [
+    {
+      "id": 1,
+      "step": "research",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.287202,
+      "actual_usd": 0.069586,
+      "status": "ok",
+      "detail": "web search \u22644 | stop=end_turn",
+      "usage": {
+        "input": 22528,
+        "output": 453,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 2
+      },
+      "at": "2026-11-09T22:27:03"
+    },
+    {
+      "id": 2,
+      "step": "research",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.287222,
+      "actual_usd": 0.073756,
+      "status": "ok",
+      "detail": "web search \u22644 | stop=end_turn",
+      "usage": {
+        "input": 23423,
+        "output": 691,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 2
+      },
+      "at": "2026-11-09T22:28:52"
+    },
+    {
+      "id": 3,
+      "step": "storyline",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.085272,
+      "actual_usd": 0.018772,
+      "status": "ok",
+      "detail": "three storylines | stop=end_turn",
+      "usage": {
+        "input": 2636,
+        "output": 1350,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 0
+      },
+      "at": "2026-11-09T22:28:59"
+    },
+    {
+      "id": 4,
+      "step": "storyline",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.085008,
+      "actual_usd": 0.025538,
+      "status": "ok",
+      "detail": "three storylines | stop=end_turn",
+      "usage": {
+        "input": 2504,
+        "output": 2053,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 0
+      },
+      "at": "2026-11-09T22:33:13"
+    }
+  ]
+}

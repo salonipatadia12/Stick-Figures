@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "slug": "how-the-apollo-13-crew-made-it-home",
+  "topic": "How the Apollo 13 crew made it home",
+  "niche": "space history",
+  "audience": "",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "",
+  "hook_promise": "",
+  "hook_options": [],
+  "hook_pick": 0,
+  "storylines": [
+    {
+      "format": "myth_vs_fact",
+      "title": "They Didn't Just Turn Around",
+      "hook": "Apollo 13 didn't just turn around.",
+      "pitch": "Everyone assumes that after the explosion the crew simply flew back. But Apollo 13 had already left its safe return path to aim for the Moon. Ground controllers computed a 35-second burn of a landing engine, fired five hours later, to put them back on course.",
+      "conflict": "The explosion vented both oxygen tanks, and the ship was on a course that no longer led safely home.",
+      "stakes": "The ship was nearly 200,000 miles out, the crew had to move into the lunar module lifeboat, and the course had to be fixed fast.",
+      "twist": "The engine that saved them was the lunar module descent engine, the one built for the landing they never made.",
+      "payoff": "No U-turn was possible; a 35-second burn from the lander got them back onto a free-return course.",
+      "visuals": [
+        "Split screen: myth of a simple U-turn vs real path",
+        "Painted space scene, a flash and the ship venting",
+        "Close-up of a countdown clock reading 35 seconds",
+        "Host holding a model lander, pointing at its engine",
+        "Painted map line curving back toward Earth"
+      ],
+      "fact_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ]
+    },
+    {
+      "format": "countdown",
+      "title": "3 Fixes That Brought Apollo 13 Home",
+      "hook": "Three fixes brought Apollo 13 home.",
+      "pitch": "After an oxygen tank explosion far from Earth, the crew survived on three fixes. Number three was a 35-second engine burn, number two was a lander turned lifeboat, and number one was plastic bags, cardboard and tape.",
+      "conflict": "With both oxygen tanks ruptured, the crew had to get home using whatever they had.",
+      "stakes": "Each fix is more improvised than the last, ending with a repair built only from materials already on board.",
+      "twist": "The biggest fix was a connector for the canisters, made from plastic bags, cardboard and tape.",
+      "payoff": "The countdown shows that bags, cardboard and tape helped bring the crew home.",
+      "visuals": [
+        "Big painted number 3 over a burn timer reading 35 seconds",
+        "Painted scene of the lander Aquarius with the host standing beside it for number 2",
+        "Close-up of the host holding plastic bags, cardboard and tape for number 1",
+        "Camera push-in on the taped-together canister fix",
+        "Painted explosion flash opening the video"
+      ],
+      "fact_ids": [
+        "s1",
+        "s2",
+        "s4",
+        "s5"
+      ]
+    },
+    {
+      "format": "pov",
+      "title": "You're 200,000 Miles From Home",
+      "hook": "Something just exploded 200,000 miles from home.",
+      "pitch": "You're in Apollo 13 when a short circuit blows up an oxygen tank and both tanks vent into space. Your ship is dying, so you move into the lander meant for the Moon, but you're off the course home. The lander's engine fires for 35 seconds, and a fix made from tape and cardboard finishes the job.",
+      "conflict": "You're nearly 200,000 miles from Earth after the explosion, and the oxygen is gone.",
+      "stakes": "First the oxygen vents, then you learn you're off course, then you need an engine burn and a repair built from what's on board.",
+      "twist": "The lander you were going to land on the Moon in becomes your lifeboat.",
+      "payoff": "You make it home because of the lander's full oxygen tank and engine, a 35-second burn, and a tape-and-cardboard fix.",
+      "visuals": [
+        "Host in painted cabin, turning to the viewer as a flash fills the scene",
+        "Painted space scene with oxygen venting from the ship",
+        "Close-up of the host's hands taping bags and cardboard",
+        "Painted scene of the lander Aquarius, host standing small beside it",
+        "Camera pull-back to Earth far away"
+      ],
+      "fact_ids": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5"
+      ]
+    }
+  ],
+  "storyline_pick": 0,
+  "story_note": "",
+  "subject_settings": [],
+  "beats": [],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "When the spacecraft was nearly 200,000 miles from Earth, activating a fan in a service module oxygen tank caused a short circuit and an explosion, and both oxygen tanks ruptured and vented their contents to space.",
+      "url": "https://www.lpi.usra.edu/lunar/missions/apollo/apollo_13/",
+      "title": "Lunar - Missions - Apollo 13 Mission",
+      "quote": "On the third day of the mission, when the spacecraft was nearly 200,000 miles from Earth, the routine activation of a fan in one of the service module..."
+    },
+    {
+      "id": "s2",
+      "claim": "The lunar module Aquarius became the lifeboat, and its full oxygen tank and descent engine were critical to keeping the crew alive and returning them to Earth.",
+      "url": "https://www.nasa.gov/missions/apollo/apollo-13-the-successful-failure/",
+      "title": "Apollo 13: The Successful Failure - NASA",
+      "quote": "Here, the lunar module, *Aquarius* became central to efforts to save the beleaguered space craft and crew. *Aquarius’* full oxygen tank and descent en..."
+    },
+    {
+      "id": "s3",
+      "claim": "Before the explosion, Apollo 13 had left its free-return trajectory to aim for a lunar landing, so the task was to get back onto a free-return course.",
+      "url": "https://www.nasa.gov/missions/apollo/apollo-13-mission-details/",
+      "title": "Apollo 13: Mission Details - NASA",
+      "quote": "Before the explosion at 30 hours, 40 minutes, Apollo 13 had made the normal midcourse correction, which would take it out of a free-return-to-Earth tr..."
+    },
+    {
+      "id": "s4",
+      "claim": "Ground controllers computed a 35-second burn of the lunar module descent engine and fired it five hours after the explosion.",
+      "url": "https://www.nasa.gov/missions/apollo/apollo-13-mission-details/",
+      "title": "Apollo 13: Mission Details - NASA",
+      "quote": "The ground computed a 35-second burn and fired it five hours after the explosion."
+    },
+    {
+      "id": "s5",
+      "claim": "Mission control devised a way to attach the command module canisters to the lunar module system using plastic bags, cardboard, and tape from materials carried on board.",
+      "url": "https://www.nasa.gov/missions/apollo/apollo-13-mission-details/",
+      "title": "Apollo 13: Mission Details - NASA",
+      "quote": "Mission control devised a way to attach the CM canisters to the LM system by using plastic bags, cardboard and to tape all materials carried on board...."
+    }
+  ],
+  "approvals": {},
+  "meta": {
+    "story": {
+      "allowed": [
+        "myth_vs_fact",
+        "countdown",
+        "pov"
+      ],
+      "version": "story-v1",
+      "generated": "2026-11-09T22:33:58"
+    },
+    "edits": [
+      {
+        "at": "2026-11-09T22:33:10",
+        "by": "claude",
+        "what": "research reused from research-003ab0c96a943d5c.json (paid run) under the new prompt key; storylines re-pitched from reputable facts only"
+      }
+    ]
+  }
+}

@@ -204,7 +204,7 @@
     {
       "id": "b02",
       "role": "problem",
-      "narration": "Its safety factor against falling over was just 1.07 to 1.15.",
+      "narration": "Engineers rated its stability at just 1.07 to 1.15. At 1, it falls.",
       "on_screen_text": "1.07 to 1.15",
       "visual_intent": "A close look at the leaning base while the host stares up, worried.",
       "shot": {
@@ -224,7 +224,7 @@
           "effects": [
             {
               "kind": "focus",
-              "anchor": "factor",
+              "anchor": "stability",
               "at": "ground",
               "detail": ""
             }
@@ -251,7 +251,7 @@
               "who": "lead",
               "verb": "gaze",
               "target": "",
-              "anchor": "falling"
+              "anchor": "falls"
             }
           ],
           "props": []
@@ -282,84 +282,6 @@
     },
     {
       "id": "b03",
-      "role": "setup",
-      "narration": "In 1990, Professor John Burland joined the 14-member stabilising committee.",
-      "on_screen_text": "14 members",
-      "visual_intent": "The host unrolls a plan in front of the tower, standing in for the committee at work.",
-      "shot": {
-        "host": {
-          "where": "scene",
-          "side": "centre",
-          "size": "medium",
-          "holds": "a rolled plan",
-          "doing": "unrolls a plan and looks up at the leaning tower",
-          "to_camera": true,
-          "cut_on": ""
-        },
-        "visual": "insert",
-        "insert": {
-          "key": "pisa-lawn-plans",
-          "scene": "Leaning Tower of Pisa across a sunny lawn, a wooden drafting table with rolled plans in the foreground, soft golden light, no people.",
-          "effects": []
-        },
-        "graphic": null,
-        "split": null,
-        "reaction_anchor": "",
-        "framing": "medium",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "other",
-          "setting_detail": "Leaning Tower of Pisa lawn",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "standing"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "point",
-              "target": "",
-              "anchor": "stabilising"
-            }
-          ],
-          "props": [
-            {
-              "name": "rolled plan",
-              "held_by": "lead",
-              "where": "right hand"
-            }
-          ]
-        },
-        "motion": [
-          {
-            "recipe": "pan_right",
-            "anchor": "",
-            "detail": ""
-          },
-          {
-            "recipe": "text_slam",
-            "anchor": "14-member",
-            "detail": ""
-          }
-        ],
-        "image_prompt": "",
-        "pose_variants": [],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [],
-      "source_ids": [
-        "s9"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b04",
       "role": "stakes",
       "narration": "First, 600 tonnes of lead went on the north side.",
       "on_screen_text": "600 tonnes",
@@ -449,7 +371,7 @@
       "duration": null
     },
     {
-      "id": "b05",
+      "id": "b04",
       "role": "clue",
       "narration": "The tower reversed its movement for the first time in its history.",
       "on_screen_text": "First time ever",
@@ -534,10 +456,10 @@
       "duration": null
     },
     {
-      "id": "b06",
+      "id": "b05",
       "role": "stakes",
-      "narration": "In 1995, an anchor swap failed. Its southward movement sped up, so lead rose to 900 tonnes.",
-      "on_screen_text": "900 tonnes",
+      "narration": "Then came Black September, 1995. A failed anchor swap made it start moving again, so the lead went up to 900 tonnes.",
+      "on_screen_text": "Black September",
       "visual_intent": "A tense night scene at the tower; the host jolts as the movement speeds up.",
       "shot": {
         "host": {
@@ -562,7 +484,7 @@
             },
             {
               "kind": "shake",
-              "anchor": "sped",
+              "anchor": "moving",
               "at": "",
               "detail": ""
             }
@@ -589,7 +511,7 @@
               "who": "lead",
               "verb": "jolt",
               "target": "",
-              "anchor": "sped"
+              "anchor": "moving"
             }
           ],
           "props": []
@@ -597,12 +519,12 @@
         "motion": [
           {
             "recipe": "impact_shake",
-            "anchor": "sped",
+            "anchor": "moving",
             "detail": ""
           },
           {
             "recipe": "text_slam",
-            "anchor": "900",
+            "anchor": "Black",
             "detail": ""
           }
         ],
@@ -614,17 +536,18 @@
       "sfx": [
         {
           "name": "thud",
-          "anchor": "sped"
+          "anchor": "moving"
         }
       ],
       "source_ids": [
-        "s4"
+        "s4",
+        "s5"
       ],
       "illustrative_numbers": false,
       "duration": null
     },
     {
-      "id": "b07",
+      "id": "b06",
       "role": "clue",
       "narration": "Before the final work, they added safety cables. They were never needed.",
       "on_screen_text": "Never needed",
@@ -709,7 +632,7 @@
       "duration": null
     },
     {
-      "id": "b08",
+      "id": "b07",
       "role": "twist",
       "narration": "The real fix? Underexcavation: carefully taking soil from under the north side.",
       "on_screen_text": "Underexcavation",
@@ -799,7 +722,7 @@
       "duration": null
     },
     {
-      "id": "b09",
+      "id": "b08",
       "role": "reveal",
       "narration": "38 cubic metres came out. It straightened 45 centimetres, back to 1838.",
       "on_screen_text": "45 centimetres",
@@ -888,7 +811,7 @@
       "duration": null
     },
     {
-      "id": "b10",
+      "id": "b09",
       "role": "payoff",
       "narration": "Carefully take soil from the north side, and let it settle.",
       "on_screen_text": "Let it settle",
@@ -967,7 +890,7 @@
       "duration": null
     },
     {
-      "id": "b11",
+      "id": "b10",
       "role": "loop",
       "narration": "Touch it wrong, and it falls. Touch it carefully, and you fix it.",
       "on_screen_text": "",
@@ -1149,6 +1072,11 @@
         "at": "2026-11-09T22:10:39",
         "by": "claude (draft, for the user to review)",
         "what": "b02 \"safety margin\" -> \"safety factor\" (source term); b06 \"The tower sped southward\" -> \"Its southward movement sped up\" (source: accelerating movements); storyline summary: cables, not steel cables; sped up, not suddenly moved"
+      },
+      {
+        "at": "2026-11-09T22:27:12",
+        "by": "user (via chat)",
+        "what": "b02 \"Engineers rated its stability at just 1.07 to 1.15. At 1, it falls.\"; b03 (committee) cut; b06 \"Then came Black September, 1995. A failed anchor swap made it start moving again, so the lead went up to 900 tonnes.\""
       }
     ],
     "approval_log": [

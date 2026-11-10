@@ -120,6 +120,40 @@ class HostScaleTest(unittest.TestCase):
         self.assertTrue(script.reputable(facts[0].url))
 
 
+class ResearchCitationTest(unittest.TestCase):
+    def blocks(self, text, cites=()):
+        from types import SimpleNamespace as N
+        result = N(type='web_search_tool_result', content=[N(url='https://www.consumerfinance.gov/ask-cfpb/x/', title='CFPB')])
+        return [N(type='server_tool_use'), result, N(type='text', text=text, citations=list(cites))]
+
+    def test_an_uncited_line_keeps_a_url_the_search_really_returned(self):
+        from pipeline.script import facts_from_content
+        facts = facts_from_content(self.blocks('Interest is charged daily on the average daily balance. '
+                                               '<https://www.consumerfinance.gov/ask-cfpb/x/>\n'
+                                               'A made-up line that names a page the search never returned. <https://example.gov/y>'))
+        self.assertEqual([(f.url, f.quote) for f in facts], [('https://www.consumerfinance.gov/ask-cfpb/x/', '')])
+        self.assertEqual(facts[0].claim, 'Interest is charged daily on the average daily balance.')
+
+    def test_a_scholar_lookup_of_a_doi_is_the_doi(self):
+        from pipeline.script import doi_link
+        self.assertEqual(doi_link('https://scholar.google.com/scholar_lookup?doi=10.1006/nimg.1999.0478&amp=&pmid=1'),
+                         'https://doi.org/10.1006/nimg.1999.0478')
+
+    def test_storylines_stand_only_on_reputable_facts(self):
+        from pipeline.models import Source
+        src = [Source(id='s1', claim='A reviewed fact here.', url='https://pubmed.ncbi.nlm.nih.gov/1/'),
+               Source(id='s2', claim='A blog fact here, dropped.', url='https://someblog.com/x')]
+        ep = Episode(slug='t', topic='why honey never spoils')
+        client = FakeClient([story_response()])
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(script, 'research', lambda *a, **k: (src, Path(d) / 'r.json', True)), \
+                mock.patch.object(story, 'allowed_formats', lambda slug: (story.ALL_FORMATS, [])):
+            from pipeline.cost import Ledger
+            ep2, notes = story.pitch(ep, Path(d), Ledger(Path(d) / 'ledger.json', 2.0), client)
+        self.assertEqual([f.url for f in ep2.sources], ['https://pubmed.ncbi.nlm.nih.gov/1/'])
+        self.assertIn('someblog.com', ' '.join(notes))
+        self.assertNotIn('someblog', client.messages.created[0]['messages'][0]['content'])
+
+
 class RotationTest(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.TemporaryDirectory()
