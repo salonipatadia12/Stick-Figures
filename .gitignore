@@ -27,3 +27,6 @@ episodes/*/out/
 
 # Local model runtimes (one per engine; see docs/LOCAL_MODELS.md)
 .venvs/
+
+# Agent worktrees (coordinator lanes)
+.claude/worktrees/
