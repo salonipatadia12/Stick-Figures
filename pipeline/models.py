@@ -86,6 +86,7 @@ InsertEffect = Literal[
     'label', 'arrow', 'pin', 'cross',
 ]
 Region = Literal['', 'sky', 'top', 'centre', 'ground', 'left', 'right', 'peak', 'horizon']
+LIGHT_WORDS = re.compile(r'\b(light|sun|sunlight|sunset|sunrise|sky|rays?|beams?|blue|atmosphere|air|scatter\w*)\b', re.I)
 GraphicKind = Literal['flow', 'bounce', 'scatter', 'two_paths', 'waves', 'bars', 'thermometer', 'cards', 'layers']
 MAX_EFFECTS, MAX_GRAPHIC_ITEMS = 4, 4
 SUBJECT_TARGET = 0.5                    # share of beats the writer aims to give an insert or a graphic
@@ -282,7 +283,7 @@ PICTURE = {
                                                      'kind: flow, bounce, scatter, two_paths, waves, bars, thermometer, '
                                                      'cards or layers. 1-4 labels of 1-3 words in reading order, each with '
                                                      'the narration word where it appears. detail: bars relative heights '
-                                                     '"3 | 5"; two_paths both, long or short; thermometer "from -> to" or '
+                                                     '"3 | 5"; two_paths (sunlight through the air only) both, long or short; thermometer "from -> to" or '
                                                      'falls/rises; else empty. E.g. "flow ; Sunlight@sun | Sulfur veil@veil ; ". '
                                                      'Else empty.'},
         'split': {'type': 'string', 'description': 'visual "split" only: "bottom-scene-key | the bottom scene painted '
@@ -968,6 +969,9 @@ class Episode(Strict):
             for a in g.anchors:
                 if a and a.casefold() not in spoken:
                     err(where, f'graphic anchor "{a}" is not in the narration')
+            if g.kind == 'two_paths' and not LIGHT_WORDS.search(f'{b.narration} {b.visual_intent}'):
+                err(where, 'two_paths draws sunlight crossing the air (sun, Earth, an eye); this beat is not about light: '
+                           'use bars, flow or cards')
         if sh.reaction_anchor:
             if sh.visual == 'character':
                 warn(where, 'reaction_anchor on a character beat does nothing; it cuts from an insert or graphic to the cast')

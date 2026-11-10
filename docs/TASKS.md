@@ -5,7 +5,7 @@ DONE = from the phone: type a topic, make the picks, download a QA-passed video;
 ## Waiting for the user
 - [ ] One real topic end to end from the phone (https://stick.srv1747356.hstgr.cloud, user `saloni`, password in the Mac Keychain item `stick-app`)
 - [ ] Port 3000 (baileys-api): who calls it (24 h SYN capture in /root/stick-port3000-callers.log, started 2026-11-10 17:30 UTC)
-- [ ] Docker Desktop: quit once local tests are done
+- [x] Docker Desktop: local tests done (386 OK, none need Docker); user may quit it
 
 ## VPS (approved 2026-11-10: B firewall, C key-only, D deploy; A cleanup skipped)
 - [x] ufw on: 22, 80, 443, 3000; everything else was already localhost-only
@@ -17,5 +17,6 @@ DONE = from the phone: type a topic, make the picks, download a QA-passed video;
 ## A. Videos
 - [x] Apollo rendered: 47.9 s, all QA pass
 - [x] Tickling rendered: 43.8 s, all QA pass
-- [ ] Finance: approved (hook 1, b05 edit); painting, then render
-- [ ] Pisa re-render: before/after straighter, cut-away with the tower standing, one lean (5.5 deg right; after 2.5 deg), b06 trimmed
+- [x] Finance rendered: 63.4 s; all QA pass except duration (target 45 +-15%); trims + b08 graphic await the user
+- [ ] Finance: user's pick of trims (b04/b09/b07) and b08 two_paths -> cards; re-approve, re-render
+- [x] Pisa re-rendered: 49.7 s, all QA pass (one lean 5.5 deg right, before/after split with upright guide, cut-away standing, b06 trimmed)

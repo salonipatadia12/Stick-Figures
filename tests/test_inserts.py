@@ -58,6 +58,17 @@ class VisualRulesTest(unittest.TestCase):
         self.assertIn('over 3 words', out)
         self.assertIn('graphic anchor "tiny" is not in the narration', out)
 
+    def test_two_paths_is_only_for_light(self):
+        # a debt script drew its "long vs short path" as the sunset diagram (sun, Earth, an eye)
+        debt = beat('reveal', 'The minimum takes eight more years.', 'The long path against the short one.', [('push_in', '', '')],
+                    cast=(), stage=staging(()), kind='graphic', graphic=dict(kind='two_paths', items=['Eight more years'],
+                                                                             anchors=['eight'], detail='both'))
+        self.assertIn('two_paths draws sunlight', ' | '.join(messages(episode_with(debt))))
+        sky = beat('reveal', 'At sunset the light crosses more air.', 'Two light paths.', [('push_in', '', '')],
+                   cast=(), stage=staging(()), kind='graphic', graphic=dict(kind='two_paths', items=['Long path'],
+                                                                            anchors=['light'], detail='both'))
+        self.assertNotIn('two_paths draws sunlight', ' | '.join(messages(episode_with(sky))))
+
     def test_v4_fields_at_defaults_do_not_change_old_digests(self):
         ep = episode_with(*salary_draft()['beats'])
         before = ep.script_digest()
