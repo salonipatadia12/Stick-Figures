@@ -1,0 +1,58 @@
+{
+ "lander-tank-and-engine": {
+  "scene": "Close painted view of the lunar module underside, a round oxygen tank in gold foil above a bell-shaped descent engine, warm side light.",
+  "source": "renders/inserts/flux/scene-lander-tank-and-engine-s132.png",
+  "file": "styles/cozy/inserts/lander-tank-and-engine.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close painted view of the lunar module underside, a round oxygen tank in gold foil above a bell-shaped descent engine, warm side light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1151,
+   "contrast": 47.8,
+   "mean": 133.9
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "earth-moon-route-map": {
+  "scene": "Illustrated map of space with Earth on the left, the Moon on the right and a small spacecraft between them, no text.",
+  "source": "renders/inserts/flux/scene-earth-moon-route-map-s685.png",
+  "file": "styles/cozy/inserts/earth-moon-route-map.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Illustrated map of space with Earth on the left, the Moon on the right and a small spacecraft between them, no text. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1041,
+   "contrast": 51.5,
+   "mean": 82.4
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "lander-cabin-interior": {
+  "scene": "Tight painted lunar module cabin with a small control panel, a triangular window showing stars, dim warm light.",
+  "source": "renders/inserts/flux/scene-lander-cabin-interior-s106.png",
+  "file": "styles/cozy/inserts/lander-cabin-interior.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Tight painted lunar module cabin with a small control panel, a triangular window showing stars, dim warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1244,
+   "contrast": 27.7,
+   "mean": 51.4
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "earth-far-away": {
+  "scene": "Painted view of space with Earth glowing blue and white in the distance, a small spacecraft in the foreground, soft light.",
+  "source": "renders/inserts/flux/scene-earth-far-away-s769.png",
+  "file": "styles/cozy/inserts/earth-far-away.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted view of space with Earth glowing blue and white in the distance, a small spacecraft in the foreground, soft light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0765,
+   "contrast": 61.1,
+   "mean": 98.7
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ }
+}

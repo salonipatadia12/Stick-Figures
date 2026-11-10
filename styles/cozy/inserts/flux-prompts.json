@@ -1127,5 +1127,545 @@
       1680
     ],
     "mode": "edit"
+  },
+  "scene-apollo-cabin-interior": {
+    "seeds": [
+      122,
+      123
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Cramped painted spacecraft cabin with a control panel, small round window showing black space and stars, warm amber lamp light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-apollo-switch-panel": {
+    "seeds": [
+      623,
+      624
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close view of a spacecraft switch panel with toggles and dials, warm amber light, a round window to one side showing stars. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-spacecraft-venting-oxygen": {
+    "seeds": [
+      571,
+      572
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo spacecraft floating in black space with pale vapor streaming from its side, distant Earth glowing small in the corner. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lunar-module-aquarius": {
+    "seeds": [
+      157,
+      158
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted lunar module with gold foil legs and a boxy cabin floating in black space, soft light from the side, Earth faint in the distance. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lander-tank-and-engine": {
+    "seeds": [
+      132,
+      133
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close painted view of the lunar module underside, a round oxygen tank in gold foil above a bell-shaped descent engine, warm side light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-earth-moon-route-map": {
+    "seeds": [
+      685,
+      686
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Illustrated map of space with Earth on the left, the Moon on the right and a small spacecraft between them, no text. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lander-cabin-interior": {
+    "seeds": [
+      105,
+      106
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Tight painted lunar module cabin with a small control panel, a triangular window showing stars, dim warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tape-bags-cardboard-table": {
+    "seeds": [
+      424,
+      425
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Top-down view of a worktable with clear plastic bags, a sheet of cardboard, a roll of tape and a small canister, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-earth-far-away": {
+    "seeds": [
+      769,
+      770
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted view of space with Earth glowing blue and white in the distance, a small spacecraft in the foreground, soft light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-apollo-cabin-interior--cabin-window-now-showing-earth": {
+    "seeds": [
+      404,
+      405
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but cabin window now showing Earth. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/apollo-cabin-interior.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-bedroom-sunlit-floor": {
+    "seeds": [
+      751,
+      752
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm sunlit bedroom with an unmade bed, wooden floor and dappled window light, morning, calm and still. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-bedroom-window-evening": {
+    "seeds": [
+      246,
+      247
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A quiet bedroom corner at dusk with a window, soft golden light fading to cool blue, an empty bed and a small lamp. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-brain-glow-bright": {
+    "seeds": [
+      395,
+      396
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A painted brain in a warm dark study glowing bright gold, soft light spilling around. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-brain-glow-dim": {
+    "seeds": [
+      769,
+      770
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A painted brain resting in a warm dark study, glowing only faintly, soft amber light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-feather-bedroom-bed": {
+    "seeds": [
+      568,
+      569
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A sunlit bedroom with a rumpled bed, a wooden floor and a soft rug, golden afternoon light and long shadows. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-bedroom-wall-clock": {
+    "seeds": [
+      490,
+      491
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm bedroom wall with a round wooden clock above a small desk, golden late-afternoon light, quiet and still. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-glowing-note-bedroom-wall": {
+    "seeds": [
+      508,
+      509
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm bedroom corner with a small paper note pinned to the wall, glowing softly gold, dusk light through the window. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-bedroom-wall-clock--the-same-wall-in-dull-gray-light": {
+    "seeds": [
+      144,
+      145
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the same wall in dull gray light. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/bedroom-wall-clock.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-spacecraft-venting-oxygen-r2": {
+    "seeds": [
+      1571,
+      1572
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo command and service module seen close, filling half the frame, its silver hull brightly lit by strong sunlight, pale white vapor streaming from a torn panel on its side, a large bright blue-and-white Earth filling the lower third behind it, open space with stars; no ground, no horizon, no desert, no landscape, one Earth only. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lunar-module-aquarius-r2": {
+    "seeds": [
+      1157,
+      1158
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo lunar module drifting in open space, gold foil lower stage with four spidery legs, boxy silver-gray cabin with small triangular windows, brightly sunlit from the side, a large bright blue-and-white Earth filling the lower third behind it; no ground, no horizon, no desert, no landscape, no Moon surface, one Earth only. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-brain-glow-bright-r2": {
+    "seeds": [
+      1395,
+      1396
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A painted human brain glowing bright warm gold, soft golden light rays spreading around it, floating against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-brain-glow-dim-r2": {
+    "seeds": [
+      1769,
+      1770
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The same kind of painted human brain glowing only faintly, a dull muted amber, barely any light around it, floating against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lander-tank-and-engine-r2": {
+    "seeds": [
+      1132,
+      1133
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close painted view of the Apollo lunar module lower stage floating in open space, a round oxygen tank wrapped in gold foil above a bell-shaped descent engine nozzle, brightly sunlit from the side, a large bright blue Earth in the lower corner; no ground, no horizon, no desert, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-earth-moon-route-map-r2": {
+    "seeds": [
+      1685,
+      1686
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Illustrated space map on a warm cream paper background: a blue-and-green Earth on the left, a gray Moon on the right, a small spacecraft between them, a faint dotted curve looping from Earth around the Moon and back; no text, no ground, no horizon, no desert, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lander-cabin-interior-r2": {
+    "seeds": [
+      1105,
+      1106
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Inside a cramped Apollo lunar module cabin seen from inside, two standing spots, a small control panel with switches and gauges filling the lower half, a triangular window showing black space and stars, warm amber cabin light on metal walls; interior only, no exterior view of the craft, no ground, no horizon, no desert, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-earth-far-away-r2": {
+    "seeds": [
+      1769,
+      1770
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted view from open space: a small silver Apollo spacecraft in the foreground, brightly sunlit, and a big glowing blue-and-white Earth ahead of it filling the lower half of the frame; no ground, no horizon, no desert, no landscape, one Earth only. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-spacecraft-venting-oxygen-r3": {
+    "seeds": [
+      2571,
+      2572
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo command and service module drifting in open space, seen close and filling half the frame, its silver hull brightly lit by strong sunlight, pale white vapor streaming from a torn panel on its side, a large bright blue-and-white Earth behind it, stars; one Earth only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lunar-module-aquarius-r3": {
+    "seeds": [
+      2157,
+      2158
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo lunar module drifting in open space, gold foil lower stage with four spidery legs, boxy silver-gray cabin with small triangular windows, brightly sunlit from the side, a large bright blue-and-white Earth behind it; no Moon surface, one Earth only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lander-cabin-interior-r3": {
+    "seeds": [
+      2105,
+      2106
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Inside a cramped Apollo lunar module cabin seen from inside, the craft flying in open space: no seats and no stools (the crew stood), a small control panel with switches and gauges across the middle, a triangular window showing black space and stars, warm amber cabin light on metal walls; interior only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-earth-far-away-r3": {
+    "seeds": [
+      2769,
+      2770
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted view in open space: a small silver Apollo capsule floating in the foreground, brightly sunlit, a big glowing blue-and-white Earth ahead of it filling the lower half of the frame; one Earth only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
   }
 }

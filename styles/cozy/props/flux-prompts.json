@@ -306,5 +306,103 @@
     "model": "mflux-community/flux2-klein-4b-mflux-q8",
     "licence": "apache-2.0",
     "steps": 4
+  },
+  "prop-switch panel": {
+    "prompt": "A single switch panel, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      618,
+      619
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-control lever": {
+    "prompt": "A single control lever, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      743,
+      744
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-roll of tape": {
+    "prompt": "A single roll of tape, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      544,
+      545
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-plastic bags": {
+    "prompt": "A single plastic bags, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      597,
+      598
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-cardboard": {
+    "prompt": "A single cardboard, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      330,
+      331
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-canister": {
+    "prompt": "A single canister, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      257,
+      258
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-feather on a stick": {
+    "prompt": "A single feather on a stick, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      391,
+      392
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
   }
 }

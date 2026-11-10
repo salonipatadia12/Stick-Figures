@@ -772,5 +772,265 @@
   "made": "2026-11-09",
   "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
   "round": 2
+ },
+ "apollo-cabin-interior": {
+  "scene": "Cramped painted spacecraft cabin with a control panel, small round window showing black space and stars, warm amber lamp light.",
+  "source": "renders/inserts/flux/scene-apollo-cabin-interior-s123.png",
+  "file": "styles/cozy/inserts/apollo-cabin-interior.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Cramped painted spacecraft cabin with a control panel, small round window showing black space and stars, warm amber lamp light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1646,
+   "contrast": 31.1,
+   "mean": 51.2
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "apollo-switch-panel": {
+  "scene": "Close view of a spacecraft switch panel with toggles and dials, warm amber light, a round window to one side showing stars.",
+  "source": "renders/inserts/flux/scene-apollo-switch-panel-s623.png",
+  "file": "styles/cozy/inserts/apollo-switch-panel.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close view of a spacecraft switch panel with toggles and dials, warm amber light, a round window to one side showing stars. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0911,
+   "contrast": 31.3,
+   "mean": 62.3
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "tape-bags-cardboard-table": {
+  "scene": "Top-down view of a worktable with clear plastic bags, a sheet of cardboard, a roll of tape and a small canister, warm light.",
+  "source": "renders/inserts/flux/scene-tape-bags-cardboard-table-s424.png",
+  "file": "styles/cozy/inserts/tape-bags-cardboard-table.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Top-down view of a worktable with clear plastic bags, a sheet of cardboard, a roll of tape and a small canister, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0794,
+   "contrast": 64.0,
+   "mean": 138.8
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "apollo-cabin-interior--cabin-window-now-showing-earth": {
+  "scene": "cabin window now showing Earth",
+  "source": "renders/inserts/flux/scene-apollo-cabin-interior--cabin-window-now-showing-earth-s405.png",
+  "file": "styles/cozy/inserts/apollo-cabin-interior--cabin-window-now-showing-earth.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but cabin window now showing Earth. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "apollo-cabin-interior",
+  "qa": {
+   "edges": 0.1664,
+   "contrast": 35.3,
+   "mean": 60.4
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home"
+ },
+ "bedroom-sunlit-floor": {
+  "scene": "A warm sunlit bedroom with an unmade bed, wooden floor and dappled window light, morning, calm and still.",
+  "source": "renders/inserts/flux/scene-bedroom-sunlit-floor-s752.png",
+  "file": "styles/cozy/inserts/bedroom-sunlit-floor.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm sunlit bedroom with an unmade bed, wooden floor and dappled window light, morning, calm and still. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0901,
+   "contrast": 49.8,
+   "mean": 145.6
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself"
+ },
+ "bedroom-window-evening": {
+  "scene": "A quiet bedroom corner at dusk with a window, soft golden light fading to cool blue, an empty bed and a small lamp.",
+  "source": "renders/inserts/flux/scene-bedroom-window-evening-s247.png",
+  "file": "styles/cozy/inserts/bedroom-window-evening.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A quiet bedroom corner at dusk with a window, soft golden light fading to cool blue, an empty bed and a small lamp. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0457,
+   "contrast": 35.2,
+   "mean": 90.3
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself"
+ },
+ "feather-bedroom-bed": {
+  "scene": "A sunlit bedroom with a rumpled bed, a wooden floor and a soft rug, golden afternoon light and long shadows.",
+  "source": "renders/inserts/flux/scene-feather-bedroom-bed-s568.png",
+  "file": "styles/cozy/inserts/feather-bedroom-bed.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A sunlit bedroom with a rumpled bed, a wooden floor and a soft rug, golden afternoon light and long shadows. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.088,
+   "contrast": 56.1,
+   "mean": 146.7
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself"
+ },
+ "bedroom-wall-clock": {
+  "scene": "A warm bedroom wall with a round wooden clock above a small desk, golden late-afternoon light, quiet and still.",
+  "source": "renders/inserts/flux/scene-bedroom-wall-clock-s490.png",
+  "file": "styles/cozy/inserts/bedroom-wall-clock.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm bedroom wall with a round wooden clock above a small desk, golden late-afternoon light, quiet and still. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0712,
+   "contrast": 46.4,
+   "mean": 134.3
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself"
+ },
+ "glowing-note-bedroom-wall": {
+  "scene": "A warm bedroom corner with a small paper note pinned to the wall, glowing softly gold, dusk light through the window.",
+  "source": "renders/inserts/flux/scene-glowing-note-bedroom-wall-s508.png",
+  "file": "styles/cozy/inserts/glowing-note-bedroom-wall.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A warm bedroom corner with a small paper note pinned to the wall, glowing softly gold, dusk light through the window. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0185,
+   "contrast": 27.6,
+   "mean": 76.0
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself"
+ },
+ "bedroom-wall-clock--the-same-wall-in-dull-gray-light": {
+  "scene": "the same wall in dull gray light",
+  "source": "renders/inserts/flux/scene-bedroom-wall-clock--the-same-wall-in-dull-gray-light-s144.png",
+  "file": "styles/cozy/inserts/bedroom-wall-clock--the-same-wall-in-dull-gray-light.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the same wall in dull gray light. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "bedroom-wall-clock",
+  "qa": {
+   "edges": 0.0505,
+   "contrast": 45.6,
+   "mean": 120.8
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself"
+ },
+ "brain-glow-bright": {
+  "scene": "A painted brain in a warm dark study glowing bright gold, soft light spilling around",
+  "source": "renders/inserts/flux/scene-brain-glow-bright-r2-s1395.png",
+  "file": "styles/cozy/inserts/brain-glow-bright.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A painted human brain glowing bright warm gold, soft golden light rays spreading around it, floating against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0269,
+   "contrast": 22.3,
+   "mean": 198.0
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself",
+  "round": 2
+ },
+ "brain-glow-dim": {
+  "scene": "A painted brain resting in a warm dark study, glowing only faintly, soft amber light.",
+  "source": "renders/inserts/flux/scene-brain-glow-dim-r2-s1769.png",
+  "file": "styles/cozy/inserts/brain-glow-dim.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The same kind of painted human brain glowing only faintly, a dull muted amber, barely any light around it, floating against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0146,
+   "contrast": 27.0,
+   "mean": 198.0
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself",
+  "round": 2
+ },
+ "lander-tank-and-engine": {
+  "scene": "Close painted view of the lunar module underside, a round oxygen tank in gold foil above a bell-shaped descent engine, warm side light.",
+  "source": "renders/inserts/flux/scene-lander-tank-and-engine-r2-s1132.png",
+  "file": "styles/cozy/inserts/lander-tank-and-engine.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close painted view of the Apollo lunar module lower stage floating in open space, a round oxygen tank wrapped in gold foil above a bell-shaped descent engine nozzle, brightly sunlit from the side, a large bright blue Earth in the lower corner; no ground, no horizon, no desert, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1121,
+   "contrast": 50.0,
+   "mean": 72.5
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 2
+ },
+ "earth-moon-route-map": {
+  "scene": "Illustrated map of space with Earth on the left, the Moon on the right and a small spacecraft between them, no text.",
+  "source": "renders/inserts/flux/scene-earth-moon-route-map-r2-s1685.png",
+  "file": "styles/cozy/inserts/earth-moon-route-map.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Illustrated space map on a warm cream paper background: a blue-and-green Earth on the left, a gray Moon on the right, a small spacecraft between them, a faint dotted curve looping from Earth around the Moon and back; no text, no ground, no horizon, no desert, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0275,
+   "contrast": 38.6,
+   "mean": 222.1
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 2
+ },
+ "spacecraft-venting-oxygen": {
+  "scene": "Painted Apollo spacecraft floating in black space with pale vapor streaming from its side, distant Earth glowing small in the corner.",
+  "source": "renders/inserts/flux/scene-spacecraft-venting-oxygen-r3-s2571.png",
+  "file": "styles/cozy/inserts/spacecraft-venting-oxygen.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo command and service module drifting in open space, seen close and filling half the frame, its silver hull brightly lit by strong sunlight, pale white vapor streaming from a torn panel on its side, a large bright blue-and-white Earth behind it, stars; one Earth only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1007,
+   "contrast": 77.5,
+   "mean": 79.2
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 3
+ },
+ "lunar-module-aquarius": {
+  "scene": "Painted lunar module with gold foil legs and a boxy cabin floating in black space, soft light from the side, Earth faint in the distance.",
+  "source": "renders/inserts/flux/scene-lunar-module-aquarius-r3-s2157.png",
+  "file": "styles/cozy/inserts/lunar-module-aquarius.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted Apollo lunar module drifting in open space, gold foil lower stage with four spidery legs, boxy silver-gray cabin with small triangular windows, brightly sunlit from the side, a large bright blue-and-white Earth behind it; no Moon surface, one Earth only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1209,
+   "contrast": 62.9,
+   "mean": 70.5
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 3
+ },
+ "lander-cabin-interior": {
+  "scene": "Tight painted lunar module cabin with a small control panel, a triangular window showing stars, dim warm light.",
+  "source": "renders/inserts/flux/scene-lander-cabin-interior-r3-s2105.png",
+  "file": "styles/cozy/inserts/lander-cabin-interior.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Inside a cramped Apollo lunar module cabin seen from inside, the craft flying in open space: no seats and no stools (the crew stood), a small control panel with switches and gauges across the middle, a triangular window showing black space and stars, warm amber cabin light on metal walls; interior only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1759,
+   "contrast": 42.4,
+   "mean": 64.1
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 3
+ },
+ "earth-far-away": {
+  "scene": "Painted view of space with Earth glowing blue and white in the distance, a small spacecraft in the foreground, soft light.",
+  "source": "renders/inserts/flux/scene-earth-far-away-r3-s2769.png",
+  "file": "styles/cozy/inserts/earth-far-away.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Painted view in open space: a small silver Apollo capsule floating in the foreground, brightly sunlit, a big glowing blue-and-white Earth ahead of it filling the lower half of the frame; one Earth only. Vertical portrait composition with open sky or open space in the top third, nothing below it: no ground, no horizon, no land. No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0702,
+   "contrast": 46.8,
+   "mean": 158.8
+  },
+  "made": "2026-11-10",
+  "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 3
  }
 }
