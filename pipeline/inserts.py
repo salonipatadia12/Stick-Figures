@@ -50,6 +50,24 @@ def save_library(lib: dict):
     LIBRARY.write_text(json.dumps(lib, indent=1, ensure_ascii=False) + '\n')
 
 
+# A close-up of things (a jar on a counter, a germ, a test strip) versus a place (a street, a tower, a kitchen seen
+# whole). In an object close-up a full-body host standing beside the object looks dwarfed by a giant prop (user
+# 2026-11-10), so the composer keeps the host in the foreground there. A library entry may set "scale" itself.
+OBJECT_WORDS = re.compile(r'\b(jars?|bottles?|glass(es)?|cups?|mugs?|strips?|dippers?|spoons?|lemons?|plates?|bowls?|cells?|'
+                          r'crystals?|drops?|droplets?|coins?|books?|phones?|tabletop|surface|microscope|macro|petri)\b')
+FIRST_CLAUSE = re.compile(r'[,:;]| in | with | at | beside | under | on a | on the ')
+
+
+def scene_scale(key: str, scene: str = '', lib: dict | None = None) -> str:
+    """'object' or 'place' for an insert scene: the library entry's own "scale", else read from the opening phrase of
+    its description (what the picture IS, not what stands in it)."""
+    entry = (library() if lib is None else lib).get(key) or {}
+    if entry.get('scale') in ('object', 'place'):
+        return entry['scale']
+    head = FIRST_CLAUSE.split((scene or entry.get('scene', '')).lower(), maxsplit=1)[0]
+    return 'object' if OBJECT_WORDS.search(head) else 'place'
+
+
 def variant_key(key: str, change: str) -> str:
     return f'{key}--{slug(change)}'
 

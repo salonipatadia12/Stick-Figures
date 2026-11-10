@@ -164,7 +164,7 @@ def cmd_make(args):
             client = make_client()
         print('\nDry run: nothing paid is sent.')
         total = 0
-        for step, tokens, how, estimate in plan(episode, style, client, not args.no_research):
+        for step, tokens, how, estimate in plan(episode, style, client, not args.no_research and not args.facts):
             total += estimate
             print(f'  {step:9} input {tokens:>7,} tokens ({how}); reserve up to ${usd(estimate):.4f}')
         print(f'  worst case for the script stage: ${usd(total):.4f} of ${usd(ledger.remaining()):.4f} remaining'
@@ -173,7 +173,8 @@ def cmd_make(args):
 
     if needs_script:
         from .script import generate
-        episode, notes = generate(episode, style, base, ledger, use_research=not args.no_research, regenerate=regenerate)
+        episode, notes = generate(episode, style, base, ledger, use_research=not args.no_research, regenerate=regenerate,
+                                  facts_file=args.facts)
         store.save(episode, base)
         for note in notes:
             print('  ' + note)
@@ -511,6 +512,8 @@ def build_parser():
     m.add_argument('--approve', help='comma-separated gates to stop at (default "script"; "none" to skip)')
     m.add_argument('--auto', action='store_true', help='skip all gates (still refuses scripts that fail checks)')
     m.add_argument('--no-research', action='store_true', help='skip web research; the script may then use no statistics')
+    m.add_argument('--facts', help='JSON list of {claim, url, title, quote} checked by hand from their sources: used '
+                   'instead of the research call (only the script is paid)')
     m.add_argument('--regenerate', action='append', choices=['research', 'story', 'script'],
                    help='ignore the cached result for this step (a new paid call)')
     m.add_argument('--dry-run', action='store_true', help='show the cost plan without sending paid requests')

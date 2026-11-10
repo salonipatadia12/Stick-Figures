@@ -187,6 +187,9 @@ def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C
         note_text(im.info.get('label', '?'), im.info['em'] * s, _box(xy, sized))
 
 
+CHECKLIST_SCALE = 1.5
+
+
 def checklist(frame: Image.Image, t: float, rows: list, t_in: float, centre=TEXT_C, width: int = 470):
     """Rows with prices need room: the card widens so the longest label never meets its price."""
     """A paper card with rows that tick on their words: rows = [(label, price or '', tick time)]."""
@@ -221,9 +224,10 @@ def checklist(frame: Image.Image, t: float, rows: list, t_in: float, centre=TEXT
         if price:
             d.text((width - pad + 6, y + 14), price, font=num, fill=INK if price.startswith('-') else (36, 120, 70), anchor='ra')
     card = painterly(card, 4, 0.5)
-    s = 0.6 + 0.4 * min(1.0, q)
+    big = min(CHECKLIST_SCALE, 860 / card.width)     # readable on a phone (user 2026-11-10), inside the safe width
+    s = (0.6 + 0.4 * min(1.0, q)) * big
     sized = card.resize((max(1, int(card.width * s)), max(1, int(card.height * s))), Image.BICUBIC)
-    xy = (int(centre[0] - sized.width / 2), int(centre[1] - sized.height / 2))
+    xy = (int(centre[0] - sized.width / 2), max(120, int(centre[1] - sized.height / 2)))
     frame.alpha_composite(sized, xy)
     if q >= 1.0:                                  # settled; while it pops in it is briefly smaller
         note_text('checklist: ' + ', '.join(r[0] for r in rows), (num_px if any(r[1] for r in rows) else lab_px) * s, _box(xy, sized))

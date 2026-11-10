@@ -127,6 +127,15 @@ Rules:
    row with the same visual type and the same host spot and size. Never the template hook -> "let me show you" ->
    diagram -> bar chart -> loop. Use at least three different tools in a video (scene animation, close-up/focus,
    split, map, a held object, camera moves, a diagram).
+14. NOTHING BEYOND THE SOURCE (user 2026-11-10). Every factual line says only what its cited fact says. No
+   extrapolation, no absolutes the fact does not state ("never touched", "always", "the only way"), no motives or
+   feelings the source does not report. If the story needs a step the facts do not support, leave the step out.
+15. ONE PLACE, ITS OWN SCENES. When the topic happens in a real place that is not a library setting (a landmark, a
+   city, a lab), every beat that shows the host shows that place: a painted scene (insert) of it, never a generic
+   library setting (street, park, office...) as a stand-in.
+16. HOST SCALE (user 2026-11-10: never dwarfed by a giant prop). In a close-up of objects (a jar on a counter, a
+   bottle, a cell) the host is "large" or "close" (near the camera) or pops in; "small" and "medium" full-body
+   placements are for places (a room, a street, a landmark). Held props are hand-sized.
 
 Visual style of this channel:
 """
@@ -149,6 +158,12 @@ def make_client():
 def research_request(episode):
     user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}')
+    focus = episode.meta.get('research_focus') or {}
+    if focus.get('find'):                      # the user's own list of events the story needs (user 2026-11-10)
+        user += ('\n\nThe story needs a cited fact for each of these, in this order:\n'
+                 + '\n'.join(f'- {x}' for x in focus['find']))
+    if focus.get('prefer'):
+        user += '\nLook first in: ' + '; '.join(focus['prefer']) + '.'
     # allowed_callers=['direct']: results go straight into Claude's context, so the answer carries
     # web_search_result_location citations with URLs. The default for this tool version routes
     # searches through code-execution filtering; the 2026-11-04 run returned 4 searches and no
@@ -325,7 +340,9 @@ PEER_REVIEWED = ('pmc.ncbi.nlm.nih.gov', 'pubmed.ncbi.nlm.nih.gov', 'ncbi.nlm.ni
                  'pnas.org', 'cell.com', 'bmj.com', 'thelancet.com', 'jstor.org', 'icevirtuallibrary.com', 'ascelibrary.org',
                  'iopscience.iop.org', 'pubs.acs.org', 'annualreviews.org', 'biomedcentral.com', 'bmcpsychology.biomedcentral.com',
                  'agu.org', 'agupubs.onlinelibrary.wiley.com', 'journals.ametsoc.org', 'copernicus.org', 'sagepub.com',
-                 'jamanetwork.com', 'nejm.org', 'elifesciences.org', 'europepmc.org', 'scielo.org', 'ieeexplore.ieee.org')
+                 'jamanetwork.com', 'nejm.org', 'elifesciences.org', 'europepmc.org', 'scielo.org', 'ieeexplore.ieee.org',
+                 'jiban.or.jp', 'jstage.jst.go.jp',   # Soils and Foundations (Japanese Geotechnical Society): user 2026-11-10
+                 'issmge.org', 'geocasehistoriesjournal.org')   # ISSMGE proceedings and its case-histories journal
 NOT_REVIEWED = ('patent', 'uspto', 'ppubs', 'espacenet', 'wikipedia.org', 'blog', 'medium.com', 'academia.edu',
                 'researchgate.net', 'slideshare.net', 'scribd.com', 'intechopen.com', 'coursehero.com', 'studocu.com')
 
@@ -411,7 +428,15 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
     return draft, path, False
 
 
-def generate(episode, style, base, ledger, client=None, use_research=True, regenerate=()):
+def checked_facts(path) -> list:
+    """Facts read by hand from their sources (each with the exact quote), in place of the research call: a JSON list
+    of {claim, url, title, quote}. Ids are s1, s2... in file order."""
+    rows = json.loads(Path(path).read_text())
+    return [Source(id=f's{k}', claim=r['claim'], url=r['url'], title=r.get('title', ''), quote=r.get('quote', ''))
+            for k, r in enumerate(rows, 1)]
+
+
+def generate(episode, style, base, ledger, client=None, use_research=True, regenerate=(), facts_file=None):
     """Fill episode.title, hook_promise, beats and sources. Returns (episode, notes)."""
     if not episode.storyline:
         raise ScriptError(f'No storyline picked for {episode.slug}: story before script (stick make --episode '
@@ -419,9 +444,13 @@ def generate(episode, style, base, ledger, client=None, use_research=True, regen
     client = client or make_client()
     notes = []
     facts = []
-    if use_research:
-        facts, path, cached = research(episode, base, ledger, client, 'research' in regenerate)
-        notes.append(f'research: {len(facts)} cited facts ({"cache" if cached else "new"}: {path.name})')
+    if facts_file or use_research:
+        if facts_file:                                 # checked by hand: no research call
+            facts = checked_facts(facts_file)
+            notes.append(f'facts: {len(facts)} checked by hand from their sources ({Path(facts_file).name}); no research call')
+        else:
+            facts, path, cached = research(episode, base, ledger, client, 'research' in regenerate)
+            notes.append(f'research: {len(facts)} cited facts ({"cache" if cached else "new"}: {path.name})')
         facts, dropped = keep_reputable(facts)
         for f in dropped:
             notes.append(f'  dropped (not government, university or peer-reviewed): {f.url}')

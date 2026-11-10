@@ -1,6 +1,6 @@
 {
   "budget_usd": 2.0,
-  "spent_usd": 0.371146,
+  "spent_usd": 0.55939,
   "prices_verified": "2026-11-04",
   "entries": [
     {
@@ -97,6 +97,25 @@
         "web_searches": 0
       },
       "at": "2026-11-09T18:55:28"
+    },
+    {
+      "id": 6,
+      "step": "research",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.287692,
+      "actual_usd": 0.188244,
+      "status": "ok",
+      "detail": "web search \u22644 | stop=end_turn",
+      "usage": {
+        "input": 67002,
+        "output": 1424,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 4
+      },
+      "at": "2026-11-09T20:37:27"
     }
   ]
 }

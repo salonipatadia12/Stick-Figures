@@ -431,7 +431,8 @@
    "mean": 153.5
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "honey-three-suspects-table": {
   "scene": "A wooden kitchen table in warm afternoon light with three small objects in a row: a brown dropper bottle, a halved lemon and an empty drinking glass.",
@@ -445,7 +446,8 @@
    "mean": 157.2
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "honey-dipper-sparks-closeup": {
   "scene": "Close-up of thick golden honey dripping from a wooden dipper into a jar, tiny glowing sparks in the honey, warm backlight.",
@@ -459,7 +461,8 @@
    "mean": 158.6
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "honey-sugar-close-up": {
   "scene": "a close view of honey with amber sugar crystals glinting and one tiny water drop beside the jar, warm light",
@@ -473,7 +476,8 @@
    "mean": 176.6
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "honey-peroxide-sparks-bet": {
   "scene": "A honey jar with glowing spark shapes floating above it on a sunlit counter, warm light.",
@@ -487,7 +491,8 @@
    "mean": 157.6
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "honey-ph-strip-counter": {
   "scene": "A honey jar on a sunlit counter beside a paper test strip with an orange-to-yellow colour gradient, no text, warm light.",
@@ -501,7 +506,8 @@
    "mean": 171.4
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "honey-jar-window-glow": {
   "scene": "A honey jar on a window sill in golden window light, one thin drop catching the sun, warm kitchen behind.",
@@ -515,7 +521,8 @@
    "mean": 123.2
   },
   "made": "2026-11-09",
-  "episode": "why-honey-never-spoils"
+  "episode": "why-honey-never-spoils",
+  "scale": "object"
  },
  "germ-cell-shrivel-in-honey": {
   "scene": "A close painted view of a golden honey surface with a small round pale cell beside glinting amber sugar crystals, soft warm light.",
@@ -530,7 +537,8 @@
   },
   "made": "2026-11-09",
   "episode": "why-honey-never-spoils",
-  "round": 2
+  "round": 2,
+  "scale": "object"
  },
  "germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled": {
   "scene": "the cell shrunken and wrinkled",
@@ -545,6 +553,49 @@
   },
   "made": "2026-11-09",
   "episode": "why-honey-never-spoils",
-  "round": 2
+  "round": 2,
+  "scale": "object"
+ },
+ "honey-suspects-closeup": {
+  "scene": "Close view of a wooden tabletop: a small brown dropper bottle, a halved lemon and an empty drinking glass side by side, filling the frame, warm afternoon light.",
+  "source": "renders/inserts/flux/scene-honey-suspects-closeup-s291.png",
+  "file": "styles/cozy/inserts/honey-suspects-closeup.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close view of a wooden tabletop: a small brown dropper bottle, a halved lemon and an empty drinking glass side by side, filling the frame, warm afternoon light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0462,
+   "contrast": 65.6,
+   "mean": 164.9
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-sugar-dry-acid": {
+  "scene": "close view of crystallised honey: amber sugar crystals on a dry, cracked honey surface, an orange pH test strip lying across it, warm light",
+  "source": "renders/inserts/flux/scene-honey-sugar-dry-acid-s664.png",
+  "file": "styles/cozy/inserts/honey-sugar-dry-acid.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: close view of crystallised honey: amber sugar crystals on a dry, cracked honey surface, an orange pH test strip lying across it, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0701,
+   "contrast": 61.2,
+   "mean": 163.0
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "peroxide-bottle-bet": {
+  "scene": "A small brown glass dropper bottle of hydrogen peroxide alone on a sunlit wooden counter, close view, warm light.",
+  "source": "renders/inserts/flux/scene-peroxide-bottle-bet-s619.png",
+  "file": "styles/cozy/inserts/peroxide-bottle-bet.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A small brown glass dropper bottle of hydrogen peroxide alone on a sunlit wooden counter, close view, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0389,
+   "contrast": 60.7,
+   "mean": 189.0
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
  }
 }

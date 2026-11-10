@@ -80,8 +80,8 @@ InsertEffect = Literal[
     'grade', 'dim', 'flash', 'sun_path', 'crossfade',
     # camera ('focus': a close-up push into one region of the painting)
     'push', 'pan', 'shake', 'focus',
-    # annotation ('pin': a map pin drops on a region, with a 1-3 word label)
-    'label', 'arrow', 'pin',
+    # annotation ('pin': a map pin drops on a region, with a 1-3 word label; 'cross': a big red X over the region)
+    'label', 'arrow', 'pin', 'cross',
 ]
 Region = Literal['', 'sky', 'top', 'centre', 'ground', 'left', 'right', 'peak', 'horizon']
 GraphicKind = Literal['flow', 'bounce', 'scatter', 'two_paths', 'waves', 'bars', 'thermometer', 'cards', 'layers']
@@ -270,10 +270,11 @@ PICTURE = {
                                                           'in frame, time of day, weather. No text.'},
         'insert_effects': {'type': 'string', 'description':
             '0-4 code effects separated by ";", each "kind | anchor word | region | detail". kind: ash, snow, dust, embers, '
-            'rain, haze, grade, dim, flash, sun_path, crossfade, push, pan, shake, label, arrow. region: sky, top, centre, '
+            'rain, haze, grade, dim, flash, sun_path, crossfade, push, pan, shake, focus, label, arrow, pin, cross. region: sky, top, centre, '
             'ground, left, right, peak, horizon or empty. detail: grade "blue -> red" or "warm -> cold"; crossfade the '
             'changed scene in a few words; sun_path "high -> low"; label 1-3 words; arrow "from -> to" regions; else '
-            'empty; focus: a close-up push into the region; pin: a map pin on the region, detail its 1-3 word label. '
+            'empty; focus: a close-up push into the region; pin: a map pin on the region, detail its 1-3 word label; '
+            'cross: a big red X stamped over the region (an idea ruled out). '
             'Example: "ash | | | ; shake | erupted | | ; label | sulfur | sky | Sulfur". No ";" inside a field.'},
         'graphic': {'type': 'string', 'description': 'visual "graphic" only: "kind ; Label@word | Label@word ; detail". '
                                                      'kind: flow, bounce, scatter, two_paths, waves, bars, thermometer, '
@@ -713,6 +714,10 @@ class Episode(Strict):
             if len(b.shot.cast) > MAX_CAST:
                 warn(where, f'{len(b.shot.cast)} characters in one frame; the bases hold at most {MAX_CAST}. Stage it as two shots')
             self._check_staging(b, spoken, err, warn, painted=self.host_format and b.shot.visual != 'character')
+            if (self.host_format and b.shot.visual == 'character' and b.shot.staging and b.shot.staging.setting != 'other'
+                    and sum(1 for o in self.beats if o.shot.staging and o.shot.staging.setting == 'other') > len(self.beats) / 2):
+                err(where, f'a generic "{b.shot.staging.setting}" base in a video set in one real place: show that place '
+                           '(a painted scene of it) instead')
             self._check_visual(b, spoken, err, warn)
         shows = sum(1 for b in self.beats if b.shot.visual in ('insert', 'graphic'))
         if any(b.shot.visual != 'character' for b in self.beats) and shows < SUBJECT_TARGET * len(self.beats):

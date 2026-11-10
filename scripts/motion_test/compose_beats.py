@@ -170,7 +170,21 @@ def finish_text_items(spec: dict, tw, items: list, t0: float, t1: float) -> list
         at = tw(word) if word else t0 + 0.33 * (t1 - t0)
         items.append(('slam', at, ost))
     times = O.settle([at for _, at, _ in items], t0, t1)
-    return [(k, at, payload) for (k, _, payload), at in zip(items, times)]
+    out = []
+    for (k, _, payload), at in zip(items, times):
+        if k == 'checklist':                         # each row ticks on the first narrated word it shares with its label
+            said = re.findall(r"[\w'-]+", spec.get('narration', '').lower())
+            rows, last = [], at
+            for i, label in enumerate(payload):
+                keys = [w for w in re.findall(r"[\w'-]+", label.lower()) if len(w) > 2 and w not in STOPWORDS]
+                hit = next((w for w in said if w in keys), None)
+                when = tw(hit) if hit else None
+                when = when if when is not None and when >= last else last + (0.5 if i else 0.0)
+                rows.append((label, min(when, t1 - 0.4)))
+                last = rows[-1][1]
+            payload = rows
+        out.append((k, at, payload))
+    return out
 
 
 def draw_text_items(frame, t, items, centre, spec, t_min=None):
@@ -194,7 +208,8 @@ def draw_text_items(frame, t, items, centre, spec, t_min=None):
                 counter(frame, t, at, a, b, centre=centre, prefix=pre, suffix=suf)
         elif kind == 'checklist':
             if until is None or t <= until:
-                rows = [(item, '', at + 0.5 * k) for k, item in enumerate(payload)]
+                rows = [(item[0], '', item[1]) if isinstance(item, tuple) else (item, '', at + 0.5 * k)
+                        for k, item in enumerate(payload)]
                 O.checklist(frame, t, rows, at - 0.1, centre=centre)
         elif kind == 'split':
             if until is None or t <= until:
@@ -808,6 +823,14 @@ class HostLayer:
         if self.side == 'centre' and not spec.get('v6'):  # v5 scripts: alternate sides beat to beat, facing in
             self.side = host_side(spec)
         self.note = ''
+        shot = spec['shot']
+        if self.where == 'scene' and self.size in ('small', 'medium') and shot.get('visual') in ('insert', 'split'):
+            from pipeline.inserts import scene_scale
+            ins = shot.get('insert') or {}
+            if scene_scale(ins.get('key', ''), ins.get('scene', '')) == 'object':
+                # never dwarfed by a giant prop (user 2026-11-10): in an object close-up the host is near the camera
+                self.note = f'host {self.size} -> large: "{ins.get("key")}" is a close-up of objects'
+                self.size = 'large'
         self.held, self.hold_side = None, lead.near
         if cue.get('holds'):                            # a prop from the props library, held up in the near hand
             entry = find_prop(cue['holds'], prop_library())
@@ -815,7 +838,7 @@ class HostLayer:
                 spr = Image.open(ROOT / entry['sprite']).convert('RGBA')
                 self.held = Held(spr, (spr.width * 0.5, spr.height * 0.62), held_width(entry, spr))
             else:
-                self.note = f'host holds "{cue["holds"]}": not in the props library (stick props --generate)'
+                self.note = '; '.join(filter(None, [self.note, f'host holds "{cue["holds"]}": not in the props library (stick props --generate)']))
         self.cut_at = word_time(T, cue.get('cut_on', ''), None) if cue.get('cut_on') else None
         self.t0 = t0
         self.starts = sorted(v for v in T.values() if t0 - 0.05 <= v <= t1)

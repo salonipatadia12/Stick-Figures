@@ -212,19 +212,23 @@
       "role": "setup",
       "narration": "Honey never spoils. So I lined up three suspects.",
       "on_screen_text": "",
-      "visual_intent": "The host stands at a kitchen table with the honey jar, gesturing at the empty spots where suspects will go.",
+      "visual_intent": "A close view of the three suspects on the table, the host in the foreground gesturing at them.",
       "shot": {
         "host": {
           "where": "scene",
-          "side": "centre",
-          "size": "medium",
+          "side": "right",
+          "size": "large",
           "holds": "",
-          "doing": "gestures at the table where the suspects will line up",
+          "doing": "gestures at the three suspects lined up on the table",
           "to_camera": true,
           "cut_on": ""
         },
-        "visual": "character",
-        "insert": null,
+        "visual": "insert",
+        "insert": {
+          "key": "honey-suspects-closeup",
+          "scene": "Close view of a wooden tabletop: a small brown dropper bottle, a halved lemon and an empty drinking glass side by side, filling the frame, warm afternoon light.",
+          "effects": []
+        },
         "graphic": null,
         "split": null,
         "reaction_anchor": "",
@@ -279,22 +283,29 @@
       "role": "setup",
       "narration": "One: hydrogen peroxide. Two: acid. Three: missing water.",
       "on_screen_text": "Three suspects",
-      "visual_intent": "Three suspects on the kitchen table: a dropper bottle (peroxide), a halved lemon (acid) and an empty glass (missing water), ticked off one by one.",
+      "visual_intent": "The camera pushes in until the dropper, lemon and glass fill the frame; a big checklist ticks them off.",
       "shot": {
         "host": {
-          "where": "scene",
+          "where": "pop_in",
           "side": "right",
           "size": "small",
           "holds": "",
-          "doing": "stands beside the three suspects on the table and points along the row",
+          "doing": "pops in at the corner and points along the row",
           "to_camera": true,
           "cut_on": ""
         },
         "visual": "insert",
         "insert": {
-          "key": "honey-three-suspects-table",
-          "scene": "A wooden kitchen table in warm afternoon light with three small objects in a row: a brown dropper bottle, a halved lemon and an empty drinking glass.",
-          "effects": []
+          "key": "honey-suspects-closeup",
+          "scene": "Close view of a wooden tabletop: a small brown dropper bottle, a halved lemon and an empty drinking glass side by side, filling the frame, warm afternoon light.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "One",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
         },
         "graphic": null,
         "split": null,
@@ -359,7 +370,7 @@
       "shot": {
         "host": {
           "where": "scene",
-          "side": "right",
+          "side": "left",
           "size": "large",
           "holds": "",
           "doing": "leans in, watching honey drip with tiny sparks",
@@ -507,7 +518,7 @@
       "role": "twist",
       "narration": "But the research says honey's main defenses are physical. Sugar, low water, acid.",
       "on_screen_text": "Physical defenses win",
-      "visual_intent": "Split screen: my bet, the peroxide sparks, against the result, sugar and a nearly empty water drop in the honey.",
+      "visual_intent": "Split screen: Prediction = the peroxide bottle, struck out with a big red X; Result = sugar crystals, a dry cracked surface and a pH strip.",
       "shot": {
         "host": {
           "where": "pop_in",
@@ -520,14 +531,21 @@
         },
         "visual": "split",
         "insert": {
-          "key": "honey-peroxide-sparks-bet",
-          "scene": "A honey jar with glowing spark shapes floating above it on a sunlit counter, warm light.",
-          "effects": []
+          "key": "peroxide-bottle-bet",
+          "scene": "A small brown glass dropper bottle of hydrogen peroxide alone on a sunlit wooden counter, close view, warm light.",
+          "effects": [
+            {
+              "kind": "cross",
+              "anchor": "says",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
         },
         "graphic": null,
         "split": {
-          "key": "honey-sugar-close-up",
-          "scene": "a close view of honey with amber sugar crystals glinting and one tiny water drop beside the jar, warm light",
+          "key": "honey-sugar-dry-acid",
+          "scene": "close view of crystallised honey: amber sugar crystals on a dry, cracked honey surface, an orange pH test strip lying across it, warm light",
           "labels": [
             "Prediction",
             "Result"
@@ -563,11 +581,6 @@
         },
         "motion": [
           {
-            "recipe": "split_compare",
-            "anchor": "research",
-            "detail": "My bet | The research"
-          },
-          {
             "recipe": "impact_shake",
             "anchor": "physical",
             "detail": ""
@@ -600,7 +613,7 @@
         "host": {
           "where": "scene",
           "side": "left",
-          "size": "small",
+          "size": "close",
           "holds": "",
           "doing": "watches a germ cell shrivel in the honey",
           "to_camera": false,
@@ -985,6 +998,11 @@
         "at": "2026-11-09",
         "by": "claude",
         "what": "b03: graphic with no diagram -> insert of three suspect objects (the script error at the gate); waiting for the user"
+      },
+      {
+        "at": "2026-11-09T20:42:14",
+        "by": "claude for the user (chat 2026-11-10)",
+        "what": "user fixes: b02-b03 suspects close-up + bigger checklist; b06 Prediction = peroxide bottle with a red X, Result = sugar, dryness, acid; host never dwarfed (object close-ups keep the host in the foreground; b04 left, b07 close)"
       }
     ]
   }

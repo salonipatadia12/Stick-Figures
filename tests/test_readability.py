@@ -28,7 +28,7 @@ class TextSizeLogTest(unittest.TestCase):
         O.checklist(frame, 2.0, [('Subscriptions', '-$15', 1.2), ('Coffee', '-$5', 1.4)], 1.0)
         sizes = {d['label'].split(':')[0]: d['em'] for d in O.take_text_log()}
         self.assertAlmostEqual(sizes['Make it / last'], 110, places=1)
-        self.assertEqual(sizes['checklist'], 40)
+        self.assertAlmostEqual(sizes['checklist'], 40 * O.CHECKLIST_SCALE, places=1)   # readable on a phone (user 2026-11-10)
 
     def test_receipt_strip_takes_per_entry_widths_and_keeps_its_type_size(self):
         strip = O.receipt_strip((('MON', '-$12'), ('PAYDAY', 'next')), (128, 168), 120)

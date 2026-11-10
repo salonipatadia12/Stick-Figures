@@ -46,26 +46,22 @@
   "storylines": [
     {
       "format": "mystery",
-      "title": "The Fix That Never Touched the Low Side",
-      "hook": "How do you fix a tower you can't touch?",
-      "pitch": "By 1990 the tower leaned 5.5 degrees, and the experts ruled out any work under its low south side. So what did they do? They dug out soil on the opposite, north side, and the tower settled back toward vertical.",
-      "conflict": "The tilt had to be reduced, but any disturbance to the ground under the south side was judged too dangerous.",
-      "stakes": "Each clue rules out another normal fix: first underpinning, then grouting, until the only move left is a risky one, and cables are added to guard against it.",
-      "twist": "The cure was to remove small amounts of soil from beneath the north side, the high side, so that it sank.",
-      "payoff": "The answer to the hook: by digging away the high side, the engineers straightened the tower by 38 cm without disturbing the south.",
+      "title": "Touch It Wrong and It Falls",
+      "hook": "Touch it wrong and it falls. How do you fix it?",
+      "pitch": "The tower was leaning further, and the wrong move could bring it down. Lead weights on the north side bought time, but a 1995 attempt to replace them made the tower suddenly move, and steel cables went on. The fix that worked: carefully removing soil from beneath the north side.",
+      "conflict": "The lean had to be reduced, but working on the tower or its ground could make it fall.",
+      "stakes": "First, lead counterweights on the north side. Then the 1995 attempt to replace them with something permanent made the tower suddenly move: a near-disaster. Steel cables were added as a safety net.",
+      "twist": "The answer was underexcavation: removing small amounts of soil from beneath the north side so it settled.",
+      "payoff": "How do you fix it? Take soil out from under the high north side, a little at a time, and let it settle back.",
       "visuals": [
-        "Painted tower tilting at dusk, camera tilts with it",
-        "Close-up of a crossed-out 'underpinning' and 'grouting' on a clipboard",
-        "Host points at the south side and shakes head",
-        "Cutaway of the foundation with soil removed from the north side",
-        "Split screen: 5.5 degrees vs 3.97 degrees"
+        "The leaning tower at dusk, the host reaching out and freezing",
+        "Lead counterweights stacked at the base of the north side",
+        "The 1995 near-disaster: an urgent night scene at the tower, the host jolts",
+        "Steel cables around the tower, the host holds a coil of cable",
+        "Cutaway of the foundation with soil drawn out from under the north side",
+        "Split screen: 1995 near-disaster vs the slow, careful fix"
       ],
-      "fact_ids": [
-        "s2",
-        "s3",
-        "s4",
-        "s6"
-      ]
+      "fact_ids": []
     },
     {
       "format": "myth_vs_fact",
@@ -936,6 +932,11 @@
         "at": "2026-11-09",
         "by": "user request",
         "what": "storyline 1 hook -> \"How do you fix a tower you can't touch?\" (the original was not accurate: cables and weights were added); typo ccure -> cure"
+      },
+      {
+        "at": "2026-11-09T20:37:19",
+        "by": "user (via chat)",
+        "what": "storyline 1 reshaped by the user: hook \"Touch it wrong and it falls. How do you fix it?\", stakes = 1995 near-disaster, twist = underexcavation; research focus on counterweights, 1995 attempt, cables, underexcavation; JGS + Imperial allowed"
       }
     ],
     "approval_log": [
@@ -954,6 +955,20 @@
       "research": true,
       "generated": "2026-11-09T18:56:29"
     },
-    "hook_by_user": "How do you fix a tower you can't touch?"
+    "hook_by_user": "Touch it wrong and it falls. How do you fix it?",
+    "research_focus": {
+      "find": [
+        "the lead counterweights placed on the north side (when, how much, what they did)",
+        "the 1995 attempt (replacing the weights / ground freezing) that made the tower suddenly move",
+        "the steel cables added as a safety measure",
+        "underexcavation: removing soil from beneath the north side, and how much the lean was reduced",
+        "John Burland of Imperial College and the international committee that led the work"
+      ],
+      "prefer": [
+        "Soils and Foundations (Japanese Geotechnical Society, jiban.or.jp / jstage.jst.go.jp)",
+        "Imperial College London pages (imperial.ac.uk)",
+        "other peer-reviewed geotechnical journals (ICE, ASCE)"
+      ]
+    }
   }
 }

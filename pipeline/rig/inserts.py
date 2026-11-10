@@ -198,6 +198,8 @@ class InsertScene:
         for e in self.effects:
             if e.kind == 'pin':
                 self._pin(frame, e, t)
+            elif e.kind == 'cross':
+                self._cross(frame, e, t)
         for e in self.effects:
             if e.kind == 'label':
                 self._label(frame, e, t)
@@ -341,6 +343,23 @@ class InsertScene:
         frame.alpha_composite(im, xy)
         if q > 0.9:
             O.note_text(e.detail, 60, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))
+
+    def _cross(self, frame, e, t):
+        """A big red brush X stamped over the region, stroke by stroke (an idea ruled out)."""
+        at = e.at if e.at is not None else self.t0 + 0.3
+        if t < at:
+            return
+        cx, cy = REGION.get(e.region, REGION[''])[0] * W, REGION.get(e.region, REGION[''])[1] * H
+        r = 0.27 * W
+        d = ImageDraw.Draw(frame, 'RGBA')
+        for k, (a, b) in enumerate((((cx - r, cy - r), (cx + r, cy + r)), ((cx + r, cy - r), (cx - r, cy + r)))):
+            p = min(1.0, max(0.0, (t - at - 0.18 * k) / 0.16))
+            if p <= 0:
+                continue
+            end = (a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p)
+            d.line([(a[0] + 6, a[1] + 8), (end[0] + 6, end[1] + 8)], fill=(40, 10, 10, 90), width=58)   # soft shadow
+            d.line([a, end], fill=(214, 40, 36, 245), width=52)
+            d.line([(a[0] + 4, a[1] - 6), (end[0] + 4, end[1] - 6)], fill=(240, 92, 80, 160), width=14)  # brush highlight
 
     def _pin(self, frame, e, t):
         """A map pin drops onto the region (with a bounce) and its label pops beside it."""

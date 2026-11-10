@@ -89,9 +89,35 @@ class RenderTextTest(unittest.TestCase):
         self.assertAlmostEqual(held_width(dict(width=0.4), Image.new('RGBA', (93, 339))), 1.1 * 93 / 339)
         self.assertAlmostEqual(held_width(dict(width=0.4), Image.new('RGBA', (197, 267))), 0.6, places=6)   # a jar is unchanged
 
+    def test_checklist_rows_tick_on_their_own_words(self):
+        from compose_beats import finish_text_items
+        T = {'one': 6.33, 'peroxide': 7.15, 'acid': 8.64, 'missing': 9.65}
+        spec = dict(narration='One: hydrogen peroxide. Two: acid. Three: missing water.', on_screen_text='')
+        items = finish_text_items(spec, lambda w: T.get((w or '').lower()), [('checklist', 6.33, ['Peroxide', 'Acid', 'Missing water'])], 6.27, 10.48)
+        self.assertEqual([t for _, t in items[0][2]], [7.15, 8.64, 9.65])
+
     def test_label_text_equal_to_the_on_screen_text_is_the_same_text(self):
         from compose_beats import same_text
         self.assertEqual(same_text('pH 3.2 to 4.5'), same_text('PH 3.2 TO 4.5!'))
+
+
+class HostScaleTest(unittest.TestCase):
+    def test_object_close_ups_and_places(self):
+        from pipeline.inserts import scene_scale
+        lib = {}
+        self.assertEqual(scene_scale('a', 'A golden honey jar with a wooden dipper on a sunlit kitchen counter', lib), 'object')
+        self.assertEqual(scene_scale('b', 'A kitchen counter piled with grocery bags, papers and a cold teapot', lib), 'place')
+        self.assertEqual(scene_scale('c', 'Close view of the base of the leaning tower on its low side', lib), 'place')
+        self.assertEqual(scene_scale('d', 'whatever', {'d': dict(scale='object')}), 'object')
+
+    def test_checked_facts_keep_their_quotes(self):
+        from pipeline.script import checked_facts
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / 'facts.json'
+            f.write_text(json.dumps([dict(claim='A.', url='https://www.issmge.org/x.pdf', title='T', quote='q')]))
+            facts = checked_facts(f)
+        self.assertEqual((facts[0].id, facts[0].quote), ('s1', 'q'))
+        self.assertTrue(script.reputable(facts[0].url))
 
 
 class RotationTest(unittest.TestCase):
