@@ -64,7 +64,8 @@ def make_client(settings):
     if settings.fake_anthropic:
         from . import fake
         return fake.make_client()
-    from pipeline import script
+    from pipeline import config, script
+    config.load_env()                  # ANTHROPIC_API_KEY normally comes from the service environment; .env if present
     return script.make_client()
 
 

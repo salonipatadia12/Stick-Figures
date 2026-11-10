@@ -248,6 +248,12 @@ class Service:
             conn.execute(update(J).where(J.c.id == job_id).values(progress=prog,
                                                                   lease_until=t + dt.timedelta(minutes=lease)))
 
+    def extend_lease(self, job_id):
+        t = db.now()
+        with self.engine.begin() as conn:
+            conn.execute(update(J).where(and_(J.c.id == job_id, J.c.status == 'running')).values(
+                lease_until=t + dt.timedelta(minutes=self.settings.mac_lease_minutes)))
+
     def worker_done(self, job_id, result):
         result = result if isinstance(result, dict) else {}
         t = db.now()
@@ -502,7 +508,8 @@ class Service:
                 raise GateError('Allow at most $5.00 more at a time.')
             limit = self.spend_limit(row) + more
             t = db.now()
-            conn.execute(S.insert().values(slug=slug, more_usd=float(more), limit_usd=float(limit), by=by, at=t))
+            conn.execute(S.insert().values(slug=slug, more_usd=float(more), limit_usd=float(limit), approved_by=by,
+                                           approved_at=t))
             j = conn.execute(select(J).where(J.c.id == waiting['job_id'])).mappings().first()
             if not j or j['status'] != 'failed':
                 raise GateError('The stopped step is gone; reload the page.')
@@ -521,15 +528,19 @@ class Service:
         return dict(id=j['id'], kind=j['kind'], status=j['status'], progress=j['progress'] or {}, attempts=j['attempts'],
                     error=j['error'], created_at=db.iso(j['created_at']), started_at=db.iso(j['started_at']))
 
-    def detail(self, slug):
+    def status(self, slug):
+        """The cheap part of `detail` (state, job progress, worker, cost): what the pages poll every 3 s."""
         self.sweep()
         row = self.episode_row(slug)
         state = row['state']
-        out = dict(slug=slug, topic=row['topic'], niche=row['niche'], audience=row['audience'], state=state,
-                   state_label=STATE_LABELS.get(state, state), cost_usd=round(row['cost_usd'] or 0, 4),
-                   error=row['error'], created_at=db.iso(row['created_at']), updated_at=db.iso(row['updated_at']),
-                   job=self.current_job(slug), worker=self.worker_status(),
-                   spend=dict(limit_usd=float(self.spend_limit(row)), waiting=row.get('waiting')))
+        return dict(slug=slug, topic=row['topic'], niche=row['niche'], audience=row['audience'], state=state,
+                    state_label=STATE_LABELS.get(state, state), cost_usd=round(row['cost_usd'] or 0, 4),
+                    error=row['error'], created_at=db.iso(row['created_at']), updated_at=db.iso(row['updated_at']),
+                    job=self.current_job(slug), worker=self.worker_status(),
+                    spend=dict(limit_usd=float(self.spend_limit(row)), waiting=row.get('waiting')))
+
+    def detail(self, slug):
+        out = self.status(slug)
         try:
             episode, _ = self._load(slug)
         except ValueError as exc:

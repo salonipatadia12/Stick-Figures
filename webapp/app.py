@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import mimetypes
 import os
+import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -22,6 +23,7 @@ from .uploads import UploadError, receive_upload
 
 HERE = Path(__file__).resolve().parent
 VERSION = '1'
+LOGIN_MAX_FAILURES, LOGIN_WINDOW_S = 10, 15 * 60
 
 
 class AuthRequired(Exception):
@@ -55,6 +57,25 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
     def api_user(request: Request):
         if not user_of(request):
             raise AuthRequired()
+
+    failures = {}                                       # client -> [failure times]; in memory, one process
+
+    def client_key(request: Request) -> str:
+        fwd = request.headers.get('x-forwarded-for', '')
+        return (fwd.split(',')[0].strip() if fwd else '') or (request.client.host if request.client else '?')
+
+    def throttled(request: Request) -> bool:
+        now = time.monotonic()
+        recent = [t for t in failures.get(client_key(request), []) if now - t < LOGIN_WINDOW_S]
+        failures[client_key(request)] = recent
+        return len(recent) >= LOGIN_MAX_FAILURES
+
+    def login_ok(request: Request, user: str, password: str) -> bool:
+        if auth.check_login(settings, user, password):
+            failures.pop(client_key(request), None)
+            return True
+        failures.setdefault(client_key(request), []).append(time.monotonic())
+        return False
 
     def worker_ok(request: Request) -> bool:
         return auth.worker_token_ok(settings, request.headers.get('authorization'))
@@ -119,9 +140,11 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
     async def login_form(request: Request):
         if not same_origin(request):
             return Response('cross-site request refused', status_code=403)
+        if throttled(request):
+            return page(request, 'login.html', status=429, error='Too many wrong tries. Wait 15 minutes.', user=None)
         form = await request.form()
         user, password = str(form.get('user', '')), str(form.get('password', ''))
-        if not auth.check_login(settings, user, password):
+        if not login_ok(request, user, password):
             return page(request, 'login.html', status=401, error='Wrong user name or password.', user=None)
         response = RedirectResponse('/', status_code=303)
         auth.set_cookie(response, settings, user)
@@ -241,9 +264,11 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
     # ------------------------------------------------------------------ JSON API
     @app.post('/api/login')
     async def api_login(request: Request):
+        if throttled(request):
+            return JSONResponse({'ok': False, 'error': 'too many wrong tries; wait 15 minutes'}, status_code=429)
         data = await body_json(request)
         user = str(data.get('user', ''))
-        if not auth.check_login(settings, user, str(data.get('password', ''))):
+        if not login_ok(request, user, str(data.get('password', ''))):
             return JSONResponse({'ok': False, 'error': 'wrong user name or password'}, status_code=401)
         response = JSONResponse({'ok': True})
         auth.set_cookie(response, settings, user)
@@ -261,7 +286,7 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
         data = await body_json(request)
         slug = service.create_episode(str(data.get('topic', '')), str(data.get('niche') or ''),
                                       str(data.get('audience') or ''))
-        return JSONResponse({'ok': True, 'slug': slug}, status_code=201)
+        return {'ok': True, 'slug': slug}
 
     @app.get('/api/episodes')
     def api_list(request: Request):
@@ -270,9 +295,9 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
                                       for e in service.list_episodes()]))
 
     @app.get('/api/episodes/{slug}')
-    def api_detail(request: Request, slug: str):
+    def api_detail(request: Request, slug: str, view: str = ''):
         api_user(request)
-        return no_store(JSONResponse(service.detail(slug)))
+        return no_store(JSONResponse(service.status(slug) if view == 'status' else service.detail(slug)))
 
     @app.post('/api/episodes/{slug}/storyline')
     async def api_storyline(request: Request, slug: str):
@@ -369,6 +394,7 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
         dest = service.output_path(slug, name)
         os.replace(tmp, dest)
         service.record_file(slug, name, kind, size)
+        service.extend_lease(job_id)
         service.touch_worker(busy_job_id=job_id)
         return {'ok': True, 'name': name, 'size': size}
 

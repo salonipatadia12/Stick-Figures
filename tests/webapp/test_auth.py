@@ -55,6 +55,15 @@ class LoginTest(unittest.TestCase):
             self.assertEqual(r.status_code, 401)
             self.assertIn('Wrong user name or password', r.text)
 
+    def test_repeated_wrong_passwords_are_throttled(self):
+        with Harness() as h:
+            for _ in range(10):
+                self.assertEqual(h.client.post('/api/login', json=dict(user=USER, password='nope')).status_code, 401)
+            r = h.client.post('/api/login', json=dict(user=USER, password=PASSWORD))
+            self.assertEqual(r.status_code, 429)
+            other = {'X-Forwarded-For': '203.0.113.9'}                    # another client is not locked out
+            self.assertEqual(h.client.post('/api/login', json=dict(user=USER, password=PASSWORD), headers=other).status_code, 200)
+
     def test_login_sets_a_signed_httponly_lax_cookie(self):
         with Harness() as h:
             r = h.login()

@@ -16,13 +16,16 @@ class FullFlowTest(unittest.TestCase):
         with Harness() as h:
             h.login()
             r = h.client.post('/api/episodes', json=dict(topic=TOPIC, niche='money', audience='salaried workers'))
-            self.assertEqual(r.status_code, 201, r.text)
+            self.assertEqual(r.status_code, 200, r.text)
             slug = r.json()['slug']
             self.assertEqual(slug, 'why-your-salary-disappears-by-the-20th')
             d = h.detail(slug)
             self.assertEqual(d['state'], 'researching')
             self.assertEqual((d['job']['kind'], d['job']['status']), ('pitch', 'queued'))
             self.assertEqual(h.client.get('/api/episodes').json()[0]['slug'], slug)
+            st = h.client.get(f'/api/episodes/{slug}?view=status').json()     # what the pages poll
+            self.assertEqual((st['state'], st['job']['kind']), ('researching', 'pitch'))
+            self.assertNotIn('storylines', st)
             self.assertIsNone(h.claim())                       # the Mac never gets VPS jobs
 
             # pitch on the runner (fake Anthropic: research + storylines, $0)

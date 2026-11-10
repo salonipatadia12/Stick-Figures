@@ -72,8 +72,8 @@ spend_approvals = Table(
     Column('slug', String(64), ForeignKey('episodes.slug'), nullable=False, index=True),
     Column('more_usd', Float, nullable=False),
     Column('limit_usd', Float, nullable=False),
-    Column('by', Text, nullable=False),
-    Column('at', DateTime, nullable=False),
+    Column('approved_by', Text, nullable=False),
+    Column('approved_at', DateTime, nullable=False),
 )
 
 

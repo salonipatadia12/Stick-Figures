@@ -130,7 +130,7 @@ class SpendRuleTest(unittest.TestCase):
             with h.service.engine.connect() as conn:
                 rows = conn.execute(select(db.spend_approvals)).mappings().all()
             self.assertEqual(len(rows), 1)
-            self.assertEqual(rows[0]['by'], 'saloni (web)')
+            self.assertEqual(rows[0]['approved_by'], 'saloni (web)')
             self.assertAlmostEqual(rows[0]['more_usd'], w['need_usd'])
             self.assertEqual(h.detail(slug)['state'], 'researching')
             # the allowance covers research's worst case; research really cost $0 here, so the storyline call fits

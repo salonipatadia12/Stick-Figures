@@ -35,7 +35,7 @@
   function pollEpisode(slug, state) {
     var cost = document.querySelector('[data-cost]');
     function tick() {
-      fetch('/api/episodes/' + encodeURIComponent(slug), { credentials: 'same-origin', cache: 'no-store' })
+      fetch('/api/episodes/' + encodeURIComponent(slug) + '?view=status', { credentials: 'same-origin', cache: 'no-store' })
         .then(function (r) {
           if (r.status === 401) { location.href = '/login'; throw new Error('login'); }
           return r.json();
