@@ -42,7 +42,7 @@
       "loop_line": "Eleven years or three. Same card."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "storylines": [
     {
       "format": "experiment",
@@ -117,14 +117,14 @@
       "role": "hook",
       "narration": "Same $3,000 debt. Wildly different bills.",
       "on_screen_text": "Same debt. Different bills.",
-      "visual_intent": "The host holds two different paper bills at a sunlit table, one thin and one long, showing the contrast in frame one.",
+      "visual_intent": "The host stands in a sunlit kitchen holding up two paper bills, one thin and one long, eyebrows raised, looking at the viewer.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
           "size": "large",
           "holds": "two paper bills",
-          "doing": "holds up two bills, brows raised, glancing between them and the viewer",
+          "doing": "The host stands in a sunlit kitchen holding up two paper bills, one thin and one long, eyebrows raised, looking at the viewer.",
           "to_camera": true,
           "cut_on": ""
         },
@@ -477,8 +477,8 @@
     {
       "id": "b05",
       "role": "stakes",
-      "narration": "Take a guess. Who wins?",
-      "on_screen_text": "Who wins?",
+      "narration": "Guess how long the minimum takes.",
+      "on_screen_text": "How long?",
       "visual_intent": "The host faces the viewer in a reaction close-up, shrugging and inviting a guess.",
       "shot": {
         "host": {
@@ -513,7 +513,7 @@
               "who": "lead",
               "verb": "shrug",
               "target": "",
-              "anchor": "guess"
+              "anchor": "Guess"
             }
           ],
           "props": [
@@ -527,12 +527,12 @@
         "motion": [
           {
             "recipe": "punch_in",
-            "anchor": "guess",
+            "anchor": "Guess",
             "detail": ""
           },
           {
             "recipe": "text_slam",
-            "anchor": "wins",
+            "anchor": "long",
             "detail": ""
           }
         ],
@@ -1120,7 +1120,8 @@
     }
   ],
   "approvals": {
-    "storyline": "46d611523c14e048793f6b95c0feabcaaa70a7e51e80cb1ddc62a30ca7605ebe"
+    "storyline": "46d611523c14e048793f6b95c0feabcaaa70a7e51e80cb1ddc62a30ca7605ebe",
+    "script": "b7017586065c3d93601e90c37483400f85af6fdf6982f72c34fae34197ce299e"
   },
   "meta": {
     "research_focus": {
@@ -1162,6 +1163,12 @@
         "pick": 1,
         "format": "experiment",
         "digest": "46d611523c14"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-10T12:24:39",
+        "digest": "b7017586065c"
       }
     ],
     "script": {

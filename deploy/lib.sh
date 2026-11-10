@@ -73,7 +73,7 @@ wait_health() {
 run_smoke_test() {
     if [ -f "$REPO_DIR/deploy/smoke_test.sh" ]; then
         say "running deploy/smoke_test.sh"
-        PUBLIC_URL=$(env_value PUBLIC_URL) sh "$REPO_DIR/deploy/smoke_test.sh" "$(env_value PUBLIC_URL)"
+        PUBLIC_URL=$(env_value PUBLIC_URL) sh "$REPO_DIR/deploy/smoke_test.sh"
     else
         say "no deploy/smoke_test.sh yet; skipped"
     fi

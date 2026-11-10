@@ -13,7 +13,8 @@
 #   SMOKE_CA_FILE               a CA bundle for curl (tests with a self-signed certificate)
 #   SMOKE_TIMEOUT               seconds per HTTP request (default 15)
 #   SMOKE_CERT_MIN_DAYS         warn when the certificate has fewer days left (default 14)
-#   COMPOSE_DIR                 the compose project directory on the host (default /srv/stick)
+#   COMPOSE_DIR                 the stick directory on the host (default /srv/stick; its disk is checked too)
+#   COMPOSE_PROJECT             the compose project name (default stick)
 #
 # One line per check (PASS / WARN / FAIL / SKIP), then a summary line. Exit 0 when nothing failed, 1 otherwise,
 # 2 on bad usage.
@@ -250,15 +251,16 @@ check_host() {
         return 0
     fi
     # Read-only commands; prints tagged lines. Never reads .env or prints environment variables.
-    if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_TARGET" sh -s -- "$COMPOSE_DIR" >"$TMP/host.txt" 2>"$TMP/ssh.err" <<'REMOTE'
+    if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_TARGET" sh -s -- "$COMPOSE_DIR" "${COMPOSE_PROJECT:-stick}" >"$TMP/host.txt" 2>"$TMP/ssh.err" <<'REMOTE'
 dir=$1
-if ! cd "$dir" 2>/dev/null; then echo "ERR|no compose directory $dir"; exit 0; fi
+project=$2
+if ! cd "$dir" 2>/dev/null; then echo "ERR|no stick directory $dir"; exit 0; fi
 if ! docker compose version >/dev/null 2>&1; then echo "ERR|docker compose not available"; exit 0; fi
-docker compose ps -a --format '{{.Service}}|{{.State}}|{{.Health}}' 2>/dev/null | sed 's/^/PS|/'
-ids=$(docker compose ps -aq 2>/dev/null)
+docker compose -p "$project" ps -a --format '{{.Service}}|{{.State}}|{{.Health}}' 2>/dev/null | sed 's/^/PS|/'
+ids=$(docker compose -p "$project" ps -aq 2>/dev/null)
 [ -n "$ids" ] && docker inspect -f '{{.Name}}|{{.RestartCount}}' $ids 2>/dev/null | sed 's/^/RC|/'
-df -P / | awk 'NR==2 {print "DF|/|" $5}'
-df -P "$dir" | awk 'NR==2 {print "DF|" $6 "|" $5}'
+df -P / | awk 'NR==2 {print "DF|/|" $5 "|" $4}'
+df -P "$dir" | awk 'NR==2 {print "DF|" $6 "|" $5 "|" $4}'
 if command -v free >/dev/null 2>&1; then free -m | awk '/^Mem:/ {print "MEM|" $2 "|" $7}'; fi
 echo "END"
 REMOTE
@@ -274,7 +276,7 @@ REMOTE
     total=$(grep -c '^PS|' "$TMP/host.txt") || total=0
     bad=$(awk -F'|' '$1 == "PS" && ($3 != "running" || ($4 != "" && $4 != "healthy")) {printf "%s%s=%s%s", sep, $2, $3, ($4 != "" ? "/" $4 : ""); sep=", "}' "$TMP/host.txt")
     if [ "$total" -eq 0 ]; then
-        fail compose "no containers in $COMPOSE_DIR"
+        fail compose "no containers in compose project ${COMPOSE_PROJECT:-stick}"
     elif [ -n "$bad" ]; then
         fail compose "not running/healthy: $bad"
     else
@@ -291,12 +293,14 @@ REMOTE
         warn restarts "$restarts"
     fi
 
-    awk -F'|' '$1 == "DF" {u = $3; sub("%", "", u); print $2, u}' "$TMP/host.txt" | sort -u >"$TMP/df.txt"
-    while read -r mount used; do
+    # Judged by the space left, not the percentage: 10% of a 100 GB disk is plenty, 10% of 10 GB is not.
+    # A video with its previews is 20-60 MB; a new web image build needs about 1 GB.
+    awk -F'|' '$1 == "DF" {u = $3; sub("%", "", u); print $2, u, int($4 / 1048576)}' "$TMP/host.txt" | sort -u >"$TMP/df.txt"
+    while read -r mount used gb; do
         free=$((100 - used))
-        if [ "$used" -ge 90 ]; then fail disk "$mount: only $free% free"
-        elif [ "$used" -ge 80 ]; then warn disk "$mount: $free% free"
-        else pass disk "$mount: $free% free"
+        if [ "$gb" -lt 2 ]; then fail disk "$mount: only $gb GB free ($free%)"
+        elif [ "$gb" -lt 5 ]; then warn disk "$mount: $gb GB free ($free%)"
+        else pass disk "$mount: $gb GB free ($free%)"
         fi
     done <"$TMP/df.txt"
 

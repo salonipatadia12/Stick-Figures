@@ -29,15 +29,15 @@ exec "$@"
 STUB_DOCKER = '''#!/bin/sh
 case "$*" in
   "compose version") echo "Docker Compose version v2.30.0" ;;
-  "compose ps -a --format"*) cat "$STUB_DIR/ps.txt" ;;
-  "compose ps -aq") echo aaa; echo bbb ;;
+  "compose -p stick ps -a --format"*) cat "$STUB_DIR/ps.txt" ;;
+  "compose -p stick ps -aq") echo aaa; echo bbb ;;
   inspect*) cat "$STUB_DIR/rc.txt" ;;
   *) echo "stub docker: $*" >&2; exit 1 ;;
 esac
 '''
 STUB_DF = '''#!/bin/sh
 echo "Filesystem 1024-blocks Used Available Capacity Mounted on"
-echo "/dev/sda1 100 50 50 $STUB_DISK /"
+echo "/dev/sda1 100 50 ${STUB_AVAIL_KB:-9437184} $STUB_DISK /"
 '''
 STUB_FREE = '''#!/bin/sh
 echo "               total        used        free      shared  buff/cache   available"
@@ -125,18 +125,18 @@ class SmokeScriptTest(unittest.TestCase):
                 self.assertEqual(code, 0, out)
                 self.assertIn('PASS  compose   3 containers running', out)
                 self.assertIn('PASS  restarts  no container restarts', out)
-                self.assertIn('PASS  disk      /: 58% free', out)
+                self.assertIn('PASS  disk      /: 9 GB free (58%)', out)
                 self.assertIn('PASS  memory    1200 MB available of 1900 MB (63%)', out)
 
     def test_ssh_mode_sick_host(self):
         (self.stubs / 'ps.txt').write_text('web|restarting|unhealthy\npostgres|running|healthy\ncaddy|exited|\n')
         (self.stubs / 'rc.txt').write_text('/stick-web-1|7\n/stick-postgres-1|1\n')
-        code, out = self.smoke('--ssh', 'root@stub', PATH=f'{self.stubs}:{os.environ["PATH"]}', STUB_DISK='95%',
+        code, out = self.smoke('--ssh', 'root@stub', PATH=f'{self.stubs}:{os.environ["PATH"]}', STUB_DISK='95%', STUB_AVAIL_KB=1048576,
                                STUB_MEM_AVAIL=80)
         self.assertEqual(code, 1, out)
         self.assertIn('FAIL  compose   not running/healthy: web=restarting/unhealthy, caddy=exited', out)
         self.assertIn('FAIL  restarts  restart loop? stick-web-1=7, stick-postgres-1=1', out)
-        self.assertIn('FAIL  disk      /: only 5% free', out)
+        self.assertIn('FAIL  disk      /: only 1 GB free (5%)', out)
         self.assertIn('FAIL  memory    only 80 MB available', out)
 
     def test_ssh_failure_is_reported(self):
@@ -195,3 +195,25 @@ class SmokeTlsTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class RunSmokeTestCallTest(unittest.TestCase):
+    """install.sh/deploy.sh call deploy/smoke_test.sh through lib.sh; the URL goes in PUBLIC_URL, not as an argument
+    (the first VPS install stopped on 'smoke: unknown argument')."""
+
+    def test_lib_passes_no_arguments(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo = Path(d) / 'repo'
+            (repo / 'deploy').mkdir(parents=True)
+            shutil.copy(h.ROOT / 'deploy' / 'lib.sh', repo / 'deploy' / 'lib.sh')
+            (repo / 'deploy' / 'smoke_test.sh').write_text('[ $# -eq 0 ] || exit 2\necho "url=$PUBLIC_URL"\n')
+            env = Path(d) / '.env'
+            env.write_text('PUBLIC_URL=https://stick.example\n')
+            env.chmod(0o600)
+            script = f'. "{repo}/deploy/lib.sh"; run_smoke_test'
+            for sh in SHELLS:
+                r = subprocess.run([sh, '-c', script], capture_output=True, text=True,
+                                   env={**os.environ, 'STICK_HOME': d, 'STICK_ENV_FILE': str(env),
+                                        'STICK_REPO_DIR': str(repo)})
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertIn('url=https://stick.example', r.stdout)
