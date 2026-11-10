@@ -31,6 +31,18 @@ LEASE_ENV_NAMES = ('WORKER_LEASE_SECONDS', 'STICK_LEASE_SECONDS', 'LEASE_SECONDS
 
 
 def free_port() -> int:
+    """A free local port, picked from 20000-39999: outside the ephemeral range that port-0 binds (other test runs on
+    this Mac) and outgoing connections use, so a race for the same port is unlikely. Callers still check that the
+    server answering is theirs (see Stack.start), because the port is free only at the moment it is probed."""
+    import random
+    for _ in range(50):
+        port = random.randint(20000, 39999)
+        with socket.socket() as s:
+            try:
+                s.bind(('127.0.0.1', port))
+                return port
+            except OSError:
+                continue
     with socket.socket() as s:
         s.bind(('127.0.0.1', 0))
         return s.getsockname()[1]

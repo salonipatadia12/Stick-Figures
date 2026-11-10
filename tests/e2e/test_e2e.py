@@ -97,25 +97,51 @@ class Stack:
             self.env.update({n: str(lease_seconds) for n in h.LEASE_ENV_NAMES})
         self.env['APP_PASSWORD_HASH'], self.hash_how = h.password_hash(self.password, self.env)
 
-    def start(self):
+    def start(self, attempts=3):
+        """Start the web app; retry on a new port when the one picked was taken meanwhile (other test runs share
+        this Mac), which shows as our process exiting or a server that does not know our login."""
         extra = ['--app-dir', str(self.app_dir)] if self.app_dir else []
-        self.web = self.spawn('web', [h.PYTHON, '-m', 'uvicorn', self.app, *extra, '--host', '127.0.0.1',
-                                      '--port', str(self.port), '--log-level', 'warning'])
+        why = ''
+        for attempt in range(attempts):
+            if attempt:
+                self.port = h.free_port()
+                self.base = self.env['PUBLIC_URL'] = f'http://127.0.0.1:{self.port}'
+            self.web = self.spawn(f'web{attempt or ""}', [h.PYTHON, '-m', 'uvicorn', self.app, *extra, '--host',
+                                                         '127.0.0.1', '--port', str(self.port), '--log-level', 'warning'])
+            ok, why = self._ours()
+            if ok:
+                break
+            self.web.stop()
+        else:
+            raise AssertionError(f'the web app did not start ({why})\n' + self.tails())
+        if self.runner_mod:                              # the mock web app double runs its own runner thread
+            self.runner = self.spawn('runner', [h.PYTHON, '-m', self.runner_mod, '--poll', '0.5'])
+        return self
+
+    def _ours(self):
         probe = h.Api(self.base, timeout=3)
         try:
             def up():
                 if not self.web.alive():
-                    raise AssertionError('the web app exited\n' + self.web.tail())
+                    return 'exited'
                 try:
                     return probe.get('/api/health').status_code == 200
                 except Exception:
                     return False
-            h.wait_for(up, 45, what='the web app to answer /api/health')
+            try:
+                state = h.wait_for(up, 45, what='the web app to answer /api/health')
+            except TimeoutError as exc:
+                return False, str(exc)
+            if state == 'exited':
+                return False, f'uvicorn exited (port {self.port} taken?)'
+            time.sleep(0.3)
+            if not self.web.alive():
+                return False, f'uvicorn exited after start (port {self.port} taken?)'
+            if probe.login(self.user, self.password).status_code != 200:
+                return False, f'the server on port {self.port} does not accept our login (not ours, or a hash mismatch)'
+            return True, ''
         finally:
             probe.close()
-        if self.runner_mod:                              # the mock web app double runs its own runner thread
-            self.runner = self.spawn('runner', [h.PYTHON, '-m', self.runner_mod, '--poll', '0.5'])
-        return self
 
     def spawn(self, name, cmd):
         p = h.Proc(name, cmd, self.env, self.logs)

@@ -29,23 +29,33 @@ def start_mock(case, **env):
     tmp = Path(tempfile.mkdtemp(prefix='mock-srv-'))
     case.addCleanup(shutil.rmtree, tmp, True)
     token, _ = h.token_pair()
-    port = h.free_port()
     e = h.safe_env(MOCK_WORKER_TOKEN=token, **env)
-    proc = h.Proc('mock_server', [h.PYTHON, '-m', 'uvicorn', 'mock_server:app', '--app-dir', str(h.HERE),
-                                  '--host', '127.0.0.1', '--port', str(port), '--log-level', 'warning'], e, tmp)
-    case.addCleanup(proc.stop)
-    base = f'http://127.0.0.1:{port}'
-    api = h.Api(base)
-    case.addCleanup(api.close)
+    for attempt in range(3):          # a port taken meanwhile by another test run: try another one
+        port = h.free_port()
+        proc = h.Proc(f'mock_server{attempt}', [h.PYTHON, '-m', 'uvicorn', 'mock_server:app', '--app-dir', str(h.HERE),
+                                                '--host', '127.0.0.1', '--port', str(port), '--log-level', 'warning'],
+                      e, tmp)
+        case.addCleanup(proc.stop)
+        base = f'http://127.0.0.1:{port}'
+        api = h.Api(base)
+        case.addCleanup(api.close)
 
-    def up():
-        if not proc.alive():
-            raise AssertionError('mock server died\n' + proc.tail())
-        try:
-            return api.get('/api/health').status_code == 200
-        except Exception:
-            return False
-    h.wait_for(up, 20, what='mock server')
+        def up():
+            if not proc.alive():
+                return 'exited'
+            try:
+                return api.get('/api/health').status_code == 200
+            except Exception:
+                return False
+        if h.wait_for(up, 20, what='mock server') is True:
+            time.sleep(0.3)
+            beat = api.post('/api/worker/heartbeat', json={'host': 't', 'version': 't'},
+                            headers={'Authorization': f'Bearer {token}'})
+            if proc.alive() and beat.status_code == 200:     # it is ours: it knows our token
+                break
+        proc.stop()
+    else:
+        raise AssertionError('mock server did not start\n' + proc.tail())
     case.tmp, case.api, case.token, case.base = tmp, api, token, base
     return base, token
 
