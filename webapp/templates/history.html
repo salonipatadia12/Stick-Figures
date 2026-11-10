@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body_attrs %}data-history="{% for e in episodes %}{{ e.slug }}:{{ e.state }}{% if not loop.last %},{% endif %}{% endfor %}"{% endblock %}
+{% block content %}
+<div class="spread">
+  <h1>Your videos</h1>
+  {% include "_worker.html" %}
+</div>
+<p><a class="btn primary block" href="/new">Make a new video</a></p>
+{% if not episodes %}
+<div class="card"><p>No videos yet. Type a topic to start one.</p></div>
+{% endif %}
+{% for e in episodes %}
+<div class="card">
+  <a class="ep-link" href="/episodes/{{ e.slug }}">
+    <div class="spread">
+      <h3>{{ e.topic }}</h3>
+      <span class="badge b-{{ e.state }}">{{ state_labels.get(e.state, e.state) }}</span>
+    </div>
+    <p class="muted small">{{ e.created_at[:10] if e.created_at else '' }} · ${{ '%.4f'|format(e.cost_usd) }}</p>
+  </a>
+  {% if e.files %}
+  <div class="row small">
+    {% if e.files.mp4 %}<a class="btn small" href="/files/{{ e.slug }}/{{ e.files.mp4 }}?dl=1">MP4</a>{% endif %}
+    {% if e.files.srt %}<a class="btn small" href="/files/{{ e.slug }}/{{ e.files.srt }}?dl=1">SRT</a>{% endif %}
+    {% if e.files.qa %}<a class="btn small" href="/files/{{ e.slug }}/{{ e.files.qa }}?dl=1">QA</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

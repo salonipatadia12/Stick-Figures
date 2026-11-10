@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}New video · Stick Figures{% endblock %}
+{% block content %}
+<h1>New video</h1>
+{% if error %}<div class="notice bad" role="alert">{{ error }}</div>{% endif %}
+<form method="post" action="/episodes" class="card">
+  <label for="topic">Topic</label>
+  <input id="topic" name="topic" type="text" maxlength="300" required value="{{ form.topic or '' }}"
+         placeholder="Why the Leaning Tower of Pisa never fell">
+  <label for="niche">Niche <span class="muted small">(optional)</span></label>
+  <input id="niche" name="niche" type="text" maxlength="200" value="{{ form.niche or '' }}" placeholder="history, science, money...">
+  <label for="audience">Audience <span class="muted small">(optional)</span></label>
+  <input id="audience" name="audience" type="text" maxlength="200" value="{{ form.audience or '' }}" placeholder="curious adults">
+  <p class="muted small">Next: Claude researches the topic and pitches three storylines for you to pick from. You approve the
+    script and the painted scenes before anything is rendered.</p>
+  <p><button class="btn primary block" type="submit">Start</button></p>
+</form>
+{% endblock %}

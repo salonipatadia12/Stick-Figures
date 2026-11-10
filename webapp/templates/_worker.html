@@ -1,0 +1,5 @@
+<div class="worker muted" data-worker>
+  <span class="dot{% if worker.online %}{% if worker.busy %} busy{% else %} on{% endif %}{% endif %}"></span><span data-worker-text>Mac worker:
+  {% if not worker.last_seen %}never seen{% elif worker.online %}online, {{ 'busy' if worker.busy else 'idle' }}{% else %}offline{% endif %}
+  {% if worker.last_seen %}(last seen {% if worker.seconds_ago < 60 %}{{ worker.seconds_ago }} s{% else %}{{ (worker.seconds_ago / 60)|round|int }} min{% endif %} ago){% endif %}</span>
+</div>
