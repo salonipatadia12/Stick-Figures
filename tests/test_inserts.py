@@ -277,3 +277,35 @@ class QaFalseFailTest(unittest.TestCase):
         from pipeline.rig.inserts import Effect, settle_effects
         e = settle_effects([Effect('pin', 9.8, 'centre', 'Burn', seed=1)], 7.0, 10.0)[0]
         self.assertLessEqual(e.at, 10.0 - O.MIN_HOLD)
+
+
+class LabelPlacementTest(unittest.TestCase):
+    """Insert labels stay in the captions' safe area and off the host (finance b02/b09: a label on the host's head,
+    "14.4% interest" past the phone's buttons)."""
+
+    def test_label_moves_off_the_host_and_stays_in_the_safe_area(self):
+        from pipeline.captions import SAFE
+        from pipeline.rig.inserts import label_centre, LABEL_Y
+        w, h = 420, 110
+        host = (620, 560, 1000, 1700)                               # a large host on the right, head near the label row
+        cx, cy = label_centre((w, h), 'right', [host])
+        box = (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)
+        self.assertGreaterEqual(box[0], SAFE['left'])
+        self.assertLessEqual(box[2], SAFE['right'])
+        self.assertGreaterEqual(box[1], SAFE['top'])
+        self.assertFalse(min(box[2], host[2]) > max(box[0], host[0]) and min(box[3], host[3]) > max(box[1], host[1]))
+        self.assertEqual(label_centre((w, h), 'right', []), (SAFE['right'] - w / 2, LABEL_Y['right']))
+
+    def test_a_wide_label_is_kept_left_of_the_phone_buttons(self):
+        from pipeline.captions import SAFE
+        from pipeline.rig.inserts import label_centre
+        cx, _ = label_centre((640, 110), 'right', [])
+        self.assertLessEqual(cx + 320, SAFE['right'])
+
+    def test_a_second_label_keeps_off_the_first(self):
+        from pipeline.rig.inserts import label_centre
+        w, h = 300, 100
+        first = label_centre((w, h), 'right', [])
+        box = (first[0] - w / 2, first[1] - h / 2, first[0] + w / 2, first[1] + h / 2)
+        cx, cy = label_centre((w, h), 'right', [], [box])
+        self.assertTrue(cy - h / 2 >= box[3] or cy + h / 2 <= box[1] or cx - w / 2 >= box[2] or cx + w / 2 <= box[0])

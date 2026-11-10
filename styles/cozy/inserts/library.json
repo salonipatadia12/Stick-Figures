@@ -600,17 +600,19 @@
  },
  "leaning-tower-dusk": {
   "scene": "Leaning Tower of Pisa at dusk, white marble tower tilting against an orange sky, green lawn, long soft shadows, no people.",
-  "source": "renders/inserts/flux/scene-leaning-tower-dusk-s525.png",
+  "source": "renders/inserts/flux/scene-leaning-tower-dusk-r3-s2524.png",
   "file": "styles/cozy/inserts/leaning-tower-dusk.png",
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa at dusk, white marble tower tilting against an orange sky, green lawn, long soft shadows, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.0909,
-   "contrast": 51.0,
-   "mean": 115.1
+   "edges": 0.0898,
+   "contrast": 48.6,
+   "mean": 133.8
   },
-  "made": "2026-11-09",
-  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+  "made": "2026-11-10",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 3,
+  "edit": "tower re-posed in code to lean 5.5 deg right"
  },
  "tower-base-closeup": {
   "scene": "Close view of the leaning tower's marble base and lower arches rising over the lawn, warm afternoon light, no people.",
@@ -623,8 +625,10 @@
    "contrast": 62.8,
    "mean": 153.4
   },
-  "made": "2026-11-09",
-  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+  "made": "2026-11-10",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 3,
+  "edit": "mirrored so the lean matches the other shots"
  },
  "lead-weights-north-base": {
   "scene": "Stacked grey lead blocks on a pale concrete ring around the north side of the tower's base, afternoon sun, no people.",
@@ -642,17 +646,19 @@
  },
  "tower-leaning-back": {
   "scene": "Leaning Tower of Pisa in golden afternoon light, a faint lighter echo of its outline beside it hinting at a slight sway, lawn, no people.",
-  "source": "renders/inserts/flux/scene-tower-leaning-back-s487.png",
+  "source": "renders/inserts/flux/scene-tower-before-fix-r3-s2306.png",
   "file": "styles/cozy/inserts/tower-leaning-back.png",
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa in golden afternoon light, a faint lighter echo of its outline beside it hinting at a slight sway, lawn, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.1233,
-   "contrast": 62.8,
-   "mean": 160.4
+   "edges": 0.0933,
+   "contrast": 62.3,
+   "mean": 185.0
   },
-  "made": "2026-11-09",
-  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+  "made": "2026-11-10",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 3,
+  "edit": "tower at 5.5 deg right, a faint outline at 8.5 deg (where it was)"
  },
  "tower-night-emergency": {
   "scene": "Leaning Tower of Pisa at night under harsh floodlights, dark sky, construction fencing and churned mud at its south base, tense mood, no people.",
@@ -675,42 +681,48 @@
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa with taut cables looped around its upper tier and anchored to the ground, early dawn light, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.1167,
+   "edges": 0.1168,
    "contrast": 57.7,
    "mean": 161.1
   },
-  "made": "2026-11-09",
-  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+  "made": "2026-11-10",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 3,
+  "edit": "mirrored so the lean matches (about 4 deg right)"
  },
  "foundation-cutaway-north": {
   "scene": "Cutaway cross-section of the ground beneath the leaning tower, layers of soil and clay, soil being drawn out from under one side through narrow channels, warm earthy tones, no people.",
-  "source": "renders/inserts/flux/scene-foundation-cutaway-north-s490.png",
+  "source": "scene-tower-before-fix-r3-s2308.png + scene-soil-cutaway-r3-s2600.png",
   "file": "styles/cozy/inserts/foundation-cutaway-north.png",
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Cutaway cross-section of the ground beneath the leaning tower, layers of soil and clay, soil being drawn out from under one side through narrow channels, warm earthy tones, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.0785,
-   "contrast": 71.6,
-   "mean": 157.1
+   "edges": 0.0815,
+   "contrast": 68.4,
+   "mean": 156.2
   },
-  "made": "2026-11-09",
-  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+  "made": "2026-11-10",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 3,
+  "edit": "composite: the standing tower at 5.5 deg over a soil cross-section, drill pipes under the north (left) side"
  },
  "tower-before-fix": {
   "scene": "Leaning Tower of Pisa leaning noticeably under a pale morning sky, lawn in front, no people.",
-  "source": "renders/inserts/flux/scene-tower-golden-hour-r2-s1431.png",
+  "source": "renders/inserts/flux/scene-tower-before-fix-r3-s2308.png",
   "file": "styles/cozy/inserts/tower-before-fix.png",
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa leaning noticeably under a pale morning sky, lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.1097,
-   "contrast": 65.7,
-   "mean": 159.2
+   "edges": 0.0641,
+   "contrast": 69.6,
+   "mean": 171.4
   },
-  "made": "2026-11-09",
+  "made": "2026-11-10",
   "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
   "copied_from": "tower-golden-hour",
-  "note": "same tower, same light: before/after must lean the same way (2026-11-10)"
+  "note": "same tower, same light: before/after must lean the same way (2026-11-10)",
+  "round": 3,
+  "edit": "split pair (scripts/motion_test/tower_split.py): the whole tower inside the split band, 5.5 deg, dashed upright guide"
  },
  "tower-leaning-back--the-tower-leaning-a-touch-less": {
   "scene": "the tower leaning a touch less",
@@ -719,44 +731,48 @@
   "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the tower leaning a touch less. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
   "base": "tower-leaning-back",
   "qa": {
-   "edges": 0.1133,
-   "contrast": 58.7,
-   "mean": 169.0
+   "edges": 0.0945,
+   "contrast": 62.2,
+   "mean": 184.8
   },
-  "made": "2026-11-09",
-  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+  "made": "2026-11-10",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 3,
+  "edit": "re-posed in code: tower at 4.0 deg, faint outline at 8.5 deg (variant of tower-leaning-back)"
  },
  "tower-after-fix": {
   "scene": "the same tower standing slightly straighter, sunlit marble, lawn in front, no people",
-  "source": "renders/inserts/flux/scene-tower-golden-hour--the-tower-standing-a-little-straighter-r2-s1119.png",
+  "source": "renders/inserts/flux/scene-tower-before-fix-r3-s2308.png",
   "file": "styles/cozy/inserts/tower-after-fix.png",
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The Leaning Tower of Pisa, white marble, still clearly leaning to the right, sunlit, green lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.1311,
-   "contrast": 60.7,
-   "mean": 164.7
+   "edges": 0.064,
+   "contrast": 69.6,
+   "mean": 171.4
   },
-  "made": "2026-11-09",
+  "made": "2026-11-10",
   "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
-  "round": 2,
+  "round": 3,
   "copied_from": "tower-golden-hour--the-tower-standing-a-little-straighter",
-  "note": "same tower, same light: before/after must lean the same way (2026-11-10)"
+  "note": "same tower, same light: before/after must lean the same way (2026-11-10)",
+  "edit": "split pair (scripts/motion_test/tower_split.py): the same tower at 1.5 deg, the same guide"
  },
  "tower-golden-hour": {
   "scene": "Leaning Tower of Pisa at golden hour, calm and warm, its tilt gentler, long shadows over the lawn, no people.",
-  "source": "renders/inserts/flux/scene-tower-golden-hour-r2-s1431.png",
+  "source": "renders/inserts/flux/scene-tower-golden-hour-r3-s2434.png",
   "file": "styles/cozy/inserts/tower-golden-hour.png",
   "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The Leaning Tower of Pisa at golden hour, white marble, clearly leaning to the right, long soft shadows over the lawn, calm warm sky, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.1075,
-   "contrast": 67.5,
-   "mean": 149.4
+   "edges": 0.0972,
+   "contrast": 62.8,
+   "mean": 157.9
   },
-  "made": "2026-11-09",
+  "made": "2026-11-10",
   "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
-  "round": 2
+  "round": 3,
+  "edit": "tower re-posed to 2.5 deg right (after the fix)"
  },
  "tower-golden-hour--the-tower-standing-a-little-straighter": {
   "scene": "the tower standing a little straighter",
@@ -765,13 +781,14 @@
   "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the same tower leaning very slightly less than before, still clearly leaning to the right; everything else unchanged. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
   "base": "tower-golden-hour",
   "qa": {
-   "edges": 0.1001,
-   "contrast": 64.0,
-   "mean": 158.2
+   "edges": 0.097,
+   "contrast": 62.8,
+   "mean": 157.9
   },
-  "made": "2026-11-09",
+  "made": "2026-11-10",
   "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
-  "round": 2
+  "round": 3,
+  "edit": "re-posed in code: tower at 1.5 deg (variant of tower-golden-hour)"
  },
  "apollo-cabin-interior": {
   "scene": "Cramped painted spacecraft cabin with a control panel, small round window showing black space and stars, warm amber lamp light.",
@@ -1075,20 +1092,6 @@
   "made": "2026-11-10",
   "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
  },
- "calendar-pages-few": {
-  "scene": "a wall calendar with only a few flipped pages beside it, same warm cafe wall",
-  "source": "renders/inserts/flux/scene-calendar-pages-few-s466.png",
-  "file": "styles/cozy/inserts/calendar-pages-few.png",
-  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with only a few flipped pages beside it, same warm cafe wall. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
-  "base": null,
-  "qa": {
-   "edges": 0.0741,
-   "contrast": 35.6,
-   "mean": 161.5
-  },
-  "made": "2026-11-10",
-  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
- },
  "calendar-pages-many": {
   "scene": "a wall calendar with a tall stack of flipped pages piled beneath it, warm afternoon cafe wall",
   "source": "renders/inserts/flux/scene-calendar-pages-many-s581.png",
@@ -1099,20 +1102,6 @@
    "edges": 0.124,
    "contrast": 47.8,
    "mean": 167.6
-  },
-  "made": "2026-11-10",
-  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
- },
- "two-coin-jars": {
-  "scene": "two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light",
-  "source": "renders/inserts/flux/scene-two-coin-jars-s693.png",
-  "file": "styles/cozy/inserts/two-coin-jars.png",
-  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
-  "base": null,
-  "qa": {
-   "edges": 0.1003,
-   "contrast": 67.2,
-   "mean": 150.6
   },
   "made": "2026-11-10",
   "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
@@ -1131,18 +1120,49 @@
   "made": "2026-11-10",
   "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
  },
- "two-bills-side-by-side": {
-  "scene": "two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light",
-  "source": "renders/inserts/flux/scene-two-bills-side-by-side-s122.png",
-  "file": "styles/cozy/inserts/two-bills-side-by-side.png",
-  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+ "two-coin-jars": {
+  "scene": "two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light",
+  "source": "renders/inserts/flux/scene-two-coin-jars-r2-s1693.png",
+  "file": "styles/cozy/inserts/two-coin-jars.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two glass jars of coins side by side on a wooden cafe table, warm window light: the LEFT jar is crammed to the brim with coins, coins heaped above the rim and spilling onto the table; the RIGHT jar is only one-third full of coins. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
   "base": null,
   "qa": {
-   "edges": 0.0665,
-   "contrast": 60.3,
-   "mean": 164.4
+   "edges": 0.0804,
+   "contrast": 70.5,
+   "mean": 134.7
   },
   "made": "2026-11-10",
-  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt",
+  "round": 2
+ },
+ "two-bills-side-by-side": {
+  "scene": "two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light",
+  "source": "renders/inserts/flux/scene-two-bills-side-by-side-r2-s1122.png",
+  "file": "styles/cozy/inserts/two-bills-side-by-side.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two paper bills lying side by side on a wooden cafe table, warm window light: on the left a short one-page paper bill, on the right a very long paper bill whose paper unrolls across the table and hangs over the edge, a coffee cup behind them. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0924,
+   "contrast": 62.4,
+   "mean": 130.9
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt",
+  "round": 2
+ },
+ "calendar-pages-few": {
+  "scene": "a wall calendar with only a few flipped pages beside it, same warm cafe wall",
+  "source": "renders/inserts/flux/scene-calendar-pages-few-r2-s1467.png",
+  "file": "styles/cozy/inserts/calendar-pages-few.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the tall stack of flipped calendar pages on the shelf is gone: only three thin flipped pages lie flat on the shelf under the calendar. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "calendar-pages-many",
+  "qa": {
+   "edges": 0.0873,
+   "contrast": 36.5,
+   "mean": 169.4
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt",
+  "round": 2
  }
 }

@@ -549,7 +549,7 @@
     {
       "id": "b06",
       "role": "clue",
-      "narration": "Before the final work, they added safety cables. They were never needed.",
+      "narration": "They added safety cables. Never needed.",
       "on_screen_text": "Never needed",
       "visual_intent": "Cables looped around the tower while the host holds up a coil, then relaxes.",
       "shot": {
@@ -615,7 +615,7 @@
           },
           {
             "recipe": "text_slam",
-            "anchor": "never",
+            "anchor": "Never",
             "detail": ""
           }
         ],
@@ -1037,7 +1037,7 @@
   ],
   "approvals": {
     "storyline": "b19f91d131058b531ea18b6254f5f46e4d29cbaad6124c0d17505409f76a16f9",
-    "script": "2eeb88198d893f95a78f46a190ad511148efe90dab46cc5a776f683bc8aa08ba"
+    "script": "3e1f9265425ff4a0fe3b4f20b1d303f4d0fd574c91e83236d099d2a87048ee36"
   },
   "meta": {
     "story": {
@@ -1094,6 +1094,12 @@
         "by": "user",
         "at": "2026-11-09T22:51:43",
         "digest": "2eeb88198d89"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-10T12:42:01",
+        "digest": "3e1f9265425f"
       }
     ],
     "script": {

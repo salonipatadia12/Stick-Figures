@@ -47,6 +47,16 @@ def note_box(kind: str, box, **extra):
     _box_log.append(dict(kind=kind, box=[int(round(v)) for v in box], **extra))
 
 
+def peek_text_log() -> list:
+    """This frame's texts so far, without taking them."""
+    return list(_text_log)
+
+
+def peek_box_log() -> list:
+    """This frame's boxes so far, without taking them (labels drawn after the host keep off it)."""
+    return list(_box_log)
+
+
 def take_box_log() -> list:
     out = list(_box_log)
     _box_log.clear()

@@ -49,6 +49,38 @@ class Effect:
     data: dict = field(default_factory=dict)
 
 
+def label_centre(size: tuple, region: str, chars: list, texts: list = ()) -> tuple:
+    """Where a label's centre goes: its region's spot, kept inside the captions' safe area (the right edge is the
+    phone's buttons), off any character (head to body boxes) and off text already on screen: above, below or beside
+    whatever is in the way, the first spot that is clear of everything."""
+    from ..captions import SAFE
+    w, h = size
+    lo_x, hi_x = SAFE['left'] + w / 2, SAFE['right'] - w / 2
+    lo_y, hi_y = SAFE['top'] + h / 2, SAFE['bottom'] - h / 2
+    blocks = list(chars) + list(texts)
+
+    def clamp(cx, cy):
+        return min(max(cx, lo_x), hi_x), min(max(cy, lo_y), hi_y)
+
+    def hits(cx, cy):
+        x0, y0, x1, y1 = cx - w / 2 - 8, cy - h / 2 - 8, cx + w / 2 + 8, cy + h / 2 + 8
+        return any(min(x1, c[2]) - max(x0, c[0]) > 0 and min(y1, c[3]) - max(y0, c[1]) > 0 for c in blocks)
+
+    cx, cy = clamp(REGION.get(region, REGION[''])[0] * W, LABEL_Y.get(region, 860))
+    if not hits(cx, cy):
+        return cx, cy
+    tries = []
+    for c in blocks:
+        room_l, room_r = c[0] - SAFE['left'], SAFE['right'] - c[2]
+        side = c[0] - 24 - w / 2 if room_l >= room_r else c[2] + 24 + w / 2
+        tries += [clamp(cx, c[1] - 24 - h / 2), clamp(cx, c[3] + 24 + h / 2), clamp(side, cy)]
+    tries.sort(key=lambda t: abs(t[0] - cx) + abs(t[1] - cy))           # the nearest clear spot to where it belongs
+    for t in tries:
+        if not hits(*t):
+            return t
+    return cx, cy
+
+
 def _ramp(t, start, dur):
     return 0.0 if t < start else min(1.0, (t - start) / max(1e-3, dur))
 
@@ -337,12 +369,14 @@ class InsertScene:
         if t < at or not e.detail:
             return
         q = back_out(min(1.0, (t - at) / 0.32), 1.6)
-        im = O.tag_label(e.detail, 60)
+        full = O.tag_label(e.detail, 60)
+        if 'c' not in e.data:           # placed once, at full size, the first frame it shows (it must not chase the host)
+            e.data['c'] = label_centre(full.size, e.region, [b['box'] for b in O.peek_box_log() if b['kind'] == 'character'],
+                                       [d['box'] for d in O.peek_text_log() if 'box' in d])
+        im = full
         if q < 0.999:
             im = im.resize((max(1, int(im.width * q)), max(1, int(im.height * q))), Image.BICUBIC)
-        cx = REGION.get(e.region, REGION[''])[0] * W
-        cx = min(max(cx, 60 + im.width / 2), 1020 - im.width / 2)
-        cy = LABEL_Y.get(e.region, 860)
+        cx, cy = e.data['c']
         xy = (int(cx - im.width / 2), int(cy - im.height / 2))
         frame.alpha_composite(im, xy)
         if q > 0.9:

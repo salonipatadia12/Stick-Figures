@@ -1,0 +1,31 @@
+{
+ "tower-leaning-back--the-tower-leaning-a-touch-less": {
+  "scene": "the tower leaning a touch less",
+  "source": "renders/inserts/flux/scene-tower-leaning-back--the-tower-leaning-a-touch-less-s700.png",
+  "file": "styles/cozy/inserts/tower-leaning-back--the-tower-leaning-a-touch-less.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the tower leaning a touch less. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "tower-leaning-back",
+  "qa": {
+   "edges": 0.1133,
+   "contrast": 58.7,
+   "mean": 169.0
+  },
+  "made": "2026-11-09",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+ },
+ "tower-golden-hour--the-tower-standing-a-little-straighter": {
+  "scene": "the tower standing a little straighter",
+  "source": "renders/inserts/flux/scene-tower-golden-hour--the-tower-standing-a-little-straighter-r2-s1119.png",
+  "file": "styles/cozy/inserts/tower-golden-hour--the-tower-standing-a-little-straighter.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the same tower leaning very slightly less than before, still clearly leaning to the right; everything else unchanged. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "tower-golden-hour",
+  "qa": {
+   "edges": 0.1001,
+   "contrast": 64.0,
+   "mean": 158.2
+  },
+  "made": "2026-11-09",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 2
+ }
+}
