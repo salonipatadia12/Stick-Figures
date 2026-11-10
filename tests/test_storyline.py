@@ -50,6 +50,26 @@ class StoryCheckTest(unittest.TestCase):
         self.assertFalse(report['payoff answers the hook'])
 
 
+class HostFormatChecksTest(unittest.TestCase):
+    def test_painted_scene_beats_need_no_base_in_the_host_format(self):
+        from pipeline import bases
+        ep = host_episode()
+        rows = bases.plan(ep, {})
+        for b, r in zip(ep.beats, rows):
+            if b.shot.visual != 'character':
+                self.assertEqual(r['base'], f'({b.shot.visual})')
+
+    def test_the_users_own_long_hook_is_a_warning_not_an_error(self):
+        ep = host_episode()
+        long = 'How do you fix a tower you really cannot touch?'
+        ep.hook_options[0].line = long
+        ep.beats[0].narration = long
+        hook_errors = lambda: [i for i in ep.check(('lead', 'friend')) if i.where == 'hook 1' and i.severity == 'error']
+        self.assertTrue(hook_errors())
+        ep.meta['hook_by_user'] = long
+        self.assertFalse(hook_errors())
+
+
 class RotationTest(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.TemporaryDirectory()
@@ -105,7 +125,7 @@ class RotationTest(unittest.TestCase):
 class VariantsTest(unittest.TestCase):
     def test_a_split_picture_comes_back_from_the_wire(self):
         shot = dict(visual='split', picture=dict(insert_key='honey-tomb', insert_scene='a tomb', insert_effects='',
-                                                 graphic_kind='', graphic_items='', graphic_detail='',
+                                                 graphic='',
                                                  split='honey-jar-lab | a lab bench | Myth@says | Fact@actually'),
                     host=dict(where='scene', placement='right large watching holding a jar of honey', doing='x'),
                     staging=dict(setting='other: castle ruins', poses=[], actions=[], props=[]))
@@ -118,6 +138,41 @@ class VariantsTest(unittest.TestCase):
         sp = data['beats'][0]['shot']['split']
         self.assertEqual(sp['labels'], ['Myth', 'Fact'])
         self.assertEqual(sp['anchors'], ['says', 'actually'])
+
+    def test_a_diagram_comes_back_from_the_wire(self):
+        pic = dict(insert_key='', insert_scene='', insert_effects='', split='',
+                   graphic='bars ; Then@then | Now@now ; 3 | 5')
+        data, notes = from_wire(dict(beats=[dict(role='reveal', shot=dict(visual='graphic', picture=pic))]))
+        g = data['beats'][0]['shot']['graphic']
+        self.assertEqual((g['kind'], g['items'], g['anchors'], g['detail']), ('bars', ['Then', 'Now'], ['then', 'now'], '3 | 5'))
+        self.assertEqual(notes, [])
+
+    def test_a_diagram_beat_without_a_diagram_falls_back_to_its_painted_scene(self):
+        pic = dict(insert_key='tower-model', insert_scene='a tower model on paper', insert_effects='', split='', graphic='')
+        data, notes = from_wire(dict(beats=[dict(role='clue', shot=dict(visual='graphic', picture=pic))]))
+        shot = data['beats'][0]['shot']
+        self.assertEqual((shot['visual'], shot['insert']['key'], shot['graphic']), ('insert', 'tower-model', None))
+        self.assertIn('no diagram', notes[0])
+
+    def test_the_wire_schema_stays_under_the_grammar_the_api_accepted(self):
+        from anthropic import transform_schema
+        from pipeline.models import ScriptDraft, wire_schema
+        schema = wire_schema(transform_schema(ScriptDraft))
+        counts = dict(props=0, enums=0)
+
+        def walk(o):
+            if isinstance(o, dict):
+                counts['props'] += len(o.get('properties', {}))
+                counts['enums'] += len(o.get('enum', []))
+                for v in o.values():
+                    walk(v)
+            elif isinstance(o, list):
+                for v in o:
+                    walk(v)
+        walk(schema)
+        self.assertLessEqual(counts['props'], 51)   # v5 (51 properties, 88 enum values) was accepted; v6 unfolded was not
+        self.assertLessEqual(counts['enums'], 88)
+        self.assertIn('graphic', schema['$defs']['Picture']['properties'])
 
     def test_qa_notes_a_video_that_repeats_the_previous_layout(self):
         with tempfile.TemporaryDirectory() as d, mock.patch.object(qa, 'LAYOUTS', Path(d) / 'layouts.json'):

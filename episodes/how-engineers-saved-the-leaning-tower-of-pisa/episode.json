@@ -11,9 +11,37 @@
     "provider": "kokoro",
     "voice_id": ""
   },
-  "title": "",
-  "hook_promise": "",
-  "hook_options": [],
+  "title": "The Fix That Never Touched the Low Side",
+  "hook_promise": "How can engineers fix a leaning tower when they can't touch the side that leans?",
+  "hook_options": [
+    {
+      "line": "How do you fix a tower you can't touch?",
+      "frame_one": "The host stands in front of the leaning tower at dusk, one mitten hand stretched out toward it, frozen just short of the stone.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "The engineers left the leaning side alone and removed small amounts of soil from the opposite, north side.",
+      "loop_line": "That's how you fix a tower you can't touch."
+    },
+    {
+      "line": "They fixed Pisa by digging the opposite side.",
+      "frame_one": "The host kneels at the base of the leaning tower on its high side, holding a small trowel, with a puzzled look at the low side.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "Controlled removal of soil beneath the north side let the tower settle while the leaning side stayed undisturbed.",
+      "loop_line": "That's how they fixed Pisa by digging the opposite side."
+    },
+    {
+      "line": "Why dig under the high side?",
+      "frame_one": "The host stands on the high side of the leaning tower, pointing down at the ground with a raised brow and a trowel nearby.",
+      "host_doing": "",
+      "scene_key": "",
+      "scene": "",
+      "answer": "Removing small volumes of soil from the high north side was the safe way to ease the tower back.",
+      "loop_line": "Now you know why you dig under the high side."
+    }
+  ],
   "hook_pick": 0,
   "storylines": [
     {
@@ -91,49 +119,799 @@
   "storyline_pick": 1,
   "story_note": "",
   "subject_settings": [],
-  "beats": [],
+  "beats": [
+    {
+      "id": "b01",
+      "role": "hook",
+      "narration": "How do you fix a tower you can't touch?",
+      "on_screen_text": "",
+      "visual_intent": "The host stretches a hand toward the leaning tower and freezes just short of it, as the camera pushes in.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "medium",
+          "holds": "",
+          "doing": "reaches toward the leaning tower, then freezes with hand hovering",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "leaning-tower-dusk",
+          "scene": "The leaning bell tower of Pisa at dusk, pale stone glowing in golden light, green lawn at its base, soft long shadows, quiet sky.",
+          "effects": [
+            {
+              "kind": "push",
+              "anchor": "touch",
+              "at": "centre",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "reach",
+              "target": "",
+              "anchor": "touch"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b02",
+      "role": "setup",
+      "narration": "Pisa's tower leans. Engineers had to stop it.",
+      "on_screen_text": "",
+      "visual_intent": "The camera pans up the tilted tower while the host looks up at it, small against the stone.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "small",
+          "holds": "",
+          "doing": "stands at the foot of the tower, looking up at its tilt",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "leaning-tower-dusk",
+          "scene": "The leaning bell tower of Pisa at dusk, pale stone glowing in golden light, green lawn at its base, soft long shadows, quiet sky.",
+          "effects": [
+            {
+              "kind": "pan",
+              "anchor": "leans",
+              "at": "peak",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "look_up",
+              "target": "",
+              "anchor": "leans"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "pan_right",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b03",
+      "role": "problem",
+      "narration": "But any disturbance to the ground on the leaning side was very dangerous.",
+      "on_screen_text": "Too dangerous",
+      "visual_intent": "A close-up push into the ground at the foot of the leaning side while the host shakes their head.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "large",
+          "holds": "",
+          "doing": "shakes head, gazing worriedly at the ground under the leaning side",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "tower-base-leaning-side",
+          "scene": "Close view of the base of the leaning tower on its low side, stone meeting soft earth and grass, warm late light, slight shadow under the lean.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "ground",
+              "at": "ground",
+              "detail": ""
+            },
+            {
+              "kind": "arrow",
+              "anchor": "leaning",
+              "at": "ground",
+              "detail": "left -> centre"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "shake_head",
+              "target": "",
+              "anchor": "dangerous"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "dangerous",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b04",
+      "role": "stakes",
+      "narration": "So that side was off limits. No digging, no poking, nothing.",
+      "on_screen_text": "Hands off",
+      "visual_intent": "The host holds a clipboard and points at the low side, ruling it out with a firm head shake.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "close",
+          "holds": "a clipboard",
+          "doing": "holds a clipboard and points firmly, ruling out the low side",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "character",
+        "insert": null,
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "street",
+          "setting_detail": "",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "clipboard",
+              "anchor": "limits"
+            },
+            {
+              "who": "lead",
+              "verb": "shake_head",
+              "target": "",
+              "anchor": "nothing"
+            }
+          ],
+          "props": [
+            {
+              "name": "clipboard",
+              "held_by": "lead",
+              "where": "left hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "off limits",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b05",
+      "role": "clue",
+      "narration": "Clue one: they didn't guess. They built advanced computer models, and ran large-scale trials first.",
+      "on_screen_text": "",
+      "visual_intent": "A painted diagram of the tower in cross-section, with a small test model beside it, while the host pops in to point.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "right",
+          "size": "small",
+          "holds": "",
+          "doing": "pops in at the frame edge and points at the diagram",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "tower-model-diagram",
+          "scene": "Painted diagram on warm paper: a cross-section of a leaning tower on layered soil, with a small scale test model of the same tower beside it, a soft grid of lines over the ground, no text.",
+          "effects": []
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "paper diagram backdrop",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "computer"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "icon_pop",
+            "anchor": "computer models",
+            "detail": "laptop"
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "pop",
+          "anchor": "computer"
+        }
+      ],
+      "source_ids": [
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b06",
+      "role": "clue",
+      "narration": "Clue two: constant watching. Continuous monitoring, and daily communication.",
+      "on_screen_text": "",
+      "visual_intent": "The host jots notes beside instruments at the tower's base, showing everything watched every day.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "medium",
+          "holds": "a notebook",
+          "doing": "writes notes in a notebook beside measuring instruments at the tower base",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "tower-base-instruments",
+          "scene": "The base of the leaning tower with small measuring instruments and thin wires set into the ground and stone, a wooden stool, warm afternoon light.",
+          "effects": [
+            {
+              "kind": "label",
+              "anchor": "daily",
+              "at": "ground",
+              "detail": "Daily checks"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "write",
+              "target": "notebook",
+              "anchor": "daily"
+            }
+          ],
+          "props": [
+            {
+              "name": "notebook",
+              "held_by": "lead",
+              "where": "left hand"
+            }
+          ]
+        },
+        "motion": [
+          {
+            "recipe": "punch_in",
+            "anchor": "constant",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s3"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b07",
+      "role": "twist",
+      "narration": "So what's left? The opposite side. The high side. They'd dig there.",
+      "on_screen_text": "Dig the high side",
+      "visual_intent": "A split view: the off-limits low side on top, the opposite high side below where the digging will happen.",
+      "shot": {
+        "host": {
+          "where": "pop_in",
+          "side": "right",
+          "size": "medium",
+          "holds": "",
+          "doing": "leans in at the frame edge, pointing down to the opposite side",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "split",
+        "insert": {
+          "key": "tower-low-side",
+          "scene": "The leaning tower seen from its low side, stone wall tilting overhead, grass and soft earth below, warm light.",
+          "effects": []
+        },
+        "graphic": null,
+        "split": {
+          "key": "tower-high-side",
+          "scene": "the opposite, high side of the leaning tower, stone wall rising almost upright above grass and earth, warm light, no people",
+          "labels": [
+            "Off limits",
+            "Dig here"
+          ],
+          "anchors": [
+            "What's",
+            "opposite"
+          ]
+        },
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "opposite"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "split_compare",
+            "anchor": "opposite",
+            "detail": "Off limits | Dig here"
+          },
+          {
+            "recipe": "text_slam",
+            "anchor": "high side",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "whoosh",
+          "anchor": "opposite"
+        }
+      ],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b08",
+      "role": "reveal",
+      "narration": "A controlled removal of small volumes of soil from beneath the north side. It's called underexcavation.",
+      "on_screen_text": "Underexcavation",
+      "visual_intent": "A painted cutaway of the foundation, with small amounts of soil drawn out from under the north side.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "left",
+          "size": "large",
+          "holds": "",
+          "doing": "points at the soil being removed under the north side",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "foundation-cutaway-north",
+          "scene": "Painted cutaway of the tower's stone foundation in the earth, layers of soil, a few small pockets of soil carefully removed beneath the high side on the right, warm glow.",
+          "effects": [
+            {
+              "kind": "focus",
+              "anchor": "soil",
+              "at": "ground",
+              "detail": ""
+            },
+            {
+              "kind": "label",
+              "anchor": "north",
+              "at": "right",
+              "detail": "North side"
+            },
+            {
+              "kind": "dust",
+              "anchor": "removal",
+              "at": "ground",
+              "detail": ""
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "cutaway of tower foundation",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "point",
+              "target": "",
+              "anchor": "north"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "text_slam",
+            "anchor": "underexcavation",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [
+        "s2"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b09",
+      "role": "payoff",
+      "narration": "Take soil from the high side, and it settles. The leaning side never got touched.",
+      "on_screen_text": "",
+      "visual_intent": "The tower crossfades to a slightly straighter version while the host watches and nods.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "centre",
+          "size": "small",
+          "holds": "",
+          "doing": "watches the tower ease upright, then nods quietly",
+          "to_camera": false,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "leaning-tower-eased",
+          "scene": "The leaning bell tower of Pisa in soft evening light, standing a little straighter, green lawn untouched at its low side, calm sky.",
+          "effects": [
+            {
+              "kind": "crossfade",
+              "anchor": "settles",
+              "at": "",
+              "detail": "the same tower standing a little straighter"
+            }
+          ]
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "touched"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "push_in",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [
+        {
+          "name": "ding",
+          "anchor": "settles"
+        }
+      ],
+      "source_ids": [
+        "s2",
+        "s1"
+      ],
+      "illustrative_numbers": false,
+      "duration": null
+    },
+    {
+      "id": "b10",
+      "role": "loop",
+      "narration": "That's how you fix a tower you can't touch.",
+      "on_screen_text": "",
+      "visual_intent": "Warm closing shot of the host smiling in front of the tower, a mitten hand lowered at last.",
+      "shot": {
+        "host": {
+          "where": "scene",
+          "side": "right",
+          "size": "close",
+          "holds": "",
+          "doing": "smiles at the camera with a small nod, tower glowing behind",
+          "to_camera": true,
+          "cut_on": ""
+        },
+        "visual": "insert",
+        "insert": {
+          "key": "leaning-tower-golden",
+          "scene": "The leaning bell tower of Pisa in golden late-afternoon light, long soft shadows on the lawn, warm sky.",
+          "effects": []
+        },
+        "graphic": null,
+        "split": null,
+        "reaction_anchor": "",
+        "framing": "medium",
+        "cast": [
+          "lead"
+        ],
+        "staging": {
+          "setting": "other",
+          "setting_detail": "lawn beside leaning tower",
+          "poses": [
+            {
+              "who": "lead",
+              "pose": "standing"
+            }
+          ],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "camera",
+              "anchor": "fix"
+            }
+          ],
+          "props": []
+        },
+        "motion": [
+          {
+            "recipe": "breathe",
+            "anchor": "",
+            "detail": ""
+          }
+        ],
+        "image_prompt": "",
+        "pose_variants": [],
+        "transition": "cut",
+        "layers": []
+      },
+      "sfx": [],
+      "source_ids": [],
+      "illustrative_numbers": false,
+      "duration": null
+    }
+  ],
   "sources": [
     {
       "id": "s1",
-      "claim": "Construction began in 1173, and the tower leaned almost from the start because it was built on the soft silt of a buried riverbed.",
-      "url": "https://www.smithsonianmag.com/travel/the-leaning-tower-straightens-up-75064764/",
-      "title": "The Leaning Tower Straightens Up",
-      "quote": "Construction began in 1173, and the tower leaned almost from the outset. It was unwittingly built on the soft silt of a buried riverbed in three diffe..."
+      "claim": "any disturbance to the ground on the leaning side would have been very dangerous.",
+      "url": "https://www.tandfonline.com/doi/abs/10.1080/13556207.2002.10785324",
+      "title": "The Stabilization of the Leaning Tower of Pisa: Journal of Architectural Conservation: Vol 8, No 3",
+      "quote": "Any disturbance to the ground on the leaning side would have been very dangerous, ruling out conventional geotechnical processes such as underpinning ..."
     },
     {
       "id": "s2",
-      "claim": "By 1990 the tilt had reached 5.5 degrees, and the Italian government appointed a committee of 13 experts, led by British engineer John Burland, to find a way to save it.",
-      "url": "https://en.wikipedia.org/wiki/Leaning_Tower_of_Pisa",
-      "title": "Leaning Tower of Pisa",
-      "quote": "By 1990, the tilt had reached 5.5 degrees."
-    },
-    {
-      "id": "s3",
-      "claim": "Any disturbance to the ground beneath the south side was judged too dangerous, so conventional fixes like underpinning or grouting there were ruled out.",
-      "url": "https://www.sciencedirect.com/science/article/pii/S0038080620307502",
-      "title": "The Stabilisation of the Leaning Tower of Pisa - ScienceDirect",
-      "quote": "Any disturbance to the ground beneath the south side of the foundation is very dangerous ; therefore the use of conventional geotechnical processes at..."
-    },
-    {
-      "id": "s4",
-      "claim": "Instead, the committee adopted underexcavation, the controlled removal of small volumes of soil from beneath the north side of the foundation, which let the north side settle slightly and pulled the tower back toward vertical.",
+      "claim": "a controlled removal of small volumes of soil from beneath the north side of the Tower foundation (underexcavation).",
       "url": "https://www.sciencedirect.com/science/article/pii/S0038080620307502",
       "title": "The Stabilisation of the Leaning Tower of Pisa - ScienceDirect",
       "quote": "After a careful consideration of a number of possible approaches, the Committee adopted a controlled removal of small volumes of soil from beneath the..."
     },
     {
-      "id": "s5",
-      "claim": "Because of the risks, the engineers first installed a safeguard system of cables that could be tightened individually to stop any unwanted movement.",
-      "url": "https://practical.engineering/blog/2023/12/19/how-engineers-straightened-the-leaning-tower-of-pisa",
-      "title": "How Engineers Straightened the Leaning Tower of Pisa — Practical Engineering",
-      "quote": "Knowing the risks and uncertainties involved, the engineers first designed a safeguard system for the tower if things started to go awry.\n\nThe cables ..."
-    },
-    {
-      "id": "s6",
-      "claim": "The remedial work between 1993 and 2001 reduced the tilt to 3.97 degrees, and the tower was straightened by 38 cm.",
-      "url": "https://en.wikipedia.org/wiki/Leaning_Tower_of_Pisa",
-      "title": "Leaning Tower of Pisa",
-      "quote": "[[4]](./Leaning_Tower_of_Pisa#cite_note-4) [[5]](./Leaning_Tower_of_Pisa#cite_note-5) [[6]](./Leaning_Tower_of_Pisa#cite_note-6) The structure was sta..."
+      "id": "s3",
+      "claim": "advanced computer modelling, large-scale development trials, an exceptional level of continuous monitoring and daily communication to maintain control.",
+      "url": "https://scholarsmine.mst.edu/cgi/viewcontent.cgi?article=2604&context=icchge",
+      "title": "The Leaning Tower of Pisa Revisited",
+      "quote": "Its implementation has required advanced computer modelling, large-scale\n\ndevelopment trials, an exceptional level of continuous monitoring and daily ..."
     }
   ],
   "approvals": {
@@ -169,6 +947,13 @@
         "format": "mystery",
         "digest": "b19f91d13105"
       }
-    ]
+    ],
+    "script": {
+      "model": "claude-sonnet-5-5",
+      "prompt_version": "script-v6",
+      "research": true,
+      "generated": "2026-11-09T18:56:29"
+    },
+    "hook_by_user": "How do you fix a tower you can't touch?"
   }
 }

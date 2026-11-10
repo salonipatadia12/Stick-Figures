@@ -1,6 +1,6 @@
 {
   "budget_usd": 2.0,
-  "spent_usd": 0.161986,
+  "spent_usd": 0.371146,
   "prices_verified": "2026-11-04",
   "entries": [
     {
@@ -59,6 +59,44 @@
         "web_searches": 2
       },
       "at": "2026-11-09T18:17:43"
+    },
+    {
+      "id": 4,
+      "step": "research",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.28722,
+      "actual_usd": 0.101392,
+      "status": "ok",
+      "detail": "web search \u22644 | stop=end_turn",
+      "usage": {
+        "input": 31991,
+        "output": 741,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 3
+      },
+      "at": "2026-11-09T18:55:21"
+    },
+    {
+      "id": 5,
+      "step": "script",
+      "provider": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "estimate_usd": 0.260578,
+      "actual_usd": 0.107768,
+      "status": "ok",
+      "detail": "structured script | stop=end_turn",
+      "usage": {
+        "input": 10289,
+        "output": 8719,
+        "cache_read": 0,
+        "cache_write_5m": 0,
+        "cache_write_1h": 0,
+        "web_searches": 0
+      },
+      "at": "2026-11-09T18:55:28"
     }
   ]
 }

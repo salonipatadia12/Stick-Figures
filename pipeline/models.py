@@ -263,7 +263,7 @@ WIRE_OMIT = {'DraftShot': ('image_prompt', 'pose_variants', 'transition', 'react
 PICTURE = {
     'type': 'object', 'additionalProperties': False,
     'description': 'What the frame shows besides the host. For visual "insert" fill the insert_* fields; for "graphic" '
-                   'fill the graphic_* fields; leave the others as empty strings.',
+                   'fill graphic; for "split" fill insert_* and split; leave the others as empty strings.',
     'properties': {
         'insert_key': {'type': 'string', 'description': 'Kebab-case scene name, reused across videos ("volcano-erupting").'},
         'insert_scene': {'type': 'string', 'description': 'The place or thing painted WITHOUT people, 10-30 words: what is '
@@ -275,6 +275,13 @@ PICTURE = {
             'changed scene in a few words; sun_path "high -> low"; label 1-3 words; arrow "from -> to" regions; else '
             'empty; focus: a close-up push into the region; pin: a map pin on the region, detail its 1-3 word label. '
             'Example: "ash | | | ; shake | erupted | | ; label | sulfur | sky | Sulfur". No ";" inside a field.'},
+        'graphic': {'type': 'string', 'description': 'visual "graphic" only: "kind ; Label@word | Label@word ; detail". '
+                                                     'kind: flow, bounce, scatter, two_paths, waves, bars, thermometer, '
+                                                     'cards or layers. 1-4 labels of 1-3 words in reading order, each with '
+                                                     'the narration word where it appears. detail: bars relative heights '
+                                                     '"3 | 5"; two_paths both, long or short; thermometer "from -> to" or '
+                                                     'falls/rises; else empty. E.g. "flow ; Sunlight@sun | Sulfur veil@veil ; ". '
+                                                     'Else empty.'},
         'split': {'type': 'string', 'description': 'visual "split" only: "bottom-scene-key | the bottom scene painted '
                                                    'without people, 10-30 words | Top label@word | Bottom label@word" (the '
                                                    'top scene is insert_*), e.g. "honey-lab-bench | a lab bench with jars | '
@@ -389,17 +396,25 @@ def from_wire(data: dict) -> tuple[dict, list]:
                 effects.append(dict(kind=f[0], anchor=f[1], at=f[2], detail=f[3]))
             if pic.get('insert_key'):
                 insert = dict(key=pic['insert_key'], scene=pic.get('insert_scene', ''), effects=effects)
-        if shot.get('visual') == 'graphic' or pic.get('graphic_kind'):
-            kind = (pic.get('graphic_kind') or '').strip()
+        g_kind, g_items, g_detail = pic.get('graphic_kind', ''), pic.get('graphic_items', ''), pic.get('graphic_detail', '')
+        if (pic.get('graphic') or '').strip():          # v6: "kind ; Label@word | Label@word ; detail"
+            g_kind, g_items, g_detail = (_split(pic['graphic'], ';') + ['', ''])[:3]
+        if shot.get('visual') == 'graphic' or g_kind:
+            kind = (g_kind or '').strip().lower()
             if kind in gkinds:
-                pairs = [x.split('@', 1) + [''] for x in _split(pic.get('graphic_items', ''), '|') if x]
+                pairs = [x.split('@', 1) + [''] for x in _split(g_items, '|') if x]
                 items = [a.strip() for a, b, *_ in pairs]
                 anchors = [b.strip() for a, b, *_ in pairs]
                 anchors = anchors if all(anchors) else []
                 graphic = dict(kind=kind, items=items, anchors=anchors if len(anchors) == len(items) else [],
-                               detail=pic.get('graphic_detail', ''))
+                               detail=(g_detail or '').strip())
             elif kind:
                 notes.append(f'b{n:02d}: graphic kind "{kind}" is not in the library; dropped')
+            elif shot.get('visual') == 'graphic':
+                notes.append(f'b{n:02d}: a graphic with no diagram; shown as its painted scene' if insert else
+                             f'b{n:02d}: a graphic with no diagram')
+                if insert:
+                    shot['visual'] = 'insert'
         split = None
         parts = _split(pic.get('split', ''), '|')
         if len(parts) >= 3 and parts[0]:
@@ -697,7 +712,7 @@ class Episode(Strict):
                 warn(where, f'~{seconds:.1f}s of narration with no word-anchored change; the picture may sit static')
             if len(b.shot.cast) > MAX_CAST:
                 warn(where, f'{len(b.shot.cast)} characters in one frame; the bases hold at most {MAX_CAST}. Stage it as two shots')
-            self._check_staging(b, spoken, err, warn)
+            self._check_staging(b, spoken, err, warn, painted=self.host_format and b.shot.visual != 'character')
             self._check_visual(b, spoken, err, warn)
         shows = sum(1 for b in self.beats if b.shot.visual in ('insert', 'graphic'))
         if any(b.shot.visual != 'character' for b in self.beats) and shows < SUBJECT_TARGET * len(self.beats):
@@ -725,8 +740,10 @@ class Episode(Strict):
             err('hook_options', f'{len(self.hook_options)} hook options; give exactly {HOOK_OPTIONS}')
         for k, h in enumerate(self.hook_options, 1):
             n = len(re.findall(r"[\w'’-]+", h.line))
-            if n > HOOK_MAX_WORDS:
-                err(f'hook {k}', f'"{h.line}" is {n} words; at most {HOOK_MAX_WORDS}')
+            if n > HOOK_MAX_WORDS:            # the user's own wording is kept: a warning, not a blocked gate
+                (warn if h.line.strip() == self.meta.get('hook_by_user', '').strip() else err)(
+                    f'hook {k}', f'"{h.line}" is {n} words; at most {HOOK_MAX_WORDS}'
+                    + (' (the user\'s own wording, kept)' if h.line.strip() == self.meta.get('hook_by_user', '').strip() else ''))
             if not h.answer:
                 err(f'hook {k}', 'say how the payoff answers this hook')
             if not _shares_word(h.loop_line, h.line):
@@ -787,7 +804,7 @@ class Episode(Strict):
         return out
 
     @staticmethod
-    def _check_staging(b, spoken, err, warn):
+    def _check_staging(b, spoken, err, warn, painted=False):
         """Staging fields are consistent with the shot, and what the rig cannot stage well is flagged with a
         simpler staging, at the script gate, before any base or render work (user item 8)."""
         where = b.id
@@ -809,7 +826,7 @@ class Episode(Strict):
             err(where, f'staging.poses names {posed}, shot.cast is {b.shot.cast}; give exactly one pose per cast id')
         if st.setting == 'other' and not st.setting_detail:
             err(where, 'staging.setting is "other" with no setting_detail')
-        if st.setting == 'other':
+        if st.setting == 'other' and not painted:     # host format: a painted scene beat uses no base
             warn(where, f'setting "{st.setting_detail}" is not in the library: a new base will stop at the bases gate')
         if len(st.actions) > MAX_ACTIONS:
             err(where, f'{len(st.actions)} actions; at most {MAX_ACTIONS} per beat')

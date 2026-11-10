@@ -113,7 +113,7 @@ Rules:
    scale), and 0-4 effects in shot.picture such as ash/snow/dust/embers/haze particles, a colour grade "blue -> red", sun_path
    "high -> low", a crossfade to a changed version of the same place, push/pan, labels and arrows, each on a word),
    "graphic" (a drawn diagram in the painted style: flow A -> B -> C, bounce, scatter, two_paths, waves, bars,
-   thermometer, cards, layers; fill the graphic_* fields of shot.picture) or "character" (the host in a setting from the library, when the
+   thermometer, cards, layers; fill the graphic field of shot.picture) or "character" (the host in a setting from the library, when the
    setting is the story). Most beats are inserts with the host in them; at least 70% show the subject. When a
    setting IS the subject (a doorway for a video about doorways), list it in subject_settings. Numbers drawn on
    screen (labels, split labels, graphic items) must be numbers this beat says. reaction_anchor stays empty in

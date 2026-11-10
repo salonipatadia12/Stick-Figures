@@ -68,7 +68,7 @@ SYNONYMS = {'alarm clock': 'clock', 'alarm': 'clock', 'coffee': 'cup', 'coffee c
 
 
 def prop_key(name: str) -> str:
-    n = name.lower().strip()
+    n = re.sub(r'^(a|an|the|some)\s+', '', name.lower().strip())
     if n in SYNONYMS:
         return SYNONYMS[n]
     for k in list(DRAWN) + list(SYNONYMS):
@@ -79,6 +79,17 @@ def prop_key(name: str) -> str:
 
 def prop_library() -> dict:
     return json.loads(PROP_LIBRARY.read_text()) if PROP_LIBRARY.exists() else {}
+
+
+def find_prop(name: str, library: dict):
+    """The library entry for a held prop as the script words it: the exact key first ("a test strip" -> "test
+    strip"), else the longest key whose words all appear in the name ("a jar of honey" -> "honey jar")."""
+    key = prop_key(name)
+    if key in library:
+        return library[key]
+    words = set(re.findall(r'[a-z]+', key))
+    fits = [k for k in library if set(k.split()) <= words]
+    return library[max(fits, key=len)] if fits else None
 
 
 def counter(frame, t, t0, a: float, b: float, centre=TEXT_TOP, size: int = 110, dur: float = 1.2, prefix: str = '', suffix: str = ''):
@@ -785,7 +796,7 @@ class HostLayer:
         self.note = ''
         self.held, self.hold_side = None, lead.near
         if cue.get('holds'):                            # a prop from the props library, held up in the near hand
-            entry = prop_library().get(prop_key(cue['holds']))
+            entry = find_prop(cue['holds'], prop_library())
             if entry and (ROOT / entry['sprite']).exists():
                 spr = Image.open(ROOT / entry['sprite']).convert('RGBA')
                 self.held = Held(spr, (spr.width * 0.5, spr.height * 0.62), max(0.6, 1.5 * entry.get('width', 0.4)))

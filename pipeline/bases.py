@@ -140,7 +140,8 @@ def plan(episode, lib: dict | None = None) -> list:
     out = []
     for b in episode.beats:
         visual = getattr(b.shot, 'visual', 'character')
-        if visual != 'character' and not b.shot.cast:     # a painted insert or a drawn graphic: no base pose
+        # a painted insert or a drawn graphic: no base pose (in the host format the host is cut in over the scene)
+        if visual != 'character' and (not b.shot.cast or episode.host_format):
             out.append(dict(beat=b.id, setting='-', pose=visual, view='-', cast=[], poses={}, source='visual',
                             base=f'({visual})', wanted=f'({visual})'))
             continue

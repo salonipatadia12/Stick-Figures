@@ -42,7 +42,7 @@
       "loop_line": "So yes, I bet on the wrong honey defense."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "storylines": [
     {
       "format": "countdown",
@@ -124,14 +124,14 @@
       "role": "hook",
       "narration": "Which honey trick really stops germs?",
       "on_screen_text": "Which trick?",
-      "visual_intent": "The host studies a honey jar through a magnifying glass like a detective, already puzzled.",
+      "visual_intent": "The host stands at a sunlit kitchen counter with a magnifying glass, squinting at a golden honey jar like a detective.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "left",
           "size": "medium",
           "holds": "a magnifying glass",
-          "doing": "squints at the honey jar through a magnifying glass",
+          "doing": "The host stands at a sunlit kitchen counter with a magnifying glass, squinting at a golden honey jar like a detective.",
           "to_camera": true,
           "cut_on": ""
         },
@@ -944,7 +944,8 @@
     }
   ],
   "approvals": {
-    "storyline": "ea48f8a8ee856eb56977e7e72c2a539735d5b0f73a2549028dd0d71203c48dd1"
+    "storyline": "ea48f8a8ee856eb56977e7e72c2a539735d5b0f73a2549028dd0d71203c48dd1",
+    "script": "eaa4438230e582189475cd778d4991466d22437e6a162f5ecee65acf5ee52289"
   },
   "meta": {
     "story": {
@@ -965,6 +966,12 @@
         "pick": 3,
         "format": "experiment",
         "digest": "ea48f8a8ee85"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T18:55:06",
+        "digest": "eaa4438230e5"
       }
     ],
     "script": {
