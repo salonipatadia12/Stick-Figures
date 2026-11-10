@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The Stick Figures Mac worker (macworker): pulls paint/render jobs from the VPS over HTTPS.
+  deploy/launchd/install_worker.sh fills in __REPO__ and __HOME__ and copies this to
+  ~/Library/LaunchAgents/com.stickfigures.worker.plist. The server address is in ~/.config/stick-worker/config;
+  the token is in the login Keychain (service stick-worker), never in this file.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.stickfigures.worker</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__REPO__/.venv/bin/python</string>
+        <string>-m</string>
+        <string>macworker</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PYTHONPATH</key>
+        <string>__REPO__</string>
+        <key>STICK_REPO</key>
+        <string>__REPO__</string>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <!-- if it exits (e.g. no network at login), launchd waits this long before starting it again -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+    <!-- full speed while rendering; the worker itself idles between 30 s polls -->
+    <key>ProcessType</key>
+    <string>Standard</string>
+    <!-- launchd stops it with SIGTERM; the worker stops its own child job and the lease returns the job to the queue -->
+    <key>ExitTimeOut</key>
+    <integer>30</integer>
+
+    <!-- the worker writes its own log to __HOME__/Library/Logs/stick-worker.log; this catches crashes -->
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/stick-worker.launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/stick-worker.launchd.log</string>
+</dict>
+</plist>

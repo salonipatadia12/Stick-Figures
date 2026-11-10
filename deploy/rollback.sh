@@ -67,6 +67,7 @@ fi
 
 dc up -d --remove-orphans
 wait_health 180 || die "not healthy after the rollback; see docker compose logs"
-record_deploy "$target" "$short"
+name=$(git describe --tags --exact-match 2>/dev/null || echo "$short")
+record_deploy "$name" "$short"
 run_smoke_test
-say "rolled back to $target ($short)"
+say "rolled back to $name ($short)"
