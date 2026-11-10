@@ -913,36 +913,6 @@
   "made": "2026-11-10",
   "episode": "why-you-can-t-tickle-yourself"
  },
- "brain-glow-bright": {
-  "scene": "A painted brain in a warm dark study glowing bright gold, soft light spilling around",
-  "source": "renders/inserts/flux/scene-brain-glow-bright-r2-s1395.png",
-  "file": "styles/cozy/inserts/brain-glow-bright.png",
-  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A painted human brain glowing bright warm gold, soft golden light rays spreading around it, floating against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
-  "base": null,
-  "qa": {
-   "edges": 0.0269,
-   "contrast": 22.3,
-   "mean": 198.0
-  },
-  "made": "2026-11-10",
-  "episode": "why-you-can-t-tickle-yourself",
-  "round": 2
- },
- "brain-glow-dim": {
-  "scene": "A painted brain resting in a warm dark study, glowing only faintly, soft amber light.",
-  "source": "renders/inserts/flux/scene-brain-glow-dim-r2-s1769.png",
-  "file": "styles/cozy/inserts/brain-glow-dim.png",
-  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The same kind of painted human brain glowing only faintly, a dull muted amber, barely any light around it, floating against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
-  "base": null,
-  "qa": {
-   "edges": 0.0146,
-   "contrast": 27.0,
-   "mean": 198.0
-  },
-  "made": "2026-11-10",
-  "episode": "why-you-can-t-tickle-yourself",
-  "round": 2
- },
  "lander-tank-and-engine": {
   "scene": "Close painted view of the lunar module underside, a round oxygen tank in gold foil above a bell-shaped descent engine, warm side light.",
   "source": "renders/inserts/flux/scene-lander-tank-and-engine-r2-s1132.png",
@@ -1031,6 +1001,36 @@
   },
   "made": "2026-11-10",
   "episode": "how-the-apollo-13-crew-made-it-home",
+  "round": 3
+ },
+ "brain-glow-bright": {
+  "scene": "A painted brain in a warm dark study glowing bright gold, soft light spilling around",
+  "source": "renders/inserts/flux/scene-brain-glow-bright-r3-s2395.png",
+  "file": "styles/cozy/inserts/brain-glow-bright.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A large painted human brain glowing bright warm gold, filling most of the frame, golden light rays spreading from it to the edges, against a soft warm cream and peach painted wall; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0587,
+   "contrast": 31.3,
+   "mean": 187.1
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself",
+  "round": 3
+ },
+ "brain-glow-dim": {
+  "scene": "A painted brain resting in a warm dark study, glowing only faintly, soft amber light.",
+  "source": "renders/inserts/flux/scene-brain-glow-dim-r3-s2770.png",
+  "file": "styles/cozy/inserts/brain-glow-dim.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The same kind of large painted human brain filling most of the frame, glowing only faintly, a dull muted amber, against a soft warm cream and peach painted wall in dim light; nothing else in the picture, no furniture, no buildings, no landscape. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0447,
+   "contrast": 39.0,
+   "mean": 142.2
+  },
+  "made": "2026-11-10",
+  "episode": "why-you-can-t-tickle-yourself",
   "round": 3
  }
 }

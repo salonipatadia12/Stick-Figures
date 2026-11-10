@@ -297,13 +297,15 @@ class Runner:
             for s in args.still:
                 name, t0, t1 = next(p for p in plan if p[1] <= s < p[2])
                 scene = self.make_scene(name, tl)
+                O.take_text_log()
                 frame = scene.frame(s)
+                drawn = O.take_text_log()
                 line = C.at(lines, s)
-                if line:
-                    C.draw(frame, line, s, avoid=getattr(scene, 'host_hit', None))
+                if line:                                # placed as in the render: clear of the host and the texts
+                    C.draw(frame, line, s, avoid=getattr(scene, 'host_hit', None),
+                           keep_clear=[d['box'] for d in drawn if 'box' in d])
                 path = self.out / f'still-{s:05.2f}.jpg'
                 frame.convert('RGB').save(path, quality=90)
-                drawn = O.take_text_log()
                 small = text_summary(drawn) if drawn else None
                 print(path, name, f"smallest text: {small['em']}px ({small['label']})" if small else '',
                       f"text box right {small['box'][2]} bottom {small['box'][3]} ({small['box_label']})" if small and 'box' in small else '')

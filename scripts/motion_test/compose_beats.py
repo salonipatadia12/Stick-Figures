@@ -122,6 +122,11 @@ def word_time(T: dict, anchor: str, default: float) -> float:
     return T.get(first, default)
 
 
+def slams(spec: dict) -> bool:
+    """The beat slams its on-screen text at the top of the frame."""
+    return any(m['recipe'] == 'text_slam' for m in spec['shot'].get('motion', [])) and bool(spec.get('on_screen_text'))
+
+
 def same_text(text: str) -> str:
     return ' '.join(re.findall(r'[a-z0-9.]+', (text or '').lower()))
 
@@ -1385,7 +1390,10 @@ class InsertShot(VisualShot):
             if e['kind'] == 'label' and said and same_text(e.get('detail', '')) == said:
                 continue                                # the on-screen text already says it: never the same words twice
             at = self.tw(e['anchor']) if e.get('anchor') else None
-            effects.append(Effect(e['kind'], at, e.get('at', ''), e.get('detail', ''), seed=11 + k))
+            where = e.get('at', '')
+            if e['kind'] == 'label' and said and where in ('top', 'sky') and slams(self.spec):
+                where = 'peak'                          # the slam holds the top: the label sits below it (tickling b07)
+            effects.append(Effect(e['kind'], at, where, e.get('detail', ''), seed=11 + k))
         settle_effects(effects, self.t0, self.t1)
         for e in effects:
             if e.at is None:

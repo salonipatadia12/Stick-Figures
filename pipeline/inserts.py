@@ -59,7 +59,8 @@ def save_library(lib: dict):
 # whole). In an object close-up a full-body host standing beside the object looks dwarfed by a giant prop (user
 # 2026-11-10), so the composer keeps the host in the foreground there. A library entry may set "scale" itself.
 OBJECT_WORDS = re.compile(r'\b(jars?|bottles?|glass(es)?|cups?|mugs?|strips?|dippers?|spoons?|lemons?|plates?|bowls?|cells?|'
-                          r'crystals?|drops?|droplets?|coins?|books?|phones?|tabletop|surface|microscope|macro|petri)\b')
+                          r'crystals?|drops?|droplets?|coins?|books?|phones?|tabletop|surface|microscope|macro|petri|brains?|hearts?|lungs?|'
+                          r'eyes?|feathers?|germs?|bacteria|molecules?|neurons?)\b')
 FIRST_CLAUSE = re.compile(r'[,:;]| in | with | at | beside | under | on a | on the ')
 
 
