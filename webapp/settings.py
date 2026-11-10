@@ -25,7 +25,7 @@ class Settings:
     spend_preapproved_usd: Decimal
     fake_anthropic: bool
     upload_limit_bytes: int = 300 * 1024 * 1024
-    mac_lease_minutes: int = 15
+    mac_lease_minutes: float = 15
     vps_lease_minutes: int = 20
     max_attempts: int = 3
     worker_online_seconds: int = 120
@@ -58,7 +58,9 @@ class Settings:
                    worker_token_sha256=os.getenv('WORKER_TOKEN_SHA256', '').strip().lower(),
                    public_url=os.getenv('PUBLIC_URL', ''),
                    spend_preapproved_usd=Decimal(os.getenv('SPEND_PREAPPROVED_USD', '0.50') or '0.50'),
-                   fake_anthropic=_flag('STICK_FAKE_ANTHROPIC'))
+                   fake_anthropic=_flag('STICK_FAKE_ANTHROPIC'),
+                   # tests only: a short Mac lease so lease expiry can be exercised (default 15 min)
+                   mac_lease_minutes=float(os.getenv('WORKER_LEASE_SECONDS', '900') or '900') / 60)
 
     def apply_pipeline_paths(self):
         """Point the pipeline at $STICK_DATA_DIR/episodes (pipeline.config reads the env at import, so set both)."""
