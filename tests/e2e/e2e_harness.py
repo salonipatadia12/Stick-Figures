@@ -23,6 +23,7 @@ NAME_OK = re.compile(r'^[a-z0-9._-]+$')
 PHONE_UA = ('Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) '
             'Version/18.1 Mobile/15E148 Safari/604.1')
 REFUSED = (401, 403)
+TERMINAL = ('done', 'done_qa_failed', 'failed')
 REDIRECT = (301, 302, 303, 307, 308)
 # The contract fixes the lease at 15 min and names no override. The tests set these candidates; the lease test runs
 # only when webapp/ reads one of them (see LeaseTest). Recommended name: WORKER_LEASE_SECONDS.
@@ -194,10 +195,11 @@ class Api:
         r.raise_for_status()
         return r.json()
 
-    def wait_state(self, slug, want, timeout, *, bad=('failed',), on_state=None, every=0.5):
+    def wait_state(self, slug, want, timeout, *, bad=None, on_state=None, every=0.5):
         """Poll the episode until its state is in `want`. Calls on_state(state, ep) for each new state seen. Raises
-        AssertionError at once on a `bad` state that is not wanted (with the episode's error)."""
+        AssertionError at once on a `bad` state that is not wanted (default: any end state), with the error."""
         want = {want} if isinstance(want, str) else set(want)
+        bad = set(TERMINAL if bad is None else bad) - want
         seen = [None]
 
         def check():

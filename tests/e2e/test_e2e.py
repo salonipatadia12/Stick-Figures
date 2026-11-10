@@ -156,7 +156,7 @@ class Flow:
         if state not in self.html:
             self.html[state] = self.api.get(f'/episodes/{self.slug}', headers={'User-Agent': h.PHONE_UA}).status_code
 
-    def wait(self, want, timeout=None, bad=('failed',)):
+    def wait(self, want, timeout=None, bad=None):
         return self.api.wait_state(self.slug, want, timeout or self.step, bad=bad, on_state=self.on_state)
 
     def human(self, gate, past, timeout):
