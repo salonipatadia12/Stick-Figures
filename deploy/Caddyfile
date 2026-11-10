@@ -1,8 +1,7 @@
-# TLS in front of the web app. The site is PUBLIC_URL (e.g. https://187-127-179-129.sslip.io): Caddy gets and
-# renews a Let's Encrypt certificate for it on its own (ports 80 and 443 must reach this host).
-# CADDY_GLOBAL_OPTIONS adds global options, e.g. `email you@example.com`, or for a local test
-# `local_certs skip_install_trust` with PUBLIC_URL=https://localhost:8443. Let's Encrypt needs the public ports
-# 80/443; with other ports use a certificate another way (or put this behind the proxy that already owns 443).
+# LOCAL DEVELOPMENT ONLY (compose profile "caddy"). On the VPS the host's nginx fronts the app
+# (deploy/nginx/stick.conf + certbot); Caddy is never started there.
+# Site = PUBLIC_URL, e.g. https://localhost:18443 with Caddy's internal CA (CADDY_GLOBAL_OPTIONS defaults to
+# `local_certs skip_install_trust`). Ports are the same inside and outside the container.
 {
 	http_port {$CADDY_HTTP_PORT:80}
 	https_port {$CADDY_HTTPS_PORT:443}

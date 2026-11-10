@@ -37,7 +37,8 @@ env_value() {
 
 timestamp() { date -u +%Y%m%d-%H%M%S; }
 
-# Wait until the web container answers /api/health with ok=true, then check it through Caddy too.
+# Wait until the web container answers /api/health with ok=true (inside the network, then on the host port), then
+# try PUBLIC_URL through nginx: that last check only warns (nginx/certbot may not be set up yet).
 wait_health() {
     limit=${1:-120}
     say "waiting for the web app to report healthy (up to ${limit}s)"
@@ -52,22 +53,19 @@ wait_health() {
         sleep 3
     done
     say "web is healthy inside the network"
-    url=$(env_value PUBLIC_URL)
-    if [ -n "$url" ] && command -v curl >/dev/null 2>&1; then
+    if command -v curl >/dev/null 2>&1; then
+        port=$(env_value WEB_PORT); port=${port:-8020}
+        body=$(curl -fsS --max-time 10 "http://127.0.0.1:$port/api/health" 2>/dev/null) || { warn "http://127.0.0.1:$port/api/health does not answer on the host"; return 1; }
+        say "host port: http://127.0.0.1:$port/api/health -> $body"
+        url=$(env_value PUBLIC_URL)
         k=""
         [ "${CURL_INSECURE:-0}" = 1 ] && k="-k"
-        t=0
         # shellcheck disable=SC2086
-        until body=$(curl -fsS $k --max-time 10 "$url/api/health" 2>/dev/null); do
-            t=$((t + 5))
-            if [ "$t" -ge "$limit" ]; then
-                warn "$url/api/health is not reachable through Caddy yet (certificate still being issued? firewall?)"
-                dc logs --tail 20 caddy >&2 || true
-                return 1
-            fi
-            sleep 5
-        done
-        say "through Caddy: $url/api/health -> $body"
+        if [ -n "$url" ] && body=$(curl -fsS $k --max-time 10 "$url/api/health" 2>/dev/null); then
+            say "public: $url/api/health -> $body"
+        else
+            warn "$url/api/health is not reachable yet (nginx site / certificate not set up? see deploy/README.md)"
+        fi
     fi
     return 0
 }

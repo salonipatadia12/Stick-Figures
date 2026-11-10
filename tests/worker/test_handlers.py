@@ -80,7 +80,7 @@ class RenderHandlerTest(HandlerBase, unittest.TestCase):
             self.assertIn('state/jobs/1/files', f['path'])
         self.assertEqual(o.result['duration'], 44.0)
         self.assertIs(o.result['qa_pass'], True)
-        self.assertEqual(o.result['qa_summary'], 'QA passed (2 checks)')
+        self.assertEqual(o.result['qa_summary'], dict(duration=True, captions=True, all=True))
         self.assertTrue(json.loads((self.repo / 'episodes' / SLUG / 'episode.json').read_text()))
         stages = [r[0] for r in self.reports]
         self.assertIn('shots', stages)
@@ -89,8 +89,12 @@ class RenderHandlerTest(HandlerBase, unittest.TestCase):
     def test_qa_fail_and_top_level_all(self):
         o = handlers.render(self.ctx(job(1), self.fake_render(dict(summary=dict(captions=False, hook=True, all=False)))))
         self.assertIs(o.result['qa_pass'], False)
-        self.assertEqual(o.result['qa_summary'], 'QA failed: captions (1/2 passed)')
+        self.assertEqual(o.result['qa_summary'], dict(captions=False, hook=True, all=False))
         self.assertIs(handlers.qa_pass(dict(all=True)), True)
+        # no summary block: derived from the top-level booleans, or from per-check pass_ flags
+        self.assertEqual(handlers.qa_summary(dict(duration=True, words=False, video='x.mp4')), dict(duration=True, words=False, all=False))
+        self.assertEqual(handlers.qa_summary(dict(duration=dict(pass_=True), hook=dict(pass_=True))), dict(duration=True, hook=True, all=True))
+        self.assertIs(handlers.qa_pass({}), False)
 
     def test_render_failure_raises(self):
         with self.assertRaises(JobError) as e:

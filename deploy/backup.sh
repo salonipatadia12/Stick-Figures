@@ -2,7 +2,9 @@
 # Back up the database and the episode/output files:
 #   sh deploy/backup.sh
 # Writes /srv/stick/backups/<UTC time>/{db.dump, data.tar.gz, commit} (mode 700), keeps the newest $KEEP (7)
-# (SKIP_PRUNE=1 keeps all) and prints the sizes. Restore: deploy/rollback.sh --restore-db <time> [--restore-data <time>] (deploy/README.md).
+# (SKIP_PRUNE=1 keeps all) and prints the sizes. KEEP_OUTPUTS=N (default 0 = keep all) then keeps only the N most
+# recently written /data/outputs/<slug>/ folders on the VPS (the older videos stay only in the backups, which rotate
+# too, and their download links on the site stop working; the Mac keeps its own renders/sample/ copy). Restore: deploy/rollback.sh --restore-db <time> [--restore-data <time>] (deploy/README.md).
 # Cron (daily 03:30): 30 3 * * * cd /srv/stick/app && sh deploy/backup.sh >> /srv/stick/backups/backup.log 2>&1
 set -eu
 . "$(dirname -- "$0")/lib.sh"
@@ -32,6 +34,14 @@ cat "$STICK_HOME/current" > "$dir/deploy" 2>/dev/null || true
 
 say "sizes"
 du -sh "$dir/db.dump" "$dir/data.tar.gz" | sed 's/^/    /'
+
+keep_outputs=${KEEP_OUTPUTS:-0}
+case "$keep_outputs" in *[!0-9]*) die "KEEP_OUTPUTS must be a number" ;; esac
+if [ "$keep_outputs" -gt 0 ]; then
+    say "outputs retention: keeping the newest $keep_outputs video folders in /data/outputs (all are in this backup)"
+    prune='cd /data/outputs && ls -1t | tail -n +$((KEEP_OUTPUTS + 1)) | while read -r d; do case "$d" in *[!a-z0-9-]*|"") continue ;; esac; [ -d "$d" ] && echo "removing outputs/$d" && rm -rf -- "$d"; done; true'
+    dc exec -T -e KEEP_OUTPUTS="$keep_outputs" web sh -c "$prune" | sed 's/^/    /'
+fi
 
 if [ "${SKIP_PRUNE:-0}" = 1 ]; then
     say "done: $stamp (old backups not pruned)"

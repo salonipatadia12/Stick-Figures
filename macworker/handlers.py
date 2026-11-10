@@ -206,20 +206,23 @@ def _emit(ctx: Ctx, update):
 RENDER_FILES = (('{slug}.mp4', 'mp4'), ('{slug}.srt', 'srt'), ('qa.json', 'qa'), ('contact_sheet.jpg', 'contact_sheet'))
 
 
+def qa_summary(qa: dict) -> dict:
+    """{check: bool, ..., all: bool}: qa.json['summary'] when present, else its top-level booleans."""
+    s = qa.get('summary')
+    if isinstance(s, dict) and s:
+        out = dict(s)
+    else:
+        out = {k: v for k, v in qa.items() if isinstance(v, bool) and k != 'all'}
+        if not out:                               # e.g. {"duration": {"pass_": true}, ...}
+            out = {k: bool(v['pass_']) for k, v in qa.items() if isinstance(v, dict) and isinstance(v.get('pass_'), bool)}
+    if not isinstance(out.get('all'), bool):
+        out['all'] = qa['all'] if isinstance(qa.get('all'), bool) else (bool(out) and all(v for v in out.values() if isinstance(v, bool)))
+    return out
+
+
 def qa_pass(qa: dict) -> bool:
-    """The contract's `qa.json['all']`; the pipeline writes it as qa.json['summary']['all']."""
-    if 'all' in qa:
-        return bool(qa['all'])
-    return bool((qa.get('summary') or {}).get('all'))
-
-
-def qa_summary(qa: dict) -> str:
-    s = qa.get('summary') or {}
-    checks = {k: v for k, v in s.items() if k != 'all'}
-    bad = [k for k, v in checks.items() if not v]
-    if not checks:
-        return 'QA ran (no summary)'
-    return f'QA passed ({len(checks)} checks)' if not bad else f'QA failed: {", ".join(bad)} ({len(checks) - len(bad)}/{len(checks)} passed)'
+    """The contract's qa.json['all']; the pipeline writes it as qa.json['summary']['all']."""
+    return bool(qa_summary(qa)['all'])
 
 
 def render(ctx: Ctx) -> Outcome:
@@ -249,7 +252,8 @@ def render(ctx: Ctx) -> Outcome:
     if duration is None:
         duration = (read_json(out_dir / 'timeline.json', {}) or {}).get('duration')
     ctx.report('upload', 96, 'uploading the video')
-    return Outcome(dict(duration=duration, qa_pass=qa_pass(qa), qa_summary=qa_summary(qa), qa_checks=qa.get('summary') or {}), files)
+    summary = qa_summary(qa)
+    return Outcome(dict(duration=duration, qa_pass=bool(summary['all']), qa_summary=summary), files)
 
 
 HANDLERS = dict(paint=paint, render=render)

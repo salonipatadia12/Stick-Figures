@@ -1,13 +1,27 @@
 #!/bin/sh
-# First install on the VPS (idempotent: safe to run again). Run from the checkout, as the deploy user:
-#   sh deploy/install.sh
-# It checks Docker and Compose (installs nothing), creates the /srv/stick layout, requires /srv/stick/.env with
-# mode 600, pulls/builds the images, starts the stack, waits for health and runs the smoke test if present.
-# It never prints secret values and never stops anything it did not start.
+# First install on the VPS (idempotent: safe to run again). Run from the checkout /srv/stick/app, as the
+# deploy user:
+#   sh deploy/install.sh                  # the stack; PRINTS the nginx + certbot commands, changes no nginx file
+#   sh deploy/install.sh --apply-nginx    # also installs the nginx site and runs certbot (after the user's OK)
+# It checks Docker and Compose (installs nothing), creates /srv/stick, requires /srv/stick/.env with mode 600,
+# pulls/builds the images, starts the `stick` project, waits for health and runs the smoke test if present.
+# It never prints secret values and never touches other projects, containers, sites or Docker data.
 set -eu
 . "$(dirname -- "$0")/lib.sh"
 
-say "1/7 Docker"
+apply_nginx=0
+for a in "$@"; do
+    case "$a" in
+        --apply-nginx) apply_nginx=1 ;;
+        -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+        *) die "unknown option $a (see --help)" ;;
+    esac
+done
+NGINX_CONF_SRC=$REPO_DIR/deploy/nginx/stick.conf
+NGINX_SITE=${NGINX_SITE:-/etc/nginx/sites-available/stick.conf}
+NGINX_LINK=${NGINX_LINK:-/etc/nginx/sites-enabled/stick.conf}
+
+say "1/8 Docker"
 if ! command -v docker >/dev/null 2>&1; then
     cat <<'EOF'
 Docker is not installed. Nothing was changed. To install it (Ubuntu/Debian), review and run:
@@ -27,9 +41,9 @@ EOF
     exit 1
 fi
 docker info >/dev/null 2>&1 || die "the Docker daemon is not reachable for $(id -un) (is it running? is $(id -un) in the docker group?)"
-say "docker $(docker version --format '{{.Server.Version}}'), $(docker compose version --short 2>/dev/null || docker compose version)"
+say "docker $(docker version --format '{{.Server.Version}}'), compose $(docker compose version --short 2>/dev/null || echo '?')"
 
-say "2/7 layout under $STICK_HOME"
+say "2/8 layout under $STICK_HOME"
 for d in "$STICK_HOME" "$BACKUPS"; do
     if [ ! -d "$d" ]; then
         if ! mkdir -p "$d" 2>/dev/null; then
@@ -45,7 +59,7 @@ EOF
 done
 chmod 700 "$BACKUPS" 2>/dev/null || true
 
-say "3/7 env file $ENV_FILE"
+say "3/8 env file $ENV_FILE"
 if [ ! -f "$ENV_FILE" ]; then
     cat <<EOF
 $ENV_FILE does not exist. Create it from the example (then fill in the values; see deploy/README.md):
@@ -69,36 +83,76 @@ if grep -Eq '^[[:space:]]*APP_PASSWORD_HASH[[:space:]]*=[[:space:]]*scrypt' "$EN
 fi
 say "env file ok (mode $mode; values not shown)"
 
-say "4/7 ports"
-http_port=$(env_value CADDY_HTTP_PORT); http_port=${http_port:-80}
-https_port=$(env_value CADDY_HTTPS_PORT); https_port=${https_port:-443}
-ours=$(dc ps -q caddy 2>/dev/null || true)
-for p in "$http_port" "$https_port"; do
-    busy=""
-    if command -v ss >/dev/null 2>&1; then
-        busy=$(ss -ltnH "sport = :$p" 2>/dev/null || true)
-    elif command -v lsof >/dev/null 2>&1; then
-        busy=$(lsof -nP -iTCP:"$p" -sTCP:LISTEN 2>/dev/null || true)
-    fi
-    if [ -n "$busy" ] && [ -z "$ours" ]; then
-        die "port $p is already used by another service on this host. Nothing was changed. Set CADDY_HTTP_PORT / CADDY_HTTPS_PORT in $ENV_FILE (see deploy/README.md, 'Ports')."
-    fi
-done
-say "ports $http_port/$https_port are free (or already ours)"
+say "4/8 port"
+web_port=$(env_value WEB_PORT); web_port=${web_port:-8020}
+ours=$(dc ps -q web 2>/dev/null || true)
+busy=""
+if command -v ss >/dev/null 2>&1; then
+    busy=$(ss -ltnH "sport = :$web_port" 2>/dev/null || true)
+elif command -v lsof >/dev/null 2>&1; then
+    busy=$(lsof -nP -iTCP:"$web_port" -sTCP:LISTEN 2>/dev/null || true)
+fi
+if [ -n "$busy" ] && [ -z "$ours" ]; then
+    die "port $web_port is already used by another service. Nothing was changed. Set WEB_PORT in $ENV_FILE and the same port in deploy/nginx/stick.conf."
+fi
+say "127.0.0.1:$web_port is free (or already ours)"
 
-say "5/7 images"
-dc pull --quiet caddy postgres
+say "5/8 images"
+dc pull --quiet postgres
 tag=$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo local)
 export STICK_IMAGE_TAG="$tag"
 dc build web
 docker image ls "stick-web:$tag" --format 'built stick-web:{{.Tag}} ({{.Size}})'
 
-say "6/7 start"
-dc up -d --remove-orphans
-wait_health 180 || die "the stack did not become healthy; see 'docker compose logs' (nothing else was changed)"
+say "6/8 start (project stick: web, runner, postgres)"
+dc up -d --remove-orphans web runner postgres
+wait_health 180 || die "the stack did not become healthy; see: docker compose -p stick logs (nothing else was changed)"
 record_deploy "$(git -C "$REPO_DIR" describe --tags --exact-match 2>/dev/null || git -C "$REPO_DIR" rev-parse --short HEAD)" "$tag"
 
-say "7/7 smoke test"
+say "7/8 nginx site + certificate"
+host=$(env_value PUBLIC_URL | sed 's#^https\{0,1\}://##; s#[:/].*$##')
+sudo_=""
+[ "$(id -u)" = 0 ] || sudo_="sudo "
+nginx_cmds="${sudo_}install -m 644 $NGINX_CONF_SRC $NGINX_SITE
+${sudo_}ln -sfn $NGINX_SITE $NGINX_LINK
+${sudo_}nginx -t
+${sudo_}systemctl reload nginx
+${sudo_}certbot --nginx -d $host --redirect --non-interactive --keep-until-expiring
+${sudo_}nginx -t
+${sudo_}systemctl reload nginx"
+if grep -q "server_name $host;" "$NGINX_CONF_SRC"; then :; else
+    warn "deploy/nginx/stick.conf has a different server_name than PUBLIC_URL's host ($host); edit it first"
+fi
+if [ "$apply_nginx" != 1 ]; then
+    say "NOT applied (needs the user's OK). To add the site and its certificate, review and run:"
+    printf '%s\n' "$nginx_cmds" | sed 's/^/    /'
+    say "or run: sh deploy/install.sh --apply-nginx"
+else
+    if [ -f "$NGINX_SITE" ] && ! cmp -s "$NGINX_CONF_SRC" "$NGINX_SITE"; then
+        if grep -q 'managed by Certbot' "$NGINX_SITE"; then
+            say "$NGINX_SITE already has certbot's TLS lines; kept as is (diff it by hand to change it)"
+            nginx_cmds=$(printf '%s\n' "$nginx_cmds" | sed '1d')
+        else
+            say "backing up the existing $NGINX_SITE"
+            ${sudo_}cp "$NGINX_SITE" "$NGINX_SITE.bak-$(timestamp)"
+        fi
+    fi
+    while read -r cmd; do
+        say "$cmd"
+        if ! sh -c "$cmd"; then
+            warn "failed: $cmd"
+            say "removing our site link so a later nginx reload (e.g. another site's renewal) is not blocked"
+            ${sudo_}rm -f "$NGINX_LINK"
+            ${sudo_}nginx -t >/dev/null 2>&1 && ${sudo_}systemctl reload nginx || true
+            die "nginx keeps serving the other sites; fix the problem and run again"
+        fi
+    done <<NGINX_CMDS
+$nginx_cmds
+NGINX_CMDS
+    wait_health 60 || true
+fi
+
+say "8/8 smoke test"
 run_smoke_test
 dc ps
-say "installed. Next: deploy/firewall.sh (prints the rules), deploy/backup.sh (add it to cron), deploy/README.md"
+say "installed. Next: deploy/firewall.sh (prints the rules), deploy/backup.sh in cron, deploy/README.md"

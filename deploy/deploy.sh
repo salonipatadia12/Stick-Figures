@@ -34,7 +34,7 @@ say "tagged $tag (local tag on the VPS checkout; not pushed)"
 export STICK_IMAGE_TAG="$after"
 say "building stick-web:$STICK_IMAGE_TAG"
 dc build web
-dc pull --quiet caddy postgres
+dc pull --quiet postgres
 say "starting"
 dc up -d --remove-orphans
 if ! wait_health 180; then
