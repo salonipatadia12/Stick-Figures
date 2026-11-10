@@ -891,8 +891,10 @@ class Episode(Strict):
                 return
             if not sh.insert.key or not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.insert.key):
                 err(where, f'insert key "{sh.insert.key}" must be kebab-case')
-            if PEOPLE.search(sh.insert.scene):
-                warn(where, f'insert scene mentions people ("{PEOPLE.search(sh.insert.scene).group(0)}"): inserts are painted with '
+            unpeopled = re.sub(r'\b(no|without|empty of|free of)\s+(\w+\s+)?(people|person|figures?|crowds?|characters?)\b', '',
+                               sh.insert.scene, flags=re.I)        # "no people" is what the painter is told anyway
+            if PEOPLE.search(unpeopled):
+                warn(where, f'insert scene mentions people ("{PEOPLE.search(unpeopled).group(0)}"): inserts are painted with '
                             'no characters. Suggest: show the place, the thing or signs of people (smoke from a chimney, a cart)')
             if len(sh.insert.effects) > MAX_EFFECTS:
                 err(where, f'{len(sh.insert.effects)} insert effects; at most {MAX_EFFECTS}')
