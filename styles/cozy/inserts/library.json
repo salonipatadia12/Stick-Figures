@@ -418,5 +418,133 @@
   },
   "made": "2026-11-09",
   "episode": "why-you-forget-why-you-walked-into-a-room"
+ },
+ "honey-jar-sunlit-counter": {
+  "scene": "A golden honey jar with a wooden dipper on a sunlit kitchen counter, fruit bowl behind it, warm morning light and drifting dust motes.",
+  "source": "renders/inserts/flux/scene-honey-jar-sunlit-counter-s438.png",
+  "file": "styles/cozy/inserts/honey-jar-sunlit-counter.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A golden honey jar with a wooden dipper on a sunlit kitchen counter, fruit bowl behind it, warm morning light and drifting dust motes. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0513,
+   "contrast": 69.7,
+   "mean": 153.5
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-three-suspects-table": {
+  "scene": "A wooden kitchen table in warm afternoon light with three small objects in a row: a brown dropper bottle, a halved lemon and an empty drinking glass.",
+  "source": "renders/inserts/flux/scene-honey-three-suspects-table-s628.png",
+  "file": "styles/cozy/inserts/honey-three-suspects-table.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A wooden kitchen table in warm afternoon light with three small objects in a row: a brown dropper bottle, a halved lemon and an empty drinking glass. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0605,
+   "contrast": 64.4,
+   "mean": 157.2
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-dipper-sparks-closeup": {
+  "scene": "Close-up of thick golden honey dripping from a wooden dipper into a jar, tiny glowing sparks in the honey, warm backlight.",
+  "source": "renders/inserts/flux/scene-honey-dipper-sparks-closeup-s750.png",
+  "file": "styles/cozy/inserts/honey-dipper-sparks-closeup.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close-up of thick golden honey dripping from a wooden dipper into a jar, tiny glowing sparks in the honey, warm backlight. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0609,
+   "contrast": 58.9,
+   "mean": 158.6
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-sugar-close-up": {
+  "scene": "a close view of honey with amber sugar crystals glinting and one tiny water drop beside the jar, warm light",
+  "source": "renders/inserts/flux/scene-honey-sugar-close-up-s692.png",
+  "file": "styles/cozy/inserts/honey-sugar-close-up.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a close view of honey with amber sugar crystals glinting and one tiny water drop beside the jar, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0516,
+   "contrast": 53.7,
+   "mean": 176.6
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-peroxide-sparks-bet": {
+  "scene": "A honey jar with glowing spark shapes floating above it on a sunlit counter, warm light.",
+  "source": "renders/inserts/flux/scene-honey-peroxide-sparks-bet-s521.png",
+  "file": "styles/cozy/inserts/honey-peroxide-sparks-bet.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A honey jar with glowing spark shapes floating above it on a sunlit counter, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0411,
+   "contrast": 62.9,
+   "mean": 157.6
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-ph-strip-counter": {
+  "scene": "A honey jar on a sunlit counter beside a paper test strip with an orange-to-yellow colour gradient, no text, warm light.",
+  "source": "renders/inserts/flux/scene-honey-ph-strip-counter-s228.png",
+  "file": "styles/cozy/inserts/honey-ph-strip-counter.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A honey jar on a sunlit counter beside a paper test strip with an orange-to-yellow colour gradient, no text, warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0399,
+   "contrast": 49.1,
+   "mean": 171.4
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "honey-jar-window-glow": {
+  "scene": "A honey jar on a window sill in golden window light, one thin drop catching the sun, warm kitchen behind.",
+  "source": "renders/inserts/flux/scene-honey-jar-window-glow-s104.png",
+  "file": "styles/cozy/inserts/honey-jar-window-glow.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A honey jar on a window sill in golden window light, one thin drop catching the sun, warm kitchen behind. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0525,
+   "contrast": 58.3,
+   "mean": 123.2
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "germ-cell-shrivel-in-honey": {
+  "scene": "A close painted view of a golden honey surface with a small round pale cell beside glinting amber sugar crystals, soft warm light.",
+  "source": "renders/inserts/flux/scene-germ-cell-shrivel-in-honey-r2-s1550.png",
+  "file": "styles/cozy/inserts/germ-cell-shrivel-in-honey.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A close painted view of a golden honey surface. In the centre, resting on the honey, one plump round pale green cell the size of a coin, with a soft dark outline and a small darker dot inside, clearly visible. Glinting amber sugar crystals around it, soft warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0505,
+   "contrast": 46.0,
+   "mean": 162.7
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils",
+  "round": 2
+ },
+ "germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled": {
+  "scene": "the cell shrunken and wrinkled",
+  "source": "renders/inserts/flux/scene-germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled-r2-s1106.png",
+  "file": "styles/cozy/inserts/germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the pale green cell in the centre is now shrivelled, wrinkled and shrunk to half its size, dull and deflated; everything else unchanged. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "germ-cell-shrivel-in-honey",
+  "qa": {
+   "edges": 0.0442,
+   "contrast": 46.8,
+   "mean": 161.0
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils",
+  "round": 2
  }
 }

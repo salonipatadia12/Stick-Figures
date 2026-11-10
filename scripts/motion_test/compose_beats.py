@@ -118,6 +118,17 @@ def word_time(T: dict, anchor: str, default: float) -> float:
     return T.get(first, default)
 
 
+def same_text(text: str) -> str:
+    return ' '.join(re.findall(r'[a-z0-9.]+', (text or '').lower()))
+
+
+def held_width(entry: dict, sprite) -> float:
+    """A held prop's width in head diameters: 1.5x the library width (at least 0.6), but a long thin thing (a test strip,
+    a pencil) keeps its long side near one head so it reads as hand-sized, not a sign board."""
+    w, h = sprite.size
+    return min(max(0.6, 1.5 * entry.get('width', 0.4)), 1.1 * w / max(w, h, 1))
+
+
 def text_items(spec: dict, tw) -> list:
     """(kind, time, payload) for the on-screen text a beat's motion recipes ask for."""
     out = []
@@ -131,6 +142,9 @@ def text_items(spec: dict, tw) -> list:
         elif r == 'checklist_tick' and detail:
             out.append(('checklist', at, [s.strip() for s in detail.split('|') if s.strip()]))
         elif r == 'split_compare' and '|' in detail:
+            sp = spec['shot'].get('split') if spec['shot'].get('visual') == 'split' else None
+            if sp and sp.get('labels'):                 # a split screen already labels its halves: no second pair
+                continue
             out.append(('split', at, [s.strip() for s in detail.split('|', 1)]))
         elif r == 'underline_draw':
             out.append((r, at, detail))
@@ -799,7 +813,7 @@ class HostLayer:
             entry = find_prop(cue['holds'], prop_library())
             if entry and (ROOT / entry['sprite']).exists():
                 spr = Image.open(ROOT / entry['sprite']).convert('RGBA')
-                self.held = Held(spr, (spr.width * 0.5, spr.height * 0.62), max(0.6, 1.5 * entry.get('width', 0.4)))
+                self.held = Held(spr, (spr.width * 0.5, spr.height * 0.62), held_width(entry, spr))
             else:
                 self.note = f'host holds "{cue["holds"]}": not in the props library (stick props --generate)'
         self.cut_at = word_time(T, cue.get('cut_on', ''), None) if cue.get('cut_on') else None
@@ -1028,7 +1042,10 @@ class InsertShot(VisualShot):
         ins = self.spec['shot']['insert']
         effects = []
         from pipeline.rig.inserts import settle_effects
+        said = same_text(self.spec.get('on_screen_text', ''))
         for k, e in enumerate(ins.get('effects', [])):
+            if e['kind'] == 'label' and said and same_text(e.get('detail', '')) == said:
+                continue                                # the on-screen text already says it: never the same words twice
             at = self.tw(e['anchor']) if e.get('anchor') else None
             effects.append(Effect(e['kind'], at, e.get('at', ''), e.get('detail', ''), seed=11 + k))
         settle_effects(effects, self.t0, self.t1)
@@ -1161,7 +1178,8 @@ class SplitShot(VisualShot):
             if g < 0.999:
                 im = im.resize((max(1, int(im.width * g)), max(1, int(im.height * g))), Image.BICUBIC)
             y = (seam - 40 - im.height if k == 0 else seam + 40) if q > 0 else 0.55 * H
-            xy = (int(W - 90 - im.width), int(y))
+            y = min(y, int(H * 0.75) - im.height)            # above the safe bottom while the seam wipes up
+            xy = (int(W - 150 - im.width), int(y))          # inside the safe area (the app's buttons sit on the right)
             frame.alpha_composite(im, xy)
             if g > 0.9:
                 O.note_text(label, 64, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))

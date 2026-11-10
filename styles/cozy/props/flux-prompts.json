@@ -236,5 +236,61 @@
     "model": "mflux-community/flux2-klein-4b-mflux-q8",
     "licence": "apache-2.0",
     "steps": 4
+  },
+  "prop-magnifying glass": {
+    "prompt": "A single magnifying glass, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      335,
+      336
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-honey jar": {
+    "prompt": "A single honey jar, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      296,
+      297
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-lineup tokens": {
+    "prompt": "A single lineup tokens, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      745,
+      746
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-test strip": {
+    "prompt": "A single test strip, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      442,
+      443
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
   }
 }

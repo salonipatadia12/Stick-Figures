@@ -268,7 +268,11 @@ def promised_texts(episode: dict) -> list:
         ost = (b.get('on_screen_text') or '').strip()
         if ost and (recipes & {'text_slam'} or not recipes & {'number_counter', 'split_compare', 'checklist_tick'}):
             out.append(dict(beat=b['id'], text=ost))
+        split_labels = [x for x in ((sh.get('split') or {}).get('labels') or []) if x] if sh.get('visual') == 'split' else []
+        out += [dict(beat=b['id'], text=x) for x in split_labels]
         for m in sh.get('motion', []):
+            if m['recipe'] == 'split_compare' and split_labels:
+                continue                     # the composer shows the split's own labels instead of a second pair
             if m['recipe'] in ('split_compare', 'checklist_tick') and m.get('detail'):
                 out += [dict(beat=b['id'], text=x.strip()) for x in m['detail'].split('|') if x.strip()]
         g = sh.get('graphic') or {}

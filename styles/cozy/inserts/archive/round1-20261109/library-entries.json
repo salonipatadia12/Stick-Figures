@@ -1,0 +1,30 @@
+{
+ "germ-cell-shrivel-in-honey": {
+  "scene": "A close painted view of a golden honey surface with a small round pale cell beside glinting amber sugar crystals, soft warm light.",
+  "source": "renders/inserts/flux/scene-germ-cell-shrivel-in-honey-s550.png",
+  "file": "styles/cozy/inserts/germ-cell-shrivel-in-honey.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: A close painted view of a golden honey surface with a small round pale cell beside glinting amber sugar crystals, soft warm light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0727,
+   "contrast": 42.2,
+   "mean": 174.5
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ },
+ "germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled": {
+  "scene": "the cell shrunken and wrinkled",
+  "source": "renders/inserts/flux/scene-germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled-s107.png",
+  "file": "styles/cozy/inserts/germ-cell-shrivel-in-honey--the-cell-shrunken-and-wrinkled.png",
+  "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the cell shrunken and wrinkled. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+  "base": "germ-cell-shrivel-in-honey",
+  "qa": {
+   "edges": 0.0707,
+   "contrast": 41.7,
+   "mean": 177.5
+  },
+  "made": "2026-11-09",
+  "episode": "why-honey-never-spoils"
+ }
+}

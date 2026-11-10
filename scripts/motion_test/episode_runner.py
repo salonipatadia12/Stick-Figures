@@ -222,7 +222,7 @@ class Runner:
                                                           keep_clear=[d['box'] for d in drawn if 'box' in d])))
             logged = [b for b in O.take_box_log() if b['kind'] == 'character']
             chars = [b['box'] for b in logged]
-            host = [{k: b[k] for k in ('box', 'pop_in', 'in_frame', 'body_rgb')} for b in logged if b.get('host')]
+            host = [{k: b[k] for k in ('box', 'pop_in', 'crop_ok', 'in_frame', 'body_rgb') if k in b} for b in logged if b.get('host')]
             if drawn:
                 texts.append(dict(t=round(t, 3), **text_summary(drawn), chars=chars, host=host))
             elif chars:                                 # character boxes on every frame (captions over a body are counted)

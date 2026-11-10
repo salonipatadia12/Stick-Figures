@@ -70,6 +70,30 @@ class HostFormatChecksTest(unittest.TestCase):
         self.assertFalse(hook_errors())
 
 
+class RenderTextTest(unittest.TestCase):
+    def setUp(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/motion_test'))
+
+    def test_a_split_screen_does_not_get_a_second_pair_of_labels(self):
+        from compose_beats import text_items
+        spec = dict(on_screen_text='', shot=dict(visual='split', split=dict(labels=['Prediction', 'Result']),
+                                                 motion=[dict(recipe='split_compare', anchor='', detail='My bet | The research')]))
+        self.assertEqual(text_items(spec, lambda a: 1.0), [])
+        spec['shot']['visual'] = 'insert'
+        self.assertEqual(text_items(spec, lambda a: 1.0)[0][0], 'split')
+
+    def test_a_thin_held_prop_stays_hand_sized(self):
+        from PIL import Image
+        from compose_beats import held_width
+        self.assertAlmostEqual(held_width(dict(width=0.4), Image.new('RGBA', (93, 339))), 1.1 * 93 / 339)
+        self.assertAlmostEqual(held_width(dict(width=0.4), Image.new('RGBA', (197, 267))), 0.6, places=6)   # a jar is unchanged
+
+    def test_label_text_equal_to_the_on_screen_text_is_the_same_text(self):
+        from compose_beats import same_text
+        self.assertEqual(same_text('pH 3.2 to 4.5'), same_text('PH 3.2 TO 4.5!'))
+
+
 class RotationTest(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.TemporaryDirectory()

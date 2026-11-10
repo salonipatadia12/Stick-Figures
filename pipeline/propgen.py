@@ -115,7 +115,7 @@ def check(sprite: Image.Image, canvas: int = 512) -> dict:
     reasons = []
     cover = a.mean() if a.size else 0.0
     w, h = sprite.size
-    if w < 100 or h < 100:
+    if max(w, h) < 100 or min(w, h) < 40:          # thin things (a test strip, a pencil) are judged on the long side
         reasons.append(f'too small ({w}x{h} px)')
     if w > canvas * 0.96 or h > canvas * 0.96:
         reasons.append('fills the canvas: the backdrop was not separated')
