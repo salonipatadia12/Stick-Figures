@@ -429,6 +429,37 @@ def from_wire(data: dict) -> tuple[dict, list]:
     return data, notes
 
 
+STATIC_MAX_S = 2.5
+
+
+def static_gap(beat, words_per_second: float) -> tuple:
+    """(seconds, word) of the longest stretch of a beat's narration with nothing changing on screen: the cut in, every
+    word-anchored camera move, effect, split reveal, diagram item, text, counter and host/cast gesture, and the cut out.
+    Times come from word positions at the narrator's speed."""
+    words = [re.sub(r"[^\w$%'.-]", '', w).strip('.').lower() for w in beat.narration.split()]
+    sh = beat.shot
+    anchors = [m.anchor for m in sh.motion if m.anchor]
+    if sh.visual in ('insert', 'split') and sh.insert:
+        anchors += [e.anchor for e in sh.insert.effects if e.anchor]
+    if sh.visual == 'split' and sh.split:
+        anchors += list(sh.split.anchors or [])
+    if sh.visual == 'graphic' and sh.graphic:
+        anchors += list(sh.graphic.anchors or [])
+    if sh.staging:
+        anchors += [a.anchor for a in sh.staging.actions if a.anchor]
+    if sh.reaction_anchor:
+        anchors.append(sh.reaction_anchor)
+    marks = {0, len(words)}
+    for a in anchors:
+        first = re.sub(r"[^\w$%'.-]", '', a.split()[0]).strip('.').lower() if a.split() else ''
+        if first in words:
+            marks.add(words.index(first))
+    marks = sorted(marks)
+    gap, after = max(((marks[i + 1] - marks[i], words[marks[i]] if marks[i] < len(words) else '')
+                      for i in range(len(marks) - 1)), default=(0, ''))
+    return gap / words_per_second, (after if marks and gap and after and marks[0] != 0 or after else '')
+
+
 class HookOption(Strict):
     """One of three hooks the user chooses between at the script gate. Option 1 is written into beat 1; picking
     another rewrites beat 1 from these fields (flat on purpose: a nested beat made the output grammar too large)."""
@@ -709,7 +740,14 @@ class Episode(Strict):
             anchored = (any(m.recipe in ANCHORED_RECIPES for m in b.shot.motion)
                         or (b.shot.visual == 'insert' and b.shot.insert and any(e.anchor for e in b.shot.insert.effects))
                         or (b.shot.visual == 'graphic' and b.shot.graphic is not None) or bool(b.shot.reaction_anchor))
-            if seconds > 2.5 and not anchored:
+            if self.host_format and self.storyline_pick:
+                # user 2026-11-10: nothing holds static for more than 2.5 s (the longest stretch between changes)
+                gap, after = static_gap(b, words_per_second)
+                if gap > STATIC_MAX_S:      # a warning: the composer's host also acts on every clause and fills pauses
+                    warn(where, f'{gap:.1f}s with nothing changing on screen' + (f' after "{after}"' if after else '')
+                        + f' (at most {STATIC_MAX_S}s): anchor a camera move, an effect, a label or a host gesture '
+                          'on a word in that stretch')
+            elif seconds > 2.5 and not anchored:
                 warn(where, f'~{seconds:.1f}s of narration with no word-anchored change; the picture may sit static')
             if len(b.shot.cast) > MAX_CAST:
                 warn(where, f'{len(b.shot.cast)} characters in one frame; the bases hold at most {MAX_CAST}. Stage it as two shots')
@@ -879,7 +917,8 @@ class Episode(Strict):
             warn(where, f'on_screen_text "{ost}" has no text_slam to show it; the composer will slam it on the first '
                         'word it shares with the narration')
         elif ost and 'number_counter' in shows and 'text_slam' not in shows:
-            left = [w for w in ost.split() if not NUMBER.search(w)]
+            shown = ' '.join(m.detail for m in sh.motion if m.recipe == 'number_counter').lower()   # '0 -> 35 seconds'
+            left = [w for w in ost.split() if not NUMBER.search(w) and w.lower().strip('.,') not in shown]
             if left:
                 warn(where, f'the number_counter draws only its number, so "{" ".join(left)}" from on_screen_text is not '
                             'shown; use text_slam if those words matter')

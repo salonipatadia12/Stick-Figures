@@ -292,5 +292,19 @@
     "model": "mflux-community/flux2-klein-4b-mflux-q8",
     "licence": "apache-2.0",
     "steps": 4
+  },
+  "prop-lead block": {
+    "prompt": "A single lead block, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      361,
+      362
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
   }
 }

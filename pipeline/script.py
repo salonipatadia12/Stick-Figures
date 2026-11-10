@@ -138,6 +138,8 @@ Rules:
 16. HOST SCALE (user 2026-11-10: never dwarfed by a giant prop). In a close-up of objects (a jar on a counter, a
    bottle, a cell) the host is "large" or "close" (near the camera) or pops in; "small" and "medium" full-body
    placements are for places (a room, a street, a landmark). Held props are hand-sized.
+17. NOTHING STATIC (user 2026-11-10). Nothing on screen holds still for more than 2.5 seconds (about 6 narration
+   words): anchor a camera move, an effect, a label, a split reveal or a host gesture on a word in every longer stretch.
 
 Visual style of this channel:
 """

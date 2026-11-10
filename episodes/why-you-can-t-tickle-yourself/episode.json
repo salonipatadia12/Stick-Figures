@@ -551,14 +551,21 @@
               "pose": "standing"
             }
           ],
-          "actions": [],
+          "actions": [
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "less"
+            }
+          ],
           "props": []
         },
         "motion": [
           {
-            "recipe": "split_compare",
-            "anchor": "own",
-            "detail": "Own touch | Someone else's"
+            "recipe": "punch_in",
+            "anchor": "brain",
+            "detail": ""
           }
         ],
         "image_prompt": "",
@@ -631,6 +638,18 @@
               "verb": "point",
               "target": "feather on a stick",
               "anchor": "gap"
+            },
+            {
+              "who": "lead",
+              "verb": "shrug",
+              "target": "",
+              "anchor": "feel"
+            },
+            {
+              "who": "lead",
+              "verb": "gaze",
+              "target": "",
+              "anchor": "predicted"
             }
           ],
           "props": [
@@ -722,6 +741,18 @@
               "verb": "gaze",
               "target": "wall clock",
               "anchor": "delayed"
+            },
+            {
+              "who": "lead",
+              "verb": "nod",
+              "target": "",
+              "anchor": "experiment"
+            },
+            {
+              "who": "lead",
+              "verb": "shake_head",
+              "target": "",
+              "anchor": "turn"
             }
           ],
           "props": []
@@ -730,6 +761,11 @@
           {
             "recipe": "parallax",
             "anchor": "",
+            "detail": ""
+          },
+          {
+            "recipe": "punch_in",
+            "anchor": "learned",
             "detail": ""
           }
         ],
@@ -980,6 +1016,11 @@
         "at": "2026-11-09T22:33:10",
         "by": "claude",
         "what": "research reused from research-175de068421d6064.json (paid run) under the new prompt key; storylines re-pitched from reputable facts only"
+      },
+      {
+        "at": "2026-11-09T23:26:52",
+        "by": "user request (via chat), applied by claude",
+        "what": "movement so nothing holds static > 2.5 s: b06 punch-in on \"brain\" + nod on \"less\" (redundant split_compare removed); b07 shrug on \"feel\"; b08 nod on \"experiment\" + punch-in on \"learned\"; b10: the friend tickles the host (renderer, lane E); b07 gaze on \"predicted\"; b08 head shake on \"turn\""
       }
     ],
     "approval_log": [

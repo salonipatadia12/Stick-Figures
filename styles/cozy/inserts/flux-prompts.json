@@ -857,5 +857,275 @@
       1680
     ],
     "mode": "edit"
+  },
+  "scene-leaning-tower-dusk": {
+    "seeds": [
+      524,
+      525
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa at dusk, white marble tower tilting against an orange sky, green lawn, long soft shadows, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-base-closeup": {
+    "seeds": [
+      525,
+      526
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Close view of the leaning tower's marble base and lower arches rising over the lawn, warm afternoon light, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-lead-weights-north-base": {
+    "seeds": [
+      270,
+      271
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Stacked grey lead blocks on a pale concrete ring around the north side of the tower's base, afternoon sun, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-leaning-back": {
+    "seeds": [
+      486,
+      487
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa in golden afternoon light, a faint lighter echo of its outline beside it hinting at a slight sway, lawn, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-night-emergency": {
+    "seeds": [
+      148,
+      149
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa at night under harsh floodlights, dark sky, construction fencing and churned mud at its south base, tense mood, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-cable-safeguard": {
+    "seeds": [
+      100,
+      101
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa with taut cables looped around its upper tier and anchored to the ground, early dawn light, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-foundation-cutaway-north": {
+    "seeds": [
+      490,
+      491
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Cutaway cross-section of the ground beneath the leaning tower, layers of soil and clay, soil being drawn out from under one side through narrow channels, warm earthy tones, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-after-fix": {
+    "seeds": [
+      208,
+      209
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: the same tower standing slightly straighter, sunlit marble, lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-before-fix": {
+    "seeds": [
+      305,
+      306
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa leaning noticeably under a pale morning sky, lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-golden-hour": {
+    "seeds": [
+      430,
+      431
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa at golden hour, calm and warm, its tilt gentler, long shadows over the lawn, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-leaning-back--the-tower-leaning-a-touch-less": {
+    "seeds": [
+      700,
+      701
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the tower leaning a touch less. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/tower-leaning-back.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-golden-hour--the-tower-standing-a-little-straighter": {
+    "seeds": [
+      119,
+      120
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the tower standing a little straighter. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/tower-golden-hour.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-after-fix-r2": {
+    "seeds": [
+      1208,
+      1209
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The Leaning Tower of Pisa, white marble, still clearly leaning to the right, sunlit, green lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-golden-hour-r2": {
+    "seeds": [
+      1430,
+      1431
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The Leaning Tower of Pisa at golden hour, white marble, clearly leaning to the right, long soft shadows over the lawn, calm warm sky, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-tower-golden-hour--the-tower-standing-a-little-straighter-r2": {
+    "seeds": [
+      1119,
+      1120
+    ],
+    "prompt": "Edit this painting: show the very same place, from the same viewpoint, with the same composition, but the same tower leaning very slightly less than before, still clearly leaning to the right; everything else unchanged. Keep every building, hill, tree and object exactly where it is. Same painterly style. No people, no text.",
+    "images": [
+      "/Users/saloni/Desktop/Claude/Keeel/Stick_Figures/styles/cozy/inserts/tower-golden-hour.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
   }
 }

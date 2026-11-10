@@ -1,0 +1,31 @@
+{
+ "tower-before-fix": {
+  "scene": "Leaning Tower of Pisa leaning noticeably under a pale morning sky, lawn in front, no people.",
+  "source": "renders/inserts/flux/scene-tower-before-fix-s306.png",
+  "file": "styles/cozy/inserts/tower-before-fix.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: Leaning Tower of Pisa leaning noticeably under a pale morning sky, lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1097,
+   "contrast": 65.7,
+   "mean": 159.2
+  },
+  "made": "2026-11-09",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa"
+ },
+ "tower-after-fix": {
+  "scene": "the same tower standing slightly straighter, sunlit marble, lawn in front, no people",
+  "source": "renders/inserts/flux/scene-tower-after-fix-r2-s1209.png",
+  "file": "styles/cozy/inserts/tower-after-fix.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: The Leaning Tower of Pisa, white marble, still clearly leaning to the right, sunlit, green lawn in front, no people. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1311,
+   "contrast": 60.7,
+   "mean": 164.7
+  },
+  "made": "2026-11-09",
+  "episode": "how-engineers-saved-the-leaning-tower-of-pisa",
+  "round": 2
+ }
+}
