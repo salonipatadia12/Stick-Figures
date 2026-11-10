@@ -119,7 +119,8 @@ class Proc:
 
 
 def worker_cmd(server, token, *flags, journal=None):
-    cmd = [PYTHON, str(FAKE_WORKER), '--server', server, '--token', token, '--poll', '0.3', *flags]
+    # --token=VALUE, not two words: a token_urlsafe token can start with '-', which argparse reads as an option
+    cmd = [PYTHON, str(FAKE_WORKER), '--server', server, f'--token={token}', '--poll', '0.3', *flags]
     if journal:
         cmd += ['--journal', str(journal)]
     return cmd

@@ -380,8 +380,16 @@ class FakeFlowTest(FakeModeCase):
         self.assertIs(health['ok'], True)
         self.assertTrue(health['db'])
         self.assertEqual({'online', 'last_seen', 'busy'} - set(health['worker']), set())
-        stack.worker()
-        h.wait_for(lambda: api.health()['worker']['online'], 15, what='worker online after a heartbeat')
+        worker = stack.worker()
+
+        def online():
+            if not worker.alive():
+                raise AssertionError(f'the fake worker exited with {worker.p.returncode}')
+            return api.health()['worker']['online']
+        try:
+            h.wait_for(online, 45, what='worker online after a heartbeat')
+        except (AssertionError, TimeoutError) as exc:
+            self.fail_with_logs(str(exc))
 
         for path in ('/', '/new'):
             r = api.get(path, headers={'User-Agent': h.PHONE_UA})
