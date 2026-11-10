@@ -264,3 +264,16 @@ class InsertRunTest(unittest.TestCase):
         self.assertNotIn('open ground', j['s']['prompt'])
         self.assertIn('no ground', j['s']['prompt'])
         self.assertIn('open ground across the lower third', j['p']['prompt'])
+
+
+class QaFalseFailTest(unittest.TestCase):
+    def test_a_possessive_heard_without_its_apostrophe_and_a_counter_with_a_word(self):
+        heard = [dict(w=w) for w in ('Mission', 'controls', 'fix')]
+        self.assertEqual(qa.words_check(['Mission', "control's", 'fix'], heard)['missing'], [])
+        frames = [dict(t=round(i / 30, 3), items=[[0, 0, 10, 10, f'{i} seconds']]) for i in range(36)]
+        self.assertEqual(qa.brief_texts(frames), [])
+
+    def test_a_pin_on_the_last_word_lands_before_the_cut(self):
+        from pipeline.rig.inserts import Effect, settle_effects
+        e = settle_effects([Effect('pin', 9.8, 'centre', 'Burn', seed=1)], 7.0, 10.0)[0]
+        self.assertLessEqual(e.at, 10.0 - O.MIN_HOLD)

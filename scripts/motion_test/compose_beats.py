@@ -954,7 +954,7 @@ class HostLayer:
         ab = (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
         in_frame = ab[0] >= 0 and ab[1] >= 0 and ab[2] <= W and ab[3] <= H
         O.note_box('character', (max(0, ab[0]), max(0, ab[1]), min(W, ab[2]), min(H, ab[3])), host=True, pop_in=pop,
-                   crop_ok=crop_ok, in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio], **self.log)
+                   crop_ok=bool(crop_ok), in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio], **self.log)
 
     log: dict = {}                                     # extra keys for the per-frame character log (the friend says who)
 

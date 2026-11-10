@@ -133,7 +133,7 @@ def words_check(script_words: list, heard: list) -> dict:
     missing, j = [], 0
     for w in script_words:
         k = norm(w)
-        alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k)}
+        alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k), k.replace("'", '')}   # control's ~ controls
         found = None
         reach = 2 if k in ('a', 'an', 'the') else 6       # a dropped article must not match one further on and skip words
         for i in range(j, min(len(h), j + reach)):
@@ -301,7 +301,7 @@ def missing_texts(text_sizes: list, promised: list) -> list:
     return [p for p in promised if _words(p['text']) and not any(_words(p['text']) <= w for w in drawn)]
 
 
-COUNTING = re.compile(r'[$€£₹¥]?[\d,.]+%?')
+COUNTING = re.compile(r"[$€£₹¥]?[\d,.]+(%| [A-Za-z' -]{1,20})?")   # 0 -> 35 seconds counts too
 BRIEF_S = 0.8       # logged (settled) seconds; a text also shows ~0.3 s while it pops in
 
 

@@ -65,15 +65,19 @@ RAMP = dict(grade=2.2, crossfade=1.4, haze=1.4, dim=1.2, sun_path=1.6, focus=1.0
 SETTLE = 0.6
 
 
+LANDS = ('label', 'arrow', 'pin', 'cross')   # effects that pop in and must be seen before the cut
+
+
 def settle_effects(effects: list, t0: float, t1: float) -> list:
     """Effects timed so the viewer sees them land (user review 2026-11-08: the Martian sunset began on "blue-gray",
     1.2 s before the cut, and never got dark): a light or colour change starts early enough to finish SETTLE seconds
     before the cut; labels and arrows land overlays.MIN_HOLD before it, in order. Effects after t1 (the next shot's)
     and whole-beat ones (at None) are left alone. Idempotent."""
+    # (a pin carries its text too: a "Burn" pin on a beat's last word showed 0.13 s, Apollo 13 2026-11-10)
     for e in effects:
         if e.at is not None and e.kind in RAMP and e.at <= t1:
             e.at = max(min(e.at, t1 - SETTLE - RAMP[e.kind]), min(e.at, t0 + 0.1))
-    info = [e for e in effects if e.kind in ('label', 'arrow') and e.at is not None]
+    info = [e for e in effects if e.kind in LANDS and e.at is not None]
     for e, at in zip(info, O.settle([e.at for e in info], t0, t1)):
         e.at = at
     return effects
