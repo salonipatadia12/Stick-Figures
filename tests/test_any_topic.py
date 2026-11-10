@@ -140,6 +140,18 @@ class PropsStepTest(unittest.TestCase):
         self.assertEqual(need['brass trumpet']['beats'], ['b01'])
         self.assertEqual(propgen.needed(ep, lib={'brass trumpet': dict(sprite='x.png')}), {})
 
+    def test_needed_skips_unheld_props_on_painted_shots(self):
+        # the composer draws staging props only on character shots; on an insert only what someone holds is drawn
+        # (a finance script stopped on a coin jar and a statement that its painted inserts already showed)
+        from pipeline.models import Beat, Episode
+        from pipeline_fixtures import beat, staging
+        st = staging(('lead',), 'cafe', 'standing', props=(('coin jar', '', 'table'), ('brass trumpet', 'lead', 'left hand')))
+        d = beat('problem', 'A jar of coins and a trumpet.', 'Coins in a jar.', [('push_in', '', '')], stage=st)
+        d['shot']['visual'] = 'insert'
+        d['shot']['insert'] = dict(key='coin-jar-table', scene='a jar of coins on a table', effects=[])
+        ep = Episode(slug='t', topic='A jar test', beats=[Beat.model_validate(dict(id='b01', **d))])
+        self.assertEqual(list(propgen.needed(ep, lib={})), ['brass trumpet'])
+
     def test_jobs_are_text_to_image_at_512_with_two_seeds(self):
         j = propgen.jobs({'brass trumpet': dict(name='brass trumpet', beats=['b01'])})
         self.assertEqual(j['brass trumpet']['size'], 512)

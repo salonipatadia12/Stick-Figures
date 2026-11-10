@@ -404,5 +404,47 @@
     "model": "mflux-community/flux2-klein-4b-mflux-q8",
     "licence": "apache-2.0",
     "steps": 4
+  },
+  "prop-credit card": {
+    "prompt": "A single credit card, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      477,
+      478
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-coin jar": {
+    "prompt": "A single coin jar, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      174,
+      175
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-statement": {
+    "prompt": "A single statement, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      381,
+      382
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
   }
 }

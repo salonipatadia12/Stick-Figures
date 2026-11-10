@@ -3,18 +3,19 @@
 DONE = from the phone: type a topic, make the picks, download a QA-passed video; VPS + Mac worker running; all tests pass.
 
 ## Waiting for the user
-- [ ] VPS: OK for A cleanup, B firewall (+ is port 3000 public?), C SSH key-only, D deploy (nginx site + certbot, .env, compose, Mac worker)
-- [ ] Finance script review (hook pick + approval)
-- [ ] Docker Desktop on the Mac: running other projects' containers since lane C's test (quit it if unwanted)
+- [ ] One real topic end to end from the phone (https://stick.srv1747356.hstgr.cloud, user `saloni`, password in the Mac Keychain item `stick-app`)
+- [ ] Port 3000 (baileys-api): who calls it (24 h SYN capture in /root/stick-port3000-callers.log, started 2026-11-10 17:30 UTC)
+- [ ] Docker Desktop: quit once local tests are done
+
+## VPS (approved 2026-11-10: B firewall, C key-only, D deploy; A cleanup skipped)
+- [x] ufw on: 22, 80, 443, 3000; everything else was already localhost-only
+- [x] SSH key-only (/etc/ssh/sshd_config.d/01-stick-keyonly.conf); hPanel Web Console is the serial console (ttyS0, /bin/login), unaffected
+- [x] Deployed b83a3f9: bare repo /srv/stick/repo.git (push from the Mac), /srv/stick/app, .env 600, nginx site + certificate
+- [x] Smoke test 10/10 (fixed: lib.sh passed the URL as an argument; compose check by project; disk check by GB)
+- [x] Mac worker launchd agent installed, online
 
 ## A. Videos
-- [x] Pisa rendered: 51.3 s, all QA pass (over the 45 s target)
-- [x] Apollo approved (with the user's edits); tickling approved (with friend + movement)
-- [x] Apollo rendered: 47.9 s, all QA pass (space scenes repainted without ground; Aquarius no longer shown landed)
-- [x] Tickling rendered: 43.8 s, all QA pass (friend tickles the host in b10)
-- [ ] Finance: script at the gate; render after approval
-- [ ] Report which hands-off videos are postable as-is
-
-## Build (merged into pipeline-v2, 380 tests pass)
-- [x] B web app  - [x] C deploy + Mac worker  - [x] D e2e (fake) + smoke test  - [x] E friend in the host format
-- [ ] Deploy to the VPS after OK; smoke test; one real topic from the phone (real e2e)
+- [x] Apollo rendered: 47.9 s, all QA pass
+- [x] Tickling rendered: 43.8 s, all QA pass
+- [ ] Finance: approved (hook 1, b05 edit); painting, then render
+- [ ] Pisa re-render: before/after straighter, cut-away with the tower standing, one lean (5.5 deg right; after 2.5 deg), b06 trimmed

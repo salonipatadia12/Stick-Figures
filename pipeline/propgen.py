@@ -73,6 +73,8 @@ def needed(episode, lib: dict | None = None) -> dict:
                 base_props |= set(m.get('props', {})) | ({'cup'} if m.get('cups') else set())
         for p in st.props:
             key = prop_key(p.name)
+            if b.shot.visual != 'character' and not p.held_by:
+                continue          # a painted insert/split/graphic shows its own things; only held props are drawn on it
             if key in base_props or key in BUILT_IN or key in lib:
                 continue
             out.setdefault(key, dict(name=p.name, beats=[]))['beats'].append(b.id)

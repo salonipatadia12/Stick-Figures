@@ -1703,5 +1703,149 @@
       1680
     ],
     "mode": "edit"
+  },
+  "scene-kitchen-table-two-bills": {
+    "seeds": [
+      277,
+      278
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a sunlit wooden kitchen table with a green coffee cup and a small plant, warm golden morning light through a window, empty chairs. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-card-and-coin-jar-table": {
+    "seeds": [
+      159,
+      160
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: top-down view of a wooden cafe table with one credit card, a glass jar of coins and a green coffee cup at the edge, warm morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-wall-calendar-daily-marks": {
+    "seeds": [
+      466,
+      467
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with every day dotted in pencil beside a glass jar of coins on a shelf, afternoon sun through a cafe window. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-calendar-pages-few": {
+    "seeds": [
+      466,
+      467
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with only a few flipped pages beside it, same warm cafe wall. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-calendar-pages-many": {
+    "seeds": [
+      581,
+      582
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with a tall stack of flipped pages piled beneath it, warm afternoon cafe wall. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-two-coin-jars": {
+    "seeds": [
+      693,
+      694
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-credit-card-statement-closeup": {
+    "seeds": [
+      224,
+      225
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: close-up of a paper monthly credit card statement lying on a cafe table beside a green coffee cup, warm light, lines of print blurred, no readable text. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
+  },
+  "scene-two-bills-side-by-side": {
+    "seeds": [
+      121,
+      122
+    ],
+    "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+    "images": [
+      "legacy/bespoke/the-empty-chair-source/assets/01-alone.png"
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4,
+    "size": [
+      944,
+      1680
+    ],
+    "mode": "edit"
   }
 }

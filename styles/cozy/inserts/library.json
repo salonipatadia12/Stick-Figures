@@ -1032,5 +1032,117 @@
   "made": "2026-11-10",
   "episode": "why-you-can-t-tickle-yourself",
   "round": 3
+ },
+ "kitchen-table-two-bills": {
+  "scene": "a sunlit wooden kitchen table with a green coffee cup and a small plant, warm golden morning light through a window, empty chairs",
+  "source": "renders/inserts/flux/scene-kitchen-table-two-bills-s278.png",
+  "file": "styles/cozy/inserts/kitchen-table-two-bills.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a sunlit wooden kitchen table with a green coffee cup and a small plant, warm golden morning light through a window, empty chairs. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1011,
+   "contrast": 54.9,
+   "mean": 151.2
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "card-and-coin-jar-table": {
+  "scene": "top-down view of a wooden cafe table with one credit card, a glass jar of coins and a green coffee cup at the edge, warm morning light",
+  "source": "renders/inserts/flux/scene-card-and-coin-jar-table-s160.png",
+  "file": "styles/cozy/inserts/card-and-coin-jar-table.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: top-down view of a wooden cafe table with one credit card, a glass jar of coins and a green coffee cup at the edge, warm morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0921,
+   "contrast": 54.8,
+   "mean": 149.9
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "wall-calendar-daily-marks": {
+  "scene": "a wall calendar with every day dotted in pencil beside a glass jar of coins on a shelf, afternoon sun through a cafe window",
+  "source": "renders/inserts/flux/scene-wall-calendar-daily-marks-s466.png",
+  "file": "styles/cozy/inserts/wall-calendar-daily-marks.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with every day dotted in pencil beside a glass jar of coins on a shelf, afternoon sun through a cafe window. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1007,
+   "contrast": 52.7,
+   "mean": 148.1
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "calendar-pages-few": {
+  "scene": "a wall calendar with only a few flipped pages beside it, same warm cafe wall",
+  "source": "renders/inserts/flux/scene-calendar-pages-few-s466.png",
+  "file": "styles/cozy/inserts/calendar-pages-few.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with only a few flipped pages beside it, same warm cafe wall. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0741,
+   "contrast": 35.6,
+   "mean": 161.5
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "calendar-pages-many": {
+  "scene": "a wall calendar with a tall stack of flipped pages piled beneath it, warm afternoon cafe wall",
+  "source": "renders/inserts/flux/scene-calendar-pages-many-s581.png",
+  "file": "styles/cozy/inserts/calendar-pages-many.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wall calendar with a tall stack of flipped pages piled beneath it, warm afternoon cafe wall. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.124,
+   "contrast": 47.8,
+   "mean": 167.6
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "two-coin-jars": {
+  "scene": "two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light",
+  "source": "renders/inserts/flux/scene-two-coin-jars-s693.png",
+  "file": "styles/cozy/inserts/two-coin-jars.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two glass jars of coins on a wooden cafe table, left jar nearly overflowing and right jar about two-thirds full, warm window light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1003,
+   "contrast": 67.2,
+   "mean": 150.6
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "credit-card-statement-closeup": {
+  "scene": "close-up of a paper monthly credit card statement lying on a cafe table beside a green coffee cup, warm light, lines of print blurred, no readable text",
+  "source": "renders/inserts/flux/scene-credit-card-statement-closeup-s224.png",
+  "file": "styles/cozy/inserts/credit-card-statement-closeup.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: close-up of a paper monthly credit card statement lying on a cafe table beside a green coffee cup, warm light, lines of print blurred, no readable text. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0535,
+   "contrast": 63.8,
+   "mean": 148.6
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
+ },
+ "two-bills-side-by-side": {
+  "scene": "two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light",
+  "source": "renders/inserts/flux/scene-two-bills-side-by-side-s122.png",
+  "file": "styles/cozy/inserts/two-bills-side-by-side.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two paper bills side by side on a sunlit cafe table, one short and one long, green coffee cup between them, golden afternoon light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0665,
+   "contrast": 60.3,
+   "mean": 164.4
+  },
+  "made": "2026-11-10",
+  "episode": "why-paying-only-the-minimum-keeps-you-in-debt"
  }
 }
