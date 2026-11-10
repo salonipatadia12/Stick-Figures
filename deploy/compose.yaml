@@ -1,0 +1,115 @@
+# The VPS stack (docs/WEBAPP.md): web (FastAPI) + runner (light pipeline steps) + postgres + the /data volume.
+#
+# On the VPS the host's existing nginx terminates TLS (deploy/nginx/stick.conf, certbot) and proxies to `web`,
+# which is published on 127.0.0.1:${WEB_PORT:-8020} only. Nothing else is published; postgres is internal.
+# `caddy` is an optional local-dev TLS front (profile "caddy"), never started on the VPS.
+#
+# Always run it with the env file, which both feeds the containers and fills ${...} below:
+#   docker compose --env-file /srv/stick/.env -f deploy/compose.yaml up -d
+# (deploy/install.sh and deploy/deploy.sh do exactly that). Project name: stick.
+name: stick
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-app: &app
+  image: stick-web:${STICK_IMAGE_TAG:-local}
+  env_file:
+    - ${STICK_ENV_FILE:-/srv/stick/.env}
+  environment:
+    STICK_DATA_DIR: /data
+    STICK_EPISODES_DIR: /data/episodes
+    DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://stick:${POSTGRES_PASSWORD:-}@postgres:5432/stick}
+    PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL must be set in the env file}
+  volumes:
+    - data:/data
+  depends_on:
+    postgres:
+      condition: service_healthy
+  restart: unless-stopped
+  logging: *logging
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  web:
+    <<: *app
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    # exactly one uvicorn worker (the login throttle and the queue's in-process state assume one process)
+    command: ["uvicorn", "webapp.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1",
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--timeout-keep-alive", "30"]
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8020}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,sys,urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4); sys.exit(0 if json.load(r).get('ok') else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    mem_limit: 384m
+
+  runner:
+    <<: *app
+    pull_policy: never              # the image is built by `web`
+    command: ["python", "-m", "webapp.runner"]   # exactly one runner
+    healthcheck:
+      disable: true
+    mem_limit: 384m
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stick
+      POSTGRES_DB: stick
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in the env file}
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=30", "-c", "work_mem=2MB",
+              "-c", "maintenance_work_mem=16MB", "-c", "effective_cache_size=128MB", "-c", "wal_buffers=1MB"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stick -d stick"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
+    mem_limit: 256m
+    shm_size: 64m
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+
+  # Local development only: `--profile caddy` with PUBLIC_URL=https://localhost:18443,
+  # CADDY_HTTP_PORT=18080, CADDY_HTTPS_PORT=18443, CADDY_GLOBAL_OPTIONS="local_certs skip_install_trust".
+  caddy:
+    image: caddy:2.10.2-alpine
+    profiles: ["caddy"]
+    restart: unless-stopped
+    ports:
+      # same port inside and out, so a PUBLIC_URL with a port and Caddy's listener agree
+      - "127.0.0.1:${CADDY_HTTP_PORT:-18080}:${CADDY_HTTP_PORT:-18080}"
+      - "127.0.0.1:${CADDY_HTTPS_PORT:-18443}:${CADDY_HTTPS_PORT:-18443}"
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL must be set in the env file}
+      CADDY_HTTP_PORT: ${CADDY_HTTP_PORT:-18080}
+      CADDY_HTTPS_PORT: ${CADDY_HTTPS_PORT:-18443}
+      CADDY_GLOBAL_OPTIONS: ${CADDY_GLOBAL_OPTIONS:-local_certs skip_install_trust}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    mem_limit: 64m
+    logging: *logging
+
+volumes:
+  data:
+  pgdata:
+  caddy_data:
+  caddy_config:

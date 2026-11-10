@@ -1,0 +1,13 @@
+# Allow-list for deploy/Dockerfile.web (BuildKit reads <Dockerfile>.dockerignore). Everything is excluded unless
+# named below: the PNG libraries, renders, episodes, venvs, legacy, .env files and git never enter the image.
+*
+!pipeline/
+!webapp/
+!schemas/
+!styles/**/*.json
+!tests/pipeline_fixtures.py
+!deploy/requirements-web.txt
+**/__pycache__
+**/*.pyc
+**/.env
+**/.env.*
