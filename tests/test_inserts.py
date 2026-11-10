@@ -224,3 +224,35 @@ class TextTimingQaTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class InsertRunTest(unittest.TestCase):
+    def test_a_scene_that_failed_in_the_first_stage_still_draws_on_the_failed_sheet_after_the_variants(self):
+        import tempfile
+        from unittest import mock
+        from pipeline import inserts
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            files = {}
+            for name in ('a-1', 'a-2', 'v-1', 'v-2', 'ok-1', 'ok-2'):
+                files[name] = str(tmp / f'{name}.png')
+                Image.new('RGB', (90, 160), (200, 180, 150)).save(files[name])
+            want = {'a': dict(scene='scene a', beats=['b01']), 'ok': dict(scene='scene ok', beats=['b02']),
+                    'v': dict(scene='variant', beats=['b03'], base='ok')}
+            found = iter([{'a': [files['a-1'], files['a-2']], 'ok': [files['ok-1'], files['ok-2']]},
+                          {'v': [files['v-1'], files['v-2']]}])
+            verdict = lambda ps: {p: dict(path=p, ok='ok-' in p, reasons=['too dark'], score=1, stats={}) for p in ps}
+            with mock.patch.object(inserts, 'needed', return_value=want), \
+                 mock.patch.object(inserts, 'jobs', side_effect=lambda part: {k: dict(prompt='p') for k in part}), \
+                 mock.patch.object(inserts, 'render', side_effect=lambda jm, slug: next(found)), \
+                 mock.patch.object(inserts, 'qa', side_effect=verdict), \
+                 mock.patch.object(inserts, 'save_library'), \
+                 mock.patch.object(inserts, 'DIR', tmp / 'lib'), \
+                 mock.patch.object(inserts, 'ROOT', tmp), \
+                 mock.patch.object(inserts, 'sheet', wraps=inserts.sheet) as sheet:
+                (tmp / 'renders/inserts').mkdir(parents=True)
+                result = inserts.run(mock.Mock(slug='t'), generate=True, lib={})
+        self.assertEqual(set(result['failed']), {'a', 'v'})
+        self.assertEqual(set(result['made']), {'ok'})
+        self.assertTrue(result['sheet'].endswith('t-inserts-failed.jpg'))
+        self.assertEqual(sheet.call_count, 2)

@@ -163,6 +163,7 @@ def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
     if not generate or not want:
         return result
     DIR.mkdir(parents=True, exist_ok=True)
+    seen = {}                                        # QA of every stage: the failed sheet covers both stages
     for stage in ('scenes', 'variants'):             # variants are edits of scenes, so scenes go first
         part = {k: d for k, d in want.items() if bool(d.get('base')) == (stage == 'variants')
                 and (stage == 'scenes' or d['base'] in lib)}   # a variant waits for its scene to exist
@@ -171,6 +172,7 @@ def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
         jm = jobs(part)
         found = render(jm, episode.slug)
         results = qa([f for fs in found.values() for f in fs])
+        seen.update(results)
         for key, files in found.items():
             ok = [f for f in files if results[f]['ok']]
             if not ok:
@@ -186,7 +188,7 @@ def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
             result['made'][key] = str(dst.relative_to(ROOT))
         save_library(lib)
         if result['failed']:
-            result['sheet'] = str(sheet(result['failed'], results, episode.slug).relative_to(ROOT))
+            result['sheet'] = str(sheet(result['failed'], seen, episode.slug).relative_to(ROOT))
     return result
 
 

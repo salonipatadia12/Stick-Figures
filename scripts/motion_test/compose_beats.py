@@ -1033,14 +1033,15 @@ def tickle_anchors(spec: dict) -> list:
 
 def held_prop(name: str):
     """(sprite, Held anchor, width in D) for a prop the friend holds: the props library first (find_prop), else a
-    code-drawn one (a feather on a stick, a bill as a receipt). None when there is none."""
+    code-drawn one (a bill as a receipt). None when there is none. A feather is always the drawn feather on a stick:
+    the tickle's aim is built on its grip at the stick's end, and a painted feather stands upright with no stick."""
+    if 'feather' in name.lower():
+        spr = drawn.feather_stick()
+        return spr, (spr.width * drawn.FEATHER_GRIP, spr.height * 0.5), FEATHER_D
     entry = find_prop(name, prop_library())
     if entry and (ROOT / entry['sprite']).exists():
         spr = Image.open(ROOT / entry['sprite']).convert('RGBA')
         return spr, (spr.width * 0.5, spr.height * 0.62), held_width(entry, spr)
-    if 'feather' in name.lower():
-        spr = drawn.feather_stick()
-        return spr, (spr.width * drawn.FEATHER_GRIP, spr.height * 0.5), FEATHER_D
     if re.search(r'\b(bill|bills|invoice|statement|receipt)\b', name.lower()):
         spr = drawn.bill()
         return spr, (spr.width * 0.5, spr.height * 0.6), 0.55
