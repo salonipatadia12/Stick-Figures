@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<title>{% block title %}Stick Figures{% endblock %}</title>
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body {% block body_attrs %}{% endblock %}>
+<header class="top">
+  <a class="brand" href="/">Stick Figures</a>
+  {% if user %}
+  <a class="btn small primary" href="/new">New video</a>
+  <form method="post" action="/logout"><button class="btn small" type="submit">Log out</button></form>
+  {% endif %}
+</header>
+<main>
+{% if fake %}<div class="notice info small">Fake mode: Claude is simulated, nothing paid is sent.</div>{% endif %}
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

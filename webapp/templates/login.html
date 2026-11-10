@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Log in · Stick Figures{% endblock %}
+{% block content %}
+<h1>Log in</h1>
+{% if error %}<div class="notice bad" role="alert">{{ error }}</div>{% endif %}
+<form method="post" action="/login" class="card">
+  <label for="user">User name</label>
+  <input id="user" name="user" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" required>
+  <label for="password">Password</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required>
+  <p><button class="btn primary block" type="submit">Log in</button></p>
+</form>
+{% endblock %}

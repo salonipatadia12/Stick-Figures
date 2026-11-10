@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}{{ ep.topic }} · Stick Figures{% endblock %}
+{% block body_attrs %}data-slug="{{ ep.slug }}" data-state="{{ ep.state }}"{% endblock %}
+{% block content %}
+{% set job = ep.job %}
+{% set worker = ep.worker %}
+<p class="small"><a href="/">← Your videos</a></p>
+<div class="spread">
+  <span class="badge b-{{ ep.state }}">{{ ep.state_label }}</span>
+  <span class="muted small">Spent <strong data-cost>${{ '%.4f'|format(ep.cost_usd) }}</strong></span>
+</div>
+<h1>{{ ep.topic }}</h1>
+{% if ep.niche or ep.audience %}<p class="muted small">{% if ep.niche %}Niche: {{ ep.niche }}{% endif %}{% if ep.niche and ep.audience %} · {% endif %}{% if ep.audience %}Audience: {{ ep.audience }}{% endif %}</p>{% endif %}
+
+{% if errors %}
+<div class="notice bad" role="alert"><strong>That did not go through:</strong>
+  <ul>{% for e in errors %}<li><pre>{{ e }}</pre></li>{% endfor %}</ul></div>
+{% endif %}
+{% if ep.episode_error %}<div class="notice bad">The episode file could not be read: {{ ep.episode_error }}</div>{% endif %}
+
+{# ---------------------------------------------------------------- live progress #}
+{% if job and job.status in ('queued', 'running') %}
+<div class="card" data-progress>
+  <div class="spread">
+    <strong data-job-kind>{{ job.kind }} · {{ job.status }}</strong>
+    <span class="muted small" data-job-pct>{{ (job.progress.pct or 0) }}%</span>
+  </div>
+  <div class="bar"><span data-job-bar style="width: {{ job.progress.pct or 0 }}%"></span></div>
+  <p class="small"><span class="muted" data-job-stage>{{ job.progress.stage or '' }}</span></p>
+  <p data-job-message>{{ job.progress.message or '' }}</p>
+  {% if job.kind in ('paint', 'render') %}
+    {% include "_worker.html" %}
+    {% if not worker.online %}<p class="muted small">The job waits in the queue until the Mac is back online. You can close this page.</p>{% endif %}
+  {% else %}
+    <p class="muted small">This step runs on the server. You can close this page; it keeps going.</p>
+  {% endif %}
+</div>
+{% else %}
+<div class="card small">{% include "_worker.html" %}</div>
+{% endif %}
+
+{# ---------------------------------------------------------------- spend approval #}
+{% if ep.state == 'spend_approval' and ep.spend.waiting %}
+{% set w = ep.spend.waiting %}
+<div class="card">
+  <h2>Allow more spending?</h2>
+  <p>{{ w.message }}</p>
+  <dl class="kv">
+    <dt>Spent</dt><dd>${{ '%.4f'|format(w.spent_usd) }}</dd>
+    <dt>Next step</dt><dd>{{ w.step }}: up to ${{ '%.4f'|format(w.estimate_usd) }}</dd>
+    <dt>Allowed</dt><dd>${{ '%.2f'|format(w.limit_usd) }}</dd>
+  </dl>
+  <p class="muted small">Nothing was sent. The step runs only if you allow it; the real cost is usually well under the estimate.</p>
+  <form method="post" action="/episodes/{{ ep.slug }}/spend/allow"
+        data-confirm="Allow this video to spend up to ${{ '%.2f'|format(w.need_usd) }} more on Claude?">
+    <input type="hidden" name="more_usd" value="{{ '%.2f'|format(w.need_usd) }}">
+    <button class="btn primary block" type="submit">Allow up to ${{ '%.2f'|format(w.need_usd) }} more</button>
+  </form>
+</div>
+{% endif %}
+
+{# ---------------------------------------------------------------- failed #}
+{% if ep.state == 'failed' %}
+<div class="notice bad"><strong>This step failed.</strong><pre>{{ ep.error or (job.error if job else '') or 'No message was given.' }}</pre></div>
+<form method="post" action="/episodes/{{ ep.slug }}/retry"
+      {% if job and job.kind in ('pitch', 'script') %}data-confirm="Run the {{ job.kind }} step again? It is a paid Claude call (cached parts are reused)."{% endif %}>
+  <button class="btn primary block" type="submit">Retry{% if job %} {{ job.kind }}{% endif %}</button>
+</form>
+{% endif %}
+
+{# ---------------------------------------------------------------- storylines #}
+{% if ep.storylines and ep.state == 'storylines' %}
+<h2>Pick a storyline</h2>
+{% if ep.storylines.note %}<div class="notice warn">This topic may not carry a real story: {{ ep.storylines.note }}</div>{% endif %}
+{% for s in ep.storylines.cards %}
+<div class="card stack">
+  <div class="spread"><span class="badge">{{ s.format_label }}</span><span class="muted small">Storyline {{ s.n }}</span></div>
+  <h3>{{ s.title }}</h3>
+  <p><strong>“{{ s.hook }}”</strong></p>
+  <p>{{ s.pitch }}</p>
+  <dl class="kv small">
+    <dt>Conflict</dt><dd>{{ s.conflict }}</dd>
+    <dt>Stakes</dt><dd>{{ s.stakes }}</dd>
+    <dt>Twist</dt><dd>{{ s.twist }}</dd>
+    <dt>Payoff</dt><dd>{{ s.payoff }}</dd>
+    {% if s.visuals %}<dt>Pictures</dt><dd>{{ s.visuals|join('; ') }}</dd>{% endif %}
+  </dl>
+  {% if s.facts %}
+  <details><summary>Facts ({{ s.facts|length }})</summary>
+    <ul class="list small">{% for f in s.facts %}<li><strong>{{ f.id }}</strong> {% if f.known %}{{ f.claim }} <a href="{{ f.url }}" target="_blank" rel="noopener noreferrer">{{ f.title or 'source' }}</a>{% else %}<span class="muted">(unknown fact id)</span>{% endif %}</li>{% endfor %}</ul>
+  </details>
+  {% endif %}
+  {% if s.refused %}<p class="notice warn small">{{ s.refused }}</p>{% endif %}
+  <form method="post" action="/episodes/{{ ep.slug }}/storyline">
+    <input type="hidden" name="story" value="{{ s.n }}">
+    <button class="btn primary block" type="submit" {% if s.refused %}disabled{% endif %}>Pick storyline {{ s.n }}</button>
+  </form>
+</div>
+{% endfor %}
+{% endif %}
+
+{# ---------------------------------------------------------------- script #}
+{% if ep.script and ep.state == 'script' %}
+{% set sc = ep.script %}
+<h2>Review the script</h2>
+<div class="card stack">
+  <h3>{{ sc.title or '(untitled)' }}</h3>
+  {% if sc.storyline %}<p class="small"><span class="badge">{{ sc.storyline.format|replace('_', ' ') }}</span> {{ sc.storyline.title }}</p>{% endif %}
+  <p class="muted small">{{ sc.beats|length }} beats · {{ sc.words }} words ≈ {{ sc.seconds }} s (target {{ sc.target_length }} s)</p>
+  <p class="small"><strong>Hook promise:</strong> {{ sc.hook_promise }}</p>
+</div>
+
+{% if sc.story_check %}
+<div class="card"><h3>Story check</h3>
+  <ul class="list small">{% for c in sc.story_check %}<li class="{{ 'check-ok' if c.ok else 'check-bad' }}"><strong>{{ c.item }}</strong>: {{ c.detail }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% set errs = sc.issues|selectattr('severity', 'equalto', 'error')|list %}
+{% set warns = sc.issues|selectattr('severity', 'equalto', 'warning')|list %}
+{% if sc.errors %}
+<div class="notice bad"><strong>{{ sc.errors|length }} problem(s) block approval</strong>
+  <ul class="small">{% for e in sc.errors %}<li>{{ e.where }}: {{ e.message }}</li>{% endfor %}</ul></div>
+{% endif %}
+{% if warns %}
+<details class="card"><summary>{{ warns|length }} warning(s)</summary>
+  <ul class="list small">{% for e in warns %}<li>{{ e.where }}: {{ e.message }}</li>{% endfor %}</ul></details>
+{% endif %}
+{% if not sc.issues %}<div class="notice ok small">All editorial checks pass.</div>{% endif %}
+
+{% for b in sc.beats %}
+<div class="card beat">
+  <div class="spread"><span class="role">{{ b.id }} · {{ b.role }}</span><span class="muted small">{{ b.visual }}</span></div>
+  <p class="say">“{{ b.say }}”</p>
+  {% if b.on_screen_text %}<p class="small"><span class="badge">ON SCREEN</span> {{ b.on_screen_text }}</p>{% endif %}
+  <dl class="kv small">
+    <dt>Show</dt><dd>{{ b.show }}</dd>
+    {% if b.host %}<dt>Host</dt><dd>{{ b.host }}</dd>{% endif %}
+    {% if b.scene %}<dt>Scene</dt><dd>{{ b.scene }}</dd>{% endif %}
+    {% if b.sources %}<dt>Sources</dt><dd>{% for s in b.sources %}<a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" title="{{ s.claim }}">{{ s.id }}{% if s.title %} · {{ s.title }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd>{% endif %}
+    {% if b.example %}<dt>Note</dt><dd>numbers are an illustrative example</dd>{% endif %}
+  </dl>
+</div>
+{% endfor %}
+
+{% if sc.sources %}
+<details class="card"><summary>Sources ({{ sc.sources|length }})</summary>
+  <ul class="list small">{% for s in sc.sources %}<li><strong>{{ s.id }}</strong> {{ s.claim }}<br><a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.title or s.url }}</a></li>{% endfor %}</ul>
+</details>
+{% endif %}
+
+<form method="post" action="/episodes/{{ ep.slug }}/script/approve" class="card" data-hook-form
+      data-hook-errors="{{ sc.hook_errors|tojson|forceescape }}">
+  {% if sc.hook_options %}
+  <h3>Pick the hook</h3>
+  {% for h in sc.hook_options %}
+  <label class="choice">
+    <input type="radio" name="hook" value="{{ h.n }}" {% if (sc.hook_pick or 1) == h.n %}checked{% endif %}>
+    <span><strong>“{{ h.line }}”</strong><br><span class="small muted">First frame: {{ h.frame_one }}<br>Pays off: {{ h.answer }}<br>Ends: “{{ h.loop_line }}”</span></span>
+  </label>
+  {% endfor %}
+  {% endif %}
+  <div class="sticky-actions">
+    <p class="small notice warn" data-approve-reason {% if not sc.blocked_reason %}hidden{% endif %}>{{ sc.blocked_reason }}</p>
+    <button class="btn primary block" type="submit" data-approve {% if not sc.can_approve %}disabled{% endif %}>Approve script</button>
+    <p class="muted small">Approving sends the script to the Mac to paint its scenes. You review the scenes before rendering.</p>
+  </div>
+</form>
+{% endif %}
+
+{# ---------------------------------------------------------------- scenes #}
+{% if ep.scenes and ep.state == 'scenes' %}
+{% set failed = ep.scenes|selectattr('status', 'equalto', 'failed')|list %}
+<h2>Review the new scenes</h2>
+<p class="muted small">These scenes and props were painted for this video. Approve them all to render, or redo one with a short note.</p>
+<div class="grid">
+{% for s in ep.scenes %}
+<div class="card stack">
+  {% if s.url %}<img class="thumb" src="{{ s.url }}" alt="{{ s.key }}" loading="lazy">{% endif %}
+  <div class="spread"><strong>{{ s.key }}</strong><span class="badge {{ 'bad' if s.status == 'failed' else '' }}">{{ s.kind or 'scene' }}{% if s.status == 'failed' %} · failed{% endif %}</span></div>
+  {% if s.why %}<p class="notice bad small">{{ s.why }}</p>{% endif %}
+  {% if s.scene %}<p class="small">{{ s.scene }}</p>{% endif %}
+  {% if s.note %}<p class="small muted">Your note: {{ s.note }}</p>{% endif %}
+  {% if s.beat_text %}<ul class="list small">{% for b in s.beat_text %}<li><strong>{{ b.id }}</strong> “{{ b.say }}”</li>{% endfor %}</ul>{% endif %}
+  <details><summary>Redo this one</summary>
+    <form method="post" action="/episodes/{{ ep.slug }}/scenes/redo">
+      <input type="hidden" name="key" value="{{ s.key }}">
+      <label for="note-{{ loop.index }}">How should it change?</label>
+      <textarea id="note-{{ loop.index }}" name="note" maxlength="500" required placeholder="e.g. warmer light, the jar on the left"></textarea>
+      <p><button class="btn block" type="submit">Redo {{ s.key }}</button></p>
+    </form>
+  </details>
+</div>
+{% endfor %}
+</div>
+<form method="post" action="/episodes/{{ ep.slug }}/scenes/approve" class="sticky-actions">
+  {% if failed %}<p class="notice warn small">Approve is off: {{ failed|length }} scene(s) failed on the Mac. Redo them with a note first.</p>{% endif %}
+  <button class="btn primary block" type="submit" {% if failed %}disabled{% endif %}>Approve all and render</button>
+</form>
+{% endif %}
+
+{# ---------------------------------------------------------------- done #}
+{% if ep.state in ('done', 'done_qa_failed') %}
+{% set mp4 = (ep.files or [])|selectattr('kind', 'equalto', 'mp4')|first %}
+{% set srt = (ep.files or [])|selectattr('kind', 'equalto', 'srt')|first %}
+{% set qa = (ep.files or [])|selectattr('kind', 'equalto', 'qa')|first %}
+{% set sheet = (ep.files or [])|selectattr('kind', 'equalto', 'contact_sheet')|first %}
+{% if ep.state == 'done_qa_failed' %}<div class="notice warn"><strong>Rendered, but QA failed.</strong> Check the failed items below before posting.</div>
+{% else %}<div class="notice ok"><strong>Done.</strong> QA passed.</div>{% endif %}
+{% if mp4 %}<video controls playsinline preload="metadata" src="{{ mp4.url }}"></video>{% endif %}
+<div class="row" style="margin-top: 12px">
+  {% if mp4 %}<a class="btn primary" href="{{ mp4.download_url }}">Download MP4</a>{% endif %}
+  {% if srt %}<a class="btn" href="{{ srt.download_url }}">SRT</a>{% endif %}
+  {% if qa %}<a class="btn" href="{{ qa.download_url }}">QA report</a>{% endif %}
+</div>
+<div class="card">
+  <h3>QA</h3>
+  {% if ep.render and ep.render.duration %}<p class="small muted">{{ '%.1f'|format(ep.render.duration) }} s · cost ${{ '%.4f'|format(ep.cost_usd) }}</p>
+  {% else %}<p class="small muted">Cost ${{ '%.4f'|format(ep.cost_usd) }}</p>{% endif %}
+  {% if ep.render and ep.render.qa_checks %}
+  <ul class="list small">{% for c in ep.render.qa_checks %}<li class="{{ 'check-ok' if c.ok == true else ('check-bad' if c.ok == false else 'check-unk') }}"><strong>{{ c.name }}</strong>{% if c.detail %}: {{ c.detail }}{% endif %}</li>{% endfor %}</ul>
+  {% else %}<p class="small">{{ 'Pass' if ep.render and ep.render.qa_pass else 'No per-check summary was sent.' }}</p>{% endif %}
+</div>
+{% if sheet %}<details class="card"><summary>Contact sheet</summary><img class="thumb wide" src="{{ sheet.url }}" alt="contact sheet" loading="lazy"></details>{% endif %}
+{% endif %}
+
+{# ---------------------------------------------------------------- the script, read-only, once approved #}
+{% if ep.script and ep.state not in ('script',) %}
+<details class="card"><summary>Script{% if ep.script.approved %} (approved){% endif %}</summary><pre class="text">{{ ep.script.text }}</pre></details>
+{% endif %}
+{% endblock %}
