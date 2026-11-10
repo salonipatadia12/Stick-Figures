@@ -42,7 +42,7 @@
       "loop_line": "Yep, my brain cheats. That's why I can't tickle myself."
     }
   ],
-  "hook_pick": 0,
+  "hook_pick": 1,
   "storylines": [
     {
       "format": "mini_story",
@@ -119,15 +119,15 @@
       "id": "b01",
       "role": "hook",
       "narration": "I can't tickle myself. Here's why.",
-      "on_screen_text": "No tickle?",
-      "visual_intent": "The host stands in a golden bedroom, poking own ribs with a puzzled frown while a flat gray cloud floats beside.",
+      "on_screen_text": "",
+      "visual_intent": "Host stands in a sunlit bedroom, poking own ribs with a puzzled frown while a flat gray cloud floats beside.",
       "shot": {
         "host": {
           "where": "scene",
           "side": "centre",
           "size": "medium",
           "holds": "",
-          "doing": "pokes own ribs, then shrugs with a puzzled frown",
+          "doing": "Host stands in a sunlit bedroom, poking own ribs with a puzzled frown while a flat gray cloud floats beside.",
           "to_camera": true,
           "cut_on": ""
         },
@@ -999,7 +999,8 @@
     }
   ],
   "approvals": {
-    "storyline": "b2346d09028bf9db7279c3f038d6626c85fb81037fd34ad64c90945173a781bd"
+    "storyline": "b2346d09028bf9db7279c3f038d6626c85fb81037fd34ad64c90945173a781bd",
+    "script": "256178eb9e7dc5b401a1230db97ff4a5afa9cc29856d75115e3e5d01d23e4982"
   },
   "meta": {
     "story": {
@@ -1031,6 +1032,12 @@
         "pick": 1,
         "format": "mini_story",
         "digest": "b2346d09028b"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-09T23:50:04",
+        "digest": "256178eb9e7d"
       }
     ],
     "script": {
