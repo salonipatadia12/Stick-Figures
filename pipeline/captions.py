@@ -182,6 +182,9 @@ def place(line: Line, avoid=None, keep_clear=()):
     options += slid(size - 14)
     for k in range(9, 14):                      # higher still (a label or a slam already sits just above the head)
         options.append((default[0], default[1] - 70 * k, size))
+    for k in range(1, 14):                      # raised AND slid to a side: clear of a large host on the other side
+        for x, _, sz in slid(size):
+            options.append((x, default[1] - 70 * k, sz))
     best = min(options, key=lambda o: (hits(*o) > 0, hits(*o), options.index(o)))
     _placed[key] = best
     return best

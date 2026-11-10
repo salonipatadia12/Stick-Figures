@@ -118,6 +118,14 @@ SPELLINGS = {'tonnes': 'tons', 'tonne': 'ton', 'cancelled': 'canceled', 'travell
              'veil': 'vale', 'cue': 'queue'}                                                               # homophones Whisper picks
 
 
+def us_spelling(w: str) -> str:
+    """British spelling as the American-trained recogniser writes it: centimetres -> centimeters, colour -> color,
+    stabilise -> stabilize."""
+    w = re.sub(r'tre(s?)$', r'ter\1', w)
+    w = re.sub(r'our(s?)$', r'or\1', w) if len(w) > 5 else w
+    return re.sub(r'is(e|ed|es|ing|ation)$', r'iz\1', w)
+
+
 def words_check(script_words: list, heard: list) -> dict:
     """Every script word must be heard, in order. Whisper writes numbers as digits and may split them
     ('$1' ',500'), so a word also matches two or three heard tokens joined, or its number."""
@@ -125,7 +133,7 @@ def words_check(script_words: list, heard: list) -> dict:
     missing, j = [], 0
     for w in script_words:
         k = norm(w)
-        alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k)}
+        alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k)}
         found = None
         reach = 2 if k in ('a', 'an', 'the') else 6       # a dropped article must not match one further on and skip words
         for i in range(j, min(len(h), j + reach)):
