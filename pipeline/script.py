@@ -104,7 +104,7 @@ Rules:
    "other: <the place in 3-6 words>" only if none fits); one pose per cast id (seated-at-table, standing, bed-edge,
    bed-awake, bed-asleep-top, seated-sofa, seated-desk, seated-bench, driving, passenger, walking); 0-3 actions from
    reach, point, shrug, facepalm, pick_up, put_down, throw, drink, type, write, wave, nod, shake_head, slump, jolt,
-   gaze, shiver, look_up, snap, freeze, each on a word of this beat's narration; 0-4 props with where they sit and
+   gaze, shiver, look_up, snap, freeze, tickle, laugh, each on a word of this beat's narration; 0-4 props with where they sit and
    who holds them. When the host is on screen, "lead" is in shot.cast with its pose and verbs in staging. Use at most 2 characters per video; a
    character holds one pose per beat. What the characters CANNOT do: run, jump, fall, fight, dance; crowds; animals.
    Walking is a short walk-in or walk-through inside one picture, not across town. In an insert scene the host

@@ -1,7 +1,14 @@
-"""Cut the host's painted body (torso and legs) out of a standing base, on a transparent plate the same size as the
-base, for compositing the host into insert scenes (script v5 host format). Runs in .venvs/mlx (OpenCV).
+"""Cut a character's painted body (torso and legs) out of a standing base, on a transparent plate the same size as the
+base, for compositing it into insert scenes (script v5 host format): the host (lead, from lead-standing-street into
+styles/cozy/host/lead-standing) and the friend (from friend-standing-street into styles/cozy/host/friend-standing).
+Runs in .venvs/mlx (OpenCV).
 
   .venvs/mlx/bin/python scripts/motion_test/host_cutout.py [base] [--preview out.jpg]
+  .venvs/mlx/bin/python scripts/motion_test/host_cutout.py friend-standing-street --preview friend.jpg
+
+The base's only seat is cut (lead or friend). The friend keeps its painted teal scarf (wrap and tail, with their dark
+edges) on the body plate, and its meta adds the seat, a relaxed rest for the arms (body space, beside the torso) and
+the base its head is painted on.
 
 The head and arms are puppet sprites, so the plate holds only the torso and legs. The body is found where the plate
 differs from the base's empty plate AND has the character's colours (white body, navy limbs and outline), near the
@@ -19,12 +26,19 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
+OUTLINE = 7                   # px: the painted outline's width around the torso (friend-standing-street)
 
 
-def cut(base: str) -> tuple[Image.Image, dict]:
+def seat_of(base: str) -> str:
+    """The character a standing base is cut for: lead when it has a lead seat, else its first seat."""
+    seats = [s['name'] for s in json.loads((ROOT / 'styles/cozy/bases' / base / 'base.json').read_text())['seats']]
+    return 'lead' if 'lead' in seats else seats[0]
+
+
+def cut(base: str, who: str = 'lead') -> tuple[Image.Image, dict]:
     d = ROOT / 'styles/cozy/bases' / base
     m = json.loads((d / 'base.json').read_text())
-    seat = next(s for s in m['seats'] if s['name'] == 'lead')
+    seat = next(s for s in m['seats'] if s['name'] == who)
     p = np.asarray(Image.open(d / 'plate.png').convert('RGB')).astype(np.int32)
     e = np.asarray(Image.open(d / 'empty.png').convert('RGB')).astype(np.int32)
     h, w = p.shape[:2]
@@ -43,8 +57,11 @@ def cut(base: str) -> tuple[Image.Image, dict]:
     torso = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8) * 255
     cs, _ = cv2.findContours(torso, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     torso = cv2.drawContours(np.zeros_like(torso), cs, -1, 255, -1)
+    if seat.get('accessory') == 'scarf':             # the friend's teal scarf: its wrap at the neck and its tail
+        torso = torso | scarf_mask(p, diff, roi, torso, D)
     band = cv2.dilate(torso, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(0.05 * D) | 1,) * 2))
-    mask = torso | (band & (navy.astype(np.uint8) * 255))
+    edge = navy if who == 'lead' else navy | ((lum < 100) & diff)   # the friend's outline on its lit side is a warm dark grey
+    mask = torso | (band & (edge.astype(np.uint8) * 255))
     # 2. the legs and shoes: navy below the torso's widest point, under the torso's width
     tx0, ty0, tw, th = cv2.boundingRect(torso)
     under = np.zeros((h, w), bool)
@@ -56,6 +73,8 @@ def cut(base: str) -> tuple[Image.Image, dict]:
     for k in range(1, n):
         if stats[k, cv2.CC_STAT_AREA] > 0.04 * D * D:
             mask[lab == k] = 255
+    if who != 'lead':                                   # the painted hands at the rest points: only the outline stays
+        mask = erase_hands(mask, torso, seat)
     n, lab, stats, _ = cv2.connectedComponentsWithStats(mask)      # one piece: drop anything not joined to the body
     mask = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8) * 255
     inv = cv2.bitwise_not(mask)                                 # small enclosed holes (not the open gap between the legs)
@@ -69,13 +88,57 @@ def cut(base: str) -> tuple[Image.Image, dict]:
     rgba = np.dstack([p.astype(np.uint8), mask])
     ys, xs = np.where(mask > 128)
     meta = dict(base=base, size=[w, h], head=seat['head'], D=D, feet_y=int(ys.max()), body_box=[int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())])
+    if who != 'lead':                                   # (the lead's meta stays as it was: compose_beats.HOST_REST)
+        meta |= dict(seat=who, rest=rest_beside(torso, seat), head_base=base)
     return Image.fromarray(rgba, 'RGBA'), meta
+
+
+def scarf_mask(p, diff, roi, torso, D):
+    """Teal pixels of the painted figure (not of the scene) joined to the torso: the scarf's wrap and tail."""
+    r, g, b = p[..., 0], p[..., 1], p[..., 2]
+    lum = p.mean(-1)
+    teal = diff & roi & (g - r > 15) & (b - r > 10) & (lum > 50) & (lum < 215)
+    teal = cv2.morphologyEx((teal.astype(np.uint8) * 255), cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7)))
+    near = cv2.dilate(torso, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(0.12 * D) | 1,) * 2))
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(teal)
+    out = np.zeros_like(torso)
+    for k in range(1, n):
+        if stats[k, cv2.CC_STAT_AREA] > 0.01 * D * D and (near[lab == k] > 0).any():
+            out[lab == k] = 255
+    cs, _ = cv2.findContours(out | torso, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    filled = cv2.drawContours(np.zeros_like(torso), cs, -1, 255, -1)       # the white between the wrap and the tail
+    return out | (filled & (diff.astype(np.uint8) * 255))
+
+
+def erase_hands(mask, torso, seat):
+    """Within 0.28 D of each painted rest point keep the torso and its outline (OUTLINE px), nothing beyond: the puppet
+    draws its own hands, so a painted mitten left on the plate would show as a ghost hand at the hip."""
+    D = seat['D']
+    near = cv2.dilate(torso, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * OUTLINE + 1,) * 2))
+    zone = np.zeros_like(mask)
+    for x, y in seat['rest'].values():
+        cv2.circle(zone, (int(x), int(y)), int(0.28 * D), 255, -1)
+    return np.where((zone > 0) & (near == 0), 0, mask).astype(np.uint8)
+
+
+def rest_beside(torso, seat) -> dict:
+    """Body-space rest points for the arms hanging at the sides: just outside the torso, 0.93 D below the shoulders
+    (as the lead's HOST_REST)."""
+    D = seat['D']
+    (lx, ly), (rx, ry) = seat['shoulders']['l'], seat['shoulders']['r']
+    mx, my = (lx + rx) / 2, (ly + ry) / 2
+    y = int(my + 0.93 * D)
+    xs = np.where(torso[min(y, torso.shape[0] - 1)] > 0)[0]
+    if not len(xs):
+        return dict(l=[-0.47, 0.93], r=[0.47, 0.93])
+    return dict(l=[round(float(xs.min() - mx) / D - 0.06, 3), 0.93], r=[round(float(xs.max() - mx) / D + 0.06, 3), 0.93])
 
 
 if __name__ == '__main__':
     base = next((a for a in sys.argv[1:] if not a.startswith('--') and not a.endswith('.jpg')), 'lead-standing-street')
-    body, meta = cut(base)
-    out = ROOT / 'styles/cozy/host' / 'lead-standing'
+    who = seat_of(base)
+    body, meta = cut(base, who)
+    out = ROOT / 'styles/cozy/host' / f'{who}-standing'
     out.mkdir(parents=True, exist_ok=True)
     body.save(out / 'body.png')
     (out / 'host.json').write_text(json.dumps(meta, indent=1))
