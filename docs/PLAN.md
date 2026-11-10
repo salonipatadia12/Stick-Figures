@@ -303,6 +303,15 @@ at 9:16, about 45 s. It ships with the MP4, SRT, contact sheet, `qa.json` and th
   at once). QA: `fill` measures content against the frame's median colour (blank paper 0.06, fail < 0.12 for 0.5 s;
   the old texture measure passed blank watercolour paper), `host` fails a standing host cut by the frame edge or
   tinted more than 15 %, and `text` fails any caption on the host's pixels.
+- The friend in the host format (user 2026-11-10): a beat whose cast has `friend` composites it too (`FriendLayer`
+  in compose_beats, a sibling of HostLayer drawn by the same code: light match, contact shadow, clamp, size). Its body
+  is cut once from friend-standing-street (`host_cutout.py friend-standing-street` -> `styles/cozy/host/friend-standing`,
+  teal scarf kept, painted hands erased). It stands opposite the host, facing it, with the host's head size and feet
+  line, and walks in on an enter_left/right recipe. Its verbs are aimed at the host (reach, point, nod, shrug, gaze,
+  tickle); a friend `reach` toward the lead while holding a feather is a `tickle` (the feather's tip wiggles at the
+  host's side for 1.2 s, the friend standing just close enough) and the host `laugh`s on it. Held props: the props
+  library, else drawn (`drawn.feather_stick`, `drawn.bill`). Captions and QA (`host`, `text.caption_on_host`) count the
+  friend's pixels as the host's. Seated staging (a cafe table) is played standing.
 
 The pipeline must make stick-figure videos about any topic, not café explainers. Videos 1 and 2 each
 needed a hand-written beats module (video 2: 9 beats, every one with at least one bespoke pose or

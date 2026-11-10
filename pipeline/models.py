@@ -63,6 +63,8 @@ Verb = Literal[
     'shake_head', 'slump', 'jolt', 'gaze',
     # host verbs (script v5): a whole-body shiver, looking up at the sky, a finger snap, freezing mid-step
     'shiver', 'look_up', 'snap', 'freeze',
+    # two characters (host format): the friend tickles the host (a held feather wiggling at the host's side), a laugh
+    'tickle', 'laugh',
     # posture and travel: a painted torso cannot do these, so they are staged as a match cut between two bases
     # of the same setting on the anchor word (walk: a pan, or the far-off drawn figure)
     'lie_down', 'sit_up', 'stand_up', 'walk',

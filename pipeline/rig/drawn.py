@@ -347,3 +347,65 @@ def shadow_disc(w: int, h: int) -> Image.Image:
     dark = Image.new('RGBA', m.size, (70, 36, 16, 0))
     dark.putalpha(m.point(lambda v: int(v * 0.5)))
     return dark
+
+
+FEATHER_GRIP = 0.06           # the grip on a feather_stick sprite, as a share of its width from the stick's end
+
+
+def feather_stick(length: int = 420, seed: int = 14) -> Image.Image:
+    """A tickling feather on a thin wooden stick, lying along +x: the stick's end at the left (held there, FEATHER_GRIP
+    of the width in), a soft pink plume with a navy outline, its quill and a few barbs, to the right. Anchor: the grip,
+    half-way down."""
+    h = int(length * 0.26)
+    im = _canvas(length, h)
+    d = ImageDraw.Draw(im)
+    W, H = length * SS, h * SS
+    cy = H / 2
+    stick_end = 0.46 * W
+    d.rounded_rectangle((2 * SS, cy - 5 * SS, stick_end + 6 * SS, cy + 5 * SS), radius=5 * SS, fill=(168, 112, 64, 255),
+                        outline=NAVY + (255,), width=3 * SS)
+    d.line([(6 * SS, cy - 1.5 * SS), (stick_end, cy - 1.5 * SS)], fill=(206, 154, 98, 255), width=2 * SS)   # the lit edge
+    x0, x1 = stick_end - 0.02 * W, W - 3 * SS
+    rng = random.Random(seed)
+    n = 60
+    top, bottom, quill = [], [], []
+    for i in range(n + 1):                       # a fluffy plume: it swells, tapers to an upturned tip, ragged at the edge
+        u = i / n
+        x = x0 + (x1 - x0) * u
+        qy = cy - 0.16 * H * u ** 2.2
+        half = 0.42 * H * math.sin(math.pi * u ** 0.7) ** 0.8
+        fluff = 1 + 0.07 * math.sin(u * 47 + 1.0) + 0.04 * math.sin(u * 89)
+        nt = 0.55 if abs(u - 0.47) < 0.035 else 1.0          # two splits in the vane, as on a real feather
+        nb = 0.6 if abs(u - 0.66) < 0.03 else 1.0
+        quill.append((x, qy))
+        top.append((x + 0.03 * W * u, qy - half * fluff * nt))  # the barbs lean toward the tip
+        bottom.append((x + 0.03 * W * u, qy + 0.9 * half * fluff * nb))
+    plume = top + bottom[::-1]
+    d.polygon(plume, fill=(246, 200, 210, 255))
+    for i in range(3, n - 2, 2):                 # barbs: thin strokes from the quill out and forward to the edge
+        for edge in (top[i], bottom[i]):
+            q = quill[i]
+            d.line([(q[0] - 3 * SS, q[1]), (edge[0] + rng.uniform(0, 3) * SS, q[1] + (edge[1] - q[1]) * 0.86)],
+                   fill=(222, 156, 176, 255), width=SS)
+    d.line(plume + [plume[0]], fill=NAVY + (255,), width=3 * SS, joint='curve')
+    d.line([(stick_end - 2 * SS, cy)] + quill[::6], fill=NAVY + (255,), width=2 * SS, joint='curve')
+    return _done(im, seed, 0.5)
+
+
+def bill(width: int = 200, seed: int = 15) -> Image.Image:
+    """A paper bill held up in a hand: cream paper with a navy outline, a coloured header band, ruled lines and a
+    boxed total, no letters or numbers (they would not read at a held size). Anchor: bottom centre."""
+    h = int(width * 1.3)
+    im = _canvas(width, h)
+    d = ImageDraw.Draw(im)
+    W, H = width * SS, h * SS
+    d.rounded_rectangle((2 * SS, 2 * SS, W - 2 * SS, H - 2 * SS), radius=6 * SS, fill=CREAM + (255,), outline=NAVY + (255,), width=3 * SS)
+    d.rectangle((5 * SS, 5 * SS, W - 5 * SS, 0.17 * H), fill=(96, 146, 150, 255))
+    rng = random.Random(seed)
+    for i in range(5):
+        y = 0.27 * H + i * 0.1 * H
+        d.line([(0.12 * W, y), (0.12 * W + rng.uniform(0.35, 0.55) * W, y)], fill=(150, 142, 150, 255), width=3 * SS)
+        d.line([(0.72 * W, y), (0.88 * W, y)], fill=(150, 142, 150, 255), width=3 * SS)
+    d.rectangle((0.56 * W, 0.80 * H, 0.9 * W, 0.92 * H), outline=RED + (255,), width=3 * SS)
+    d.line([(0.62 * W, 0.86 * H), (0.84 * W, 0.86 * H)], fill=RED + (255,), width=3 * SS)
+    return _done(im, seed, 0.5)

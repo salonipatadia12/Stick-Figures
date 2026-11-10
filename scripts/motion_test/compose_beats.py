@@ -678,6 +678,13 @@ MAX_SFX = 6                   # user 2026-11-08: at most 5-6 meaningful sounds p
 ACT_GAP = 1.0                 # s: at most one new gesture this often
 FILL_GAP = 1.6                # s: a longer still stretch gets a small gesture of its own
 LOOKS = ('present', 'gaze', 'point', 'look')   # while these play the host looks at the thing, not at the viewer
+FRIEND_DIR = ROOT / 'styles/cozy/host/friend-standing'
+FRIEND_REACH = 2.0            # D of empty canvas on the friend's facing side: room for an arm and a feather reaching out
+FRIEND_MIN_GAP = 1.9          # D between the two head lines at least (no overlap of the two bodies)
+FEATHER_D = 1.35              # a feather on a stick, end to tip, in head diameters
+TICKLE_DROP = 1.3             # the host's side is tickled this many D below its head centre (its widest, flat side)
+TICKLE_PRESS = 0.08           # D: the feather tip sits this far into the host's outline (it touches)
+FRIEND_HOLD = {'feather': ((0.40, 0.34), -74.0)}   # held up beside the body, the plume up and toward the host
 
 
 def talk_curve(starts: list, t: float) -> float:
@@ -849,6 +856,12 @@ class HostLayer:
         self.shivers = [self.c.tw(a['anchor']) for a in (spec['shot'].get('staging') or {}).get('actions', []) if a['verb'] == 'shiver']
         self.facing = lead.facing
         perf = self.c.perfs['lead']
+        staged = (spec['shot'].get('staging') or {}).get('actions', [])
+        self.laughs = [(self.c.tw(a['anchor']), 0.8) for a in staged if a['who'] == 'lead' and a['verb'] == 'laugh']
+        for anchor in tickle_anchors(spec) if self.where == 'scene' else []:
+            at = self.c.tw(anchor) + V.TICKLE_REACH      # the friend's feather lands: the host laughs and flinches away
+            perf.actions.append(V.laugh(lead, at, dur=V.TICKLE_DUR).action)
+            self.laughs.append((at, V.TICKLE_DUR))
         busy = [(a.start, a.end) for a in perf.actions]
         self.acts = acting(spec.get('narration', ''), T, t0, t1, busy, self.where)
         for verb, at, dur in self.acts:
@@ -884,29 +897,22 @@ class HostLayer:
                 tilt, scale = tilt + 3.5 * q, scale * (1 + 0.025 * q)
             else:
                 scale, rise = scale * (1 - 0.06 * q), rise + 0.016 * q
+        for at, dur in self.laughs:                     # a laugh bounces the whole body a little (no lean: a host at
+            if at - 0.05 <= t <= at + dur + 0.3:        # the frame edge would be clamped and slide)
+                q = ease((t - at) / 0.15) * (1 - ease((t - at - dur) / 0.3))
+                rise += 0.004 * q * abs(math.sin((t - at) * 2 * math.pi * 6.5))
         return tilt, scale, rise
 
     def draw(self, frame: Image.Image, t: float, zoom: float = 1.0, dx: float = 0.0, dy: float = 0.0):
         import numpy as np
         from PIL import ImageDraw, ImageFilter
         sp, foot_x = self.sprite(t)
-        side = self.side
-        if self.cut_at is not None:                    # the host is at one spot, then (a cut) at the next one
-            side = 'left' if t < self.cut_at else 'right'
+        side = self.side_at(t)
         tilt, grow, rise = self.body_motion(t)
         pop = self.where == 'pop_in'
-        share, feet = HOST_SIZES.get(self.size, HOST_SIZES['medium'])
-        crop_ok = pop or self.size in ('large', 'close')     # cut by the bottom edge on purpose
-        if pop:                                        # from the bottom-left or bottom-right corner, facing in
-            k = POP_H * H / sp.height
-            fx = (0.8 if side == 'right' else 0.2) * W
-            fy = 1.17 * H + 0.3 * H * (1 - ease((t - self.t0) / 0.35))
-            flip = self.facing > 0 if side == 'right' else self.facing < 0
-        else:
-            k = share * H * zoom * grow / sp.height
-            fx = W / 2 + (HOST_X.get(side, 0.5) * W - W / 2 - dx) * zoom
-            fy = H / 2 + (feet * H - H / 2 - dy) * zoom - rise * H
-            flip = (side == 'right' and self.facing > 0) or (side == 'left' and self.facing < 0)
+        entering = self.entering(t)
+        crop_ok = pop or self.size in ('large', 'close') or entering     # cut by the bottom edge on purpose
+        k, fx, fy, flip = self.placement(sp, t, zoom, dx, dy, side, grow, rise, pop)
         for at in self.shivers:
             if 0 <= t - at <= 2.2:
                 fx += 4 * math.sin((t - at) * 2 * math.pi * 9)
@@ -924,12 +930,13 @@ class HostLayer:
             foot += pad
         bb = sp.getchannel('A').point(lambda v: 255 if v >= 128 else 0).getbbox() or (0, 0, sp.width, sp.height)
         x, y = int(fx - foot), int(fy - sp.height)
-        if not pop:                                    # fully inside the frame (user 2026-11-09), however the camera moves
+        if not pop and not entering:                   # fully inside the frame (user 2026-11-09), however the camera moves
             x = min(max(x, HOST_MARGIN - bb[0]), W - HOST_MARGIN - bb[2])
             if not crop_ok:                            # feet in frame too when the camera zooms
                 y = min(y, H - HOST_MARGIN - bb[3])
             y = max(y, HOST_MARGIN - bb[1])
         fx = x + foot
+        self.placed = dict(fx=fx, fy=fy, k=k / grow if not pop else k, flip=flip)
         rgb_ratio = [1.0, 1.0, 1.0]
         if not pop:                                    # the scene's light on the host: a capped tint, a rim light, a shadow
             box = (max(0, x), max(0, y), min(W, x + sp.width), min(H, y + sp.height))
@@ -947,7 +954,33 @@ class HostLayer:
         ab = (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
         in_frame = ab[0] >= 0 and ab[1] >= 0 and ab[2] <= W and ab[3] <= H
         O.note_box('character', (max(0, ab[0]), max(0, ab[1]), min(W, ab[2]), min(H, ab[3])), host=True, pop_in=pop,
-                   crop_ok=crop_ok, in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio])
+                   crop_ok=crop_ok, in_frame=bool(in_frame), body_rgb=[round(float(v), 3) for v in rgb_ratio], **self.log)
+
+    log: dict = {}                                     # extra keys for the per-frame character log (the friend says who)
+
+    def side_at(self, t: float) -> str:
+        if self.cut_at is not None:                    # the host is at one spot, then (a cut) at the next one
+            return 'left' if t < self.cut_at else 'right'
+        return self.side
+
+    def entering(self, t: float) -> bool:
+        """True while the figure walks in from a frame edge (partly outside the frame on purpose)."""
+        return False
+
+    def placement(self, sp, t: float, zoom: float, dx: float, dy: float, side: str, grow: float, rise: float, pop: bool):
+        """(scale, foot-line x, feet y, mirrored) of the sprite in the frame."""
+        share, feet = HOST_SIZES.get(self.size, HOST_SIZES['medium'])
+        if pop:                                        # from the bottom-left or bottom-right corner, facing in
+            k = POP_H * H / sp.height
+            fx = (0.8 if side == 'right' else 0.2) * W
+            fy = 1.17 * H + 0.3 * H * (1 - ease((t - self.t0) / 0.35))
+            flip = self.facing > 0 if side == 'right' else self.facing < 0
+        else:
+            k = share * H * zoom * grow / sp.height
+            fx = W / 2 + (HOST_X.get(side, 0.5) * W - W / 2 - dx) * zoom
+            fy = H / 2 + (feet * H - H / 2 - dy) * zoom - rise * H
+            flip = (side == 'right' and self.facing > 0) or (side == 'left' and self.facing < 0)
+        return k, fx, fy, flip
 
     def hit(self, box) -> int:
         """How many of the host's pixels (last frame drawn) fall inside `box` (x0, y0, x1, y1)."""
@@ -957,6 +990,274 @@ class HostLayer:
         x0, y0 = max(0, int(box[0]) - x), max(0, int(box[1]) - y)
         x1, y1 = min(a.shape[1], int(box[2]) - x), min(a.shape[0], int(box[3]) - y)
         return int(a[y0:y1, x0:x1].sum()) if x1 > x0 and y1 > y0 else 0
+
+
+def friend_spec(spec: dict) -> dict:
+    """The beat as the friend plays it beside the host: standing, no verbs of its own from the composer (FriendLayer
+    adds them, aimed at the host), no text, no camera moves, no sounds."""
+    s = copy.deepcopy(spec)
+    st = s['shot'].get('staging') or {}
+    s['shot']['cast'] = ['friend']
+    s['shot']['staging'] = dict(setting=st.get('setting', 'other'), setting_detail='', poses=[dict(who='friend', pose='standing')],
+                                actions=[], props=[])
+    s['shot']['motion'], s['on_screen_text'], s['sfx'] = [], '', []
+    return s
+
+
+def friend_prop(spec: dict) -> str:
+    """The prop the friend holds in this beat (staging props held_by friend), or ''."""
+    return next((p['name'] for p in (spec['shot'].get('staging') or {}).get('props', []) if p.get('held_by') == 'friend'), '')
+
+
+def friend_actions(spec: dict) -> list:
+    """The friend's verbs in a beat whose cast has the friend: [dict(verb, target, anchor)]. A reach toward the host
+    while the friend holds a feather is a tickle."""
+    if 'friend' not in spec['shot'].get('cast', []):
+        return []
+    feather = 'feather' in friend_prop(spec).lower()
+    out = []
+    for a in (spec['shot'].get('staging') or {}).get('actions', []):
+        if a['who'] != 'friend' or a['verb'] in V.STAGED:
+            continue
+        verb = a['verb']
+        if verb == 'reach' and feather and a.get('target', '') in ('lead', 'host', ''):
+            verb = 'tickle'
+        out.append(dict(verb=verb, target=a.get('target', ''), anchor=a.get('anchor', '')))
+    return out
+
+
+def tickle_anchors(spec: dict) -> list:
+    """Anchor words on which the friend tickles the host (the host laughs on each)."""
+    return [a['anchor'] for a in friend_actions(spec) if a['verb'] == 'tickle']
+
+
+def held_prop(name: str):
+    """(sprite, Held anchor, width in D) for a prop the friend holds: the props library first (find_prop), else a
+    code-drawn one (a feather on a stick, a bill as a receipt). None when there is none."""
+    entry = find_prop(name, prop_library())
+    if entry and (ROOT / entry['sprite']).exists():
+        spr = Image.open(ROOT / entry['sprite']).convert('RGBA')
+        return spr, (spr.width * 0.5, spr.height * 0.62), held_width(entry, spr)
+    if 'feather' in name.lower():
+        spr = drawn.feather_stick()
+        return spr, (spr.width * drawn.FEATHER_GRIP, spr.height * 0.5), FEATHER_D
+    if re.search(r'\b(bill|bills|invoice|statement|receipt)\b', name.lower()):
+        spr = drawn.bill()
+        return spr, (spr.width * 0.5, spr.height * 0.6), 0.55
+    key = prop_key(name)
+    if key in DRAWN and DRAWN[key][0] is not None:
+        spr = DRAWN[key][0]()
+        return spr, (spr.width * 0.5, spr.height * 0.62), held_width(dict(width=DRAWN[key][1]), spr)
+    return None
+
+
+class FriendLayer(HostLayer):
+    """The friend beside the host in the host format (a beat whose cast has 'friend'): its body cut once from the
+    friend-standing-street base (host_cutout.py -> styles/cozy/host/friend-standing), its puppet head and arms, drawn by
+    HostLayer.draw with the same light match, contact shadow, clamp in frame and size rules. It stands on the side
+    opposite the host, facing the host, with the host's head size and feet line; in a tickle it stands just close
+    enough for its feather to touch the host's side. Its verbs are aimed at the host (reach, point, nod, shrug,
+    tickle); a held prop comes from the props library (else a drawn one). It walks in from its edge on an
+    enter_left / enter_right recipe. No lip-sync: the host is the one talking."""
+
+    log = {'who': 'friend'}
+
+    def __init__(self, spec: dict, T: dict, t0: float, t1: float, host: HostLayer):
+        from dataclasses import replace as dc_replace
+        from pipeline.rig.puppet import Puppet, Stage, load_base
+        meta = json.loads((FRIEND_DIR / 'host.json').read_text())
+        rest = meta['rest']
+        base_cls = make_class(friend_spec(spec), {}, meta['base'])
+
+        class Friend(base_cls):
+            def build(self):                            # arms relaxed at the sides
+                f = self.p['friend']
+                f.s = dict(f.s, rest={k: f.world(v) for k, v in rest.items()})
+                return super().build()
+
+        self.c = Friend(T, t0, t1)
+        body = Image.open(FRIEND_DIR / 'body.png').convert('RGBA')
+        wide = Image.new('RGBA', (body.width + int(FRIEND_REACH * meta['D']), body.height), (0, 0, 0, 0))
+        wide.paste(body, (0, 0))                        # room on the facing side (+x) for the reaching arm
+        self.c.base = dc_replace(self.c.base, plate=wide, meta=dict(self.c.base.meta, size=[wide.width, wide.height]))
+        self.c.stage = Stage(self.c.base, (round(W * wide.width / body.width), H))
+        self.cam = self.c.stage.camera(wide.width / 2, wide.height / 2, wide.width)
+        f = self.c.p['friend']
+        if meta.get('head_base') and meta['head_base'] != meta['base']:
+            clean = Puppet(load_base(meta['head_base']), 'friend')
+            k = f.D / clean.D
+            f.head_sprite = clean.head_sprite.resize((round(clean.head_sprite.width * k), round(clean.head_sprite.height * k)), Image.LANCZOS)
+            f.head_centre = (clean.head_centre[0] * k, clean.head_centre[1] * k)
+            f._head_cache.clear()
+        x0c, _, s = self.cam
+        D = meta['D']
+        self.meta = meta
+        self.top, self.feet, self.cx, self.D = (meta['head'][1] - 0.62 * D) * s, meta['feet_y'] * s, (meta['head'][0] - x0c) * s, D * s
+        self.host = host
+        self.where, self.size, self.to_camera, self.cut_at, self.t0 = 'scene', host.size, False, None, t0
+        self.shivers, self.acts, self.laughs, self.starts = [], [], [], []
+        self.facing = f.facing
+        self.note = ''
+        self.held, self.hold_side, self.hold_angle = None, f.far, 0.0   # the arm toward the host holds the prop
+        name = friend_prop(spec)
+        if name:
+            found = held_prop(name)
+            if found:
+                self.held = found
+                kind = next((k for k in FRIEND_HOLD if k in name.lower()), None)
+                (hx, hy), self.hold_angle = FRIEND_HOLD[kind] if kind else ((0.46, 0.40), 0.0)
+                perf = self.c.perfs['friend']
+                sd = self.hold_side
+                perf.base = replace(perf.base, **{sd + 'h': (hx * f.facing, hy), sd + '_shape': 'grip', sd + '_rot': 0.0})
+            else:
+                self.note = f'friend holds "{name}": not in the props library (stick props --generate)'
+        self.gap, self.tickle_at, self.tickle_angle = None, [], 0.0
+        self.host_side_x, self.host_drop = self.host_waist()
+        perf = self.c.perfs['friend']
+        for a in friend_actions(spec):
+            at = self.c.tw(a['anchor'])
+            mv = self.verb(f, a, at)
+            if mv is not None:
+                perf.actions.append(mv.action)
+        perf.actions.sort(key=lambda a: a.start)
+        motion = spec['shot'].get('motion', [])
+        self.enter_at = next((self.c.tw(m.get('anchor', '')) for m in motion if m['recipe'] in ('enter_left', 'enter_right')), None)
+        self.last = None
+
+    # -- geometry: the friend's body space (D from its shoulder midpoint; the host is on its facing side) ---------------
+    def host_waist(self):
+        """(the host's side at the waist as D from the host's head line toward the friend, the waist's height as D above
+        the feet), measured on the host's cut-out."""
+        import numpy as np
+        hm = json.loads((HOST_DIR / 'host.json').read_text())
+        a = np.asarray(Image.open(HOST_DIR / 'body.png').getchannel('A'))
+        y = int(hm['head'][1] + TICKLE_DROP * hm['D'])
+        xs = np.where(a[y] >= 128)[0]
+        side = (xs.max() - hm['head'][0]) / hm['D'] if len(xs) else 0.45
+        return float(side), (hm['feet_y'] - y) / hm['D']
+
+    def in_body(self, f, head_gap: float, up_from_feet: float):
+        """The point head_gap D from the friend's head line toward the host, up_from_feet D above the feet."""
+        hx, _ = f.body(f.s['head'])
+        feet = (self.meta['feet_y'] - f.mid[1]) / f.D
+        return (hx + head_gap * f.facing, feet - up_from_feet)
+
+    def solve_tickle(self, f, side: str):
+        """(wrist target, feather angle, gap between the two head lines in D) that put the feather's tip on the host's
+        side at the waist."""
+        from pipeline.rig.skeleton import Pose
+        if self.held is None:
+            return (0.95 * f.facing, 0.55), 0.0, 2.0
+        spr, anchor, width = self.held
+        tip = width * (spr.width - anchor[0]) / spr.width
+        feet = (self.meta['feet_y'] - f.mid[1]) / f.D
+        want_y = feet - self.host_drop                  # the waist's height in the friend's body space
+        ang = 12.0                                      # the feather slants a little down toward the host
+        sh = f.body(f.shoulders[side])
+        lo, hi, best = -40.0, 85.0, None
+        for _ in range(28):                             # the arm's angle that brings the tip to the waist's height
+            th = (lo + hi) / 2
+            wrist = (sh[0] + 0.82 * math.cos(math.radians(th)) * f.facing, sh[1] + 0.82 * math.sin(math.radians(th)))
+            pose = Pose(**{side + 'h': wrist, side + '_shape': 'grip', side + '_rot': -10 * f.facing, side + '_bend': 1,
+                           'extra': {side + '_droop': 0.7, side + '_front': 1.0}})
+            j = f.joints(pose)
+            grip = f.body(f.hand_placement(pose, j, side)['grip'])
+            tip_xy = (grip[0] + tip * math.cos(math.radians(ang)) * f.facing, grip[1] + tip * math.sin(math.radians(ang)))
+            best = (wrist, tip_xy)
+            if tip_xy[1] < want_y:
+                lo = th
+            else:
+                hi = th
+        wrist, tip_xy = best
+        hx, _ = f.body(f.s['head'])
+        gap = (tip_xy[0] - hx) * f.facing + self.host_side_x - TICKLE_PRESS
+        return wrist, ang, gap
+
+    def nominal_gap(self) -> float:
+        """D between the two head lines when each stands at its side's spot (camera at rest, before any clamp)."""
+        share, _ = HOST_SIZES.get(self.size, HOST_SIZES['medium'])
+        d_screen = self.host.D * share * H / (int(self.host.feet) + 4 - int(self.host.top))
+        hs = self.host.side
+        fs = 'left' if hs == 'right' else 'right'
+        return max(FRIEND_MIN_GAP, abs(HOST_X.get(fs, 0.5) - HOST_X.get(hs, 0.5)) * W / d_screen)
+
+    def verb(self, f, a: dict, at: float):
+        target = a['target']
+        to_host = target in ('lead', 'host', '')
+        gap = self.gap or self.nominal_gap()
+        head = self.in_body(f, gap, (self.meta['feet_y'] - self.meta['head'][1]) / self.meta['D'] - 0.2)
+        chest = self.in_body(f, gap - self.host_side_x - 0.1, self.host_drop + 0.4)
+        if a['verb'] == 'tickle':
+            wrist, self.tickle_angle, self.gap = self.solve_tickle(f, self.hold_side)
+            self.tickle_at.append(at)
+            return V.tickle(f, at, wrist, side=self.hold_side)
+        if a['verb'] == 'reach':
+            return V.reach(f, at, chest if to_host else (0.85 * f.facing, -0.45))
+        if a['verb'] == 'point':
+            return V.point(f, at, head if to_host else (0.85 * f.facing, -0.6))
+        if a['verb'] == 'gaze':
+            return V.gaze(f, at, head) if to_host else V.gaze(f, at, direction=target)
+        if a['verb'] in ('nod', 'shrug', 'shake_head', 'wave', 'jolt', 'laugh', 'facepalm', 'slump', 'snap', 'freeze', 'look_up'):
+            return V.VERBS[a['verb']](f, at)
+        self.note = '; '.join(filter(None, [self.note, f'friend {a["verb"]}: not staged in the host format']))
+        return None
+
+    # -- HostLayer hooks --------------------------------------------------------------------------------------------
+    def side_at(self, t: float) -> str:
+        return 'left' if self.host.side_at(t) == 'right' else 'right'
+
+    def body_motion(self, t: float):
+        return 0.0, 1.0, 0.0
+
+    def enter_q(self, t: float) -> float:
+        """1 while still outside the frame, 0 once in place (walking in on an enter recipe)."""
+        if self.enter_at is None:
+            return 0.0
+        return 1 - ease((t - self.enter_at + 0.15) / 0.6)
+
+    def entering(self, t: float) -> bool:
+        return self.enter_q(t) > 0.001
+
+    def placement(self, sp, t, zoom, dx, dy, side, grow, rise, pop):
+        h = self.host.placed
+        _, feet = HOST_SIZES.get(self.size, HOST_SIZES['medium'])
+        k = h['k'] * self.host.D / self.D               # the host's head size on screen
+        d_screen = self.D * k
+        out = 1 if side == 'right' else -1
+        if self.gap is not None:                        # a tickle: just close enough for the feather to touch
+            tilt = self.host.body_motion(t)[0]           # the host's lean or flinch moves its waist: follow it
+            fx = h['fx'] + out * (self.gap + math.sin(math.radians(tilt)) * self.host_drop) * d_screen
+        else:
+            fx = W / 2 + (HOST_X.get(side, 0.5) * W - W / 2 - dx) * zoom
+            if (fx - h['fx']) * out < FRIEND_MIN_GAP * d_screen:
+                fx = h['fx'] + out * FRIEND_MIN_GAP * d_screen
+        fx += out * self.enter_q(t) * 0.8 * W
+        fy = H / 2 + (feet * H - H / 2 - dy) * zoom
+        flip = (side == 'right' and self.facing > 0) or (side == 'left' and self.facing < 0)
+        return k, fx, fy, flip
+
+    def sprite(self, t: float):
+        from pipeline.rig.skeleton import GRIPPING
+        pose = self.c.pose('friend', t)
+        held = {}
+        if self.held is not None:
+            spr, anchor, width = self.held
+            sd = self.hold_side
+            if getattr(pose, sd + '_shape') not in GRIPPING:
+                pose = replace(pose, **{sd + '_shape': 'grip'})
+            w = max((a.weight(t) for a in self.c.perfs['friend'].actions if a.name.startswith('tickle')), default=0.0)
+            angle = (self.hold_angle + (self.tickle_angle - self.hold_angle) * w) * self.facing
+            angle += pose.extra.get(sd + '_prop_rot', 0.0)
+            held = {sd: Held(spr, anchor, width, angle=angle)}
+        frame = self.c.stage.compose(self.cam, [self.c.p['friend']], [pose], [held])
+        x0, x1 = int(self.cx - 1.7 * self.D), int(self.cx + (FRIEND_REACH + 0.6) * self.D)
+        return frame.crop((max(0, x0), int(self.top), min(frame.width, x1), int(self.feet) + 4)), self.cx - max(0, x0)
+
+    def draw(self, frame, t: float, zoom: float = 1.0, dx: float = 0.0, dy: float = 0.0):
+        if self.enter_q(t) >= 0.999 or getattr(self.host, 'placed', None) is None:
+            self.last = None                            # not in the frame yet
+            return
+        super().draw(frame, t, zoom, dx, dy)
 
 
 def host_side(spec: dict) -> str:
@@ -1034,6 +1335,8 @@ class VisualShot:
         self.events, self.notes = [], []
         cue = self.spec['shot'].get('host') or {}
         self.host = HostLayer(self.spec, T, t0, t1) if self.host_format and cue.get('where', 'off') != 'off' and load_art else None
+        self.friend = (FriendLayer(self.spec, T, t0, t1, self.host) if self.host is not None and self.host.where == 'scene'
+                       and 'friend' in self.spec['shot'].get('cast', []) and (FRIEND_DIR / 'host.json').exists() else None)
         self.text_items = finish_text_items(self.spec, self.tw, text_items(self.spec, self.tw), t0, t1)
         for snd in self.spec.get('sfx', []):
             at = self.tw(snd['anchor'])
@@ -1050,7 +1353,14 @@ class VisualShot:
 
     def host_hit(self, box) -> int:
         """The host's pixels inside `box` in the frame just drawn (captions keep off the host)."""
-        return self.host.hit(box) if self.host is not None else 0
+        if self.host is None:
+            return 0
+        return self.host.hit(box) + (self.friend.hit(box) if self.friend is not None else 0)
+
+    def draw_people(self, frame, t, zoom=1.0, dx=0.0, dy=0.0):
+        """The host, then the friend beside it (in front: its feather reaches the host's side)."""
+        self.host.draw(frame, t, zoom, dx, dy)
+        self.friend.draw(frame, t, zoom, dx, dy)
 
     def frame(self, t):
         frame = self.draw(t)
@@ -1117,7 +1427,7 @@ class InsertShot(VisualShot):
                     self.notes.append(f'crossfade "{e["detail"]}" has no painted variant; it is skipped')
         self.scene = InsertScene(scene, effects, self.t0, self.t1, variants, seed=sum(map(ord, self.spec['id'])))
         if self.host is not None:
-            self.scene.host = self.host.draw
+            self.scene.host = self.host.draw if self.friend is None else self.draw_people
 
     def draw(self, t):
         return self.scene.frame(t)
@@ -1197,6 +1507,8 @@ class SplitShot(VisualShot):
             d.rectangle((0, seam - 7, W, seam + 7), fill=(250, 244, 230), outline=(34, 30, 52), width=3)
         if self.host is not None:
             self.host.draw(frame, t)
+            if self.friend is not None:
+                self.friend.draw(frame, t)
         for k, (label, at) in enumerate(zip(self.labels, self.label_at)):
             if t < at or (k == 1 and q <= 0):
                 continue
@@ -1386,6 +1698,11 @@ def host_episode(episode, specs: dict, lib: dict, slug: str):
                 cls = make_visual_class(s2)
                 notes.append(f'no standing {want["setting"]} base: the host stands in the {key} scene')
                 lib_used = [f'insert {key}'] + used
+        if on and cue.where == 'scene' and 'friend' in b.shot.cast:
+            acts = ', '.join(f'{a["verb"]} on "{a["anchor"]}"' for a in friend_actions(spec)) or 'no verbs'
+            held = friend_prop(spec)
+            notes.append(f'the friend stands opposite the host ({acts}{"; holds " + held if held else ""})'
+                         + ('; the host laughs on the tickle' if tickle_anchors(spec) else ''))
         cls.host_format = True
         beats[b.id] = cls
         report[b.id] = dict(library=lib_used + ([f'host {cue.where}'] if on else []) + verbs, hand_written=[], props=[],

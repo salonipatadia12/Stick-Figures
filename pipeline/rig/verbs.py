@@ -18,7 +18,7 @@ from .actions import Action, back_out, ease, ease_out, keys
 from .skeleton import Pose
 
 IN_PLACE = ('reach', 'point', 'shrug', 'facepalm', 'pick_up', 'put_down', 'throw', 'drink', 'type', 'write', 'wave', 'nod',
-            'shake_head', 'slump', 'jolt', 'gaze', 'shiver', 'look_up', 'snap', 'freeze')
+            'shake_head', 'slump', 'jolt', 'gaze', 'shiver', 'look_up', 'snap', 'freeze', 'tickle', 'laugh')
 STAGED = ('lie_down', 'sit_up', 'stand_up', 'walk')
 
 
@@ -349,6 +349,47 @@ def freeze(p, t0: float, dur: float = 1.8) -> Move:
     return Move(Action(t0 - 0.05, t0 + dur, fn, 0.12, 0.35, 'freeze'), label='freeze')
 
 
+# ---- two characters in the host format: the friend tickles the host, the host laughs ---------------------
+
+TICKLE_DUR = 1.2              # s: the wiggle at the target
+TICKLE_REACH = 0.35           # s: the hand going out to it
+
+
+def tickle(p, t0: float, target=None, side: str = 'auto', dur: float = TICKLE_DUR, reach_in: float = TICKLE_REACH,
+           shape: str = 'grip') -> Move:
+    """The hand (with a held feather) goes out to `target` (body space; default ahead at the waist) and wiggles there for
+    `dur` seconds, eyes on it and a grin; the held prop flutters with it (pose.extra '<side>_prop_rot', degrees, read by
+    the composer). Contact is at t0 + reach_in."""
+    target = target or (0.95 * p.facing, 0.55)
+    s = _side(p, side, target)
+    look = _toward(p, target)
+
+    def fn(t, pose):
+        u = t - t0
+        q = ease(u / reach_in)
+        w = ease((u - 0.8 * reach_in) / 0.15) * (1 - ease((u - reach_in - dur + 0.15) / 0.15))
+        start = getattr(pose, s + 'h')
+        xy = _lerp(start, target, q)
+        xy = (xy[0] + 0.035 * w * math.sin(u * 2 * math.pi * 5.5), xy[1] + 0.03 * w * math.sin(u * 2 * math.pi * 7.3 + 0.7))
+        kw = _hand(s, xy, shape, rot=-10 * p.facing, droop=0.7, front=1.0, prop_rot=5.0 * w * math.sin(u * 2 * math.pi * 6.2))
+        return replace(pose, **kw, **look, smile=0.85, brow_raise=0.35 * q, mouth_open=max(pose.mouth_open, 0.15 * w))
+    return Move(Action(t0 - 0.05, t0 + reach_in + dur, fn, 0.1, 0.4, f'tickle {s}'), label='tickle')
+
+
+def laugh(p, t0: float, dur: float = 0.8) -> Move:
+    """A burst of laughter (a flinch from a tickle): shoulders squeezed up and shaking, head tilted back, eyes shut in a
+    grin, mouth open, hands pulled in to the belly."""
+    def fn(t, pose):
+        u = t - t0
+        q = ease(u / 0.15) * (1 - ease((u - dur + 0.2) / 0.2))
+        shake = abs(math.sin(u * 2 * math.pi * 6.5))
+        return replace(pose, lift=q * (0.05 + 0.05 * shake), head_tilt=-9 * q * p.facing, head_dy=-0.02 * q,
+                       eye_open=max(0.05, 1 - 0.95 * q), eye_wide=0.0, smile=1.0, mouth_open=q * (0.45 + 0.25 * shake),
+                       brow_raise=0.5 * q, brow_worry=0.0, lh=_lerp(pose.lh, (-0.40, 0.60), q), rh=_lerp(pose.rh, (0.40, 0.60), q),
+                       l_shape='fist', r_shape='fist', l_rot=-30, r_rot=30, l_bend=1, r_bend=1)
+    return Move(Action(t0 - 0.05, t0 + dur, fn, 0.06, 0.3, 'laugh'), label='laugh')
+
+
 # ---- presenter gestures (user 2026-11-09: the host reacts to every line, never hands-on-hips for a whole beat) ------
 # The composer adds these line by line (compose_beats.acting); they are not script verbs.
 
@@ -419,6 +460,6 @@ def open_hands(p, t0: float, dur: float = 1.4) -> Move:
 
 VERBS = dict(reach=reach, point=point, shrug=shrug, facepalm=facepalm, pick_up=pick_up, put_down=put_down, throw=throw,
              drink=drink, type=type_, write=write, wave=wave, nod=nod, shake_head=shake_head, slump=slump, jolt=jolt, gaze=gaze,
-             shiver=shiver, look_up=look_up, snap=snap, freeze=freeze)
+             shiver=shiver, look_up=look_up, snap=snap, freeze=freeze, tickle=tickle, laugh=laugh)
 GESTURES = dict(explain=explain, present=present, lean=lean, step_back=step_back, open_hands=open_hands, nod=nod, shrug=shrug,
                 gaze=gaze, point=point)
