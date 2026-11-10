@@ -1,0 +1,31 @@
+{
+ "base": "friend-standing-street",
+ "size": [
+  941,
+  1672
+ ],
+ "head": [
+  496.1,
+  487.7
+ ],
+ "D": 338.2,
+ "feet_y": 1551,
+ "body_box": [
+  310,
+  628,
+  650,
+  1551
+ ],
+ "seat": "friend",
+ "rest": {
+  "l": [
+   -0.47,
+   0.93
+  ],
+  "r": [
+   0.538,
+   0.93
+  ]
+ },
+ "head_base": "friend-standing-street"
+}
