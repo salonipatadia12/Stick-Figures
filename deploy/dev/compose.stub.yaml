@@ -1,0 +1,11 @@
+# Local stack check with the stub app (deploy/dev/stub_app.py) instead of webapp.app, and no runner:
+#   docker compose --env-file <test env> -p sticktest -f deploy/compose.yaml -f deploy/dev/compose.stub.yaml \
+#     up -d postgres web caddy
+# Paths here are relative to deploy/ (the first compose file's folder).
+services:
+  web:
+    volumes:
+      - ./dev:/stub:ro
+    command: ["uvicorn", "--app-dir", "/stub", "stub_app:app", "--host", "0.0.0.0", "--port", "8000"]
+  runner:
+    profiles: ["never"]

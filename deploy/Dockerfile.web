@@ -1,0 +1,38 @@
+# The VPS image for `web` (uvicorn webapp.app:app) and `runner` (python -m webapp.runner).
+# Build from the repository root:  docker build -f deploy/Dockerfile.web -t stick-web .
+# What goes in is an allow-list (deploy/Dockerfile.web.dockerignore): pipeline/, webapp/, schemas/, the styles/
+# JSON metadata and tests/pipeline_fixtures.py (fake mode). No PNG libraries, renders, episodes or secrets.
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_ROOT_USER_ACTION=ignore \
+    PYTHONPATH=/app \
+    STICK_DATA_DIR=/data \
+    STICK_EPISODES_DIR=/data/episodes
+
+RUN groupadd --gid 10001 app \
+ && useradd --uid 10001 --gid app --home-dir /home/app --create-home --shell /usr/sbin/nologin app \
+ && mkdir -p /app /data/episodes /data/outputs \
+ && chown -R app:app /data
+
+WORKDIR /app
+
+# Dependencies first (their layer is reused while only code changes). webapp/requirements*.txt is optional.
+COPY deploy/requirements-web.txt webap[p]/requirements*.txt /tmp/req/
+RUN pip install --no-cache-dir -r /tmp/req/requirements-web.txt \
+ && if [ -f /tmp/req/requirements.txt ]; then pip install --no-cache-dir -r /tmp/req/requirements.txt; fi \
+ && rm -rf /tmp/req /root/.cache
+
+COPY --chown=app:app . /app/
+
+USER app
+VOLUME ["/data"]
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import json,sys,urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4); sys.exit(0 if json.load(r).get('ok') else 1)"
+
+CMD ["uvicorn", "webapp.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]

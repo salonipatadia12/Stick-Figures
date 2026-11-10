@@ -1,0 +1,39 @@
+# TLS in front of the web app. The site is PUBLIC_URL (e.g. https://187-127-179-129.sslip.io): Caddy gets and
+# renews a Let's Encrypt certificate for it on its own (ports 80 and 443 must reach this host).
+# CADDY_GLOBAL_OPTIONS adds global options, e.g. `email you@example.com`, or for a local test
+# `local_certs skip_install_trust` with PUBLIC_URL=https://localhost:8443. Let's Encrypt needs the public ports
+# 80/443; with other ports use a certificate another way (or put this behind the proxy that already owns 443).
+{
+	http_port {$CADDY_HTTP_PORT:80}
+	https_port {$CADDY_HTTPS_PORT:443}
+	{$CADDY_GLOBAL_OPTIONS}
+	servers {
+		timeouts {
+			read_body 15m
+		}
+	}
+}
+
+{$PUBLIC_URL} {
+	encode zstd gzip
+
+	# the Mac uploads the finished MP4 and previews here
+	request_body {
+		max_size 2GB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	reverse_proxy web:8000
+
+	log {
+		output stdout
+		format console
+	}
+}

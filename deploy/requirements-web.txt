@@ -1,0 +1,18 @@
+# The VPS image (deploy/Dockerfile.web): the pipeline's light steps + the web app. Pinned to the versions the
+# Mac's .venv runs today. Lane B's webapp/requirements.txt, if present, is installed after this file.
+# pipeline (pyproject.toml)
+anthropic==2.5.0
+pydantic==2.14.2
+python-dotenv==1.2.2
+Pillow==13.0.0
+numpy==2.5.4
+edge-tts==7.3.1
+# web app
+fastapi==0.159.1
+uvicorn==0.54.0
+SQLAlchemy==2.1.8
+psycopg[binary]==3.3.8
+Jinja2==3.1.6
+python-multipart==0.0.33
+itsdangerous==2.2.0
+httpx==0.28.1
