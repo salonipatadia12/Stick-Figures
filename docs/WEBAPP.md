@@ -134,6 +134,16 @@ In the user's `Stick_Figures` checkout on `pipeline-v2`, with its venvs:
 - `caffeinate -i -w <pid>` only while a job runs; the launchd agent (`KeepAlive`) polls every 30 s while idle.
 - Never kills other processes; one job at a time; the token from the Keychain; logs in `~/Library/Logs/stick-worker.log`.
 
+## Fake mode (tests; no money, no FLUX)
+
+- `STICK_FAKE_ANTHROPIC=1` (B): the runner's pipeline calls get a fake client (`tests/pipeline_fixtures.FakeClient`
+  with the fixtures' research, storyline and script responses) instead of `pipeline.script.make_client()`. Nothing
+  paid is ever sent in this mode; the ledger records the fake usage as $0.
+- `tests/e2e/fake_worker.py` (D): speaks the worker API like the Mac, with canned outputs (a 2 s ffmpeg `testsrc`
+  MP4, an SRT, a passing `qa.json`, two preview JPEGs). The real Mac worker (C) has a `--once` mode for tests.
+- Ports: Caddy's host ports are `CADDY_HTTP_PORT`/`CADDY_HTTPS_PORT` (default 80/443) in case the VPS already
+  runs something on them; the web app listens on 8000 inside the network only.
+
 ## Out of scope for v1 (say so in the UI if hit)
 
 - A script that needs a base the library does not have stops at the script gate with that message (the host format
