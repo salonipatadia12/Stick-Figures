@@ -5,6 +5,7 @@
 !webapp/
 !schemas/
 !styles/**/*.json
+!styles/*/script_brief.md
 !tests/pipeline_fixtures.py
 !deploy/requirements-web.txt
 **/__pycache__
