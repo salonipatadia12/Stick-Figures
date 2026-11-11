@@ -2,10 +2,15 @@
 
 ```sh
 python3 -m venv .venv && .venv/bin/python -m pip install -e .
-cp .env.example .env   # add ANTHROPIC_API_KEY (scripts); images and voice run locally, no keys
+brew install ollama && brew services start ollama && ollama pull qwen2.5:14b   # once; qwen2.5:32b on 32 GB+
+cp .env.example .env   # SCRIPT_PROVIDER=ollama: no keys at all
 .venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance" --dry-run
 .venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance"
 ```
+
+Everything runs on this machine at $0 per video: research (DuckDuckGo, no key), storylines and scripts (Ollama +
+Qwen 2.5, Apache-2.0), images (FLUX.2 klein) and narration (Kokoro). The paid Claude path is still there behind
+`SCRIPT_PROVIDER=anthropic` with `ANTHROPIC_API_KEY` in `.env`. See [docs/LOCAL_MODELS.md](docs/LOCAL_MODELS.md).
 
 Or ask Claude Code, in this repository, to "make a stick figure Short about …". The
 [`stick-short` skill](.claude/skills/stick-short/SKILL.md) runs the same commands and shows each
@@ -13,8 +18,8 @@ approval gate in the chat.
 
 - Everything for one video lives in `episodes/<slug>/episode.json`
   ([schema](schemas/episode.schema.json)).
-- Every paid call goes through a per-video cost ledger, capped at `--budget` (default $2.00), with
-  no automatic paid retries.
+- Every call goes through a per-video cost ledger, capped at `--budget` (default $2.00), with
+  no automatic paid retries; local model calls and searches are recorded at $0.00.
 - The default look is `cozy`, taken from The Empty Chair.
 - **Phase 1** (the researched script plus the approval gate) is built. Images, voice, captions
   and compositing follow in Phases 2–4.

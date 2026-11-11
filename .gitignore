@@ -24,6 +24,8 @@ legacy/bespoke/the-empty-chair-source/qa-*
 # pipeline-v2 episodes: commit episode.json and ledger.json; never caches or renders
 episodes/*/cache/
 episodes/*/out/
+# shared research cache (fetched page text, 7 days; pipeline/cache.py)
+/cache/
 
 # Local model runtimes (one per engine; see docs/LOCAL_MODELS.md)
 .venvs/

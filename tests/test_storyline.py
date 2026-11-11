@@ -10,7 +10,7 @@ from unittest import mock
 
 from pipeline import cli, config, qa, script, story
 from pipeline.models import Episode, Storyline, from_wire
-from pipeline_fixtures import FakeClient, research_response, story_pitch, story_response, storyline
+from pipeline_fixtures import FakeClient, anthropic_provider, research_response, story_pitch, story_response, storyline
 from test_host_format import episode as host_episode
 
 
@@ -121,6 +121,9 @@ class HostScaleTest(unittest.TestCase):
 
 
 class ResearchCitationTest(unittest.TestCase):
+    def setUp(self):
+        anthropic_provider(self)
+
     def blocks(self, text, cites=()):
         from types import SimpleNamespace as N
         result = N(type='web_search_tool_result', content=[N(url='https://www.consumerfinance.gov/ask-cfpb/x/', title='CFPB')])
@@ -156,6 +159,7 @@ class ResearchCitationTest(unittest.TestCase):
 
 class RotationTest(unittest.TestCase):
     def setUp(self):
+        anthropic_provider(self)                 # the pitches below come from a fake Anthropic client
         self.dir = tempfile.TemporaryDirectory()
         p = mock.patch.object(config, 'EPISODES_DIR', Path(self.dir.name))
         p.start()
@@ -204,6 +208,33 @@ class RotationTest(unittest.TestCase):
         with mock.patch.object(script, 'make_client', lambda: client):
             code, out = run_cli('make', 'Why honey never spoils')
         self.assertIn('may not carry a real story: only one fact, no conflict', out)
+
+
+class OllamaPitchTest(unittest.TestCase):
+    """story.pitch() under SCRIPT_PROVIDER=ollama: no key, the formats constrained, one repair for a repeated format."""
+
+    def test_pitch_repairs_a_repeated_format_and_logs_free_calls(self):
+        import os
+        from ollama_fixtures import FakeOllama, patched
+        from pipeline.cost import Ledger
+        from pipeline.models import Source
+        src = [Source(id='s1', claim='Honey has very little water.', url='https://pubmed.ncbi.nlm.nih.gov/1/', quote='x')]
+        answers = [story_pitch(('mystery', 'mystery', 'pov')), story_pitch(('mystery', 'pov', 'what_if'))]
+        fake = FakeOllama(lambda body: answers.pop(0))
+        with tempfile.TemporaryDirectory() as d, patched(fake), \
+                mock.patch.dict(os.environ, {'SCRIPT_PROVIDER': 'ollama', 'ANTHROPIC_API_KEY': '', 'STICK_CACHE_DIR': d}), \
+                mock.patch.object(script, 'research', lambda *a, **k: (src, Path(d) / 'r.json', True)), \
+                mock.patch.object(script, 'make_client', lambda: (_ for _ in ()).throw(AssertionError('no client'))), \
+                mock.patch.object(story, 'allowed_formats', lambda slug: (story.ALL_FORMATS, [])):
+            ledger = Ledger(Path(d) / 'ledger.json', 2.0)
+            ep, notes = story.pitch(Episode(slug='t', topic='why honey never spoils'), Path(d), ledger)
+        self.assertEqual([s.format for s in ep.storylines], ['mystery', 'pov', 'what_if'])
+        self.assertEqual(len(fake.chats), 2)
+        self.assertIn('share a format', fake.chats[1]['messages'][1]['content'])
+        self.assertEqual(fake.chats[0]['format']['properties']['storylines']['items']['properties']['format']['enum'],
+                         story.ALL_FORMATS)
+        self.assertEqual({e['provider'] for e in ledger.entries}, {'ollama'})
+        self.assertEqual(fake.unloads[-1]['keep_alive'], 0)
 
 
 class VariantsTest(unittest.TestCase):

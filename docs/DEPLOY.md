@@ -1,5 +1,41 @@
 # Deployment plan: VPS + this Mac as the GPU worker
 
+> **2026-11-10: research, storylines and scripts are free and local (Ollama).** Wherever this plan says "script calls
+> (Claude)", read: Ollama on the Mac. See "Ollama" below.
+
+## Ollama (research, storylines, scripts)
+
+Chosen: **on the Mac** (Option B of the spec: the M5 has 16 GB, so `qwen2.5:14b`; a 32 GB+ Mac would run
+`qwen2.5:32b`). The VPS queues the research / storyline / script jobs and the Mac worker runs them next to FLUX, one
+job at a time; the pipeline unloads the model when each step ends so FLUX gets the memory.
+
+```sh
+# Mac, once
+brew install ollama
+brew services start ollama          # a launchd service: starts at login, restarts if it stops
+ollama pull qwen2.5:14b             # 9 GB, Apache-2.0; qwen2.5:32b on 32 GB or more
+curl -s localhost:11434/api/tags    # the model is listed
+# .env (repo root or the worker's env file)
+SCRIPT_PROVIDER=ollama
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:14b
+```
+
+The Homebrew service already sets `OLLAMA_FLASH_ATTENTION=1` and `OLLAMA_KV_CACHE_TYPE=q8_0` (a smaller context
+cache). Nothing else needs a plist: the service is Homebrew's own LaunchAgent, separate from the GPU worker's.
+
+**Fallback (Option C), only if the Mac cannot hold both:** Ollama on the VPS, CPU only, `qwen2.5:7b` (Apache-2.0),
+slower but no architecture change:
+
+```sh
+curl -fsSL https://ollama.com/install.sh | sh     # installs the ollama systemd service
+ollama pull qwen2.5:7b
+# VPS env: SCRIPT_PROVIDER=ollama  OLLAMA_HOST=http://localhost:11434  OLLAMA_MODEL=qwen2.5:7b
+```
+
+Inside Docker, point `OLLAMA_HOST` at the host (`http://host.docker.internal:11434` or the host's bridge address)
+and keep port 11434 closed to the internet.
+
 Status: **plan, waiting for the user's OK.** Nothing is installed on the VPS yet. The key install adds one line to
 `~/.ssh/authorized_keys`; the spec check (`scripts/deploy/vps_spec_check.sh`) only reads.
 

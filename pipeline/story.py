@@ -6,7 +6,9 @@ to another topic still waiting at its storyline gate (so two videos picked toget
 can say a topic cannot carry a real story; the gate then shows that note instead of forcing one.
 
 The pitch is one structured call through the same ledger as the script (cache by content hash, worst case reserved
-first, no retries).
+first, no retries). Under SCRIPT_PROVIDER=ollama (the default) the same prompt goes to the local model, free, with
+its output constrained to the allowed formats and fact ids, and at most two repairs when a hook runs long or two
+storylines share a format.
 """
 from __future__ import annotations
 
@@ -115,13 +117,119 @@ def story_estimate(input_tokens):
     return token_cost(config.SCRIPT_MODEL, input=input_tokens, output=STORY_MAX_TOKENS)
 
 
+def story_schema(allowed, fact_ids) -> dict:
+    """StoryPitch for the local model: exactly three storylines, formats only from the allowed list, fact ids only
+    from the research (Ollama's schema-constrained output cannot produce anything else)."""
+    from .script import _arr, _enum, _obj, _s
+    line = _obj(dict(format=_enum(allowed), title=_s(), hook=_s(), pitch=_s(), conflict=_s(), stakes=_s(), twist=_s(),
+                     payoff=_s(), visuals=_arr(_s(), 3, 5), fact_ids=_arr(_enum(fact_ids) if fact_ids else _s(), 1 if fact_ids else 0)))
+    return _obj(dict(story_supported={'type': 'boolean'}, note=_s(), storylines=_arr(line, 3, 3)))
+
+
+def story_issues(data, allowed) -> list:
+    """What the local pitch must get right before it is shown (the same things the gate notes)."""
+    from .models import HOOK_MAX_WORDS
+    import re
+    try:
+        sp = StoryPitch.model_validate(data)
+    except ValueError as exc:
+        return [f'the answer does not fit the shape: {str(exc)[:300]}']
+    out = []
+    if len(sp.storylines) != 3:
+        out.append(f'{len(sp.storylines)} storylines; give exactly 3')
+    if len({s.format for s in sp.storylines}) < len(sp.storylines):
+        out.append('two storylines share a format; each must use a different allowed format')
+    for k, s in enumerate(sp.storylines, 1):
+        n = len(re.findall(r"[\w'’-]+", s.hook))
+        if n > HOOK_MAX_WORDS:
+            out.append(f'storyline {k}: the hook "{s.hook}" is {n} words; at most {HOOK_MAX_WORDS}')
+        if s.format not in allowed:
+            out.append(f'storyline {k}: format {s.format} is not allowed')
+    return out
+
+
+STORY_REPAIRS = 2
+STORY_LOCAL_MAX_TOKENS = 1600    # three storylines are ~700 tokens; small enough to stay in the 4096-token window
+
+
+def _pitch_free(episode, facts, allowed, base, ledger, regenerate):
+    """(pitch data, cache path, cached) from the local model, with at most STORY_REPAIRS repairs."""
+    from . import llm
+    from .cache import for_episode
+    from .script import ScriptError, _cache, _write_json, shape
+    cache = for_episode(base)
+    system = STORY_SYSTEM + format_guide(allowed)
+    fact_lines = '\n'.join(f'{f.id}: {f.claim} <{f.url}>' for f in facts)
+    user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+            f'Audience: {episode.audience or "general English-speaking audience"}\n'
+            f'Length: {episode.target_length} seconds.\n'
+            f'Allowed formats (pick 3 different ones that fit this topic best): {", ".join(allowed)}\n\n'
+            f'Research facts (cite by id):\n{fact_lines}')
+    schema = story_schema(allowed, [f.id for f in facts])
+    model = config.ollama_model()
+    key = digest([STORY_VERSION, 'ollama', model, system, user, STORY_REPAIRS])
+    path = _cache(base, 'story', key)
+    if path.exists() and not regenerate:
+        return json.loads(path.read_text())['pitch'], path, True
+    data, issues, log = None, [], []
+    for attempt in range(STORY_REPAIRS + 1):
+        ask = user + '\n\nAnswer with JSON only: ' + shape(schema)
+        if data is not None:
+            ask += ('\n\nYOUR PREVIOUS ANSWER:\n' + json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+                    + '\n\nTHE CHECKER FOUND THESE PROBLEMS. Fix every one and keep everything else:\n'
+                    + '\n'.join(f'- {m}' for m in issues))
+        t = time.time()
+        try:
+            data = llm.generate_json(system, ask, schema, STORY_LOCAL_MAX_TOKENS, temperature=0.5 if attempt == 0 else 0.3,
+                                     seed=41 + attempt, cache=cache, refresh=regenerate, ledger=ledger, step='storyline',
+                                     detail='three storylines' + (f' (repair {attempt})' if attempt else ''))
+        except llm.LLMError as exc:
+            raise ScriptError(f'The local model could not pitch storylines: {exc}') from None
+        issues = story_issues(data, allowed)
+        log.append(dict(attempt=attempt, seconds=round(time.time() - t, 1), issues=issues))
+        if not issues:
+            break
+    try:
+        StoryPitch.model_validate(data)
+    except ValueError as exc:
+        failed = base / 'cache' / f'failed-story-{time.strftime("%Y%m%d-%H%M%S")}.json'
+        _write_json(failed, dict(error=str(exc)[:2000], raw=data))
+        raise ScriptError(f'The storyline answer did not match the schema; saved to {failed}.') from None
+    _write_json(path, dict(pitch=data, created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=model, provider='ollama',
+                           version=STORY_VERSION, allowed=allowed, attempts=log))
+    LAST_PITCH.clear()
+    LAST_PITCH.update(attempts=log, cache=dict(cache.stats))
+    return data, path, False
+
+
+LAST_PITCH: dict = {}
+
+
 def pitch(episode: Episode, base, ledger, client=None, regenerate=False):
     """Research (cached) -> three storylines. Returns (episode with storylines, notes). Stops the pipeline at the
-    storyline gate; nothing else is written."""
-    from .script import ScriptError, _cache, _send, _write_json, count_input_tokens, keep_reputable, make_client, research
-    client = client or make_client()
+    storyline gate; nothing else is written.
+
+    SCRIPT_PROVIDER=ollama (default): free and local, `client` is ignored and no key is needed; the model is unloaded
+    at the end. SCRIPT_PROVIDER=anthropic: one budgeted Claude call, as before."""
+    from .script import provider
+    prov = provider(client)
+    LAST_PITCH.clear()
+    try:
+        return _pitch(episode, base, ledger, client, regenerate, prov)
+    finally:
+        if prov == 'ollama' and config.ollama_unload_after_step():
+            from . import llm
+            llm.unload()
+
+
+def _pitch(episode, base, ledger, client, regenerate, prov):
+    from .script import (ScriptError, _cache, _send, _write_json, count_input_tokens, free_notes, keep_reputable,
+                         make_client, research)
+    client = (client or make_client()) if prov == 'anthropic' else None
     facts, rpath, rcached = research(episode, base, ledger, client)
     notes = [f'research: {len(facts)} cited facts ({"cache" if rcached else "new"}: {rpath.name})']
+    if prov == 'ollama':
+        notes += free_notes('research')
     facts, dropped = keep_reputable(facts)            # storylines stand only on facts the script may use
     notes += [f'  dropped (not government, university or peer-reviewed): {f.url}' for f in dropped]
     if not facts:
@@ -129,6 +237,12 @@ def pitch(episode: Episode, base, ledger, client=None, regenerate=False):
                           'pitched.')
     allowed, why = allowed_formats(episode.slug)
     notes += [f'formats: {", ".join(allowed)}'] + [f'  ({w})' for w in why]
+    if prov == 'ollama':
+        data, path, cached = _pitch_free(episode, facts, allowed, base, ledger, regenerate)
+        for a in LAST_PITCH.get('attempts', []):
+            notes.append(f'  storyline call {a["attempt"] + 1}: {a["seconds"]} s'
+                         + (f'; fixing: {"; ".join(a["issues"])}' if a['issues'] else ''))
+        return _finish(episode, data, path, cached, facts, allowed, notes)
     request = story_request(episode, facts, allowed)
     key = digest([STORY_VERSION, request['model'], request['system'], request['messages']])
     path = _cache(base, 'story', key)
@@ -151,6 +265,10 @@ def pitch(episode: Episode, base, ledger, client=None, regenerate=False):
         _write_json(path, dict(pitch=data, created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=request['model'],
                                version=STORY_VERSION, allowed=allowed))
         cached = False
+    return _finish(episode, data, path, cached, facts, allowed, notes)
+
+
+def _finish(episode, data, path, cached, facts, allowed, notes):
     sp = StoryPitch.model_validate(data)
     fact_ids = {f.id for f in facts}
     for k, s in enumerate(sp.storylines, 1):

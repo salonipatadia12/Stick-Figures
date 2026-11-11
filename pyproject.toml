@@ -14,6 +14,11 @@ dependencies = [
     "Pillow>=13.0",
     "numpy>=2.3",
     "edge-tts>=7.3",
+    # free research and scripts (SCRIPT_PROVIDER=ollama): keyless DuckDuckGo search (the package formerly called
+    # duckduckgo-search), page text extraction, and the Ollama HTTP API
+    "ddgs>=9.10",
+    "trafilatura>=2.0",
+    "requests>=2.32",
 ]
 
 [project.optional-dependencies]

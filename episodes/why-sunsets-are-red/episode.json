@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "slug": "why-sunsets-are-red",
+  "topic": "Why sunsets are red",
+  "niche": "",
+  "audience": "",
+  "style": "cozy",
+  "aspect": "9:16",
+  "target_length": 45,
+  "voice": {
+    "provider": "kokoro",
+    "voice_id": ""
+  },
+  "title": "",
+  "hook_promise": "",
+  "hook_options": [],
+  "hook_pick": 0,
+  "storylines": [
+    {
+      "format": "mini_story",
+      "title": "Why Sunsets Are Red: A Mini Story",
+      "hook": "Sunsets are red, why?",
+      "pitch": "A curious host wonders why sunsets turn red. They learn about light scattering and the long atmospheric path during sunset.",
+      "conflict": "The host wants to understand why sunsets are red but finds conflicting information online.",
+      "stakes": "Understanding the science behind sunsets could help explain other natural phenomena too.",
+      "twist": "Sunlight travels a longer path through the atmosphere at sunset, scattering out blue and violet light.",
+      "payoff": "Red light dominates during sunset because it’s less scattered by air molecules.",
+      "visuals": [
+        "A painted sky turning red as the sun sets",
+        "An animated diagram showing sunlight scattering in the atmosphere",
+        "The host holding a globe to demonstrate sunlight path"
+      ],
+      "fact_ids": [
+        "s2",
+        "s5"
+      ]
+    },
+    {
+      "format": "myth_vs_fact",
+      "title": "Myth vs Fact: Red Sunsets and Pollution",
+      "hook": "Red sunsets due to pollution, myth or fact?",
+      "pitch": "The host investigates the common belief that red sunsets indicate high pollution levels. They find out it’s about light scattering.",
+      "conflict": "A popular misconception exists that red sunsets are caused by pollution.",
+      "stakes": "Correcting this misunderstanding helps people appreciate natural phenomena accurately.",
+      "twist": "Sunsets turn red because sunlight travels a longer path through the atmosphere at sunset, not due to pollution.",
+      "payoff": "Understanding true causes enriches our appreciation of nature’s beauty and complexity.",
+      "visuals": [
+        "A split screen showing a polluted city with grey sky vs. a pristine landscape with a vibrant red sunset",
+        "The host standing next to a painted globe demonstrating sunlight path",
+        "Captions explaining the science"
+      ],
+      "fact_ids": [
+        "s2",
+        "s5"
+      ]
+    },
+    {
+      "format": "what_if",
+      "title": "What If Sunlight Didn't Scatter?",
+      "hook": "Imagine if sunsets weren’t red.",
+      "pitch": "The host explores what would happen if sunlight didn’t scatter. They discover the beauty of red sunsets lies in light scattering physics.",
+      "conflict": "A world where sunsets are not colored by light scattering, leading to a lack of vibrant sunsets.",
+      "stakes": "Appreciating why red sunsets occur can deepen our understanding and enjoyment of natural phenomena.",
+      "twist": "Without scattering, the sky would be dark at sunset instead of colorful.",
+      "payoff": "Sunlight’s journey through more atmosphere during sunset makes red hues dominate, creating stunning visuals.",
+      "visuals": [
+        "A painted scene showing a darkening sky without colors vs. a vibrant red sunset",
+        "The host holding a diagram explaining light scattering and wavelength differences",
+        "Animated sun setting with different colored lights fading out"
+      ],
+      "fact_ids": [
+        "s2",
+        "s5"
+      ]
+    }
+  ],
+  "storyline_pick": 0,
+  "story_note": "",
+  "subject_settings": [],
+  "beats": [],
+  "sources": [
+    {
+      "id": "s1",
+      "claim": "Sunlight is scattered more by blue light waves than other colors.",
+      "url": "https://www.niehs.nih.gov/health/kids/topics/natural-world/why-the-sky-is-blue",
+      "title": "Ever wondered why the sky is blue? Or why sunsets are red?",
+      "quote": "Blue light waves are shorter than light waves of any other color."
+    },
+    {
+      "id": "s2",
+      "claim": "During sunset, sunlight travels through more atmosphere and reds and yellows dominate.",
+      "url": "https://www.niehs.nih.gov/health/kids/topics/natural-world/why-the-sky-is-blue",
+      "title": "Ever wondered why the sky is blue? Or why sunsets are red?",
+      "quote": "When the Sun is lower in the sky, sunlight goes through more of the atmosphere. The blue light is scattered so much that the reds and yellows pass through to your eyes."
+    },
+    {
+      "id": "s3",
+      "claim": "Air molecules scatter short-wavelength light more efficiently than long-wavelength light, making the sky appear blue during the day.",
+      "url": "https://cimss.ssec.wisc.edu/wxwise/class/optics.html",
+      "title": "ATMOSPHERIC OPTICS",
+      "quote": "Air molecules are much smaller than the cloud droplets. Molecules are wavelength selective in the light they scatter. They are more efficient at scattering light with a short wavelength violet, blue, green."
+    },
+    {
+      "id": "s4",
+      "claim": "Sunsets are red because of light refraction in Earth's atmosphere.",
+      "url": "https://doi.org/10.24297/jap.v9i3.1353",
+      "title": "Red Sunrise, Blue Sky, and Red Sunset: the Light Refraction of Earth Atmosphere",
+      "quote": "This paper used earth atmosphere refraction principles to explain the sky and sun color."
+    },
+    {
+      "id": "s5",
+      "claim": "Sunlight during sunset takes a longer path through the atmosphere, scattering out violet and blue light and leaving red light visible.",
+      "url": "https://www.spc.noaa.gov/publications/corfidi/sunset/",
+      "title": "The Colors of Sunset and Twilight",
+      "quote": "At sunrise or sunset, sunlight takes a much longer path through the atmosphere than during the middle part of the day. Because this lengthened path results in an increased amount of violet and blue light being scattered out of the beam by the nearly infinite number of scattering \"events\" that occur along the way (a process collectively known as multiple scattering), the light that reaches an observer early or late in the day is noticeably reddened."
+    }
+  ],
+  "approvals": {},
+  "meta": {
+    "story": {
+      "allowed": [
+        "mini_story",
+        "myth_vs_fact",
+        "what_if",
+        "countdown",
+        "mystery",
+        "pov"
+      ],
+      "version": "story-v1",
+      "generated": "2026-11-10T22:33:06"
+    }
+  }
+}

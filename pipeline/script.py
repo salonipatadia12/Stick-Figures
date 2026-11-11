@@ -1,4 +1,9 @@
-"""Topic -> researched script, via Claude (claude-sonnet-5-5) in two budgeted calls.
+"""Topic -> researched script.
+
+SCRIPT_PROVIDER=ollama (the default since 2026-11-10, $0): research by DuckDuckGo and fetched pages
+(pipeline/search.py), the script by a local model in two stages with a bounded repair loop (write_free below).
+
+SCRIPT_PROVIDER=anthropic (the earlier path, kept as it was): Claude (claude-sonnet-5-5) in two budgeted calls.
 
 1. research(): web search. Citations are always on for web search, so every fact keeps the
    URL of the result it came from. Citations can't be combined with structured outputs,
@@ -143,6 +148,76 @@ Rules:
 
 Visual style of this channel:
 """
+
+# SCRIPT_RULES, compressed for a local model (SCRIPT_PROVIDER=ollama): the same 17 rules without the history notes,
+# overlapping rules merged, enum lists left to the output schema (which only allows the listed values). Under 1,200
+# words. Split in two because the local writer works in two stages: the outline (story, hook, narration, picture
+# type, sources) and then each beat's staging, in parallel.
+SCRIPT_RULES_COMPACT_OUTLINE = """You write explainer Shorts: 30-60 s vertical videos, painted stick figures, a narrated voice, word-synced captions.
+The lead stick figure is the HOST: it talks to the viewer ("I", "you"), lips moving, and acts the story out inside the
+pictures.
+
+STORY. Tell the PICKED STORYLINE, in its format, as a story, never a list of facts: a clear problem early, stakes that
+rise, at least one true twist, a payoff that answers the hook. Beat roles in order: beat 1 "hook"; middle beats are
+"setup", "problem" (the conflict, by beat 2-4), "stakes" (stakes rise), "clue" (mystery clues), "reason" (countdown
+reasons, counting down), "twist" (the surprise), "reveal"; then ONE "payoff" beat that answers the hook; the LAST beat
+"loop", whose last words tie back to the hook line. "promise" only when the format needs it, never "let me show you".
+A mystery or countdown needs at least two "clue"/"reason" beats after the problem; other formats at least one "stakes".
+HOOK. Beat 1's narration is ONLY the hook line: at most 8 words, a question or bold honest claim the payoff answers,
+never walked back. No greeting, no "in this video". Frame 1 already shows the host in a surprising situation that
+makes the line land. Write 3 different hook_options; option 1 is the storyline's hook and is beat 1's narration. Each
+option: line, frame_one (what the first frame shows), answer (one sentence: how the payoff answers it), loop_line (the
+last beat's narration for that hook; it echoes a word of the hook). hook_promise = the question the hook opens.
+FACTS. Use only the numbered research facts; cite their ids in source_ids on every beat that uses one. A number that
+is not in a cited fact is framed as an example in the narration ("say you earn 3,000") with illustrative_numbers=true.
+Ordinal dates ("the 20th") are fine. Every factual line says only what its fact says: no extrapolation, no absolutes
+the fact does not state, no motives or feelings. If the story needs a step the facts do not support, leave it out.
+Any storyline line the facts do not support is dropped.
+VOICE. Conversational, short sentences, contractions, one idea per beat.
+ON-SCREEN TEXT. 0-5 words that punch the key idea (often the number or the turn); empty when the picture says it.
+Numbers on screen are numbers the beat says.
+PICTURE TYPE per beat. Viewers must SEE the idea: "insert" (a full-frame painted scene of the thing, place or process,
+with the host standing in it) for most beats; "graphic" (a drawn diagram: flow, bounce, scatter, two_paths, waves, bars,
+thermometer, cards, layers) at most 2 per video, never a bar chart unless the comparison IS the story; "split" (two
+painted scenes stacked: myth vs fact, then vs now); "character" (the host in a library setting) only when that setting
+is the story. At least 70 % of beats show the subject. Use at least three different tools across the video (scene
+animation, close-up, split, map, held object, camera moves, diagram). Never the template hook -> "let me show you" ->
+diagram -> bar chart -> loop. When the topic happens in one real place (a landmark, a city), show that place in every
+beat. subject_settings: settings that ARE the subject (e.g. "doorway" for a video about doorways), usually empty."""
+
+SCRIPT_RULES_COMPACT_BEAT = """You stage ONE beat of an explainer Short (painted stick figures; the lead is the HOST, who talks to the viewer
+and acts the story out inside the picture). The beat's narration and picture type are fixed; fill in how it looks.
+
+HOST. host.where: "scene" (full body inside the picture), "pop_in" (pops in at a frame edge to point at a diagram) or
+"off" (rare). When the host is on screen, "lead" is in cast with a pose. side left/centre/right and size small (the
+place dominates), medium (full body), large (knees up, near the camera), close (head and shoulders: a reaction or an
+aside): vary them beat to beat. In a close-up of objects (a jar, a cell) the host is large or close or pops in; small and
+medium are for places. watching=true when the host watches the scene instead of talking to the viewer. holds: a
+hand-sized prop the host holds up or uses, or "". doing: what the host does, 4-15 words. The friend appears only when
+the story needs a second person. At most 2 characters; each holds one pose per beat. The characters cannot run, jump,
+fall, fight or dance; no crowds, no animals. In a painted scene the host stands or walks a few steps.
+STAGING. setting: the library place, or "other" with setting_detail (the place in 3-6 words) when none fits (an insert
+of a real place, a sky, a lab). One pose per cast id. 0-3 actions, each a verb on a word of THIS narration. 0-4 props
+with where they sit and who holds them.
+INSERT (picture type insert or split). key: kebab-case scene name ("street-sunset"). scene: the place or thing painted
+WITHOUT any people or text, 10-30 words: what is in frame, time of day, weather. 0-4 effects, each on a narration
+word: particles (ash, snow, dust, embers, rain, haze), grade (detail "blue -> red" or "warm -> cold"), dim, flash,
+sun_path (detail "high -> low"), crossfade (detail: the same place, changed), push, pan, shake, focus (close-up push into
+a region), label (detail: 1-3 words), arrow (detail "from -> to" regions), pin (a map pin; detail its label), cross (a
+red X over an idea ruled out). A painted map is an insert of an illustrated map, with pins and arrows.
+SPLIT. The bottom scene (key, scene without people) and two labels of 1-3 words (top, bottom), each on a narration word.
+GRAPHIC. kind, 1-4 items (1-3 words each, reading order) with the narration word where each appears; detail: bars
+relative heights "3 | 5", thermometer "from -> to", two_paths "both", else "". Only numbers this beat says.
+MOTION. 1-2 recipes. The picture changes on a key word at least every 2.5 s (about 6 words): anchor a camera move, an
+effect, a label, a split reveal or a host action on a word in every longer stretch. Continuous moves (push_in, pan_left,
+pan_right, parallax, breathe) take anchor "". punch_in on a key word; impact_shake for a shock; text_slam lands the
+on-screen text (anchor: a word of it that is spoken); number_counter when a quantity changes (detail "0 -> 31"). Every
+anchor is a word of THIS beat's narration.
+SOUND. 0-1 effect per beat, only when meaningful (a thud, a door, a finger snap), anchored to a word; at most 5-6 in
+the whole video, never one for every label.
+visual_intent: one sentence on how the picture SHOWS the idea through action, a metaphor or a diagram."""
+
+SCRIPT_RULES_COMPACT = SCRIPT_RULES_COMPACT_OUTLINE + '\n\n' + SCRIPT_RULES_COMPACT_BEAT
 
 
 class ScriptError(RuntimeError):
@@ -400,6 +475,8 @@ def keep_reputable(facts):
 
 
 def research(episode, base, ledger, client, regenerate=False):
+    if provider(client) == 'ollama':                   # free: DuckDuckGo + the local model (pipeline/search.py)
+        return research_free(episode, base, ledger, regenerate)
     request = research_request(episode)
     key = digest([RESEARCH_VERSION, 'research', request['model'], request['system'], request['messages'], request['tools']])
     path = _cache(base, 'research', key)
@@ -434,6 +511,8 @@ def research(episode, base, ledger, client, regenerate=False):
 
 
 def write(episode, style, facts, base, ledger, client, regenerate=False):
+    if provider(client) == 'ollama':                   # free: the two-stage local writer
+        return write_free(episode, style, facts, base, ledger, regenerate)
     request = script_request(episode, style, facts)
     key = digest([PROMPT_VERSION, 'script', request['model'], request['system'], request['messages']])
     path = _cache(base, 'script', key)
@@ -458,6 +537,505 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
     return draft, path, False
 
 
+# ------------------------------------------------------------------ free path (SCRIPT_PROVIDER=ollama)
+#
+# Research: pipeline/search.py (DuckDuckGo -> reputable pages -> facts quoted from them). Script, in two stages:
+#   A. one short call writes the outline: title, hook options, and per beat the role, narration, on-screen text,
+#      picture type and cited fact ids (the structural rules only: SCRIPT_RULES_COMPACT_OUTLINE);
+#   B. one short call per beat fills its staging (host, cast, setting, poses, actions, props, scene or diagram,
+#      motion, sound), in parallel: SCRIPT_RULES_COMPACT_BEAT. Anchor fields may only take words of that beat's
+#      narration and every list of names only its allowed values (Ollama's schema-constrained output).
+# Then the draft is checked by the same Episode.check() as any script. Errors go back to the model, a few rounds at
+# most: outline-level errors (story shape, hook, unsourced numbers) to the outline call, beat-level errors to that
+# beat's call only. No rule is loosened: what still fails after the last round is shown at the script gate.
+
+FREE_RESEARCH_VERSION = 'research-free-v1'
+FREE_SCRIPT_VERSION = 'script-free-v2'   # v2: longer beats ask for word-anchored actions and effects
+FREE_REPAIR_ROUNDS = 3          # rounds of "here are the checker's errors, fix them" after the first draft
+OUTLINE_REPAIRS = 2             # repairs of the outline before any beat is staged
+OUTLINE_MAX_TOKENS, BEAT_MAX_TOKENS = 1400, 900     # measured: outline ~860 tokens, a beat ~270-420
+OUTLINE_ROLES = ['hook', 'setup', 'problem', 'stakes', 'clue', 'reason', 'twist', 'reveal', 'promise', 'payoff', 'loop']
+OUTLINE_LEVEL = ('on-screen text has', 'empty narration', 'cites unknown sources', 'with no source', 'greeting',
+                 'hook sentence', 'the last beat must', 'the first beat must')
+SIDES = ('centre', 'left', 'right')
+# suggested host sizes per picture type, rotated beat to beat (rule 16: places small/medium; close-ups large/close)
+SIZES = {'insert': ('medium', 'small', 'large', 'medium'), 'split': ('medium', 'small'),
+         'graphic': ('medium', 'large'), 'character': ('medium', 'large', 'close')}
+LAST_RUN: dict = {}             # timings and cache behaviour of the latest free run, shown in the notes
+
+
+def provider(client=None) -> str:
+    return config.script_provider(client)
+
+
+def _s():
+    return {'type': 'string'}
+
+
+def _enum(values):
+    return {'type': 'string', 'enum': list(dict.fromkeys(values))}
+
+
+def _arr(items, lo=None, hi=None):
+    d = {'type': 'array', 'items': items}
+    if lo is not None:
+        d['minItems'] = lo
+    if hi is not None:
+        d['maxItems'] = hi
+    return d
+
+
+def _obj(props):
+    return {'type': 'object', 'properties': props, 'required': list(props)}
+
+
+def shape(schema) -> str:
+    """The schema as a short field guide for the prompt: names and types only."""
+    t = schema.get('type')
+    if 'enum' in schema:
+        vals = schema['enum']
+        return 'one of ' + '|'.join(v or '""' for v in vals) if len(vals) <= 12 else 'one of the allowed values'
+    if t == 'object':
+        return '{' + ', '.join(f'{k}: {shape(v)}' for k, v in schema['properties'].items()) + '}'
+    if t == 'array':
+        n = f' ({schema.get("minItems", 0)}-{schema["maxItems"]})' if 'maxItems' in schema else ''
+        return f'[{shape(schema["items"])}]{n}'
+    return {'string': 'str', 'boolean': 'bool', 'integer': 'int', 'number': 'num'}.get(t, 'str')
+
+
+def anchor_words(narration: str) -> list:
+    """The words of a narration, as written: the only values an anchor field may take."""
+    words = [w.strip("-'’") for w in re.findall(r"[\w'’-]+", narration)]
+    return list(dict.fromkeys(w for w in words if w))
+
+
+def _kebab(text: str) -> str:
+    return '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))[:60]
+
+
+def outline_schema(fact_ids, lo, hi):
+    src = _arr(_enum(fact_ids)) if fact_ids else _arr(_s(), 0, 0)
+    hook = _obj(dict(line=_s(), frame_one=_s(), answer=_s(), loop_line=_s()))
+    beat = _obj(dict(role=_enum(OUTLINE_ROLES), narration=_s(), on_screen_text=_s(),
+                     visual=_enum(['insert', 'graphic', 'split', 'character']), source_ids=src,
+                     illustrative_numbers={'type': 'boolean'}))
+    return _obj(dict(title=_s(), hook_promise=_s(), hook_options=_arr(hook, 3, 3), subject_settings=_arr(_s(), 0, 2),
+                     beats=_arr(beat, lo, hi)))
+
+
+def beat_schema(ob, index, cast_ids):
+    from typing import get_args
+    from .models import GraphicKind, HostSize, InsertEffect, LIGHT_WORDS, MotionRecipe, PoseName, Region, Setting, SfxName, STAGING_VERBS, Verb
+    words = anchor_words(ob['narration'])
+    w, w0, cast = _enum(words), _enum([''] + words), _enum(cast_ids)
+    # pop_in is for diagrams (the host pops in at the edge to point); frame 1 always shows the host
+    where = ['pop_in', 'scene'] if ob['visual'] == 'graphic' else ['scene']
+    host = _obj(dict(where=_enum(where if index == 0 else where + ['off']),
+                     side=_enum(['left', 'centre', 'right']), size=_enum(get_args(HostSize)), watching={'type': 'boolean'},
+                     holds=_s(), doing=_s()))
+    # rule 17 (nothing static for more than 2.5 s, about 6 words): a longer line asks for word-anchored changes, within
+    # the rules' own ranges (0-3 actions, 0-4 effects)
+    n_words = len(ob['narration'].split())
+    need = 0 if n_words <= 6 else 1 if n_words <= 13 else 2
+    staging = _obj(dict(setting=_enum(get_args(Setting)), setting_detail=_s(),
+                        poses=_arr(_obj(dict(who=cast, pose=_enum(get_args(PoseName)))), 0, 2),
+                        actions=_arr(_obj(dict(who=cast, verb=_enum(v for v in get_args(Verb) if v not in STAGING_VERBS),
+                                               target=_s(), anchor=w)), need, 3),
+                        props=_arr(_obj(dict(name=_s(), held_by=_enum([''] + list(cast_ids)), where=_s())), 0, 4)))
+    props = dict(visual_intent=_s(), host=host, cast=_arr(cast, 0, 2), staging=staging)
+    if ob['visual'] in ('insert', 'split'):
+        props['insert'] = _obj(dict(key=_s(), scene=_s(), effects=_arr(_obj(dict(
+            kind=_enum(get_args(InsertEffect)), anchor=w0, at=_enum(get_args(Region)), detail=_s())), min(need, 1), 4)))
+    if ob['visual'] == 'split':
+        props['split'] = _obj(dict(key=_s(), scene=_s(), labels=_arr(_s(), 2, 2), anchors=_arr(w, 2, 2)))
+    if ob['visual'] == 'graphic':
+        kinds = [k for k in get_args(GraphicKind) if k != 'two_paths' or LIGHT_WORDS.search(ob['narration'])]
+        props['graphic'] = _obj(dict(kind=_enum(kinds), items=_arr(_s(), 1, 4), anchors=_arr(w, 0, 4), detail=_s()))
+    props['motion'] = _arr(_obj(dict(recipe=_enum(get_args(MotionRecipe)), anchor=w0, detail=_s())), 1, 2)
+    props['sfx'] = _arr(_obj(dict(name=_enum(get_args(SfxName)), anchor=w)), 0, 1)
+    return _obj(props)
+
+
+def per_beat(words, lo, hi) -> str:
+    """Words per beat (after the hook) that add up to the target, as a range: '12-16'."""
+    n = max(1, round((lo + hi) / 2) - 1)
+    mid = max(6, round((words - 6) / n))
+    return f'{max(5, mid - 2)}-{mid + 2}'
+
+
+def _free_context(episode, style, facts) -> dict:
+    from .models import FORMATS
+    lo, hi = beat_range(episode.target_length)
+    words = round(episode.target_length * style.words_per_second)
+    aim_lo, aim_hi = max(lo, round(episode.target_length / 5.5)), min(hi, round(episode.target_length / 4))
+    head = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+            f'Audience: {episode.audience or "general English-speaking audience"}\n'
+            f'Length: {episode.target_length} s: {lo}-{hi} beats (aim for {aim_lo}-{aim_hi}) and about {words} narration '
+            f'words in total ({round(words * 0.85)}-{round(words * 1.15)}; the narrator reads {style.words_per_second} '
+            f'words per second). The hook is at most 8 words; every other beat is one or two short sentences of about '
+            f'{per_beat(words, aim_lo, aim_hi)} words.\nCast ids: {", ".join(style.cast_ids)} (lead is the host).')
+    if facts:
+        research = 'Research facts (cite by id):\n' + '\n'.join(f'{f.id}: {f.claim} <{f.url}>' for f in facts)
+    else:
+        research = 'No research facts were gathered. Do not state statistics or claims that need a source.'
+    sl = episode.storyline
+    story = (f'PICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nHook: {sl.hook}\nPitch: {sl.pitch}\n'
+             f'Twist: {sl.twist}\nPayoff: {sl.payoff}\nIt was pitched from earlier research: cite only the facts above, '
+             'and drop any line of it they do not support.') if sl else ''
+    brief = f'Topic: {episode.topic}\n' + (f'Story ({sl.format}): {sl.title}. {sl.pitch}' if sl else '')
+    return dict(outline_user=f'{head}\n\n{research}\n\n{story}'.strip(), beat_head=brief,
+                cast=list(style.cast_ids) or ['lead'], target=episode.target_length, wps=style.words_per_second)
+
+
+def _normalise_outline(o):
+    """Beat 1 says hook option 1 exactly; option 1's loop line is what the loop beat says."""
+    beats, opts = o.get('beats') or [], o.get('hook_options') or []
+    for b in beats:
+        b['narration'] = ' '.join(str(b.get('narration', '')).split())
+        b['on_screen_text'] = ' '.join(str(b.get('on_screen_text', '')).split())
+        if not re.search(r'\w', b['on_screen_text']):     # a lone "?" or "!" is no on-screen text
+            b['on_screen_text'] = ''
+        b['source_ids'] = list(dict.fromkeys(b.get('source_ids') or []))
+    if beats and opts:
+        beats[0]['narration'] = ' '.join(opts[0]['line'].split())
+        if beats[-1].get('role') == 'loop':
+            opts[0]['loop_line'] = beats[-1]['narration']
+    return o
+
+
+PLACEHOLDER_DETAIL = dict(
+    visual_intent='placeholder',
+    shot=dict(host=dict(where='scene', side='centre', size='medium', holds='', doing='stands in the scene', to_camera=True),
+              visual='character', insert=None, graphic=None, split=None, cast=['lead'],
+              staging=dict(setting='street', setting_detail='', poses=[dict(who='lead', pose='standing')], actions=[], props=[]),
+              motion=[dict(recipe='push_in', anchor='', detail='')]),
+    sfx=[])
+
+
+def _draft_dict(o, details) -> dict:
+    beats = [dict(role=ob['role'], narration=ob['narration'], on_screen_text=ob['on_screen_text'],
+                  visual_intent=d['visual_intent'], shot=d['shot'], sfx=d['sfx'], source_ids=ob['source_ids'],
+                  illustrative_numbers=bool(ob['illustrative_numbers'])) for ob, d in zip(o['beats'], details)]
+    opts = [dict(line=h['line'], frame_one=h['frame_one'], answer=h['answer'], loop_line=h['loop_line'])
+            for h in o['hook_options']]
+    return dict(title=o['title'], hook_promise=o['hook_promise'], hook_options=opts,
+                subject_settings=list(o.get('subject_settings') or []), beats=beats)
+
+
+def _episode_with(episode, facts, draft):
+    updated = episode.model_copy(update=dict(
+        title=draft.title, hook_promise=draft.hook_promise, sources=facts, hook_options=draft.hook_options, hook_pick=0,
+        subject_settings=draft.subject_settings, beats=[Beat.from_draft(i, b) for i, b in enumerate(draft.beats)]))
+    return Episode.model_validate(updated.model_dump())
+
+
+def _is_outline_issue(issue) -> bool:
+    return not re.fullmatch(r'b\d{2}', issue.where) or any(p in issue.message for p in OUTLINE_LEVEL)
+
+
+def _outline_issues(episode, style, facts, o) -> list:
+    """Outline-level errors of the real checker on the outline with placeholder staging, plus the writer's own limits
+    the checker leaves to the gate (at most 2 graphics; the word count it warns about)."""
+    try:
+        draft = ScriptDraft.model_validate(_draft_dict(o, [json.loads(json.dumps(PLACEHOLDER_DETAIL))] * len(o['beats'])))
+        ep = _episode_with(episode, facts, draft)
+    except ValueError as exc:
+        return [f'the outline does not fit the script shape: {str(exc)[:300]}']
+    msgs = [f'{i.where}: {i.message}' for i in ep.check(style.cast_ids, style.words_per_second)
+            if i.severity == 'error' and _is_outline_issue(i)]
+    words, expected = ep.word_count(), episode.target_length * style.words_per_second
+    if not 0.75 * expected <= words <= 1.2 * expected:
+        n = max(1, len(o['beats']) - 1)
+        each = round((expected - len(o['beats'][0]['narration'].split())) / n)
+        msgs.append(f'beats: the narration has {words} words in total but the video needs about {round(expected)} '
+                    f'({round(0.8 * expected)}-{round(1.15 * expected)}): ' +
+                    (f'make every beat after the hook about {each} words (add a second short sentence that says what the '
+                     'beat shows), keeping the facts as they are' if words < expected else
+                     f'cut every beat after the hook to about {each} words'))
+    from .models import _shares_word
+    for k, h in enumerate(o.get('hook_options') or [], 1):   # a checker warning the writer can fix: the loop ties back
+        if not _shares_word(h.get('loop_line', ''), h.get('line', '')):
+            msgs.append(f'hook {k}: the loop line "{h.get("loop_line", "")}" must repeat a word of the hook "{h.get("line", "")}"'
+                        + (" (it is also the last beat's narration)" if k == 1 else ''))
+    return msgs
+
+
+def _cap_graphics(o) -> list:
+    """Rule 13, at most 2 diagrams per video: later graphic beats become painted scenes. Returns notes."""
+    notes, seen = [], 0
+    for k, b in enumerate(o['beats'], 1):
+        if b['visual'] == 'graphic':
+            seen += 1
+            if seen > 2:
+                b['visual'] = 'insert'
+                notes.append(f'b{k:02d}: a third diagram; shown as a painted scene (at most 2 diagrams per video)')
+    return notes
+
+
+def _outline_call(ctx, schema, cache, ledger, previous=None, issues=(), attempt=0):
+    from . import llm
+    user = ctx['outline_user']
+    if previous is not None:
+        user += ('\n\nYOUR PREVIOUS OUTLINE:\n' + json.dumps(previous, ensure_ascii=False, separators=(',', ':'))
+                 + '\n\nTHE CHECKER FOUND THESE PROBLEMS. Fix every one and keep everything else:\n'
+                 + '\n'.join(f'- {m}' for m in issues))
+    user += '\n\nAnswer with JSON only: ' + shape(schema)
+    try:
+        return llm.generate_json(SCRIPT_RULES_COMPACT_OUTLINE, user, schema, OUTLINE_MAX_TOKENS,
+                                 temperature=0.4 if previous is None else 0.3, seed=21 + attempt, cache=cache,
+                                 ledger=ledger, step='script', detail='outline' + (f' (repair {attempt})' if attempt else ''))
+    except llm.LLMError as exc:
+        raise ScriptError(f'The local model could not write the outline: {exc}') from None
+
+
+def _placement(i, visual='insert'):
+    sizes = SIZES.get(visual, SIZES['insert'])
+    return SIDES[i % len(SIDES)], sizes[i % len(sizes)]
+
+
+def _beat_prompt(ctx, o, i, schema, previous=None, issues=()):
+    ob = o['beats'][i]
+    side, size = _placement(i, ob['visual'])
+    lines = '\n'.join(f'b{k + 1:02d} {b["role"]} [{b["visual"]}]: {b["narration"]}' for k, b in enumerate(o['beats']))
+    user = (f'{ctx["beat_head"]}\nThe whole video:\n{lines}\n\n'
+            f'STAGE b{i + 1:02d} (role {ob["role"]}, picture type {ob["visual"]}).\nNarration: "{ob["narration"]}"\n'
+            f'On-screen text: "{ob["on_screen_text"] or "(none)"}"\n'
+            f'Suggested host placement: {side} {size} (pick another if the picture needs it).\n'
+            f'Cast ids: {", ".join(ctx["cast"])}. Anchor fields take only words of this narration; put the actions, '
+            'effects and motion anchors on different words spread across the line (a change about every 6 words).')
+    if previous is not None:
+        user += ('\n\nYOUR PREVIOUS ANSWER:\n' + json.dumps(previous, ensure_ascii=False, separators=(',', ':'))
+                 + '\n\nTHE CHECKER FOUND THESE PROBLEMS. Fix every one and keep everything else:\n'
+                 + '\n'.join(f'- {m}' for m in issues))
+    user += '\n\nAnswer with JSON only: ' + shape(schema)
+    return user
+
+
+def _detail_from(raw, ob, cast_ids):
+    """The model's beat answer as DraftBeat fields. Only mechanical fixes: "lead" in cast when the host is on screen,
+    one pose per cast member, no action or held prop for someone not in the picture, kebab-case scene keys, graphic
+    anchors that do not pair with the items are dropped (the checker allows none)."""
+    h = raw['host']
+    cast = [c for c in dict.fromkeys(raw.get('cast') or []) if c in cast_ids]
+    if h['where'] != 'off' and 'lead' not in cast:
+        cast.insert(0, 'lead')
+    st = raw['staging']
+    poses = {}
+    for p in st.get('poses') or []:
+        if p['who'] in cast and p['who'] not in poses:
+            poses[p['who']] = p['pose']
+    poses = [dict(who=c, pose=poses.get(c, 'standing')) for c in cast]
+    insert = graphic = split = None
+    if ob['visual'] in ('insert', 'split') and raw.get('insert'):
+        ins = raw['insert']
+        insert = dict(key=_kebab(ins['key']) or _kebab(ins['scene'])[:40], scene=ins['scene'],
+                      effects=[dict(kind=e['kind'], anchor=e['anchor'], at=e['at'], detail=e['detail'])
+                               for e in ins.get('effects') or []][:4])
+    if ob['visual'] == 'split' and raw.get('split'):
+        sp = raw['split']
+        split = dict(key=_kebab(sp['key']) or _kebab(sp['scene'])[:40], scene=sp['scene'], labels=list(sp['labels']),
+                     anchors=list(sp.get('anchors') or []))
+    if ob['visual'] == 'graphic' and raw.get('graphic'):
+        g = raw['graphic']
+        anchors = list(g.get('anchors') or [])
+        graphic = dict(kind=g['kind'], items=list(g['items']), anchors=anchors if len(anchors) == len(g['items']) else [],
+                       detail=g.get('detail', ''))
+    setting, detail = st['setting'], ' '.join(str(st.get('setting_detail', '')).split())
+    if setting == 'other' and not detail and insert:
+        detail = insert['key'].replace('-', ' ')
+    shot = dict(host=dict(where=h['where'], side=h['side'], size=h['size'], holds=h.get('holds', ''), doing=h['doing'],
+                          to_camera=not h.get('watching', False)),
+                visual=ob['visual'], insert=insert, graphic=graphic, split=split, cast=cast,
+                staging=dict(setting=setting, setting_detail=detail if setting == 'other' else '', poses=poses,
+                             actions=[a for a in st.get('actions') or [] if a['who'] in cast][:3],
+                             props=[dict(name=p['name'], held_by=p['held_by'] if p['held_by'] in cast else '', where=p['where'])
+                                    for p in st.get('props') or []][:4]),
+                motion=[dict(recipe=m['recipe'], anchor=m['anchor'], detail=m['detail']) for m in raw['motion']][:2])
+    return dict(visual_intent=raw['visual_intent'], shot=shot,
+                sfx=[dict(name=s['name'], anchor=s['anchor']) for s in raw.get('sfx') or []][:1])
+
+
+def _vary_placement(details):
+    """Rule 13: no two beats in a row with the same picture type and the same host spot and size."""
+    for prev, cur in zip(details, details[1:]):
+        a, b = prev['shot'], cur['shot']
+        if (a['visual'] == b['visual'] and a['host']['where'] == b['host']['where'] != 'off'
+                and (a['host']['side'], a['host']['size']) == (b['host']['side'], b['host']['size'])):
+            b['host']['side'] = SIDES[(SIDES.index(b['host']['side']) + 1) % len(SIDES)]
+
+
+def _stage_beats(ctx, o, indices, cache, ledger, previous=None, issues=None, attempt=0):
+    """{index: raw answer or LLMError} for the given beats, in parallel."""
+    from . import llm
+    prompts = []
+    for i in indices:
+        schema = beat_schema(o['beats'][i], i, ctx['cast'])
+        prev = (previous or {}).get(i)
+        msgs = (issues or {}).get(i, ())
+        prompts.append(dict(system=SCRIPT_RULES_COMPACT_BEAT, user=_beat_prompt(ctx, o, i, schema, prev, msgs),
+                            json_schema=schema, max_tokens=BEAT_MAX_TOKENS, temperature=0.2, seed=31 + attempt,
+                            cache=cache, ledger=ledger, step='script',
+                            detail=f'b{i + 1:02d} staging' + (f' (repair {attempt})' if attempt else '')))
+    return dict(zip(indices, llm.generate_batch(prompts, as_json=True)))
+
+
+def write_free(episode, style, facts, base, ledger, regenerate=False):
+    """The two-stage local writer with the bounded repair loop. Returns (ScriptDraft, cache path, cached)."""
+    from .cache import for_episode
+    cache = for_episode(base)
+    ctx = _free_context(episode, style, facts)
+    model = config.ollama_model()
+    key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS])
+    path = _cache(base, 'script', key)
+    if path.exists() and not regenerate:
+        data = json.loads(path.read_text())
+        LAST_RUN['script'] = dict(cached=True, timings=data.get('timings', {}), repairs=data.get('repairs', []),
+                                  remaining=data.get('remaining', []))
+        return ScriptDraft.model_validate(data['draft']), path, True
+    lo, hi = beat_range(episode.target_length)
+    oschema = outline_schema([f.id for f in facts], lo, hi)
+    times, log = {}, []
+    t0 = time.time()
+    o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger))
+    times['outline_s'] = round(time.time() - t0, 1)
+    for attempt in range(1, OUTLINE_REPAIRS + 1):
+        issues = _outline_issues(episode, style, facts, o)
+        if not issues:
+            break
+        t = time.time()
+        log.append(dict(stage='outline', attempt=attempt, issues=issues))
+        o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger, o, issues, attempt))
+        log[-1]['seconds'] = round(time.time() - t, 1)
+    times['outline_repairs_s'] = round(time.time() - t0 - times['outline_s'], 1)
+    capped = _cap_graphics(o)
+    if capped:
+        log.append(dict(stage='outline', attempt=0, issues=capped, seconds=0))
+    t = time.time()
+    raws = _stage_beats(ctx, o, list(range(len(o['beats']))), cache, ledger)
+    failed = {i: [f'the answer could not be used ({r})'] for i, r in raws.items() if isinstance(r, Exception)}
+    if failed:                                    # one more try for a call that failed outright
+        raws.update(_stage_beats(ctx, o, list(failed), cache, ledger, issues=failed, attempt=1))
+        bad = [f'b{i + 1:02d}' for i, r in raws.items() if isinstance(r, Exception)]
+        if bad:
+            raise ScriptError(f'The local model could not stage {", ".join(bad)}; nothing was saved.')
+    times['details_s'] = round(time.time() - t, 1)
+    details = [_detail_from(raws[i], o['beats'][i], ctx['cast']) for i in range(len(o['beats']))]
+    _vary_placement(details)
+    errors = []
+    for rnd in range(1, FREE_REPAIR_ROUNDS + 2):
+        draft = ScriptDraft.model_validate(_draft_dict(o, details))
+        ep = _episode_with(episode, facts, draft)
+        errors = [i for i in ep.check(style.cast_ids, style.words_per_second) if i.severity == 'error']
+        if not errors or rnd > FREE_REPAIR_ROUNDS:
+            break
+        t = time.time()
+        entry = dict(stage='repair', round=rnd, errors=[str(e) for e in errors])
+        outline_errs = [e for e in errors if _is_outline_issue(e)]
+        restage = []
+        if outline_errs:
+            before = [(b['role'], b['narration'], b['visual']) for b in o['beats']]
+            o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger, o, [f'{e.where}: {e.message}' for e in outline_errs],
+                                                 10 + rnd))
+            after = [(b['role'], b['narration'], b['visual']) for b in o['beats']]
+            restage = [i for i in range(len(after)) if i >= len(before) or after[i] != before[i]]
+            details = (details + [None] * len(after))[:len(after)]
+        beat_errs = {}
+        for e in errors:
+            if not _is_outline_issue(e):
+                i = int(e.where[1:]) - 1
+                if i < len(o['beats']) and i not in restage:
+                    beat_errs.setdefault(i, []).append(e.message)
+        if restage:
+            got = _stage_beats(ctx, o, restage, cache, ledger, attempt=rnd)
+            for i, r in got.items():
+                if isinstance(r, Exception):
+                    details[i] = details[i] or json.loads(json.dumps(PLACEHOLDER_DETAIL))
+                else:
+                    raws[i] = r
+                    details[i] = _detail_from(r, o['beats'][i], ctx['cast'])
+        if beat_errs:
+            got = _stage_beats(ctx, o, sorted(beat_errs), cache, ledger, previous={i: raws.get(i) for i in beat_errs},
+                               issues=beat_errs, attempt=rnd)
+            for i, r in got.items():
+                if not isinstance(r, Exception):
+                    raws[i] = r
+                    details[i] = _detail_from(r, o['beats'][i], ctx['cast'])
+        _vary_placement(details)
+        entry.update(outline=bool(outline_errs), restaged=[f'b{i + 1:02d}' for i in restage],
+                     beats=[f'b{i + 1:02d}' for i in sorted(beat_errs)], seconds=round(time.time() - t, 1))
+        log.append(entry)
+    times['repairs_s'] = round(sum(e.get('seconds', 0) for e in log if e['stage'] == 'repair'), 1)
+    times['total_s'] = round(time.time() - t0, 1)
+    remaining = [str(e) for e in errors]
+    _write_json(path, dict(draft=draft.model_dump(), created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=model,
+                           provider='ollama', prompt_version=PROMPT_VERSION, writer=FREE_SCRIPT_VERSION,
+                           outline=o, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats)))
+    LAST_RUN['script'] = dict(cached=False, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats))
+    return draft, path, False
+
+
+def research_free(episode, base, ledger, regenerate=False):
+    """research() for SCRIPT_PROVIDER=ollama: (facts, cache path, cached)."""
+    from . import search
+    from .cache import for_episode
+    cache = for_episode(base)
+    focus = episode.meta.get('research_focus') or {}
+    key = digest([FREE_RESEARCH_VERSION, config.ollama_model(), episode.topic, episode.niche, episode.audience, focus,
+                  search.QUERY_TEMPLATES, search.FACT_SYSTEM])
+    path = _cache(base, 'research', key)
+    if path.exists() and not regenerate:
+        data = json.loads(path.read_text())
+        LAST_RUN['research'] = dict(cached=True, timings=data.get('timings', {}), notes=data.get('notes', []))
+        return [Source.model_validate(f) for f in data['facts']], path, True
+    timings, notes = {}, []
+    facts = search.research_topic(episode.topic, episode.niche, episode.audience, cache, ledger=ledger, focus=focus,
+                                  fresh=regenerate, timings=timings, notes=notes)
+    LAST_RUN['research'] = dict(cached=False, timings=timings, notes=notes, cache=dict(cache.stats))
+    if not facts:
+        raise ScriptError('Research found no facts on government, university or peer-reviewed pages, so nothing was '
+                          'written. Re-run with --regenerate research later (the search engines may have refused this '
+                          'machine for a while), or use --facts with facts checked by hand.')
+    _write_json(path, dict(facts=[f.model_dump() for f in facts], created=time.strftime('%Y-%m-%dT%H:%M:%S'),
+                           model=config.ollama_model(), provider='ollama', version=FREE_RESEARCH_VERSION,
+                           timings=timings, notes=notes, cache=dict(cache.stats)))
+    return facts, path, False
+
+
+def free_notes(kind: str) -> list:
+    """Timing and cache lines for the notes of the latest free research or script run."""
+    run = LAST_RUN.get(kind) or {}
+    if not run:
+        return []
+    t = run.get('timings', {})
+    if kind == 'research':
+        out = [f'  research timing: queries {t.get("queries_s", "-")} s, searches done {t.get("search_s", "-")} s, '
+               f'pages fetched {t.get("fetch_s", "-")} s, facts read {t.get("facts_s", "-")} s, total {t.get("total_s", "-")} s '
+               f'(wall clock from the start; the stages overlap)' + (' [from the research cache]' if run.get('cached') else '')]
+        out += [f'  {n}' for n in run.get('notes', [])]
+        if t.get('engines'):
+            out.append(f'  search engines: {", ".join(t["engines"])}; {t.get("reputable_pages", 0)} reputable pages, '
+                       f'{t.get("pages_with_text", 0)} with text')
+    else:
+        out = [f'  script timing: outline {t.get("outline_s", "-")} s, outline repairs {t.get("outline_repairs_s", "-")} s, '
+               f'beat staging {t.get("details_s", "-")} s, repairs {t.get("repairs_s", "-")} s, total {t.get("total_s", "-")} s'
+               + (' [from the script cache]' if run.get('cached') else '')]
+        for e in run.get('repairs', []):
+            if e['stage'] == 'outline' and not e['attempt']:
+                out += [f'  {n}' for n in e['issues']]
+            elif e['stage'] == 'outline':
+                out.append(f'  outline repair {e["attempt"]}: {len(e["issues"])} issue(s), {e.get("seconds", "-")} s')
+            else:
+                out.append(f'  repair round {e["round"]}: {len(e["errors"])} error(s); outline {"yes" if e["outline"] else "no"}, '
+                           f'beats {", ".join(e["beats"] + e["restaged"]) or "none"}, {e["seconds"]} s')
+        if run.get('remaining'):
+            out.append(f'  {len(run["remaining"])} error(s) remain after {FREE_REPAIR_ROUNDS} repair rounds: shown at the script gate')
+    if run.get('cache'):
+        c = run['cache']
+        out.append(f'  cache: search {c["search_hit"]} hit / {c["search_miss"]} miss, pages {c["page_hit"]} hit / '
+                   f'{c["page_miss"]} miss, model {c["llm_hit"]} hit / {c["llm_miss"]} miss')
+    return out
+
+
 def checked_facts(path) -> list:
     """Facts read by hand from their sources (each with the exact quote), in place of the research call: a JSON list
     of {claim, url, title, quote}. Ids are s1, s2... in file order."""
@@ -467,11 +1045,25 @@ def checked_facts(path) -> list:
 
 
 def generate(episode, style, base, ledger, client=None, use_research=True, regenerate=(), facts_file=None):
-    """Fill episode.title, hook_promise, beats and sources. Returns (episode, notes)."""
+    """Fill episode.title, hook_promise, beats and sources. Returns (episode, notes).
+
+    SCRIPT_PROVIDER=ollama (default): free and local; `client` is ignored and no key is needed. The model is unloaded
+    when the step ends so the next step (FLUX) gets the memory. SCRIPT_PROVIDER=anthropic: the paid path as before."""
     if not episode.storyline:
         raise ScriptError(f'No storyline picked for {episode.slug}: story before script (stick make --episode '
                           f'{episode.slug} pitches three; stick approve --gate storyline --story N picks one).')
-    client = client or make_client()
+    prov = provider(client)
+    client = (client or make_client()) if prov == 'anthropic' else None
+    LAST_RUN.clear()
+    try:
+        return _generate(episode, style, base, ledger, client, prov, use_research, regenerate, facts_file)
+    finally:
+        if prov == 'ollama' and config.ollama_unload_after_step():
+            from . import llm
+            llm.unload()
+
+
+def _generate(episode, style, base, ledger, client, prov, use_research, regenerate, facts_file):
     notes = []
     facts = []
     if facts_file or use_research:
@@ -481,6 +1073,7 @@ def generate(episode, style, base, ledger, client=None, use_research=True, regen
         else:
             facts, path, cached = research(episode, base, ledger, client, 'research' in regenerate)
             notes.append(f'research: {len(facts)} cited facts ({"cache" if cached else "new"}: {path.name})')
+            notes += free_notes('research')
         facts, dropped = keep_reputable(facts)
         for f in dropped:
             notes.append(f'  dropped (not government, university or peer-reviewed): {f.url}')
@@ -489,11 +1082,16 @@ def generate(episode, style, base, ledger, client=None, use_research=True, regen
                               'written. Re-run research, or pick a topic with better sources.')
     draft, path, cached = write(episode, style, facts, base, ledger, client, 'script' in regenerate)
     notes.append(f'script: {len(draft.beats)} beats ({"cache" if cached else "new"}: {path.name})')
+    notes += free_notes('script')
+    model = config.SCRIPT_MODEL if prov == 'anthropic' else config.ollama_model()
+    script_meta = dict(model=model, prompt_version=PROMPT_VERSION, research=use_research,
+                       generated=time.strftime('%Y-%m-%dT%H:%M:%S'))
+    if prov == 'ollama':
+        script_meta |= dict(provider='ollama', writer=FREE_SCRIPT_VERSION)
     updated = episode.model_copy(update=dict(
         title=draft.title, hook_promise=draft.hook_promise, sources=facts,
         hook_options=draft.hook_options, hook_pick=0, subject_settings=draft.subject_settings,
         beats=[Beat.from_draft(i, b) for i, b in enumerate(draft.beats)],
         approvals={k: v for k, v in episode.approvals.items() if k != 'script'},
-        meta=episode.meta | dict(script=dict(model=config.SCRIPT_MODEL, prompt_version=PROMPT_VERSION,
-                                             research=use_research, generated=time.strftime('%Y-%m-%dT%H:%M:%S')))))
+        meta=episode.meta | dict(script=script_meta)))
     return Episode.model_validate(updated.model_dump()), notes

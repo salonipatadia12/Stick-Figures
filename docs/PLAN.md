@@ -17,6 +17,12 @@ locally on this Mac (see [LOCAL_MODELS.md](LOCAL_MODELS.md)). Everything is comp
 Python. The existing studio rig stays as a separate, zero-cost lane for formats with a recurring
 character.
 
+**Since 2026-11-10 the pipeline is $0 per video.** The Anthropic credits ran out, so research, storylines and scripts
+moved to free local tools: DuckDuckGo search with page extraction for research, and Ollama with Qwen 2.5 (Apache-2.0;
+`qwen2.5:14b` on this 16 GB Mac) for the writing (`SCRIPT_PROVIDER=ollama`, the default). The editorial rules and the
+checker are unchanged; the Claude path stays behind `SCRIPT_PROVIDER=anthropic`. Details in
+[LOCAL_MODELS.md](LOCAL_MODELS.md#scripts-ollama--qwen-25-2026-11-10).
+
 Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 
 ## Ground rules
@@ -24,12 +30,15 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 - **Git:** work on `pipeline-v2`. Never push to `main`, force-push or rewrite history.
 - **Nothing is deleted without asking.** Files are archived instead; the GitHub Release
   `archive-2026-11` holds the first batch.
-- **Keys** come only from `.env`. The only one is `ANTHROPIC_API_KEY`, for the script.
+- **Keys** come only from `.env`. With `SCRIPT_PROVIDER=ollama` (the default since 2026-11-10) none is needed;
+  `ANTHROPIC_API_KEY` is used only by the paid path (`SCRIPT_PROVIDER=anthropic`). Nothing that needs a key, an
+  account or a free tier is used for search.
 - **Local models only** for images and voice, and only under licences that allow commercial use.
   No FLUX "dev"-licence models, no F5-TTS or XTTS (non-commercial). A rented GPU is never used
   without asking first.
 - **Budget:** every paid call goes through the episode's cost ledger, with a per-video cap
-  (`--budget`, default $2.00). With local models, the script-writing call is the only paid step.
+  (`--budget`, default $2.00). With local models and `SCRIPT_PROVIDER=ollama` no step is paid; local model calls
+  and DuckDuckGo searches are recorded in the ledger at $0.00 (providers `ollama`, `duckduckgo`).
   - Each step's worst case is reserved before it is sent.
   - If the cap would be exceeded, the pipeline stops cleanly, records nothing and sends nothing.
   - There are no automatic paid retries. The SDK clients use `max_retries=0`, and Anthropic's
@@ -71,6 +80,13 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 - **The script is written in two budgeted calls to `claude-sonnet-5-5`:**
   1. Web-search research. Citations are kept, so every fact has a real URL.
   2. A structured-output script. It may cite only those facts, or numbers clearly framed as examples.
+- **Since 2026-11-10 (default `SCRIPT_PROVIDER=ollama`, $0):** research is DuckDuckGo (six parallel queries: four
+  templates and two from the model) -> reputable pages fetched while the searches still run -> at most two facts per
+  page, each quoted from the page and kept with its URL (`pipeline/search.py`). The script is two stages on the local
+  model: an outline, then each beat's staging in parallel, with the output constrained to the library's values and
+  the narration's words, then the same `Episode.check()` and at most three rounds of repairs of only the failing parts
+  (`pipeline/script.py`, `write_free`). Three cache layers: searches 24 h, pages 7 days (shared), model answers by
+  prompt hash (`pipeline/cache.py`).
 - **The editorial rules are enforced in code:**
   - the hook lands in ~2 s, with no greeting
   - one idea per beat, 7–14 beats for 30–60 s
