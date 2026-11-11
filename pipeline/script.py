@@ -550,7 +550,7 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
 # beat's call only. No rule is loosened: what still fails after the last round is shown at the script gate.
 
 FREE_RESEARCH_VERSION = 'research-free-v1'
-FREE_SCRIPT_VERSION = 'script-free-v1'
+FREE_SCRIPT_VERSION = 'script-free-v2'   # v2: longer beats ask for word-anchored actions and effects
 FREE_REPAIR_ROUNDS = 3          # rounds of "here are the checker's errors, fix them" after the first draft
 OUTLINE_REPAIRS = 2             # repairs of the outline before any beat is staged
 OUTLINE_MAX_TOKENS, BEAT_MAX_TOKENS = 1400, 900     # measured: outline ~860 tokens, a beat ~270-420
@@ -633,15 +633,19 @@ def beat_schema(ob, index, cast_ids):
     host = _obj(dict(where=_enum(where if index == 0 else where + ['off']),
                      side=_enum(['left', 'centre', 'right']), size=_enum(get_args(HostSize)), watching={'type': 'boolean'},
                      holds=_s(), doing=_s()))
+    # rule 17 (nothing static for more than 2.5 s, about 6 words): a longer line asks for word-anchored changes, within
+    # the rules' own ranges (0-3 actions, 0-4 effects)
+    n_words = len(ob['narration'].split())
+    need = 0 if n_words <= 6 else 1 if n_words <= 13 else 2
     staging = _obj(dict(setting=_enum(get_args(Setting)), setting_detail=_s(),
                         poses=_arr(_obj(dict(who=cast, pose=_enum(get_args(PoseName)))), 0, 2),
                         actions=_arr(_obj(dict(who=cast, verb=_enum(v for v in get_args(Verb) if v not in STAGING_VERBS),
-                                               target=_s(), anchor=w)), 0, 3),
+                                               target=_s(), anchor=w)), need, 3),
                         props=_arr(_obj(dict(name=_s(), held_by=_enum([''] + list(cast_ids)), where=_s())), 0, 4)))
     props = dict(visual_intent=_s(), host=host, cast=_arr(cast, 0, 2), staging=staging)
     if ob['visual'] in ('insert', 'split'):
         props['insert'] = _obj(dict(key=_s(), scene=_s(), effects=_arr(_obj(dict(
-            kind=_enum(get_args(InsertEffect)), anchor=w0, at=_enum(get_args(Region)), detail=_s())), 0, 4)))
+            kind=_enum(get_args(InsertEffect)), anchor=w0, at=_enum(get_args(Region)), detail=_s())), min(need, 1), 4)))
     if ob['visual'] == 'split':
         props['split'] = _obj(dict(key=_s(), scene=_s(), labels=_arr(_s(), 2, 2), anchors=_arr(w, 2, 2)))
     if ob['visual'] == 'graphic':
@@ -650,6 +654,13 @@ def beat_schema(ob, index, cast_ids):
     props['motion'] = _arr(_obj(dict(recipe=_enum(get_args(MotionRecipe)), anchor=w0, detail=_s())), 1, 2)
     props['sfx'] = _arr(_obj(dict(name=_enum(get_args(SfxName)), anchor=w)), 0, 1)
     return _obj(props)
+
+
+def per_beat(words, lo, hi) -> str:
+    """Words per beat (after the hook) that add up to the target, as a range: '12-16'."""
+    n = max(1, round((lo + hi) / 2) - 1)
+    mid = max(6, round((words - 6) / n))
+    return f'{max(5, mid - 2)}-{mid + 2}'
 
 
 def _free_context(episode, style, facts) -> dict:
@@ -661,7 +672,8 @@ def _free_context(episode, style, facts) -> dict:
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} s: {lo}-{hi} beats (aim for {aim_lo}-{aim_hi}) and about {words} narration '
             f'words in total ({round(words * 0.85)}-{round(words * 1.15)}; the narrator reads {style.words_per_second} '
-            f'words per second).\nCast ids: {", ".join(style.cast_ids)} (lead is the host).')
+            f'words per second). The hook is at most 8 words; every other beat is one or two short sentences of about '
+            f'{per_beat(words, aim_lo, aim_hi)} words.\nCast ids: {", ".join(style.cast_ids)} (lead is the host).')
     if facts:
         research = 'Research facts (cite by id):\n' + '\n'.join(f'{f.id}: {f.claim} <{f.url}>' for f in facts)
     else:
@@ -681,6 +693,8 @@ def _normalise_outline(o):
     for b in beats:
         b['narration'] = ' '.join(str(b.get('narration', '')).split())
         b['on_screen_text'] = ' '.join(str(b.get('on_screen_text', '')).split())
+        if not re.search(r'\w', b['on_screen_text']):     # a lone "?" or "!" is no on-screen text
+            b['on_screen_text'] = ''
         b['source_ids'] = list(dict.fromkeys(b.get('source_ids') or []))
     if beats and opts:
         beats[0]['narration'] = ' '.join(opts[0]['line'].split())
@@ -729,14 +743,33 @@ def _outline_issues(episode, style, facts, o) -> list:
         return [f'the outline does not fit the script shape: {str(exc)[:300]}']
     msgs = [f'{i.where}: {i.message}' for i in ep.check(style.cast_ids, style.words_per_second)
             if i.severity == 'error' and _is_outline_issue(i)]
-    graphics = sum(1 for b in o['beats'] if b['visual'] == 'graphic')
-    if graphics > 2:
-        msgs.append(f'beats: {graphics} graphic beats; at most 2 per video (make the others inserts)')
     words, expected = ep.word_count(), episode.target_length * style.words_per_second
     if not 0.75 * expected <= words <= 1.2 * expected:
-        msgs.append(f'beats: {words} narration words in total; write about {round(expected)} '
-                    f'({round(0.8 * expected)}-{round(1.15 * expected)})')
+        n = max(1, len(o['beats']) - 1)
+        each = round((expected - len(o['beats'][0]['narration'].split())) / n)
+        msgs.append(f'beats: the narration has {words} words in total but the video needs about {round(expected)} '
+                    f'({round(0.8 * expected)}-{round(1.15 * expected)}): ' +
+                    (f'make every beat after the hook about {each} words (add a second short sentence that says what the '
+                     'beat shows), keeping the facts as they are' if words < expected else
+                     f'cut every beat after the hook to about {each} words'))
+    from .models import _shares_word
+    for k, h in enumerate(o.get('hook_options') or [], 1):   # a checker warning the writer can fix: the loop ties back
+        if not _shares_word(h.get('loop_line', ''), h.get('line', '')):
+            msgs.append(f'hook {k}: the loop line "{h.get("loop_line", "")}" must repeat a word of the hook "{h.get("line", "")}"'
+                        + (" (it is also the last beat's narration)" if k == 1 else ''))
     return msgs
+
+
+def _cap_graphics(o) -> list:
+    """Rule 13, at most 2 diagrams per video: later graphic beats become painted scenes. Returns notes."""
+    notes, seen = [], 0
+    for k, b in enumerate(o['beats'], 1):
+        if b['visual'] == 'graphic':
+            seen += 1
+            if seen > 2:
+                b['visual'] = 'insert'
+                notes.append(f'b{k:02d}: a third diagram; shown as a painted scene (at most 2 diagrams per video)')
+    return notes
 
 
 def _outline_call(ctx, schema, cache, ledger, previous=None, issues=(), attempt=0):
@@ -768,7 +801,8 @@ def _beat_prompt(ctx, o, i, schema, previous=None, issues=()):
             f'STAGE b{i + 1:02d} (role {ob["role"]}, picture type {ob["visual"]}).\nNarration: "{ob["narration"]}"\n'
             f'On-screen text: "{ob["on_screen_text"] or "(none)"}"\n'
             f'Suggested host placement: {side} {size} (pick another if the picture needs it).\n'
-            f'Cast ids: {", ".join(ctx["cast"])}. Anchor fields take only words of this narration.')
+            f'Cast ids: {", ".join(ctx["cast"])}. Anchor fields take only words of this narration; put the actions, '
+            'effects and motion anchors on different words spread across the line (a change about every 6 words).')
     if previous is not None:
         user += ('\n\nYOUR PREVIOUS ANSWER:\n' + json.dumps(previous, ensure_ascii=False, separators=(',', ':'))
                  + '\n\nTHE CHECKER FOUND THESE PROBLEMS. Fix every one and keep everything else:\n'
@@ -873,6 +907,9 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
         o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger, o, issues, attempt))
         log[-1]['seconds'] = round(time.time() - t, 1)
     times['outline_repairs_s'] = round(time.time() - t0 - times['outline_s'], 1)
+    capped = _cap_graphics(o)
+    if capped:
+        log.append(dict(stage='outline', attempt=0, issues=capped, seconds=0))
     t = time.time()
     raws = _stage_beats(ctx, o, list(range(len(o['beats']))), cache, ledger)
     failed = {i: [f'the answer could not be used ({r})'] for i, r in raws.items() if isinstance(r, Exception)}
@@ -983,7 +1020,9 @@ def free_notes(kind: str) -> list:
                f'beat staging {t.get("details_s", "-")} s, repairs {t.get("repairs_s", "-")} s, total {t.get("total_s", "-")} s'
                + (' [from the script cache]' if run.get('cached') else '')]
         for e in run.get('repairs', []):
-            if e['stage'] == 'outline':
+            if e['stage'] == 'outline' and not e['attempt']:
+                out += [f'  {n}' for n in e['issues']]
+            elif e['stage'] == 'outline':
                 out.append(f'  outline repair {e["attempt"]}: {len(e["issues"])} issue(s), {e.get("seconds", "-")} s')
             else:
                 out.append(f'  repair round {e["round"]}: {len(e["errors"])} error(s); outline {"yes" if e["outline"] else "no"}, '

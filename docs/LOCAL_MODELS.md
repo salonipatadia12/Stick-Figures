@@ -42,6 +42,18 @@ them (`pipeline/script.py`, `write_free`):
    sentence they came from; the sentence must be on the page, every number in the fact must be in it, and the fact
    keeps its page URL. The source rule (government, university, peer-reviewed) is the same `keep_reputable`.
 
+**Measured (2026-11-10, "Why sunsets are red", 45 s, M5 16 GB with 11-19 GB of swap in use by other apps).**
+DuckDuckGo answered this machine with its bot check (HTTP 202) all day, so the results came from ddgs's other keyless
+engines plus the open indexes. First `stick make`: research 192 s (6 searches, 16 reputable pages, 15 with text, 2
+facts), storylines 57 s, 250 s in all. With the improved fact reader: research 81 s (5 facts; searches and pages from
+the cache), storylines 58 + 56 s (one repair: a 9-word hook). Script (test episode): outline 112 s, two outline repairs
+173 s, ten beats staged 259 s (about 26 s a beat, two at a time), no beat repairs needed, 544 s in all; `stick validate`
+0 errors, 12 warnings (mostly the 2.5 s static-stretch warning). Writer v2 then asks longer beats for word-anchored
+actions and effects (the outline came from the model cache): staging 606 s (bigger answers, and the machine was busy),
+0 errors, 10 warnings, with shorter static stretches. Re-runs: research, storylines and script from the cache
+in under a second; `--regenerate script` answered all 13 model calls from the model cache in 0.1 s. Ollama peaked at
+8.8 GB resident (9.1 GB in `ollama ps`, 4096-token context) and was unloaded (40 MB) after each step.
+
 **Caching** (`pipeline/cache.py`): search results per query for 24 h (`episodes/<slug>/cache/search-*.json`), page
 text for 7 days in a cache shared by every episode (`cache/pages/`, or `STICK_CACHE_DIR`), model answers by
 hash(system + user + model + schema + options) (`episodes/<slug>/cache/llm-*.json`), plus the finished research,

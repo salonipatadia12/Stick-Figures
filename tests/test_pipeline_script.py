@@ -316,6 +316,22 @@ class OllamaScript(unittest.TestCase):
         self.assertEqual(episode.beats[0].narration, "Your salary didn't shrink. It leaked.")
         self.assertTrue(any('outline repair 1' in n for n in notes))
 
+    def test_outline_helpers(self):
+        o = free_outline()
+        for b in o['beats'][1:5]:
+            b['visual'] = 'graphic'
+        o['beats'][2]['on_screen_text'] = '?'
+        notes = script._cap_graphics(script._normalise_outline(o))
+        self.assertEqual([b['visual'] for b in o['beats'][1:5]], ['graphic', 'graphic', 'insert', 'insert'])
+        self.assertEqual(o['beats'][5]['visual'], 'insert')     # the outline's own diagram at b06 is the fifth
+        self.assertEqual(len(notes), 3)
+        self.assertEqual(o['beats'][2]['on_screen_text'], '')
+        self.assertEqual(script.per_beat(122, 8, 11), '11-15')
+        o = free_outline()
+        o['hook_options'][0]['loop_line'] = o['beats'][-1]['narration'] = 'Light makes the difference.'
+        issues = script._outline_issues(self.episode, self.style, self.facts, o)
+        self.assertTrue(any(i.startswith('hook 1: the loop line') for i in issues))
+
     def test_a_rerun_is_answered_from_the_cache(self):
         self.run_generate()
         n = len(self.fake.chats)
