@@ -180,6 +180,8 @@ class ResearchTopic(unittest.TestCase):
         self.assertTrue(search.verify_quote('The air mass at the horizon is about 38 times the air mass overhead.', page))
         self.assertTrue(search.verify_quote('the air mass at the horizon is about 38 times the airmass overhead', page))
         self.assertFalse(search.verify_quote('Sunsets are caused by volcanoes on most days of the year.', page))
+        two = 'Sunlight takes a longer path at sunset. Most of the blue is scattered out of it. Other text here.'
+        self.assertTrue(search.verify_quote('Sunlight takes a longer path at sunset, and most of the blue is scattered out of it.', two))
         self.assertTrue(search.numbers_supported('About 38 times more air.', page))
         self.assertFalse(search.numbers_supported('About 40 times more air.', page))
 

@@ -58,8 +58,9 @@ Return 0-2 facts that the page states directly and that help explain the topic. 
 happens); at most one statistic. For each fact:
 - claim: one plain sentence (at most 30 words) saying only what the page says. Name the country or period if the page
   limits it. No advice, no opinions, nothing the page does not say.
-- quote: the sentence from the page text that supports the claim, copied exactly, word for word.
-If the page says nothing useful about the topic, return no facts."""
+- quote: the sentence (or two) from the page text that supports the claim, copied exactly, word for word.
+When the page explains any part of the topic, return at least one fact. Return no facts only when the page is not
+about the topic at all."""
 FACT_SCHEMA = {'type': 'object', 'properties': {'facts': {'type': 'array', 'maxItems': FACTS_PER_PAGE, 'items': {
     'type': 'object', 'properties': {'claim': {'type': 'string'}, 'quote': {'type': 'string'}},
     'required': ['claim', 'quote']}}}, 'required': ['facts']}
@@ -197,8 +198,10 @@ def open_index_search(query: str, max_results: int = MAX_RESULTS_PER_QUERY) -> l
             if not doi or not inv:
                 continue
             words = sorted(((p, word) for word, pos in inv.items() for p in pos))
-            out.append(dict(title=w.get('display_name') or '', href=doi, body='', text=' '.join(x for _, x in words),
-                            via='openalex'))
+            abstract = ' '.join(x for _, x in words)
+            if len(_stems(f'{w.get("display_name") or ""} {abstract}') & _stems(query)) < 0.5 * len(_stems(query)):
+                continue                                   # OpenAlex's search is loose: keep papers about the query
+            out.append(dict(title=w.get('display_name') or '', href=doi, body='', text=abstract, via='openalex'))
     except Exception:
         pass
     seen, uniq = set(), []
@@ -246,20 +249,24 @@ def _norm(s: str) -> str:
 
 
 def verify_quote(quote: str, text: str) -> str:
-    """The page's own sentence behind `quote` ('' if the page does not say it). An exact match after normalising
-    spaces and punctuation, or a sentence of the page at least 90 % the same (the model sometimes drops a word)."""
+    """The page's own words behind `quote` ('' if the page does not say it). An exact match after normalising
+    spaces and punctuation, or one to three consecutive sentences of the page at least 90 % the same (the model
+    sometimes drops or changes a word)."""
     q, t = _norm(quote).strip(' ."'), _norm(text)
     if len(q) < 20:
         return ''
     if q in t:
         return quote.strip()
+    sents = [x.strip() for x in re.split(r'(?<=[.!?])\s+|\n+', text) if x.strip()]
     best, score = '', 0.0
-    for sent in re.split(r'(?<=[.!?])\s+|\n+', text):
-        if abs(len(sent) - len(quote)) > 0.4 * len(quote):
-            continue
-        r = difflib.SequenceMatcher(None, q, _norm(sent).strip(' ."')).ratio()
-        if r > score:
-            best, score = sent.strip(), r
+    for n in (1, 2, 3):
+        for i in range(len(sents) - n + 1):
+            span = ' '.join(sents[i:i + n])
+            if abs(len(span) - len(quote)) > 0.4 * len(quote):
+                continue
+            r = difflib.SequenceMatcher(None, q, _norm(span).strip(' ."')).ratio()
+            if r > score:
+                best, score = span, r
     return best if score >= 0.9 else ''
 
 
