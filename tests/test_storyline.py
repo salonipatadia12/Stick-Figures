@@ -142,6 +142,18 @@ class ResearchCitationTest(unittest.TestCase):
         self.assertEqual(doi_link('https://scholar.google.com/scholar_lookup?doi=10.1006/nimg.1999.0478&amp=&pmid=1'),
                          'https://doi.org/10.1006/nimg.1999.0478')
 
+    def test_a_doi_counts_only_when_its_publisher_is_reviewed(self):
+        from unittest import mock
+        from pipeline import script
+        targets = {'10.24297/jap.v9i3.1353': 'https://rajpub.com/index.php/jap/article/view/1353',
+                   '10.1006/nimg.1999.0478': 'https://linkinghub.elsevier.com/retrieve/pii/S1053811999904780',
+                   '10.1/unknown': ''}
+        with mock.patch.object(script, 'resolve_doi', lambda doi: targets[doi]):
+            self.assertFalse(script.reputable('https://doi.org/10.24297/jap.v9i3.1353'))     # unlisted publisher
+            self.assertTrue(script.reputable('https://doi.org/10.1006/nimg.1999.0478'))     # Elsevier
+            self.assertFalse(script.reputable('https://doi.org/10.1/unknown'))              # could not resolve
+            self.assertFalse(script.reputable('https://doi.org/not-a-doi'))
+
     def test_storylines_stand_only_on_reputable_facts(self):
         from pipeline.models import Source
         src = [Source(id='s1', claim='A reviewed fact here.', url='https://pubmed.ncbi.nlm.nih.gov/1/'),

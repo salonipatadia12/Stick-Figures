@@ -430,7 +430,8 @@ def _plain(obj):
 # Hosts of peer-reviewed publishers and indexes; plus any government (.gov, .gov.xx, .gouv.fr, .gob.xx) or university
 # (.edu, .edu.xx, .ac.xx, uni-*/univ-* hosts) domain. Patents are excluded even on government sites (a claim, not a
 # reviewed finding). Checked 2026-11-09 against the user's rule: government, university, peer-reviewed only.
-PEER_REVIEWED = ('pmc.ncbi.nlm.nih.gov', 'pubmed.ncbi.nlm.nih.gov', 'ncbi.nlm.nih.gov', 'doi.org', 'sciencedirect.com',
+PEER_REVIEWED = ('pmc.ncbi.nlm.nih.gov', 'pubmed.ncbi.nlm.nih.gov', 'ncbi.nlm.nih.gov', 'sciencedirect.com',
+                 'linkinghub.elsevier.com',   # Elsevier's DOI router to ScienceDirect
                  'springer.com', 'link.springer.com', 'nature.com', 'science.org', 'wiley.com', 'tandfonline.com',
                  'mdpi.com', 'frontiersin.org', 'plos.org', 'academic.oup.com', 'cambridge.org', 'royalsocietypublishing.org',
                  'pnas.org', 'cell.com', 'bmj.com', 'thelancet.com', 'jstor.org', 'icevirtuallibrary.com', 'ascelibrary.org',
@@ -443,14 +444,42 @@ NOT_REVIEWED = ('patent', 'uspto', 'ppubs', 'espacenet', 'wikipedia.org', 'blog'
                 'researchgate.net', 'slideshare.net', 'scribd.com', 'intechopen.com', 'coursehero.com', 'studocu.com')
 
 
+DOI_HOSTS = ('doi.org', 'dx.doi.org')
+_DOI_TARGETS: dict = {}
+
+
+def resolve_doi(doi: str) -> str:
+    """Where a DOI points (doi.org's keyless handle API), or '' when that can't be found out. Kept per process."""
+    if doi in _DOI_TARGETS:
+        return _DOI_TARGETS[doi]
+    import json as _json
+    import urllib.parse
+    import urllib.request
+    try:
+        api = f'https://doi.org/api/handles/{urllib.parse.quote(doi, safe="/")}?type=URL'
+        with urllib.request.urlopen(api, timeout=10) as r:
+            data = _json.load(r)
+        url = next((v['data']['value'] for v in data.get('values', []) if v.get('type') == 'URL'), '')
+    except Exception:
+        return ''                                       # unknown now; not remembered, so a later call may succeed
+    _DOI_TARGETS[doi] = url
+    return url
+
+
 def reputable(url: str) -> bool:
-    """Government, university or peer-reviewed (user rule, 2026-11-09)."""
+    """Government, university or peer-reviewed (user rule, 2026-11-09). A doi.org link counts only when the DOI
+    resolves to such a site: a DOI says nothing about review (user 2026-11-11, after a doi.org paper from an
+    unlisted publisher said refraction makes sunsets red)."""
     import re as _re
-    from urllib.parse import urlparse
+    from urllib.parse import unquote, urlparse
     u = urlparse(url)
     host = (u.hostname or '').lower()
     if any(x in host or x in u.path.lower() for x in NOT_REVIEWED):
         return False
+    if host in DOI_HOSTS:
+        doi = unquote(u.path.lstrip('/'))
+        target = resolve_doi(doi) if doi.startswith('10.') else ''
+        return bool(target) and (urlparse(target).hostname or '').lower() not in DOI_HOSTS and reputable(target)
     if _re.search(r'(\.gov|\.gov\.[a-z]{2}|\.gouv\.[a-z]{2}|\.gob\.[a-z]{2}|\.mil|\.edu|\.edu\.[a-z]{2}|\.ac\.[a-z]{2})$', host):
         return True
     if _re.search(r'(^|\.)(uni|univ)[a-z-]*\.[a-z.]+$', host) or '.europa.eu' in host or host.endswith('europa.eu'):

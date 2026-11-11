@@ -158,7 +158,8 @@ class ResearchTopic(unittest.TestCase):
                 dict(title='Paper', href='https://doi.org/10.1/abc', body='', via='openalex',
                      text='Rayleigh scattering by air molecules is much stronger for short wavelengths such as blue light '
                           'than for long wavelengths such as red light. ' * 3)]
-        with mock.patch.object(search, 'open_index_search', lambda q, n=8: hits):
+        with mock.patch.object(search, 'open_index_search', lambda q, n=8: hits), \
+                mock.patch('pipeline.script.resolve_doi', lambda doi: 'https://www.nature.com/articles/abc'):
             facts, _, _, timings = self.run_research()
         self.assertIn('open_index', timings['engines'])
         self.assertEqual({f.url for f in facts}, {'https://www.noaa.gov/sunset', 'https://doi.org/10.1/abc'})
