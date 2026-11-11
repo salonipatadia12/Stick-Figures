@@ -295,7 +295,7 @@
     },
     {
       "id": "b03",
-      "role": "setup",
+      "role": "problem",
       "narration": "Two payers. One pays only the minimum. The other pays $103 a month.",
       "on_screen_text": "Minimum vs $103",
       "visual_intent": "The host and the friend sit across the cafe table, each with their own bill, acting out the two payers.",
@@ -379,97 +379,6 @@
       "sfx": [],
       "source_ids": [
         "s4"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b04",
-      "role": "problem",
-      "narration": "Many card companies figure interest daily, on your average daily balance.",
-      "on_screen_text": "Interest ticks daily",
-      "visual_intent": "A wall calendar with each day dotted in pencil beside a coin jar, the host watching the days fill in.",
-      "shot": {
-        "host": {
-          "where": "scene",
-          "side": "right",
-          "size": "small",
-          "holds": "",
-          "doing": "watches pencil dots fill the calendar days, arms at sides",
-          "to_camera": false,
-          "cut_on": ""
-        },
-        "visual": "insert",
-        "insert": {
-          "key": "wall-calendar-daily-marks",
-          "scene": "a wall calendar with every day dotted in pencil beside a glass jar of coins on a shelf, afternoon sun through a cafe window",
-          "effects": [
-            {
-              "kind": "label",
-              "anchor": "daily",
-              "at": "top",
-              "detail": "Daily interest"
-            },
-            {
-              "kind": "dust",
-              "anchor": "",
-              "at": "",
-              "detail": ""
-            }
-          ]
-        },
-        "graphic": null,
-        "split": null,
-        "reaction_anchor": "",
-        "framing": "medium",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "standing"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "gaze",
-              "target": "wall calendar",
-              "anchor": "daily"
-            }
-          ],
-          "props": [
-            {
-              "name": "wall calendar",
-              "held_by": "",
-              "where": "wall"
-            }
-          ]
-        },
-        "motion": [
-          {
-            "recipe": "push_in",
-            "anchor": "",
-            "detail": ""
-          },
-          {
-            "recipe": "underline_draw",
-            "anchor": "average daily balance",
-            "detail": ""
-          }
-        ],
-        "image_prompt": "",
-        "pose_variants": [],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [],
-      "source_ids": [
-        "s1"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -632,7 +541,7 @@
     {
       "id": "b07",
       "role": "stakes",
-      "narration": "And the cost? About $4,745 for the minimum. Just $3,712 at $103.",
+      "narration": "The cost? About $4,745 versus $3,712.",
       "on_screen_text": "",
       "visual_intent": "Two glass coin jars side by side, one nearly overflowing and one shorter, with the host pointing at the fuller one.",
       "shot": {
@@ -664,7 +573,7 @@
             },
             {
               "kind": "focus",
-              "anchor": "Just",
+              "anchor": "versus",
               "at": "right",
               "detail": ""
             }
@@ -710,7 +619,7 @@
           },
           {
             "recipe": "punch_in",
-            "anchor": "Just",
+            "anchor": "versus",
             "detail": ""
           }
         ],
@@ -736,7 +645,7 @@
       "role": "twist",
       "narration": "So the tiny payment is the pricey one. Eight more years, and about $1,033 extra.",
       "on_screen_text": "Pricey minimum",
-      "visual_intent": "A two-path diagram showing the long minimum path against the short $103 path with the gap marked, the host popping in to point at the gap.",
+      "visual_intent": "Two cards slide in, one in front of the other: \"Eight more years\", then \"$1,033 extra\".",
       "shot": {
         "host": {
           "where": "pop_in",
@@ -750,7 +659,7 @@
         "visual": "graphic",
         "insert": null,
         "graphic": {
-          "kind": "two_paths",
+          "kind": "cards",
           "items": [
             "Eight more years",
             "$1,033 extra"
@@ -759,7 +668,7 @@
             "Eight",
             "$1,033"
           ],
-          "detail": "both"
+          "detail": ""
         },
         "split": null,
         "reaction_anchor": "",
@@ -811,97 +720,6 @@
       ],
       "source_ids": [
         "s4"
-      ],
-      "illustrative_numbers": false,
-      "duration": null
-    },
-    {
-      "id": "b09",
-      "role": "reveal",
-      "narration": "Your monthly bill shows minimum-only payoff time, plus the payment that clears it in three years.",
-      "on_screen_text": "",
-      "visual_intent": "A close-up of a paper monthly statement on the table, the host reading it beside a coffee cup.",
-      "shot": {
-        "host": {
-          "where": "scene",
-          "side": "right",
-          "size": "medium",
-          "holds": "",
-          "doing": "reads the statement over a green coffee cup, nodding slowly",
-          "to_camera": false,
-          "cut_on": ""
-        },
-        "visual": "insert",
-        "insert": {
-          "key": "credit-card-statement-closeup",
-          "scene": "close-up of a paper monthly credit card statement lying on a cafe table beside a green coffee cup, warm light, lines of print blurred, no readable text",
-          "effects": [
-            {
-              "kind": "focus",
-              "anchor": "monthly",
-              "at": "centre",
-              "detail": ""
-            },
-            {
-              "kind": "label",
-              "anchor": "three years",
-              "at": "centre",
-              "detail": "Three-year payment"
-            }
-          ]
-        },
-        "graphic": null,
-        "split": null,
-        "reaction_anchor": "",
-        "framing": "medium",
-        "cast": [
-          "lead"
-        ],
-        "staging": {
-          "setting": "cafe",
-          "setting_detail": "",
-          "poses": [
-            {
-              "who": "lead",
-              "pose": "standing"
-            }
-          ],
-          "actions": [
-            {
-              "who": "lead",
-              "verb": "nod",
-              "target": "",
-              "anchor": "three years"
-            }
-          ],
-          "props": [
-            {
-              "name": "statement",
-              "held_by": "",
-              "where": "table"
-            }
-          ]
-        },
-        "motion": [
-          {
-            "recipe": "push_in",
-            "anchor": "",
-            "detail": ""
-          },
-          {
-            "recipe": "icon_pop",
-            "anchor": "three years",
-            "detail": "calendar"
-          }
-        ],
-        "image_prompt": "",
-        "pose_variants": [],
-        "transition": "cut",
-        "layers": []
-      },
-      "sfx": [],
-      "source_ids": [
-        "s3"
       ],
       "illustrative_numbers": false,
       "duration": null
@@ -1121,7 +939,7 @@
   ],
   "approvals": {
     "storyline": "46d611523c14e048793f6b95c0feabcaaa70a7e51e80cb1ddc62a30ca7605ebe",
-    "script": "b7017586065c3d93601e90c37483400f85af6fdf6982f72c34fae34197ce299e"
+    "script": "58e321710aeabf379b6a76f26530ee307a3856c326fb568a00053ebe6b220917"
   },
   "meta": {
     "research_focus": {
@@ -1169,6 +987,12 @@
         "by": "user",
         "at": "2026-11-10T12:24:39",
         "digest": "b7017586065c"
+      },
+      {
+        "gate": "script",
+        "by": "user",
+        "at": "2026-11-10T19:15:16",
+        "digest": "58e321710aea"
       }
     ],
     "script": {
