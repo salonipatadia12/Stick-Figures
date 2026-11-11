@@ -290,6 +290,13 @@ class QaFalseFailTest(unittest.TestCase):
         self.assertLessEqual(e.at, 10.0 - O.MIN_HOLD)
 
 
+class DigitHeardAsWordTest(unittest.TestCase):
+    def test_a_digit_in_the_script_heard_as_its_word_counts(self):
+        # finance: "Paying $103 a month: 3 years." heard as "... a month three years"
+        heard = [dict(w=w) for w in ('a', 'month', 'three', 'years')]
+        self.assertEqual(qa.words_check(['a', 'month', '3', 'years'], heard)['missing'], [])
+
+
 class LabelPlacementTest(unittest.TestCase):
     """Insert labels stay in the captions' safe area and off the host (finance b02/b09: a label on the host's head,
     "14.4% interest" past the phone's buttons)."""

@@ -112,6 +112,8 @@ NUMBER_WORDS = {'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 
                 'nine': '9', 'ten': '10', 'eleven': '11', 'twelve': '12', 'fifteen': '15', 'twenty': '20', 'thirty': '30', 'forty': '40',
                 'fifty': '50', 'sixty': '60', 'seventy': '70', 'eighty': '80', 'ninety': '90', 'hundred': '100', 'thousand': '1000'}
 
+DIGIT_WORDS = {v: k for k, v in NUMBER_WORDS.items()}
+
 
 SPELLINGS = {'tonnes': 'tons', 'tonne': 'ton', 'cancelled': 'canceled', 'travelled': 'traveled', 'modelling': 'modeling', 'colour': 'color', 'colours': 'colors', 'grey': 'gray', 'metres': 'meters',
              'litres': 'liters', 'centre': 'center', 'favourite': 'favorite', 'behaviour': 'behavior',   # UK spelling, US hearing
@@ -133,7 +135,8 @@ def words_check(script_words: list, heard: list) -> dict:
     missing, j = [], 0
     for w in script_words:
         k = norm(w)
-        alts = {k, NUMBER_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k), k.replace("'", '')}   # control's ~ controls
+        alts = {k, NUMBER_WORDS.get(k, k), DIGIT_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k),
+                k.replace("'", '')}   # control's ~ controls; a script 3 heard as three
         found = None
         reach = 2 if k in ('a', 'an', 'the') else 6       # a dropped article must not match one further on and skip words
         for i in range(j, min(len(h), j + reach)):
