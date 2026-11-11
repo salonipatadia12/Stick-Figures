@@ -3,7 +3,7 @@
 DONE = from the phone: type a topic, make the picks, download a QA-passed video; VPS + Mac worker running; all tests pass.
 
 ## Waiting for the user
-- [ ] Free pipeline (Ollama qwen2.5:14b + keyless research) is live: retry the sunsets episode from the phone; OK the keyless fallbacks (DuckDuckGo blocks this Mac); judge the 14B script quality
+- [ ] Free pipeline live (Ollama qwen3.5:9b, picked 2026-11-11; keyless research approved; doi.org judged by its publisher): user retries the sunsets topic from the phone
 - [ ] One real topic end to end from the phone (https://stick.srv1747356.hstgr.cloud, user `saloni`, password in the Mac Keychain item `stick-app`)
 - [x] Port 3000 localhost-only (user, 2026-11-10); capture still logging until ~2026-11-11 17:30 UTC
 - [x] Docker Desktop: local tests done (386 OK, none need Docker); user may quit it

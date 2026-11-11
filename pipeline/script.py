@@ -840,10 +840,13 @@ def _beat_prompt(ctx, o, i, schema, previous=None, issues=()):
     return user
 
 
+MAX_LABEL_WORDS = 3
+
+
 def _detail_from(raw, ob, cast_ids):
     """The model's beat answer as DraftBeat fields. Only mechanical fixes: "lead" in cast when the host is on screen,
     one pose per cast member, no action or held prop for someone not in the picture, kebab-case scene keys, graphic
-    anchors that do not pair with the items are dropped (the checker allows none)."""
+    anchors that do not pair with the items are dropped (the checker allows none), and diagram labels are cut to 3 words."""
     h = raw['host']
     cast = [c for c in dict.fromkeys(raw.get('cast') or []) if c in cast_ids]
     if h['where'] != 'off' and 'lead' not in cast:
@@ -867,7 +870,8 @@ def _detail_from(raw, ob, cast_ids):
     if ob['visual'] == 'graphic' and raw.get('graphic'):
         g = raw['graphic']
         anchors = list(g.get('anchors') or [])
-        graphic = dict(kind=g['kind'], items=list(g['items']), anchors=anchors if len(anchors) == len(g['items']) else [],
+        items = [' '.join(str(it).split()[:MAX_LABEL_WORDS]) for it in g['items']]   # labels are 1-3 words (user 2026-11-11:
+        graphic = dict(kind=g['kind'], items=items, anchors=anchors if len(anchors) == len(items) else [],  # cut, not repaired)
                        detail=g.get('detail', ''))
     setting, detail = st['setting'], ' '.join(str(st.get('setting_detail', '')).split())
     if setting == 'other' and not detail and insert:

@@ -2,7 +2,7 @@
 
 ```sh
 python3 -m venv .venv && .venv/bin/python -m pip install -e .
-brew install ollama && brew services start ollama && ollama pull qwen2.5:14b   # once; qwen2.5:32b on 32 GB+
+brew install ollama && brew services start ollama && ollama pull qwen3.5:9b   # once (Apache-2.0, 6.6 GB)
 cp .env.example .env   # SCRIPT_PROVIDER=ollama: no keys at all
 .venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance" --dry-run
 .venv/bin/stick make "Why your salary disappears by the 20th" --niche "personal finance"

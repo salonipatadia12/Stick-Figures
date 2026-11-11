@@ -21,7 +21,7 @@ class Resp:
 class FakeOllama:
     """route(body) -> answer text (or a Resp for errors). Records every /api/chat body and the peak concurrency."""
 
-    def __init__(self, route, models=('qwen2.5:14b',), delay=0.0):
+    def __init__(self, route, models=('qwen2.5:14b', 'qwen3.5:9b'), delay=0.0):
         self.route, self.models, self.delay = route, list(models), delay
         self.chats, self.unloads, self.gets = [], [], []
         self.active = self.peak = 0

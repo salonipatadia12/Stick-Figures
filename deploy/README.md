@@ -143,7 +143,7 @@ own child processes. `caffeinate -i` prevents idle sleep, not a closed lid.
 
 pitch/script (a server on `SCRIPT_PROVIDER=ollama`): the worker always asks for `pitch, script, paint, render`; the
 server hands out only what its provider routes to the Mac. Ollama runs as a Homebrew service
-(`brew services start ollama`; `ollama pull qwen2.5:14b` once), so the LaunchAgent needs no change. Each such job
+(`brew services start ollama`; `ollama pull qwen3.5:9b` once), so the LaunchAgent needs no change. Each such job
 first checks `GET http://localhost:11434/api/version`; if nothing answers, the job fails with "Ollama is not running
 on the Mac: brew services start ollama" (the phone shows it; Retry re-queues it, free). Otherwise the worker writes
 the claimed episode, its ledger and `cache/` files (plus stubs of the server's other episodes, which the storyline

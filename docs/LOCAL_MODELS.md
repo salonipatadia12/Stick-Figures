@@ -15,7 +15,8 @@ Research, the three storylines and the script are written by a local model throu
 | Model on this Mac (16 GB) | `qwen2.5:14b`, Q4_K_M, 9.0 GB download, about 9.1 GB in memory at a 4096-token context. Measured: ~25 s cold load, ~13 tokens/s out, a few hundred tokens/s in. |
 | Machines with 32 GB or more | `qwen2.5:32b` (set `OLLAMA_MODEL=qwen2.5:32b`) |
 | Licence | [Qwen2.5-14B-Instruct](https://huggingface.co/Qwen/Qwen2.5-14B-Instruct) and 32B: Apache-2.0, commercial use allowed. (The 3B and 72B Qwen 2.5 models have other licences; don't use them.) |
-| Setup, once | `brew install ollama && brew services start ollama && ollama pull qwen2.5:14b` |
+| Default model (2026-11-11) | `qwen3.5:9b`, Apache-2.0, 6.6 GB. On the same facts and storyline it wrote a livelier sunsets script than `qwen2.5:14b` (which stays usable via `OLLAMA_MODEL`); it is a thinking model, so requests send `think: false` (`OLLAMA_THINK=1` to allow it). |
+| Setup, once | `brew install ollama && brew services start ollama && ollama pull qwen3.5:9b` |
 | Search | DuckDuckGo through [`ddgs`](https://pypi.org/project/ddgs/) (MIT; the package formerly called `duckduckgo-search`), no key or account. If DuckDuckGo refuses (rate limit or bot check) ddgs's other keyless engines are tried, then two open indexes: the reference links of the matching Wikipedia articles (Wikipedia itself is never cited) and OpenAlex (peer-reviewed abstracts, cited by DOI). |
 | Page text | [trafilatura](https://pypi.org/project/trafilatura/) 2.3 (Apache-2.0) |
 

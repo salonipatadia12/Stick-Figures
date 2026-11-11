@@ -19,7 +19,7 @@ character.
 
 **Since 2026-11-10 the pipeline is $0 per video.** The Anthropic credits ran out, so research, storylines and scripts
 moved to free local tools: DuckDuckGo search with page extraction for research, and Ollama with Qwen 2.5 (Apache-2.0;
-`qwen2.5:14b` on this 16 GB Mac) for the writing (`SCRIPT_PROVIDER=ollama`, the default). The editorial rules and the
+`qwen3.5:9b` on this 16 GB Mac, chosen over `qwen2.5:14b` on 2026-11-11) for the writing (`SCRIPT_PROVIDER=ollama`, the default). The editorial rules and the
 checker are unchanged; the Claude path stays behind `SCRIPT_PROVIDER=anthropic`. Details in
 [LOCAL_MODELS.md](LOCAL_MODELS.md#scripts-ollama--qwen-25-2026-11-10).
 

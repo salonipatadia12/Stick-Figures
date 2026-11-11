@@ -20,7 +20,7 @@ SCRIPT_MODEL = 'claude-sonnet-5-5'
 SCRIPT_PROVIDERS = ('ollama', 'anthropic')
 DEFAULT_SCRIPT_PROVIDER = 'ollama'
 DEFAULT_OLLAMA_HOST = 'http://localhost:11434'
-DEFAULT_OLLAMA_MODEL = 'qwen2.5:14b'    # Apache-2.0; 16 GB Macs. qwen2.5:32b on 32 GB or more.
+DEFAULT_OLLAMA_MODEL = 'qwen3.5:9b'     # Apache-2.0, 6.6 GB; picked over qwen2.5:14b on the sunsets test (user 2026-11-11)
 
 
 def load_env():

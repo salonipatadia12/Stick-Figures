@@ -20,7 +20,7 @@ phone ──HTTPS──► VPS (Docker Compose, small)                       Mac
 
 - **SCRIPT_PROVIDER** (2026-11-10, Anthropic credits ran out): `ollama` (the default) moves research/storylines
   (`pitch`) and the script (`script`) to the Mac worker, which runs them with the pipeline's free local model
-  (Ollama + qwen2.5:14b, a Homebrew service on the Mac); the VPS only queues them. `anthropic` is the original paid
+  (Ollama + qwen3.5:9b, a Homebrew service on the Mac); the VPS only queues them. `anthropic` is the original paid
   path on the VPS runner, unchanged. The rest of this file describes both; where they differ it says so.
 
 - The VPS never paints or renders. It runs the web app, the queue, Postgres, the light pipeline steps under

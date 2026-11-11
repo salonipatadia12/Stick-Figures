@@ -13,12 +13,12 @@ job at a time; the pipeline unloads the model when each step ends so FLUX gets t
 # Mac, once
 brew install ollama
 brew services start ollama          # a launchd service: starts at login, restarts if it stops
-ollama pull qwen2.5:14b             # 9 GB, Apache-2.0; qwen2.5:32b on 32 GB or more
+ollama pull qwen3.5:9b              # 6.6 GB, Apache-2.0 (the default since 2026-11-11)
 curl -s localhost:11434/api/tags    # the model is listed
 # .env (repo root or the worker's env file)
 SCRIPT_PROVIDER=ollama
 OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=qwen2.5:14b
+OLLAMA_MODEL=qwen3.5:9b
 ```
 
 The Homebrew service already sets `OLLAMA_FLASH_ATTENTION=1` and `OLLAMA_KV_CACHE_TYPE=q8_0` (a smaller context

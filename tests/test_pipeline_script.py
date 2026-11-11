@@ -361,3 +361,17 @@ class OllamaScript(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DiagramLabelCutTest(unittest.TestCase):
+    """A diagram label longer than 3 words is cut before validation, so repair rounds never chase it (user 2026-11-11)."""
+
+    def test_graphic_labels_are_cut_to_three_words(self):
+        from pipeline import script
+        raw = dict(host=dict(where='off', side='left', size='small', doing='', holds=''), cast=[],
+                   staging=dict(setting='other', setting_detail='', poses=[], actions=[], props=[]),
+                   graphic=dict(kind='waves', items=['short blue waves bouncing', 'long red waves passing through'],
+                                anchors=['blue', 'red'], detail=''), motion=[], visual_intent='Two waves.')
+        g = script._detail_from(raw, dict(visual='graphic'), ['lead'])['shot']['graphic']
+        self.assertEqual(g['items'], ['short blue waves', 'long red waves'])
+        self.assertEqual(g['anchors'], ['blue', 'red'])
