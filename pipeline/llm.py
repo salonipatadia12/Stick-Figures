@@ -90,6 +90,7 @@ def generate(system: str, user: str, json_schema: dict | None = None, max_tokens
                 messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user}])
     if json_schema is not None:
         body['format'] = json_schema
+    body['think'] = config.ollama_think()          # thinking models (qwen3.5) answer directly unless OLLAMA_THINK=1
     host = config.ollama_host()
     t0 = time.time()
     try:

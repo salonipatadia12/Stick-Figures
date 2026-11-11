@@ -68,7 +68,12 @@ def ollama_num_ctx() -> int:
 
 def ollama_parallel() -> int:
     """Concurrent model calls (per-beat details, fact extraction). Ollama queues what its server cannot run at once."""
-    return max(1, min(4, int(os.getenv('OLLAMA_PARALLEL', '2'))))
+    return max(1, min(4, int(os.getenv('OLLAMA_PARALLEL', '1'))))   # the Ollama server runs one at a time (user 2026-11-11)
+
+
+def ollama_think() -> bool:
+    """Let a thinking model (qwen3.5) reason before answering. Off: slower, and the schema-bound answers don't need it."""
+    return os.getenv('OLLAMA_THINK', '0').strip().lower() in ('1', 'true', 'yes', 'on')
 
 
 def ollama_keep_alive() -> str:
