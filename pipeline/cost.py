@@ -5,11 +5,15 @@ request is sent; if the cap would be exceeded nothing is sent. Afterwards `settl
 the actual cost computed from the provider's reported usage. Calls that fail after being
 sent keep their estimate as "possibly billed", so the cap stays conservative. There are no
 automatic paid retries anywhere in the pipeline.
+
+Free local calls (Ollama) and keyless searches (DuckDuckGo) are recorded too, at $0.00 with their provider, through
+`record_free()`: the ledger shows every model call and search a video made, and the cap logic is unchanged.
 """
 from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 from decimal import ROUND_CEILING, Decimal
 from pathlib import Path
@@ -20,6 +24,7 @@ TOKEN_PRICES = {
     'claude-sonnet-5-5': dict(input='2.00', output='10.00', cache_write_5m='2.50', cache_write_1h='4.00', cache_read='0.10'),
 }
 WEB_SEARCH_USD = Decimal('0.01')  # $10 per 1,000 searches
+FREE_PROVIDERS = ('ollama', 'duckduckgo')  # local model and keyless search: logged at $0.00
 MILLION = Decimal(1_000_000)
 
 
@@ -72,6 +77,7 @@ class Ledger:
         self.path = Path(path)
         self.budget = Decimal(str(budget_usd))
         self.entries = entries or []
+        self._lock = threading.RLock()     # parallel model calls (per-beat details, fact extraction) share one ledger
 
     @classmethod
     def open(cls, path, budget_usd=None, default_budget=2.00):
@@ -109,31 +115,47 @@ class Ledger:
                 f'Raise the cap with --budget if you want to continue.')
 
     def reserve(self, step, provider, model, estimate_usd, detail=''):
-        self.check(estimate_usd)
-        entry = dict(id=len(self.entries) + 1, step=step, provider=provider, model=model,
-                     estimate_usd=usd(estimate_usd), actual_usd=None, status='reserved', detail=detail,
-                     usage=None, at=time.strftime('%Y-%m-%dT%H:%M:%S'))
-        self.entries.append(entry)
-        self.save()
-        return entry['id']
+        with self._lock:
+            self.check(estimate_usd)
+            entry = dict(id=len(self.entries) + 1, step=step, provider=provider, model=model,
+                         estimate_usd=usd(estimate_usd), actual_usd=None, status='reserved', detail=detail,
+                         usage=None, at=time.strftime('%Y-%m-%dT%H:%M:%S'))
+            self.entries.append(entry)
+            self.save()
+            return entry['id']
 
     def settle(self, entry_id, actual_usd, usage=None, note=''):
-        entry = self._entry(entry_id)
-        entry.update(actual_usd=usd(actual_usd), status='ok', usage=usage)
-        if note:
-            entry['detail'] = (entry['detail'] + ' | ' + note).strip(' |')
-        self.save()
+        with self._lock:
+            entry = self._entry(entry_id)
+            entry.update(actual_usd=usd(actual_usd), status='ok', usage=usage)
+            if note:
+                entry['detail'] = (entry['detail'] + ' | ' + note).strip(' |')
+            self.save()
 
     def fail(self, entry_id, note, billed=True):
         """Mark a failed call. If it may have been billed, keep its estimate counted."""
-        entry = self._entry(entry_id)
-        entry.update(status='possibly_billed' if billed else 'not_sent', detail=(entry['detail'] + ' | ' + note).strip(' |'))
-        self.save()
+        with self._lock:
+            entry = self._entry(entry_id)
+            entry.update(status='possibly_billed' if billed else 'not_sent', detail=(entry['detail'] + ' | ' + note).strip(' |'))
+            self.save()
+
+    def record_free(self, step, provider, model, detail='', usage=None):
+        """One free call (a local Ollama model, a keyless DuckDuckGo search): recorded at $0.00 with its provider."""
+        if provider not in FREE_PROVIDERS:
+            raise PriceUnknown(f'{provider} is not a free provider; paid calls go through reserve() and settle().')
+        with self._lock:
+            entry = self.reserve(step, provider, model, 0, detail)
+            self.settle(entry, 0, usage=usage)
+            return entry
 
     def _entry(self, entry_id):
         return next(e for e in self.entries if e['id'] == entry_id)
 
     def save(self):
+        with self._lock:
+            self._save()
+
+    def _save(self):
         data = dict(budget_usd=usd(self.budget), spent_usd=usd(self.spent()), prices_verified=PRICES_VERIFIED,
                     entries=self.entries)
         tmp = self.path.with_suffix('.tmp')
@@ -146,4 +168,7 @@ class Ledger:
         for e in self.entries:
             amount = e['actual_usd'] if e['status'] == 'ok' else e['estimate_usd']
             rows.append(f"  #{e['id']:<3} {e['step']:<10} {e['model']:<20} {e['status']:<15} ${amount:.4f}  {e['detail']}")
+        free = sum(1 for e in self.entries if e.get('provider') in FREE_PROVIDERS)
+        if free:
+            rows.append(f'  ({free} of these are free local calls or keyless searches, recorded at $0.00)')
         return '\n'.join(rows)

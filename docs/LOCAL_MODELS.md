@@ -1,8 +1,52 @@
 # Local models
 
-Images and narration run on open-source models on this Mac. The Claude script call is the only
-paid step. Only models whose licences allow commercial use are allowed. That rules out FLUX "dev"
-licences, F5-TTS and XTTS.
+Images, narration, research and scripts run on open-source models on this Mac (scripts since 2026-11-10, when the
+Anthropic credits ran out: see "Scripts: Ollama + Qwen 2.5" below). Nothing in the pipeline is paid. Only models whose
+licences allow commercial use are allowed. That rules out FLUX "dev" licences, F5-TTS and XTTS.
+
+## Scripts: Ollama + Qwen 2.5 (2026-11-10)
+
+Research, the three storylines and the script are written by a local model through [Ollama](https://ollama.com)
+(`SCRIPT_PROVIDER=ollama`, the default). The earlier Claude path stays behind `SCRIPT_PROVIDER=anthropic`.
+
+| | |
+|---|---|
+| Runtime | Ollama 0.32.9, Homebrew service (`brew services start ollama`), `http://localhost:11434`; starts at login. The service sets `OLLAMA_FLASH_ATTENTION=1` and `OLLAMA_KV_CACHE_TYPE=q8_0`. |
+| Model on this Mac (16 GB) | `qwen2.5:14b`, Q4_K_M, 9.0 GB download, about 9.1 GB in memory at a 4096-token context. Measured: ~25 s cold load, ~13 tokens/s out, a few hundred tokens/s in. |
+| Machines with 32 GB or more | `qwen2.5:32b` (set `OLLAMA_MODEL=qwen2.5:32b`) |
+| Licence | [Qwen2.5-14B-Instruct](https://huggingface.co/Qwen/Qwen2.5-14B-Instruct) and 32B: Apache-2.0, commercial use allowed. (The 3B and 72B Qwen 2.5 models have other licences; don't use them.) |
+| Setup, once | `brew install ollama && brew services start ollama && ollama pull qwen2.5:14b` |
+| Search | DuckDuckGo through [`ddgs`](https://pypi.org/project/ddgs/) (MIT; the package formerly called `duckduckgo-search`), no key or account. If DuckDuckGo refuses (rate limit or bot check) ddgs's other keyless engines are tried, then two open indexes: the reference links of the matching Wikipedia articles (Wikipedia itself is never cited) and OpenAlex (peer-reviewed abstracts, cited by DOI). |
+| Page text | [trafilatura](https://pypi.org/project/trafilatura/) 2.3 (Apache-2.0) |
+
+**Memory next to FLUX.** FLUX.2 klein peaks at about 11 GB and runs right after the script step, so the model must be
+out of memory by then:
+- every call uses a 4096-token context (`OLLAMA_NUM_CTX`); a call whose prompt and answer would not fit gets 8192 for
+  that call only (Ollama reloads the model when the window changes, so this is the exception);
+- at most `OLLAMA_PARALLEL` (2) calls are sent at once (per-beat staging, fact reading); the server queues the rest;
+- each step (`story.pitch`, `script.generate`) ends with an explicit unload (`keep_alive: 0`), so the 9 GB are free
+  before FLUX starts. `OLLAMA_UNLOAD=0` keeps the model loaded instead.
+
+**How a 14B model keeps the editorial bar.** The rules are unchanged; the writer is built so a smaller model can meet
+them (`pipeline/script.py`, `write_free`):
+1. Two stages. A short outline call (story, hook options, per beat the role, narration, on-screen text, picture type
+   and cited fact ids) with `SCRIPT_RULES_COMPACT_OUTLINE`, then one short call per beat for its staging, two at a
+   time, with `SCRIPT_RULES_COMPACT_BEAT`. Together the compact rules are the same 17 rules in about 1,100 words.
+2. Constrained output. Ollama's JSON-schema `format` limits every field to its allowed values: fact ids to the
+   research ids, recipes, verbs, poses, settings, effects and sound names to the library, and every anchor to the
+   words of that beat's narration, so an anchor can never miss.
+3. The real checker, then repairs. The draft goes through `Episode.check()`. Outline-level errors (story shape, hook,
+   unsourced numbers) go back to the outline call, beat errors to that beat's call only, at most three rounds; what
+   still fails is shown at the script gate, and `--auto` refuses it.
+4. Facts are quoted. The model reads the passages of each fetched page and returns at most two facts with the
+   sentence they came from; the sentence must be on the page, every number in the fact must be in it, and the fact
+   keeps its page URL. The source rule (government, university, peer-reviewed) is the same `keep_reputable`.
+
+**Caching** (`pipeline/cache.py`): search results per query for 24 h (`episodes/<slug>/cache/search-*.json`), page
+text for 7 days in a cache shared by every episode (`cache/pages/`, or `STICK_CACHE_DIR`), model answers by
+hash(system + user + model + schema + options) (`episodes/<slug>/cache/llm-*.json`), plus the finished research,
+storylines and script as before. Every local call and search is recorded in the ledger at $0.00 (providers `ollama`
+and `duckduckgo`).
 
 ## Hardware (checked 2026-11-05)
 

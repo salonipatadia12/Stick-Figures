@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from pipeline import cli, config, script
-from pipeline_fixtures import FakeClient, research_response, script_response, story_response
+from pipeline_fixtures import FakeClient, anthropic_provider, research_response, script_response, story_response
 
 TOPIC = 'Why your salary disappears by the 20th'
 SLUG = 'why-your-salary-disappears-by-the-20th'
@@ -20,6 +20,7 @@ class CliFlow(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         self.addCleanup(self.dir.cleanup)
+        anthropic_provider(self)                 # these tests drive the paid path with a fake client
         self.client = FakeClient([research_response(), story_response(), script_response()])
         p = mock.patch.object(script, 'make_client', lambda: self.client)
         p.start()

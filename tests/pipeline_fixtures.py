@@ -124,3 +124,13 @@ class FakeMessages:
 class FakeClient:
     def __init__(self, responses, count=1200):
         self.messages = FakeMessages(responses, count)
+
+
+def anthropic_provider(test):
+    """Pin SCRIPT_PROVIDER=anthropic for a test that drives the paid path with a FakeClient (the default provider is
+    ollama since 2026-11-10). Restored on cleanup, together with anything a test's .env load added."""
+    import os
+    from unittest import mock
+    p = mock.patch.dict(os.environ, {'SCRIPT_PROVIDER': 'anthropic'})
+    p.start()
+    test.addCleanup(p.stop)

@@ -123,6 +123,15 @@ def cmd_make(args):
 
     needs_story = (not episode.beats and not episode.storyline_pick) or 'story' in regenerate
     needs_script = not episode.beats or bool(regenerate & {'script', 'research'})
+    if args.dry_run and config.script_provider() == 'ollama':
+        from . import llm
+        ok = llm.is_available()
+        print(f'\nDry run: SCRIPT_PROVIDER=ollama, so research (DuckDuckGo), storylines and the script run locally on '
+              f'{config.ollama_model()} at {config.ollama_host()}: $0.00, nothing is paid.')
+        print(f'  Ollama: {"ready" if ok else "NOT ready (start it with brew services start ollama, then ollama pull " + config.ollama_model() + ")"}')
+        print('  next step: ' + ('research + three storylines (stops at the storyline gate)' if needs_story else
+                                 'the script' if needs_script else 'nothing to write (the script exists)'))
+        return 0
     if args.dry_run and needs_story:
         from .script import Source, count_input_tokens, make_client, research_estimate, research_request
         from .story import allowed_formats, story_estimate, story_request
