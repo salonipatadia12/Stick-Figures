@@ -51,6 +51,7 @@ class Config:
     host: str = field(default_factory=socket.gethostname)
     auto_pull: bool = False            # `git pull --ff-only` on pipeline-v2 while idle (off by default)
     job_timeout_s: float = 4 * 3600    # a stuck child is stopped after this long
+    ollama_url: str = 'http://localhost:11434'   # pitch/script run on this (a Homebrew service on the Mac)
     token: str | None = field(default=None, repr=False)
     token_source: str = ''
 
@@ -76,6 +77,20 @@ class Config:
         return out
 
 
+def ollama_url(value: str) -> str:
+    """OLLAMA_HOST as Ollama itself takes it (`127.0.0.1:11434`, `http://host:port`, `0.0.0.0`) -> a base URL."""
+    v = (value or '').strip().rstrip('/') or 'http://localhost:11434'
+    if '://' not in v:
+        v = 'http://' + v
+    scheme, _, rest = v.partition('://')
+    host = rest.split('/')[0]
+    if host.startswith('0.0.0.0'):
+        host = 'localhost' + host[len('0.0.0.0'):]
+    if ':' not in host.split(']')[-1]:
+        host += ':11434'
+    return f'{scheme}://{host}'
+
+
 def load(env: dict | None = None, token_lookup=keychain_token) -> Config:
     env = dict(os.environ if env is None else env)
     file_vals = _read_file(Path(env.get('STICK_WORKER_CONFIG', DEFAULT_CONFIG)).expanduser())
@@ -94,6 +109,7 @@ def load(env: dict | None = None, token_lookup=keychain_token) -> Config:
         cfg.host = get('STICK_WORKER_HOST')
     cfg.auto_pull = str(get('STICK_WORKER_PULL', '0')).lower() in ('1', 'true', 'yes')
     cfg.job_timeout_s = float(get('STICK_JOB_TIMEOUT', cfg.job_timeout_s))
+    cfg.ollama_url = ollama_url(get('OLLAMA_HOST', cfg.ollama_url))
     if env.get('STICK_WORKER_TOKEN'):
         cfg.token, cfg.token_source = env['STICK_WORKER_TOKEN'], 'STICK_WORKER_TOKEN'
     else:

@@ -9,6 +9,19 @@ from decimal import Decimal
 from pathlib import Path
 
 
+LLM_KINDS = ('pitch', 'script')             # research + storylines, the script: the language-model steps
+HEAVY_KINDS = ('paint', 'render')           # always on the Mac
+PROVIDERS = ('ollama', 'anthropic')
+
+
+def provider_from_env() -> str:
+    """SCRIPT_PROVIDER: `ollama` (default; free, on the Mac) or `anthropic` (paid, on the VPS runner)."""
+    value = (os.getenv('SCRIPT_PROVIDER', '') or 'ollama').strip().lower()
+    if value not in PROVIDERS:
+        raise ValueError(f'SCRIPT_PROVIDER must be one of {", ".join(PROVIDERS)}, not {value!r}')
+    return value
+
+
 def _flag(name):
     return os.getenv(name, '').strip().lower() in ('1', 'true', 'yes', 'on')
 
@@ -29,6 +42,23 @@ class Settings:
     vps_lease_minutes: int = 20
     max_attempts: int = 3
     worker_online_seconds: int = 120
+    # `ollama`: pitch/script run on the Mac worker (free, local model; the VPS only queues them).
+    # `anthropic`: pitch/script run on the VPS runner (paid; the spend rule; never retried on their own).
+    script_provider: str = 'ollama'
+
+    @property
+    def llm_on_mac(self) -> bool:
+        return self.script_provider != 'anthropic'
+
+    @property
+    def vps_kinds(self) -> tuple:
+        """The job kinds the VPS runner claims."""
+        return () if self.llm_on_mac else LLM_KINDS
+
+    @property
+    def mac_kinds(self) -> tuple:
+        """The job kinds the Mac worker may claim (one at a time). Their lease expiry re-queues them: free work."""
+        return LLM_KINDS + HEAVY_KINDS if self.llm_on_mac else HEAVY_KINDS
 
     @property
     def episodes_dir(self) -> Path:
@@ -59,6 +89,7 @@ class Settings:
                    public_url=os.getenv('PUBLIC_URL', ''),
                    spend_preapproved_usd=Decimal(os.getenv('SPEND_PREAPPROVED_USD', '0.50') or '0.50'),
                    fake_anthropic=_flag('STICK_FAKE_ANTHROPIC'),
+                   script_provider=provider_from_env(),
                    # tests only: a short Mac lease so lease expiry can be exercised (default 15 min)
                    mac_lease_minutes=float(os.getenv('WORKER_LEASE_SECONDS', '900') or '900') / 60)
 

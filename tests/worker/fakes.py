@@ -23,6 +23,7 @@ class FakeServer:
         self.files = []                       # (job_id, name, kind, bytes)
         self.done, self.failed, self.progress = {}, {}, []
         self.down, self.status = {}, {}
+        self.kinds = None                     # the heartbeat's `kinds` (None: an older server that sends none)
 
     def _match(self, table, path):
         return next((k for k in table if path.endswith(k)), None)
@@ -51,7 +52,10 @@ class FakeServer:
         if path == '/api/health':
             return httpx.Response(200, json=dict(ok=True, db=True, worker=dict(online=True)))
         if path == '/api/worker/heartbeat':
-            return httpx.Response(200, json=dict(ok=True, queued=len(self.jobs)))
+            body = dict(ok=True, queued=len(self.jobs))
+            if self.kinds is not None:
+                body['kinds'] = list(self.kinds)
+            return httpx.Response(200, json=body)
         if path == '/api/worker/claim':
             if not self.jobs:
                 return httpx.Response(204)

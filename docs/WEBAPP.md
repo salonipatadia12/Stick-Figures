@@ -10,16 +10,24 @@ D tests). Change it only through the coordinator.
 phone ──HTTPS──► VPS (Docker Compose, small)                       Mac (Apple silicon)
                  caddy (TLS) ─► web (FastAPI, HTML + JSON API)      macworker (launchd)
                                  ├─ runner: research/storylines/      │ pulls jobs over HTTPS,
-                                 │  script (Anthropic, the pipeline)   │ one heavy job at a time:
+                                 │  script (only SCRIPT_PROVIDER=      │ one job at a time:
+                                 │  anthropic; idle with ollama)       │ pitch, script (ollama: Ollama on the Mac)
                                  ├─ postgres: episodes, jobs, worker   │ paint (FLUX scenes/props)
                                  └─ /data volume: episodes/, outputs/  │ render (voice, compose, QA)
                                          ▲                            │
                                          └──── outbound HTTPS only ───┘
 ```
 
-- The VPS never paints or renders. It runs the web app, the queue, Postgres, the light pipeline steps (Anthropic
-  calls: research, storylines, script, through the existing ledger and caps) and stores the outputs.
-- The Mac does all heavy work: painting (FLUX inserts/props) and rendering (Kokoro voice, compositing, Whisper QA).
+- **SCRIPT_PROVIDER** (2026-11-10, Anthropic credits ran out): `ollama` (the default) moves research/storylines
+  (`pitch`) and the script (`script`) to the Mac worker, which runs them with the pipeline's free local model
+  (Ollama + qwen2.5:14b, a Homebrew service on the Mac); the VPS only queues them. `anthropic` is the original paid
+  path on the VPS runner, unchanged. The rest of this file describes both; where they differ it says so.
+
+- The VPS never paints or renders. It runs the web app, the queue, Postgres, the light pipeline steps under
+  `SCRIPT_PROVIDER=anthropic` (Anthropic calls: research, storylines, script, through the existing ledger and caps)
+  and stores the outputs.
+- The Mac does all heavy work: painting (FLUX inserts/props) and rendering (Kokoro voice, compositing, Whisper QA),
+  and under `SCRIPT_PROVIDER=ollama` research, storylines and the script on its local model.
   It pulls jobs; nothing connects into the Mac. Jobs wait in the queue while the Mac is offline or asleep.
 - One heavy job at a time on the Mac (a single queue; the worker claims one job, finishes it, then claims the next).
 
@@ -47,10 +55,12 @@ The old `studio/`, root `compose.yaml` and root `Dockerfile` are a retired exper
 | `APP_USER`, `APP_PASSWORD_HASH` | web | the single login; hash = `scrypt$<salt hex>$<hash hex>` (n=2**14, r=8, p=1, dklen=32); `python -m webapp.hashpw` prints one |
 | `SESSION_SECRET` | web | cookie signing key |
 | `WORKER_TOKEN_SHA256` | web | sha256 hex of the Mac worker's bearer token (the VPS never stores the token) |
-| `ANTHROPIC_API_KEY` | web runner | the only paid key |
+| `SCRIPT_PROVIDER` | web, runner | `ollama` (default): `pitch`/`script` are Mac jobs; `anthropic`: VPS runner jobs (paid). Both containers read it from the same env file |
+| `ANTHROPIC_API_KEY` | web runner | the only paid key; needed only with `SCRIPT_PROVIDER=anthropic` |
 | `PUBLIC_URL` | web, caddy | e.g. `https://187-127-179-129.sslip.io` (a real domain later) |
 | `SPEND_PREAPPROVED_USD` | web | `0.50`: an Anthropic step that would take a video past this total stops and asks in the UI |
 | `STICK_SERVER`, token in Keychain (`security ... -s stick-worker`) | macworker | where to pull jobs from |
+| `OLLAMA_HOST` | macworker | default `http://localhost:11434` (checked with `GET /api/version` before every pitch/script job) |
 
 ## Data
 
@@ -59,7 +69,8 @@ Postgres tables (SQLAlchemy 2 Core or ORM, psycopg 3; migrations by a simple `CR
 - `episodes`: `slug` (pk), `topic`, `niche`, `audience`, `state`, `created_at`, `updated_at`, `cost_usd`, `error`.
   The episode itself stays the pipeline's `episode.json` + `ledger.json` under `/data/episodes/<slug>/` (the
   pipeline's `store` reads/writes it; `STICK_EPISODES_DIR=/data/episodes`).
-- `jobs`: `id`, `slug`, `kind` (`pitch`, `script` run on the VPS; `paint`, `render` run on the Mac), `status`
+- `jobs`: `id`, `slug`, `kind` (`pitch`, `script` run on the Mac with `SCRIPT_PROVIDER=ollama`, on the VPS runner
+  with `anthropic`; `paint`, `render` always run on the Mac), `status`
   (`queued`, `running`, `done`, `failed`), `payload` json, `result` json, `progress` json (`stage`, `pct`, `message`,
   `at`), `attempts`, `lease_until`, `created_at`, `started_at`, `finished_at`, `error`.
 - `worker`: one row: `last_seen`, `host`, `version`, `busy_job_id`.
@@ -67,7 +78,8 @@ Postgres tables (SQLAlchemy 2 Core or ORM, psycopg 3; migrations by a simple `CR
 
 Episode states: `researching` → `storylines` (gate) → `scripting` → `script` (gate: hook + approve) → `painting`
 → `scenes` (gate: approve new scenes, or redo one with a note) → `rendering` → `done` | `done_qa_failed` |
-`failed` (with `error`; a retry button re-queues the failed job; paid steps never retry on their own).
+`failed` (with `error`; a retry button re-queues the failed job; paid steps, i.e. pitch/script under `anthropic`,
+never retry on their own).
 If painting finds nothing new, the episode goes straight to `rendering`.
 
 ## Gates (the user decides; the app never approves on its own)
@@ -108,15 +120,21 @@ Worker API (`Authorization: Bearer <token>`; sha256 must equal `WORKER_TOKEN_SHA
 
 | Method, path | Body | Response |
 |---|---|---|
-| `POST /api/worker/heartbeat` | `{host, version, busy_job_id?}` | `{ok, queued: n}` |
-| `POST /api/worker/claim` | `{kinds: ["paint","render"]}` | 204 none, or `{job_id, kind, slug, payload, episode: <episode.json>, ledger: <ledger.json>}`; sets `running`, `lease_until = now + 15 min` |
+| `POST /api/worker/heartbeat` | `{host, version, busy_job_id?}` | `{ok, queued: n, kinds: [...]}` (`kinds`: what this server hands the Mac) |
+| `POST /api/worker/claim` | `{kinds: ["pitch","script","paint","render"]}` | 204 none, or `{job_id, kind, slug, payload, episode: <episode.json>, ledger: <ledger.json>}` (+ for pitch/script: `provider`, `cache: {name: text}` of `episodes/<slug>/cache/*.json`, and for pitch `others: {slug: stub episode.json}`); sets `running`, `lease_until = now + 15 min`. Kinds the provider does not route to the Mac are ignored |
 | `POST /api/worker/jobs/{id}/progress` | `{stage, pct, message}` | `{ok}`; extends the lease |
-| `POST /api/worker/jobs/{id}/files` | multipart `file`, form `name`, `kind` | `{ok}`; saved to `/data/outputs/<slug>/<name>` (names: `[a-z0-9._-]+` only) |
+| `POST /api/worker/jobs/{id}/files` | multipart `file`, form `name`, `kind` | `{ok}`; saved to `/data/outputs/<slug>/<name>` (names: `[a-z0-9._-]+` only). A pitch/script job uploads only `kind=cache` (at most 20 MB each), saved to `/data/episodes/<slug>/cache/<name>`, not listed as a download |
 | `POST /api/worker/jobs/{id}/done` | `{result}` | `{ok}`; advances the episode state |
 | `POST /api/worker/jobs/{id}/fail` | `{error}` | `{ok}`; episode `failed` |
 
-A running Mac job whose lease expires goes back to `queued` (free work; at most 3 attempts). The worker counts as
-online if `last_seen` is under 2 minutes old.
+A running Mac job whose lease expires goes back to `queued` (free work, which includes pitch/script under `ollama`;
+at most 3 attempts). The worker counts as online if `last_seen` is under 2 minutes old.
+
+Pitch/script result (Mac, `ollama`): `{notes: [...], episode: <episode.json>, ledger: <ledger.json>, provider}`;
+the new `cache/` files are uploaded first. The server checks the episode (same slug; storylines after pitch, beats
+after script), saves `episode.json`/`ledger.json` and moves the episode exactly as the runner does: `storylines`
+after pitch, `script` after script (`cost_usd` from the ledger, $0). An episode it cannot use fails the job with the
+reason (Retry re-runs it). The job's stored result is `{notes, ran_on: "mac", provider}`.
 
 Paint result: `{new: [{key, kind: "scene"|"prop", name: "<key>.jpg", scene, beats}], failed: [{key, why}]}` (the
 previews are uploaded first as `scene_preview` files). Render result: `{duration, qa_pass: bool, qa_summary}`;
@@ -131,6 +149,12 @@ In the user's `Stick_Figures` checkout on `pipeline-v2`, with its venvs:
   as round 2 with the note as art direction, archiving round 1), previews as 720px JPEGs, upload, `done`;
 - `render`: `.venv/bin/python scripts/motion_test/episode_compose.py <slug> --workers 4`, progress from its output
   (`bNN: frames ... s` lines, then QA), upload the files, `done` with `qa_pass` from `qa.json['all']`;
+- `pitch` / `script` (`SCRIPT_PROVIDER=ollama`): check Ollama (`GET http://localhost:11434/api/version`; down →
+  `fail` with "Ollama is not running on the Mac: brew services start ollama"), write the claimed episode, ledger,
+  `cache/` and the `others` stubs into a scratch `episodes/` inside the job folder (the checkout's own `episodes/`
+  is not touched), run `story.pitch` / `script.generate` there through `macworker/bridge.py` (the repo's `.venv`;
+  `SCRIPT_PROVIDER=ollama`, an empty `ANTHROPIC_API_KEY`, a ledger that refuses any paid reservation), upload the
+  new or changed `cache/` files, `done` with the episode and ledger;
 - `caffeinate -i -w <pid>` only while a job runs; the launchd agent (`KeepAlive`) polls every 30 s while idle.
 - Never kills other processes; one job at a time; the token from the Keychain; logs in `~/Library/Logs/stick-worker.log`.
 

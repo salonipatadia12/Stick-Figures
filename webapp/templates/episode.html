@@ -28,7 +28,7 @@
   <div class="bar"><span data-job-bar style="width: {{ job.progress.pct or 0 }}%"></span></div>
   <p class="small"><span class="muted" data-job-stage>{{ job.progress.stage or '' }}</span></p>
   <p data-job-message>{{ job.progress.message or '' }}</p>
-  {% if job.kind in ('paint', 'render') %}
+  {% if job.kind in mac_kinds %}
     {% include "_worker.html" %}
     {% if not worker.online %}<p class="muted small">The job waits in the queue until the Mac is back online. You can close this page.</p>{% endif %}
   {% else %}
@@ -63,7 +63,7 @@
 {% if ep.state == 'failed' %}
 <div class="notice bad"><strong>This step failed.</strong><pre>{{ ep.error or (job.error if job else '') or 'No message was given.' }}</pre></div>
 <form method="post" action="/episodes/{{ ep.slug }}/retry"
-      {% if job and job.kind in ('pitch', 'script') %}data-confirm="Run the {{ job.kind }} step again? It is a paid Claude call (cached parts are reused)."{% endif %}>
+      {% if job and job.kind in ('pitch', 'script') and job.kind not in mac_kinds %}data-confirm="Run the {{ job.kind }} step again? It is a paid Claude call (cached parts are reused)."{% endif %}>
   <button class="btn primary block" type="submit">Retry{% if job %} {{ job.kind }}{% endif %}</button>
 </form>
 {% endif %}

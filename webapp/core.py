@@ -2,8 +2,10 @@
 
 Every gate is an explicit user action that goes through the pipeline's own gate code (`stick approve ... --by
 'user (web)'`), so the episode's approval log is written exactly as on the command line. Nothing here approves on its
-own. Paid steps (pitch, script) never retry on their own: a lease that runs out on a VPS job fails it (Retry is a
-button); a lease that runs out on a Mac job (free work) re-queues it, at most `max_attempts` times.
+own. Where pitch/script run follows SCRIPT_PROVIDER (settings.vps_kinds / settings.mac_kinds): with `anthropic` they
+are paid VPS steps that never retry on their own (a lease that runs out fails them; Retry is a button); with `ollama`
+(the default) the Mac runs them like paint/render. A lease that runs out on a Mac job (free work) re-queues it, at
+most `max_attempts` times.
 """
 from __future__ import annotations
 
@@ -29,10 +31,15 @@ SPEND_APPROVAL = 'spend_approval'      # addition: a paid step would pass the pr
 STATES = (RESEARCHING, STORYLINES, SCRIPTING, SCRIPT, PAINTING, SCENES, RENDERING, DONE, DONE_QA_FAILED, FAILED,
           SPEND_APPROVAL)
 KIND_STATE = {'pitch': RESEARCHING, 'script': SCRIPTING, 'paint': PAINTING, 'render': RENDERING}
-VPS_KINDS, MAC_KINDS = ('pitch', 'script'), ('paint', 'render')
+LLM_KINDS = ('pitch', 'script')
+# SCRIPT_PROVIDER=anthropic routing; the live routing is settings.vps_kinds / settings.mac_kinds
+VPS_KINDS, MAC_KINDS = LLM_KINDS, ('paint', 'render')
 BY = 'user (web)'
 NAME_RE = re.compile(r'^[a-z0-9._-]+$')
 FILE_KINDS = ('mp4', 'srt', 'qa', 'contact_sheet', 'scene_preview')
+CACHE_KIND = 'cache'                   # a pitch/script job's episodes/<slug>/cache/ file (not a user download)
+CACHE_FILE_LIMIT, CACHE_TOTAL_LIMIT = 20 * 1024 * 1024, 100 * 1024 * 1024
+LLM_WHAT = {'pitch': 'Research/storylines', 'script': 'Script'}
 STATE_LABELS = {RESEARCHING: 'Researching', STORYLINES: 'Pick a storyline', SCRIPTING: 'Writing the script',
                 SCRIPT: 'Review the script', PAINTING: 'Painting scenes', SCENES: 'Review the scenes',
                 RENDERING: 'Rendering', DONE: 'Done', DONE_QA_FAILED: 'Done, QA failed', FAILED: 'Failed',
@@ -103,8 +110,18 @@ class Service:
                                                                                 at=db.iso(db.now()))))
         return res.inserted_primary_key[0]
 
-    @staticmethod
-    def _queued_message(kind):
+    @property
+    def mac_kinds(self):
+        return self.settings.mac_kinds
+
+    @property
+    def vps_kinds(self):
+        return self.settings.vps_kinds
+
+    def _queued_message(self, kind):
+        if kind in LLM_KINDS and kind in self.mac_kinds:
+            return {'pitch': 'Waiting for the Mac to research the topic',
+                    'script': 'Waiting for the Mac to write the script'}[kind]
         return {'pitch': 'Waiting to research the topic', 'script': 'Waiting to write the script',
                 'paint': 'Waiting for the Mac to paint the scenes', 'render': 'Waiting for the Mac to render'}[kind]
 
@@ -160,12 +177,14 @@ class Service:
 
     # ------------------------------------------------------------------ queue
     def sweep(self):
-        """Expired leases: Mac jobs go back to the queue (at most max_attempts); VPS (paid) jobs fail."""
+        """Expired leases: Mac jobs (free work, incl. pitch/script under ollama) go back to the queue (at most
+        max_attempts); VPS (paid) jobs fail."""
         t = db.now()
+        mac = self.mac_kinds
         with self.engine.begin() as conn:
             stale = conn.execute(select(J).where(and_(J.c.status == 'running', J.c.lease_until < t))).mappings().all()
             for j in stale:
-                if j['kind'] in MAC_KINDS and j['attempts'] < self.settings.max_attempts:
+                if j['kind'] in mac and j['attempts'] < self.settings.max_attempts:
                     conn.execute(update(J).where(and_(J.c.id == j['id'], J.c.status == 'running')).values(
                         status='queued', lease_until=None,
                         progress=dict(stage='queued', pct=0, at=db.iso(t),
@@ -173,7 +192,7 @@ class Service:
                                               f'{self.settings.max_attempts} used)')))
                     conn.execute(update(W).where(W.c.busy_job_id == j['id']).values(busy_job_id=None))
                     continue
-                if j['kind'] in MAC_KINDS:
+                if j['kind'] in mac:
                     why = (f'The Mac stopped answering during {j["kind"]} {self.settings.max_attempts} times; '
                            'press Retry when it is back.')
                 else:
@@ -225,7 +244,7 @@ class Service:
         j = conn.execute(select(J).where(J.c.id == job_id)).mappings().first()
         if not j:
             raise NotFound(job_id)
-        if j['kind'] not in MAC_KINDS:
+        if j['kind'] not in self.mac_kinds:
             raise GateError(f'job {job_id} is not a Mac job')
         if j['status'] != 'running':
             raise GateError(f'job {job_id} is {j["status"]}, not running (its lease may have run out)')
@@ -259,6 +278,8 @@ class Service:
         t = db.now()
         with self.engine.begin() as conn:
             j = self._running_mac_job(conn, job_id)
+            if j['kind'] in LLM_KINDS:
+                return self._llm_done(conn, j, result)
             conn.execute(update(J).where(J.c.id == job_id).values(
                 status='done', result=result, finished_at=t, lease_until=None,
                 progress=dict(stage='done', pct=100, message='Finished', at=db.iso(t))))
@@ -272,6 +293,96 @@ class Service:
                     self._enqueue(conn, slug, 'render', {})
             else:
                 self._set_state(conn, slug, DONE if result.get('qa_pass') is True else DONE_QA_FAILED, error=None)
+
+    def _llm_done(self, conn, j, result):
+        """A pitch/script job the Mac ran (SCRIPT_PROVIDER=ollama): the result carries the updated episode.json and
+        ledger.json (its cache/ files were uploaded first). The same transitions as the VPS runner: storylines gate
+        after pitch, script gate after script. An episode the server cannot read fails the job (Retry re-runs it)."""
+        from pipeline import store
+        from pipeline.models import Episode
+        slug, kind = j['slug'], j['kind']
+        what = LLM_WHAT[kind]
+        try:
+            episode = Episode.model_validate(result.get('episode'))
+            if episode.slug != slug:
+                raise ValueError(f'it is for "{episode.slug}", not "{slug}"')
+            if kind == 'pitch' and not episode.storylines:
+                raise ValueError('it has no storylines')
+            if kind == 'script' and not episode.beats:
+                raise ValueError('it has no beats')
+            ledger = result.get('ledger')
+            if ledger is not None and not (isinstance(ledger, dict) and isinstance(ledger.get('entries'), list)
+                                           and isinstance(ledger.get('budget_usd'), (int, float, str))):
+                raise ValueError('its ledger.json has no budget_usd and entries list')
+        except ValueError as exc:
+            msg = ' '.join(str(exc).split())[:1500]
+            self._fail_job(conn, j, f'{what} failed: the Mac sent back an episode the server cannot use ({msg}). '
+                                    'Press Retry to run it again.')
+            return
+        base = store.folder(slug)
+        store.save(episode, base)
+        if ledger is not None:
+            tmp = base / 'ledger.json.tmp'
+            tmp.write_text(json.dumps(ledger, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')
+            tmp.replace(base / 'ledger.json')
+        notes = [str(n)[:500] for n in (result.get('notes') or []) if isinstance(n, (str, int, float))][:200]
+        try:
+            cost = float(self._ledger_spent(slug))
+        except Exception:                                  # an odd ledger entry must not lose the finished step
+            cost = float(self._episode_row(conn, slug).get('cost_usd') or 0)
+        t = db.now()
+        conn.execute(update(J).where(J.c.id == j['id']).values(
+            status='done', finished_at=t, lease_until=None,
+            result=dict(notes=notes, ran_on='mac', provider=str(result.get('provider') or 'ollama')[:40]),
+            progress=dict(stage='done', pct=100, message='Finished', at=db.iso(t))))
+        conn.execute(update(W).where(W.c.busy_job_id == j['id']).values(busy_job_id=None))
+        conn.execute(update(E).where(E.c.slug == slug).values(
+            state=STORYLINES if kind == 'pitch' else SCRIPT, error=None, waiting=None, cost_usd=cost, updated_at=t))
+
+    def cache_dir(self, slug) -> Path:
+        from pipeline import config
+        return config.EPISODES_DIR / slug / 'cache'
+
+    def cache_files(self, slug) -> dict:
+        """{name: text} of the episode's cache/ JSON (research, storylines, script responses) for a Mac pitch/script
+        job, so a retry or the next step reuses them. Failed-response dumps and oversized files stay behind."""
+        out, total = {}, 0
+        d = self.cache_dir(slug)
+        if not d.is_dir():
+            return out
+        for p in sorted(d.iterdir()):
+            if not p.is_file() or not safe_name(p.name) or p.name.startswith('failed-'):
+                continue
+            size = p.stat().st_size
+            if size > CACHE_FILE_LIMIT or total + size > CACHE_TOTAL_LIMIT:
+                continue
+            try:
+                out[p.name] = p.read_text(encoding='utf-8')
+            except (OSError, UnicodeDecodeError):
+                continue
+            total += size
+        return out
+
+    def rotation_episodes(self, slug) -> dict:
+        """{slug: episode.json} stubs of every other episode with storylines (slug, topic, storylines, the pick and
+        its approval log): what the storyline rotation rule reads, so the Mac pitches with the server's history."""
+        from pipeline import store
+        from pipeline.models import Episode
+        out = {}
+        for other in store.list_episodes():
+            if other == slug:
+                continue
+            try:
+                ep, _ = store.load(other)
+            except ValueError:
+                continue
+            if not ep.storylines:
+                continue
+            log = [e for e in ep.meta.get('approval_log', []) if isinstance(e, dict) and e.get('gate') == 'storyline']
+            stub = Episode(slug=ep.slug, topic=ep.topic, storylines=ep.storylines, storyline_pick=ep.storyline_pick,
+                           meta=dict(approval_log=log))
+            out[other] = stub.model_dump(mode='json')
+        return out
 
     def worker_fail(self, job_id, error):
         error = (str(error or '') or 'The Mac reported a failure without a message.')[:4000]
@@ -289,7 +400,7 @@ class Service:
             else:
                 conn.execute(W.insert().values(id=1, **vals))
             queued = conn.execute(select(func.count()).select_from(J).where(
-                and_(J.c.status == 'queued', J.c.kind.in_(MAC_KINDS)))).scalar_one()
+                and_(J.c.status == 'queued', J.c.kind.in_(self.mac_kinds)))).scalar_one()
         self.sweep()
         return queued
 
@@ -310,7 +421,7 @@ class Service:
         with self.engine.connect() as conn:
             w = conn.execute(select(W).where(W.c.id == 1)).mappings().first()
             running = conn.execute(select(J.c.id, J.c.kind, J.c.slug).where(
-                and_(J.c.status == 'running', J.c.kind.in_(MAC_KINDS)))).mappings().first()
+                and_(J.c.status == 'running', J.c.kind.in_(self.mac_kinds)))).mappings().first()
         if not w or not w['last_seen']:
             return dict(online=False, last_seen=None, busy=bool(running), busy_job_id=running['id'] if running else None,
                         host=None, version=None)
@@ -324,8 +435,13 @@ class Service:
         from pipeline import config
         base = config.EPISODES_DIR / j['slug']
         read = lambda p: json.loads(p.read_text()) if p.exists() else {}
-        return dict(job_id=j['id'], kind=j['kind'], slug=j['slug'], payload=j['payload'] or {},
-                    episode=read(base / 'episode.json'), ledger=read(base / 'ledger.json'))
+        out = dict(job_id=j['id'], kind=j['kind'], slug=j['slug'], payload=j['payload'] or {},
+                   episode=read(base / 'episode.json'), ledger=read(base / 'ledger.json'))
+        if j['kind'] in LLM_KINDS:                        # a Mac pitch/script (SCRIPT_PROVIDER=ollama)
+            out.update(provider=self.settings.script_provider, cache=self.cache_files(j['slug']))
+            if j['kind'] == 'pitch':
+                out['others'] = self.rotation_episodes(j['slug'])
+        return out
 
     # ------------------------------------------------------------------ files
     def output_path(self, slug, name) -> Path:

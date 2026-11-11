@@ -7,11 +7,15 @@ amount (SPEND_PREAPPROVED_USD, raised only by the user's "Allow up to $X more").
 `spend_approval`. Paid steps never retry on their own; a failure waits for the user's Retry.
 
 STICK_FAKE_ANTHROPIC=1 uses webapp.fake (the fixtures' responses, $0) and nothing paid is ever sent.
+
+SCRIPT_PROVIDER=ollama (the default): pitch and script run on the Mac worker (free, local model), so this runner
+claims nothing and only idles; SCRIPT_PROVIDER=anthropic is the paid VPS path described above.
 """
 from __future__ import annotations
 
 import argparse
 import logging
+import os
 import signal
 import sys
 import time
@@ -77,11 +81,21 @@ def install_fake(settings):
         script.make_client = fake.make_client
 
 
+def pin_provider(settings):
+    """The pipeline follows the web app's SCRIPT_PROVIDER, so the runner's anthropic path never meets a pipeline
+    default of ollama (env for code that reads it at call time, pipeline.config for code that read it at import)."""
+    os.environ['SCRIPT_PROVIDER'] = settings.script_provider
+    from pipeline import config
+    if hasattr(config, 'SCRIPT_PROVIDER'):
+        config.SCRIPT_PROVIDER = settings.script_provider
+
+
 class Runner:
     def __init__(self, settings=None, service=None):
         self.settings = settings or Settings.from_env()
         self.service = service or core.Service(self.settings)
         install_fake(self.settings)
+        pin_provider(self.settings)
         self.stopping = False
 
     def set_progress(self, job_id, stage, pct, message):
@@ -91,8 +105,11 @@ class Runner:
             pass
 
     def run_once(self) -> bool:
-        """Claim and run one VPS job. False when the queue is empty."""
-        job = self.service.claim(core.VPS_KINDS, self.settings.vps_lease_minutes)
+        """Claim and run one VPS job. False when the queue is empty (always, with SCRIPT_PROVIDER=ollama)."""
+        kinds = self.settings.vps_kinds
+        if not kinds:
+            return False
+        job = self.service.claim(kinds, self.settings.vps_lease_minutes)
         if not job:
             return False
         self.run_job(job)
@@ -167,16 +184,22 @@ class Runner:
         log.warning('job %s %s %s -> %s: %s', job['id'], job['kind'], job['slug'], state, error)
 
     def fail_orphans(self):
-        """At start: a VPS job still `running` belongs to a runner that died mid-step. Paid: fail it, never re-run."""
+        """At start: a VPS job still `running` belongs to a runner that died mid-step. Paid: fail it, never re-run.
+        With SCRIPT_PROVIDER=ollama a running pitch/script is the Mac's: left alone (its lease decides)."""
         from sqlalchemy import and_, select
+        kinds = self.settings.vps_kinds
+        if not kinds:
+            return
         with self.service.engine.begin() as conn:
-            for j in conn.execute(select(J).where(and_(J.c.status == 'running', J.c.kind.in_(core.VPS_KINDS)))).mappings().all():
+            for j in conn.execute(select(J).where(and_(J.c.status == 'running', J.c.kind.in_(kinds)))).mappings().all():
                 self.service._fail_job(conn, dict(j), f'The runner restarted during the {j["kind"]} step. Paid steps '
                                                       'are never retried on their own: press Retry to run it again.')
 
     def loop(self, poll_seconds=3.0):
         self.fail_orphans()
-        log.info('runner started (fake Anthropic: %s, data: %s)', self.settings.fake_anthropic, self.settings.data_dir)
+        log.info('runner started (SCRIPT_PROVIDER=%s%s, fake Anthropic: %s, data: %s)', self.settings.script_provider,
+                 ': pitch/script run on the Mac; nothing to do here' if not self.settings.vps_kinds else '',
+                 self.settings.fake_anthropic, self.settings.data_dir)
         while not self.stopping:
             try:
                 if not self.run_once():

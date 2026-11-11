@@ -70,7 +70,14 @@ fi
 mode=$(file_mode "$ENV_FILE")
 [ "$mode" = 600 ] || [ "$mode" = 400 ] || die "$ENV_FILE has mode $mode; run: chmod 600 $ENV_FILE"
 missing=""
-for key in PUBLIC_URL POSTGRES_PASSWORD APP_USER APP_PASSWORD_HASH SESSION_SECRET WORKER_TOKEN_SHA256 ANTHROPIC_API_KEY; do
+required="PUBLIC_URL POSTGRES_PASSWORD APP_USER APP_PASSWORD_HASH SESSION_SECRET WORKER_TOKEN_SHA256"
+provider=$(env_value SCRIPT_PROVIDER | tr 'A-Z' 'a-z' | tr -d '[:space:]'); provider=${provider:-ollama}   # ollama: no key
+case "$provider" in
+    anthropic) required="$required ANTHROPIC_API_KEY" ;;
+    ollama) ;;
+    *) die "SCRIPT_PROVIDER must be ollama or anthropic, not $provider" ;;
+esac
+for key in $required; do
     if ! grep -Eq "^[[:space:]]*$key[[:space:]]*=[[:space:]]*[^[:space:]]" "$ENV_FILE"; then
         missing="$missing $key"
     elif grep -Eq "^[[:space:]]*$key[[:space:]]*=.*change-me" "$ENV_FILE"; then

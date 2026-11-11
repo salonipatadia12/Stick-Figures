@@ -1,12 +1,14 @@
 """End to end through the JSON API of docs/WEBAPP.md: topic -> storylines -> script -> scenes -> MP4.
 
 Fake mode (default): starts the web app (uvicorn webapp.app:app) and `python -m webapp.runner` on a free local port
-with STICK_FAKE_ANTHROPIC=1, SQLite and a data dir in a temp dir, plus tests/e2e/fake_worker.py as the Mac. Nothing
-paid is ever sent: the subprocesses get ANTHROPIC_API_KEY='' (which also stops .env loading a real one).
+with STICK_FAKE_ANTHROPIC=1 and SCRIPT_PROVIDER=anthropic (pitch/script on the runner), SQLite and a data dir in a temp
+dir, plus tests/e2e/fake_worker.py as the Mac. Nothing paid is ever sent: the subprocesses get ANTHROPIC_API_KEY=''
+(which also stops .env loading a real one).
 
 Real mode (E2E_REAL=1 E2E_REAL_CONFIRM=yes E2E_SERVER=... E2E_USER=... E2E_PASSWORD=... E2E_TOPIC=...): the same
-flow against a real deployment and the real Mac worker. It costs real money (Anthropic research, storylines and
-script). It never approves on its own: each gate waits for the human unless E2E_PICKS names the pick, e.g.
+flow against a real deployment and the real Mac worker. With SCRIPT_PROVIDER=anthropic on the server it costs real
+money (Anthropic research, storylines and script); with ollama the Mac writes them for free. It never approves on its
+own: each gate waits for the human unless E2E_PICKS names the pick, e.g.
 `E2E_PICKS=story=1,hook=1` (and `,scenes=approve` to approve the painted scenes). Run only when the coordinator asks:
 
     python tests/e2e/test_e2e.py --real
@@ -92,7 +94,8 @@ class Stack:
         self.env = h.safe_env(
             DATABASE_URL=f'sqlite:///{self.tmp / "stick.db"}', STICK_DATA_DIR=data, STICK_EPISODES_DIR=data / 'episodes',
             APP_USER=self.user, SESSION_SECRET=h.secrets.token_hex(32), WORKER_TOKEN_SHA256=token_sha,
-            PUBLIC_URL=self.base, SPEND_PREAPPROVED_USD='0.50', STICK_FAKE_ANTHROPIC='1')
+            PUBLIC_URL=self.base, SPEND_PREAPPROVED_USD='0.50', STICK_FAKE_ANTHROPIC='1',
+            SCRIPT_PROVIDER='anthropic')                   # the runner's fake-Anthropic path; fake_worker is paint/render
         if lease_seconds:
             self.env.update({n: str(lease_seconds) for n in h.LEASE_ENV_NAMES})
         self.env['APP_PASSWORD_HASH'], self.hash_how = h.password_hash(self.password, self.env)

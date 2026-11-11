@@ -135,7 +135,7 @@ class WorkerTokenTest(unittest.TestCase):
             self.assertEqual(r.status_code, 401)
             r = h.w('post', '/api/worker/heartbeat', json=dict(host='mac', version='1'))
             self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.json(), dict(ok=True, queued=0))
+            self.assertEqual(r.json(), dict(ok=True, queued=0, kinds=['paint', 'render']))   # the Harness runs anthropic
 
     def test_no_configured_token_rejects_everything(self):
         with Harness() as h:

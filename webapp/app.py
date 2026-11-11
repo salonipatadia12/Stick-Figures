@@ -105,7 +105,9 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
 
     def page(request, name, status=200, **ctx):
         ctx.setdefault('user', user_of(request))
-        ctx.setdefault('fake', settings.fake_anthropic)
+        ctx.setdefault('fake', settings.fake_anthropic and not settings.llm_on_mac)
+        ctx.setdefault('llm_on_mac', settings.llm_on_mac)     # SCRIPT_PROVIDER=ollama: research/script on the Mac
+        ctx.setdefault('mac_kinds', settings.mac_kinds)
         return templates.TemplateResponse(request, name, ctx, status_code=status)
 
     def no_store(response):
@@ -348,14 +350,15 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
             return worker_denied()
         data = await body_json(request)
         queued = service.heartbeat(data.get('host'), data.get('version'), data.get('busy_job_id'))
-        return {'ok': True, 'queued': queued}
+        return {'ok': True, 'queued': queued, 'kinds': list(settings.mac_kinds)}
 
     @app.post('/api/worker/claim')
     async def w_claim(request: Request):
         if not worker_ok(request):
             return worker_denied()
         data = await body_json(request)
-        kinds = [k for k in (data.get('kinds') or list(core.MAC_KINDS)) if k in core.MAC_KINDS]
+        allowed = settings.mac_kinds                   # pitch/script only with SCRIPT_PROVIDER=ollama
+        kinds = [k for k in (data.get('kinds') or list(allowed)) if k in allowed]
         service.touch_worker()
         job = service.claim(kinds, settings.mac_lease_minutes)
         if not job:
@@ -379,7 +382,8 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
         with service.engine.connect() as conn:
             job = service._running_mac_job(conn, job_id)
         slug = job['slug']
-        out_dir = service.settings.outputs_dir / slug
+        llm = job['kind'] in core.LLM_KINDS               # a Mac pitch/script: only its cache/ files come up
+        out_dir = service.cache_dir(slug) if llm else service.settings.outputs_dir / slug
         try:
             fields, tmp, size = await receive_upload(request, out_dir, settings.upload_limit_bytes)
         except UploadError as exc:
@@ -387,6 +391,17 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
         except Exception as exc:                       # a malformed multipart body
             return JSONResponse({'ok': False, 'error': f'bad upload: {exc.__class__.__name__}'}, status_code=400)
         name, kind = fields.get('name', '').strip(), fields.get('kind', '').strip()
+        if llm:
+            if not core.safe_name(name) or kind != core.CACHE_KIND or size > core.CACHE_FILE_LIMIT:
+                tmp.unlink(missing_ok=True)
+                return JSONResponse({'ok': False, 'error': f'a {job["kind"]} job uploads only its cache files: kind '
+                                                           f'"{core.CACHE_KIND}", name [a-z0-9._-]+, at most '
+                                                           f'{core.CACHE_FILE_LIMIT // (1024 * 1024)} MB'},
+                                    status_code=400)
+            os.replace(tmp, out_dir / name)
+            service.extend_lease(job_id)
+            service.touch_worker(busy_job_id=job_id)
+            return {'ok': True, 'name': name, 'size': size}
         if not core.safe_name(name) or kind not in core.FILE_KINDS:
             tmp.unlink(missing_ok=True)
             return JSONResponse({'ok': False, 'error': f'name must match [a-z0-9._-]+ and kind be one of '

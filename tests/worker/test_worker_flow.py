@@ -53,7 +53,7 @@ class FlowTest(Base):
         self.assertEqual(server.done['7'], dict(duration=44.2, qa_pass=True, qa_summary='QA passed'))
         self.assertEqual([b['stage'] for _, b in server.progress][:2], ['shots', 'qa'])
         claim = next(b for _, p, b in server.calls if p == '/api/worker/claim')
-        self.assertEqual(claim, dict(kinds=['paint', 'render']))
+        self.assertEqual(claim, dict(kinds=['pitch', 'script', 'paint', 'render']))   # the server filters by provider
         hb = next(b for _, p, b in server.calls if p == '/api/worker/heartbeat')
         self.assertEqual(set(hb), {'host', 'version'})
         state = json.loads((self.cfg.state_dir / 'jobs/7/outcome.json').read_text())
@@ -229,7 +229,7 @@ class DryRunTest(Base):
         import contextlib
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            rc = dry_run(self.cfg, client_factory=lambda s, t: server.client())
+            rc = dry_run(self.cfg, client_factory=lambda s, t: server.client(), ollama_check=lambda: '0.12.0')
         self.assertIn('nothing was claimed', buf.getvalue())
         self.assertNotIn('test-token-123', buf.getvalue())     # the token is never printed
         self.assertEqual(server.paths(), ['/api/health', '/api/worker/heartbeat'])

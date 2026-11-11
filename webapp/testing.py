@@ -28,8 +28,11 @@ def password_hash():
 class Harness:
     """with Harness() as h: h.client (TestClient), h.service, h.runner, h.worker_headers ..."""
 
-    def __init__(self, spend='0.50', public_url='http://testserver', upload_limit=None):
+    def __init__(self, spend='0.50', public_url='http://testserver', upload_limit=None, provider='anthropic'):
+        """provider: SCRIPT_PROVIDER. 'anthropic' (fake client) keeps pitch/script on the runner; 'ollama' hands them
+        to the (simulated) Mac."""
         self.spend, self.public_url, self.upload_limit = spend, public_url, upload_limit
+        self.provider = provider
 
     def __enter__(self):
         from fastapi.testclient import TestClient
@@ -44,13 +47,15 @@ class Harness:
         self.patches = [mock.patch.object(config, 'EPISODES_DIR', config.EPISODES_DIR),
                         mock.patch.object(script, 'make_client', script.make_client),
                         mock.patch.dict(os.environ, {'STICK_EPISODES_DIR': str(data / 'episodes')})]
+        if hasattr(config, 'SCRIPT_PROVIDER'):                 # the runner pins it to the Harness's provider
+            self.patches.append(mock.patch.object(config, 'SCRIPT_PROVIDER', config.SCRIPT_PROVIDER))
         for p in self.patches:
             p.start()
         self.settings = Settings(database_url=f'sqlite:///{data / "test.db"}', data_dir=data, app_user=USER,
                                  app_password_hash=password_hash(), session_secret='test-session-secret',
                                  worker_token_sha256=hashlib.sha256(WORKER_TOKEN.encode()).hexdigest(),
                                  public_url=self.public_url, spend_preapproved_usd=Decimal(self.spend),
-                                 fake_anthropic=True)
+                                 fake_anthropic=True, script_provider=self.provider)
         if self.upload_limit:
             self.settings.upload_limit_bytes = self.upload_limit
         self.service = core.Service(self.settings)

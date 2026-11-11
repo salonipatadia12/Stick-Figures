@@ -3,9 +3,13 @@ long-running worker never holds stale pipeline code. Run by file path, not as pa
 
   .venv/bin/python macworker/bridge.py needed <slug>
   .venv/bin/python macworker/bridge.py redo <slug> <redo.json>      # {key: note}: repaint as the next round
+  .venv/bin/python macworker/bridge.py pitch <slug> <episodes dir>  # research + three storylines (Ollama)
+  .venv/bin/python macworker/bridge.py script <slug> <episodes dir> # the script (Ollama)
 
 The answer is one line on stdout: `BRIDGE_JSON {...}`. Everything else (FLUX progress) passes through.
-Uses only the pipeline's public helpers: inserts.jobs/render/qa/library/save_library and the propgen equivalents.
+Uses only the pipeline's public helpers: inserts.jobs/render/qa/library/save_library and the propgen equivalents;
+story.pitch and script.generate for pitch/script, always with SCRIPT_PROVIDER=ollama, no Anthropic key and a ledger
+that refuses any paid reservation (nothing paid can be sent from the Mac).
 """
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ import os
 import shutil
 import sys
 import time
+import traceback
 from pathlib import Path
 
 MARK = 'BRIDGE_JSON '
@@ -162,10 +167,70 @@ def redo(slug: str, notes: dict, ins, pg, today: str | None = None) -> dict:
     return out
 
 
+class PaidCallRefused(RuntimeError):
+    pass
+
+
+def free_only_env(episodes_dir: Path, environ=os.environ):
+    """Before the pipeline is imported: the local model, no Anthropic key (an empty value also keeps the repo's .env
+    from supplying one) and the job's own episodes folder."""
+    environ['SCRIPT_PROVIDER'] = 'ollama'
+    environ['ANTHROPIC_API_KEY'] = ''
+    environ['STICK_EPISODES_DIR'] = str(episodes_dir)
+
+
+def free_ledger(path: Path, config):
+    """The pipeline's Ledger, refusing any reservation that would cost money (only $0 local-model entries pass)."""
+    from decimal import Decimal
+
+    from pipeline.cost import Ledger
+
+    class FreeLedger(Ledger):
+        def reserve(self, step, provider, model, estimate_usd, *args, **kw):
+            if Decimal(str(estimate_usd or 0)) > 0 and str(provider).lower() != 'ollama':
+                raise PaidCallRefused(f'the {step} step asked for a paid {provider} call (up to ${estimate_usd}); '
+                                      'the Mac runs only the free local model, so nothing was sent')
+            return super().reserve(step, provider, model, estimate_usd, *args, **kw)
+
+    return FreeLedger.open(path, None, default_budget=config.DEFAULT_BUDGET_USD)
+
+
+def llm(kind: str, slug: str, episodes_dir: Path, repo: Path) -> dict:
+    """Run story.pitch or script.generate on <episodes_dir>/<slug> (written by the worker from the claim) and save
+    the episode there. {notes: [...]} or {error, type}."""
+    free_only_env(episodes_dir)
+    sys.path.insert(0, str(repo))
+    from pipeline import config, store, styles
+    config.EPISODES_DIR = Path(episodes_dir)
+    if hasattr(config, 'SCRIPT_PROVIDER'):
+        config.SCRIPT_PROVIDER = 'ollama'
+    try:
+        episode, base = store.load(slug)
+        ledger = free_ledger(base / 'ledger.json', config)
+        if kind == 'pitch':
+            from pipeline import story
+            episode, notes = story.pitch(episode, base, ledger, client=None)
+        else:
+            from pipeline import script
+            episode, notes = script.generate(episode, styles.load(episode.style), base, ledger, client=None)
+        store.save(episode, base)
+    except Exception as e:                    # ScriptError, BudgetExceeded, PaidCallRefused, Ollama errors, ...
+        traceback.print_exc()                 # into the job's output.log
+        known = type(e).__name__ in ('ScriptError', 'BudgetExceeded', 'PaidCallRefused', 'PriceUnknown') \
+            or isinstance(e, (ValueError, RuntimeError, OSError))
+        msg = ' '.join(str(e).split()) if known else f'{type(e).__name__}: {" ".join(str(e).split())}'
+        return dict(error=msg[:3000] or type(e).__name__, type=type(e).__name__)
+    return dict(notes=[str(n) for n in notes])
+
+
 def main(argv: list) -> int:
     repo = Path(os.environ.get('STICK_REPO') or Path(__file__).resolve().parents[1])
-    ins, pg, store = _pipeline(repo)
     cmd, slug = argv[0], argv[1]
+    if cmd in ('pitch', 'script'):
+        ans = llm(cmd, slug, Path(argv[2]), repo)
+        print(MARK + json.dumps(ans, ensure_ascii=False, default=str), flush=True)
+        return 1 if 'error' in ans else 0
+    ins, pg, store = _pipeline(repo)
     if cmd == 'needed':
         ans = needed(slug, ins, pg, store)
     elif cmd == 'redo':

@@ -2,9 +2,10 @@
 
 The contract is `docs/WEBAPP.md`. On the VPS: the host's existing **nginx** (TLS by certbot) proxies
 `https://stick.srv1747356.hstgr.cloud` to the `web` container on `127.0.0.1:8020`; `runner` does the light
-pipeline steps; `postgres` holds the queue; the `data` volume holds `/data/episodes` and `/data/outputs`. Compose
-project `stick`, everything under `/srv/stick`. The Mac runs `macworker` (launchd), which pulls paint/render jobs
-over HTTPS; nothing connects into the Mac.
+pipeline steps when `SCRIPT_PROVIDER=anthropic` (with `ollama`, the default, it idles); `postgres` holds the queue;
+the `data` volume holds `/data/episodes` and `/data/outputs`. Compose project `stick`, everything under `/srv/stick`.
+The Mac runs `macworker` (launchd), which pulls paint/render jobs, and pitch/script jobs under `ollama`, over HTTPS;
+nothing connects into the Mac.
 
 | File | What |
 |---|---|
@@ -69,6 +70,10 @@ ufw is already active only the `allow` lines matter. The stack itself publishes 
   reads each `$` as a variable. `install.sh` refuses the unquoted form.
 - `WORKER_TOKEN_SHA256`: see "Worker token" below.
 - `PUBLIC_URL=https://stick.srv1747356.hstgr.cloud`; `WEB_PORT` (default 8020) must match `nginx/stick.conf`.
+- `SCRIPT_PROVIDER`: `ollama` (the default when unset) hands research/storylines and the script to the Mac worker,
+  which runs them on its local Ollama model for free; `anthropic` keeps them on the VPS runner (paid, needs
+  `ANTHROPIC_API_KEY`, the spend rule). `web` and `runner` read the same env file, so they agree; after a change,
+  `up -d` recreates both. Jobs already queued follow the new routing.
 
 ## 2. Deploy a new version
 
@@ -122,7 +127,8 @@ Runs in the user's `Stick_Figures` checkout with its `.venv`:
 
 Config: `STICK_SERVER` (required, https), `STICK_REPO` (defaults to the checkout holding `macworker/`),
 `STICK_RENDER_WORKERS` (4), `STICK_WORKER_PULL=1` (git pull --ff-only on a clean `pipeline-v2` while idle; off by
-default), `STICK_JOB_TIMEOUT` (4 h), from the environment or `~/.config/stick-worker/config`. The token comes
+default), `STICK_JOB_TIMEOUT` (4 h), `OLLAMA_HOST` (default `http://localhost:11434`), from the environment or
+`~/.config/stick-worker/config`. The token comes
 from the Keychain (`security find-generic-password -s stick-worker -w`). Log: `~/Library/Logs/stick-worker.log`
 (rotated, 3 x 5 MB). Job state: `~/Library/Application Support/stick-worker/jobs/<id>/` (outcome, uploads done,
 command output, hard links of the files to upload).
@@ -134,6 +140,18 @@ painting; a busy heartbeat and the last progress again every 2 minutes keep the 
 (5 s ... 5 min) and resumes the remaining uploads and the report, also after a restart. A job stopped mid-way (Mac
 shut down, launchd stop) is not reported; its lease expires and the server queues it again. It only ever stops its
 own child processes. `caffeinate -i` prevents idle sleep, not a closed lid.
+
+pitch/script (a server on `SCRIPT_PROVIDER=ollama`): the worker always asks for `pitch, script, paint, render`; the
+server hands out only what its provider routes to the Mac. Ollama runs as a Homebrew service
+(`brew services start ollama`; `ollama pull qwen2.5:14b` once), so the LaunchAgent needs no change. Each such job
+first checks `GET http://localhost:11434/api/version`; if nothing answers, the job fails with "Ollama is not running
+on the Mac: brew services start ollama" (the phone shows it; Retry re-queues it, free). Otherwise the worker writes
+the claimed episode, its ledger and `cache/` files (plus stubs of the server's other episodes, which the storyline
+rotation rule reads) into `jobs/<id>/episodes/`, runs `story.pitch` / `script.generate` there through
+`macworker/bridge.py` with `SCRIPT_PROVIDER=ollama`, an empty `ANTHROPIC_API_KEY` and a ledger that refuses any paid
+reservation, uploads the new `cache/` files (kind `cache`) and reports `done` with the updated `episode.json` and
+`ledger.json`. A lapsed lease re-queues these like paint/render (free work). `--dry-run` also prints Ollama's state;
+it counts as a problem only when the server hands pitch/script to the Mac.
 
 Install the launchd agent (the user runs this):
 

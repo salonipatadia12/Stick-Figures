@@ -11,7 +11,7 @@
   <input id="niche" name="niche" type="text" maxlength="200" value="{{ form.niche or '' }}" placeholder="history, science, money...">
   <label for="audience">Audience <span class="muted small">(optional)</span></label>
   <input id="audience" name="audience" type="text" maxlength="200" value="{{ form.audience or '' }}" placeholder="curious adults">
-  <p class="muted small">Next: Claude researches the topic and pitches three storylines for you to pick from. You approve the
+  <p class="muted small">Next: {% if llm_on_mac %}the Mac researches the topic (free, on its local model){% else %}Claude researches the topic{% endif %} and pitches three storylines for you to pick from. You approve the
     script and the painted scenes before anything is rendered.</p>
   <p><button class="btn primary block" type="submit">Start</button></p>
 </form>

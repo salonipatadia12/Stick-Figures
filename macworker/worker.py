@@ -21,7 +21,7 @@ from pathlib import Path
 
 from . import VERSION, config, proc
 from .client import AuthError, Client, NetworkError, Rejected
-from .handlers import HANDLERS, Ctx, JobError
+from .handlers import CLAIM_KINDS, HANDLERS, LLM_KINDS, OLLAMA_DOWN, Ctx, JobError, ollama_version
 from .util import Backoff, read_json, safe_name, write_json
 
 log = logging.getLogger('stick-worker')
@@ -114,7 +114,7 @@ class Worker:
                               report=lambda s, p, m='': self.progress(job_id, s, p, m),
                               run=lambda cmd, on_line=None: self.runner(cmd, cwd=self.cfg.repo, env=self.child_env(), on_line=on_line,
                                                                         log_path=jdir / 'output.log', timeout=self.cfg.job_timeout_s),
-                              render_workers=self.cfg.workers)
+                              render_workers=self.cfg.workers, ollama=lambda: ollama_version(self.cfg.ollama_url))
                     outcome = handler(ctx)
                     state = dict(job_id=job_id, kind=kind, status='finished', result=outcome.result, files=outcome.files, uploaded=[])
                     log.info('job %s finished: %d file(s) to upload', job_id, len(outcome.files))
@@ -235,7 +235,7 @@ class Worker:
         while True:
             try:
                 self.call('heartbeat', self.cfg.host, VERSION)
-                job = self.call('claim', ['paint', 'render'])
+                job = self.call('claim', list(CLAIM_KINDS))
                 net.reset()
             except NetworkError as e:
                 if once:
@@ -285,8 +285,9 @@ def setup_logging(cfg: config.Config, verbose: bool = False):
         log.addHandler(sh)
 
 
-def dry_run(cfg: config.Config, client_factory=Client) -> int:
-    """Check the setup without claiming anything: config, token, repo, then /api/health and one heartbeat."""
+def dry_run(cfg: config.Config, client_factory=Client, ollama_check=None) -> int:
+    """Check the setup without claiming anything: config, token, repo, Ollama, then /api/health and one heartbeat
+    (whose `kinds` say whether this server hands pitch/script to the Mac, i.e. runs SCRIPT_PROVIDER=ollama)."""
     print(f'server   {cfg.server or "(not set)"}')
     print(f'repo     {cfg.repo}')
     print(f'python   {cfg.python} {"ok" if cfg.python.exists() else "MISSING"}')
@@ -294,9 +295,16 @@ def dry_run(cfg: config.Config, client_factory=Client) -> int:
     print(f'token    {"found" if cfg.token else "MISSING"} ({cfg.token_source or "Keychain"})')
     print(f'log      {cfg.log_file}')
     print(f'state    {cfg.state_dir}')
+    try:
+        version = (ollama_check or (lambda: ollama_version(cfg.ollama_url)))()
+        ollama_problem = None
+        print(f'ollama   {cfg.ollama_url} ok (version {version})')
+    except JobError as e:
+        ollama_problem = str(e)
+        print(f'ollama   {cfg.ollama_url} NOT RUNNING')
     problems = cfg.problems()
     if not cfg.server or not cfg.token:
-        for p in problems:
+        for p in problems + ([ollama_problem] if ollama_problem else []):
             print('problem:', p)
         return 1
     c = client_factory(cfg.server, cfg.token)
@@ -310,9 +318,15 @@ def dry_run(cfg: config.Config, client_factory=Client) -> int:
         return 1
     finally:
         c.close()
+    kinds = [k for k in (hb.get('kinds') or ('paint', 'render')) if k in CLAIM_KINDS]   # an older server: paint, render
+    if ollama_problem:
+        if any(k in LLM_KINDS for k in kinds):
+            problems.append(ollama_problem)
+        else:
+            print(f'note: {OLLAMA_DOWN} (not needed now: this server runs research and scripts itself)')
     for p in problems:
         print('problem:', p)
-    print('dry run: would claim one job at a time of kinds paint, render; nothing was claimed')
+    print(f'dry run: would claim one job at a time of kinds {", ".join(kinds)}; nothing was claimed')
     return 1 if problems else 0
 
 
@@ -322,7 +336,7 @@ def _on_term(signum, frame):
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog='python -m macworker', description='Stick Figures Mac worker (paint + render jobs)')
+    ap = argparse.ArgumentParser(prog='python -m macworker', description='Stick Figures Mac worker (pitch, script, paint, render jobs)')
     ap.add_argument('--once', action='store_true', help='claim at most one job, run it, then exit')
     ap.add_argument('--dry-run', action='store_true', help='check config, token and server; claim nothing')
     ap.add_argument('--verbose', '-v', action='store_true', help='also log to stderr')

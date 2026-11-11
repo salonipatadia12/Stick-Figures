@@ -1,4 +1,5 @@
-"""Job handlers: `paint` and `render` (docs/WEBAPP.md, "What the Mac worker runs").
+"""Job handlers: `paint` and `render`, and `pitch`/`script` when the server runs SCRIPT_PROVIDER=ollama (docs/WEBAPP.md,
+"What the Mac worker runs").
 
 A handler gets a Ctx and returns an Outcome: the result for `done` plus the files to upload first. It raises
 JobError for a failure the server should hear about (`fail`). Handlers never talk to the server themselves.
@@ -14,7 +15,7 @@ from pathlib import Path
 
 from . import bridge
 from .progress import PaintProgress, RenderProgress, failed_reasons
-from .util import check_key, check_slug, read_json, safe_name, write_json
+from .util import NAME_OK, check_key, check_slug, read_json, safe_name, write_json
 
 log = logging.getLogger('stick-worker')
 
@@ -23,6 +24,11 @@ PROPS_LIB = 'styles/cozy/props/library.json'
 EXIT_GATE = 3                                # `stick inserts|props` when some candidates failed QA on both seeds
 PREVIEW_W = 720
 CREAM = (246, 238, 222)
+LLM_KINDS = ('pitch', 'script')
+CLAIM_KINDS = LLM_KINDS + ('paint', 'render')   # the server hands out pitch/script only with SCRIPT_PROVIDER=ollama
+LLM_WHAT = dict(pitch='Research/storylines', script='Script')
+DEFAULT_OLLAMA_URL = 'http://localhost:11434'
+OLLAMA_DOWN = 'Ollama is not running on the Mac: brew services start ollama'
 
 
 class JobError(Exception):
@@ -43,6 +49,7 @@ class Ctx:
     report: callable                                 # report(stage, pct, message)
     run: callable                                    # run(cmd, on_line=None) -> (rc, output tail)
     render_workers: int = 4
+    ollama: callable = None                          # ollama() -> version, or JobError(OLLAMA_DOWN)
 
     @property
     def slug(self) -> str:
@@ -256,4 +263,83 @@ def render(ctx: Ctx) -> Outcome:
     return Outcome(dict(duration=duration, qa_pass=bool(summary['all']), qa_summary=summary), files)
 
 
-HANDLERS = dict(paint=paint, render=render)
+# ---- pitch / script (SCRIPT_PROVIDER=ollama) -----------------------------------------------------------
+def ollama_version(url: str = DEFAULT_OLLAMA_URL, timeout: float = 5.0, transport=None) -> str:
+    """Ollama's version from GET <url>/api/version, or JobError(OLLAMA_DOWN) when nothing answers."""
+    import httpx
+    try:
+        with httpx.Client(timeout=timeout, transport=transport) as c:
+            r = c.get(url.rstrip('/') + '/api/version')
+            r.raise_for_status()
+            return str((r.json() or {}).get('version') or 'unknown')
+    except (httpx.HTTPError, ValueError, AttributeError) as e:
+        raise JobError(f'{OLLAMA_DOWN} (no answer at {url}: {type(e).__name__}). Press Retry once it runs.') from None
+
+
+def _cache_name(name) -> bool:
+    return isinstance(name, str) and bool(NAME_OK.match(name)) and not name.startswith('.') and len(name) <= 128
+
+
+def llm(ctx: Ctx) -> Outcome:
+    """Run story.pitch / script.generate here with the local model, in a scratch episodes folder inside the job
+    folder: the episode, its ledger and cache/ from the claim, plus the server's other episodes as stubs (the
+    storyline rotation reads them). Result: the updated episode.json and ledger.json; the new or changed cache/
+    files go up first (kind `cache`), so a retry or the next step reuses them."""
+    kind, slug = ctx.job.get('kind'), ctx.slug
+    if kind not in LLM_KINDS:
+        raise JobError(f'not a pitch/script job: {kind!r}')
+    what = LLM_WHAT[kind]
+    ep = ctx.job.get('episode')
+    if not isinstance(ep, dict) or not ep:
+        raise JobError('the claim carried no episode.json')
+    ctx.report('ollama', 2, 'Checking Ollama on the Mac')
+    version = (ctx.ollama or ollama_version)()
+    edir = ctx.workdir / 'episodes'
+    if edir.exists():
+        shutil.rmtree(edir)                       # a fresh copy for every run of this job
+    d = edir / slug
+    write_json(d / 'episode.json', ep)
+    ledger = ctx.job.get('ledger')
+    if isinstance(ledger, dict) and isinstance(ledger.get('entries'), list):
+        write_json(d / 'ledger.json', ledger)
+    (d / 'cache').mkdir(parents=True, exist_ok=True)
+    received = {}
+    for name, text in (ctx.job.get('cache') or {}).items():
+        if _cache_name(name) and isinstance(text, str):
+            (d / 'cache' / name).write_text(text, encoding='utf-8')
+            received[name] = text
+    for other, data in (ctx.job.get('others') or {}).items():
+        try:
+            check_slug(other)
+        except ValueError:
+            continue
+        if other != slug and isinstance(data, dict):
+            write_json(edir / other / 'episode.json', data)
+    ctx.report(kind, 10, ('Researching the topic and pitching three storylines' if kind == 'pitch' else
+                          'Writing the script') + f' (Ollama {version} on the Mac, free)')
+    rc, out = ctx.run([ctx.repo / '.venv/bin/python', Path(bridge.__file__).resolve(), kind, slug, edir])
+    ans = bridge.parse(out)
+    if isinstance(ans, dict) and ans.get('error'):
+        raise JobError(f'{what} failed: {ans["error"]} (press Retry to run it again)')
+    if rc != 0 or not isinstance(ans, dict):
+        tail = '\n'.join(out.splitlines()[-15:])
+        raise JobError(f'{what} failed on the Mac (exit {rc}):\n{tail}')
+    episode = read_json(d / 'episode.json')
+    if not isinstance(episode, dict):
+        raise JobError(f'{what} finished but episode.json is unreadable')
+    files = []
+    for p in sorted((d / 'cache').iterdir()):
+        if not p.is_file() or not _cache_name(p.name):
+            continue
+        try:
+            if received.get(p.name) == p.read_text(encoding='utf-8'):
+                continue                          # the server has it already
+        except (OSError, UnicodeDecodeError):
+            continue
+        files.append(dict(path=str(p), name=p.name, kind='cache'))
+    ctx.report('upload', 95, f'{what} done: sending it back')
+    return Outcome(dict(notes=[str(n) for n in (ans.get('notes') or [])], episode=episode,
+                        ledger=read_json(d / 'ledger.json'), provider='ollama', ollama_version=version), files)
+
+
+HANDLERS = dict(paint=paint, render=render, pitch=llm, script=llm)
