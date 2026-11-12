@@ -1,5 +1,66 @@
 {
   "$defs": {
+    "ActionCue": {
+      "additionalProperties": false,
+      "properties": {
+        "who": {
+          "description": "A cast id from shot.cast.",
+          "title": "Who",
+          "type": "string"
+        },
+        "verb": {
+          "description": "One verb from the action library.",
+          "enum": [
+            "reach",
+            "point",
+            "shrug",
+            "facepalm",
+            "pick_up",
+            "put_down",
+            "throw",
+            "drink",
+            "type",
+            "write",
+            "wave",
+            "nod",
+            "shake_head",
+            "slump",
+            "jolt",
+            "gaze",
+            "shiver",
+            "look_up",
+            "snap",
+            "freeze",
+            "tickle",
+            "laugh",
+            "lie_down",
+            "sit_up",
+            "stand_up",
+            "walk"
+          ],
+          "title": "Verb",
+          "type": "string"
+        },
+        "target": {
+          "description": "What the verb acts on: a prop name from props, a cast id, \"window\", \"camera\", or empty string.",
+          "title": "Target",
+          "type": "string"
+        },
+        "anchor": {
+          "description": "Exact word from THIS beat's narration where the action happens.",
+          "title": "Anchor",
+          "type": "string"
+        }
+      },
+      "required": [
+        "who",
+        "verb",
+        "target",
+        "anchor"
+      ],
+      "title": "ActionCue",
+      "type": "object"
+    },
     "Beat": {
       "additionalProperties": false,
       "properties": {
@@ -11,11 +72,19 @@
         "role": {
           "enum": [
             "hook",
+            "promise",
+            "story",
             "setup",
             "tension",
             "reveal",
             "payoff",
-            "ending"
+            "loop",
+            "ending",
+            "problem",
+            "stakes",
+            "clue",
+            "reason",
+            "twist"
           ],
           "title": "Role",
           "type": "string"
@@ -76,6 +145,301 @@
         "shot"
       ],
       "title": "Beat",
+      "type": "object"
+    },
+    "CastPose": {
+      "additionalProperties": false,
+      "properties": {
+        "who": {
+          "description": "A cast id from shot.cast.",
+          "title": "Who",
+          "type": "string"
+        },
+        "pose": {
+          "description": "The painted base pose this character holds for the whole beat.",
+          "enum": [
+            "seated-at-table",
+            "standing",
+            "bed-edge",
+            "bed-awake",
+            "bed-asleep-top",
+            "seated-sofa",
+            "seated-desk",
+            "seated-bench",
+            "driving",
+            "passenger",
+            "walking"
+          ],
+          "title": "Pose",
+          "type": "string"
+        }
+      },
+      "required": [
+        "who",
+        "pose"
+      ],
+      "title": "CastPose",
+      "type": "object"
+    },
+    "EffectCue": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "ash",
+            "snow",
+            "dust",
+            "embers",
+            "rain",
+            "haze",
+            "grade",
+            "dim",
+            "flash",
+            "sun_path",
+            "crossfade",
+            "push",
+            "pan",
+            "shake",
+            "focus",
+            "label",
+            "arrow",
+            "pin",
+            "cross"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "anchor": {
+          "description": "Word of THIS beat's narration where the effect starts or peaks; empty string for the whole beat.",
+          "title": "Anchor",
+          "type": "string"
+        },
+        "at": {
+          "description": "Where in the picture: sky, top, centre, ground, left, right, peak, horizon, or empty.",
+          "enum": [
+            "",
+            "sky",
+            "top",
+            "centre",
+            "ground",
+            "left",
+            "right",
+            "peak",
+            "horizon"
+          ],
+          "title": "At",
+          "type": "string"
+        },
+        "detail": {
+          "description": "grade: \"blue -> red\" or \"warm -> cold\"; crossfade: the second scene in a few words (same place, changed); sun_path: \"high -> low\"; label: 1-3 words; arrow: \"from -> to\" regions; otherwise empty string.",
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "anchor",
+        "at",
+        "detail"
+      ],
+      "title": "EffectCue",
+      "type": "object"
+    },
+    "GraphicCue": {
+      "additionalProperties": false,
+      "description": "A code-drawn diagram on paper: flow (A -> B -> C), bounce (light hits a layer and bounces back), scatter (a beam\nhits small particles and sprays in every direction), two_paths (light's short vs long path through the air), waves\n(short wave scatters, long wave passes), bars (2-3 bars), thermometer (a value falls or rises), cards\n(chapters/steps), layers (stacked bands: ground, air, haze).",
+      "properties": {
+        "kind": {
+          "enum": [
+            "flow",
+            "bounce",
+            "scatter",
+            "two_paths",
+            "waves",
+            "bars",
+            "thermometer",
+            "cards",
+            "layers"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "items": {
+          "description": "1-4 labels, 1-3 words each, in reading order.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "anchors": {
+          "description": "Word of THIS beat's narration where each item appears (same length as items), or empty list to reveal them in turn.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Anchors",
+          "type": "array"
+        },
+        "detail": {
+          "description": "bars: relative heights \"3 | 5\" (only numbers the narration says or illustrative heights with no axis); thermometer: \"from -> to\"; otherwise empty string.",
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "items",
+        "anchors",
+        "detail"
+      ],
+      "title": "GraphicCue",
+      "type": "object"
+    },
+    "HookOption": {
+      "additionalProperties": false,
+      "description": "One of three hooks the user chooses between at the script gate. Option 1 is written into beat 1; picking\nanother rewrites beat 1 from these fields (flat on purpose: a nested beat made the output grammar too large).",
+      "properties": {
+        "line": {
+          "description": "The spoken hook, at most 8 words: a question or a bold, honest claim that the payoff answers. Never walked back later.",
+          "title": "Line",
+          "type": "string"
+        },
+        "frame_one": {
+          "description": "What the very first frame shows: the host already in a surprising situation, 10-25 words.",
+          "title": "Frame One",
+          "type": "string"
+        },
+        "host_doing": {
+          "default": "",
+          "title": "Host Doing",
+          "type": "string"
+        },
+        "scene_key": {
+          "default": "",
+          "title": "Scene Key",
+          "type": "string"
+        },
+        "scene": {
+          "default": "",
+          "title": "Scene",
+          "type": "string"
+        },
+        "answer": {
+          "description": "One sentence: how the payoff beat answers this hook.",
+          "title": "Answer",
+          "type": "string"
+        },
+        "loop_line": {
+          "description": "The narration of the final loop beat for this hook: its last words tie back to the hook line.",
+          "title": "Loop Line",
+          "type": "string"
+        }
+      },
+      "required": [
+        "line",
+        "frame_one",
+        "answer",
+        "loop_line"
+      ],
+      "title": "HookOption",
+      "type": "object"
+    },
+    "HostCue": {
+      "additionalProperties": false,
+      "description": "Script v5: the lead is the HOST. It talks to the viewer and acts the story out INSIDE the picture: full-body in\nthe painted scene (an insert or a setting), matched to its light and scale, or popping in at the frame edge to\npoint at a diagram. Its pose and verbs are the \"lead\" entries of shot.cast and shot.staging (kept there so the\noutput grammar stays small).",
+      "properties": {
+        "where": {
+          "description": "scene: full-body inside this beat's picture (the insert scene or the setting); pop_in: pops in at a frame edge to point at the diagram; off: not on screen.",
+          "enum": [
+            "scene",
+            "pop_in",
+            "off"
+          ],
+          "title": "Where",
+          "type": "string"
+        },
+        "side": {
+          "default": "centre",
+          "description": "Where the host stands (or pops in): left, centre or right. Vary it from beat to beat.",
+          "enum": [
+            "left",
+            "centre",
+            "right"
+          ],
+          "title": "Side",
+          "type": "string"
+        },
+        "size": {
+          "default": "medium",
+          "description": "small (far, the place dominates), medium (full body), large (knees up, close to camera) or close (head and shoulders: a reaction or a confession). Vary it from beat to beat.",
+          "enum": [
+            "small",
+            "medium",
+            "large",
+            "close"
+          ],
+          "title": "Size",
+          "type": "string"
+        },
+        "holds": {
+          "default": "",
+          "description": "A prop the host holds up or uses in this beat (\"jar of honey\", \"old map\"), or empty string.",
+          "title": "Holds",
+          "type": "string"
+        },
+        "doing": {
+          "description": "What the host does in the picture, 4-15 words (\"shivers in a t-shirt, staring at snow on the roses\").",
+          "title": "Doing",
+          "type": "string"
+        },
+        "to_camera": {
+          "description": "True when the host talks to the viewer (eyes to camera, lips moving); false when it watches the scene.",
+          "title": "To Camera",
+          "type": "boolean"
+        },
+        "cut_on": {
+          "default": "",
+          "title": "Cut On",
+          "type": "string"
+        }
+      },
+      "required": [
+        "where",
+        "doing",
+        "to_camera"
+      ],
+      "title": "HostCue",
+      "type": "object"
+    },
+    "InsertCue": {
+      "additionalProperties": false,
+      "description": "A full-frame painted scene with NO characters, generated once and kept in the insert library, animated in code.",
+      "properties": {
+        "key": {
+          "description": "Short kebab-case name for the scene, reused across videos when it already exists (\"volcano-erupting\", \"street-sunset\").",
+          "title": "Key",
+          "type": "string"
+        },
+        "scene": {
+          "description": "The place or thing, painted, 10-30 words: what is in frame, time of day, weather. No people, no characters, no text.",
+          "title": "Scene",
+          "type": "string"
+        },
+        "effects": {
+          "description": "0-4 code effects that animate the scene on narration words.",
+          "items": {
+            "$ref": "#/$defs/EffectCue"
+          },
+          "title": "Effects",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "scene",
+        "effects"
+      ],
+      "title": "InsertCue",
       "type": "object"
     },
     "Layer": {
@@ -150,6 +514,33 @@
       "title": "Motion",
       "type": "object"
     },
+    "PropCue": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Short lowercase noun for one prop in the frame (\"alarm clock\", \"coffee cup\").",
+          "title": "Name",
+          "type": "string"
+        },
+        "held_by": {
+          "description": "Cast id holding it at the start of the beat, or empty string.",
+          "title": "Held By",
+          "type": "string"
+        },
+        "where": {
+          "description": "Where it sits: \"nightstand\", \"table\", \"left hand\", \"wall\", \"floor\"\u2026",
+          "title": "Where",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "held_by",
+        "where"
+      ],
+      "title": "PropCue",
+      "type": "object"
+    },
     "SfxCue": {
       "additionalProperties": false,
       "properties": {
@@ -182,7 +573,68 @@
     "Shot": {
       "additionalProperties": false,
       "properties": {
+        "host": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HostCue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "visual": {
+          "default": "character",
+          "enum": [
+            "character",
+            "insert",
+            "graphic",
+            "split"
+          ],
+          "title": "Visual",
+          "type": "string"
+        },
+        "insert": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InsertCue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "graphic": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GraphicCue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "split": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SplitCue"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reaction_anchor": {
+          "default": "",
+          "title": "Reaction Anchor",
+          "type": "string"
+        },
         "framing": {
+          "default": "medium",
           "enum": [
             "wide",
             "medium",
@@ -201,18 +653,16 @@
           "title": "Cast",
           "type": "array"
         },
-        "image_prompt": {
-          "description": "One painted frame: setting, who is where, pose, expression, props, lighting. Concrete and visual. No text, numbers or letters in the art. Do not describe the art style; it is appended separately.",
-          "title": "Image Prompt",
-          "type": "string"
-        },
-        "pose_variants": {
-          "description": "0-2 alternate poses for the SAME frame (same camera, setting, props; only the character changes), used by pose_swap.",
-          "items": {
-            "type": "string"
-          },
-          "title": "Pose Variants",
-          "type": "array"
+        "staging": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Staging"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "motion": {
           "description": "1-2 motion recipes.",
@@ -222,14 +672,32 @@
           "title": "Motion",
           "type": "array"
         },
+        "image_prompt": {
+          "default": "",
+          "title": "Image Prompt",
+          "type": "string"
+        },
+        "pose_variants": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pose Variants",
+          "type": "array"
+        },
         "transition": {
-          "description": "cut unless a whip or match cut is motivated by the story.",
+          "default": "cut",
           "enum": [
             "cut",
             "whip",
             "match_cut"
           ],
           "title": "Transition",
+          "type": "string"
+        },
+        "continuity": {
+          "default": "",
+          "description": "How the last frame of this beat sets up the first frame of the next: a held pose, a moving object, a filled frame, a travel direction, a shape or a camera motion, naming both sides (\"the host points up; the next beat opens on the sky\"). Empty string on the last beat.",
+          "title": "Continuity",
           "type": "string"
         },
         "layers": {
@@ -241,12 +709,8 @@
         }
       },
       "required": [
-        "framing",
         "cast",
-        "image_prompt",
-        "pose_variants",
-        "motion",
-        "transition"
+        "motion"
       ],
       "title": "Shot",
       "type": "object"
@@ -285,6 +749,193 @@
         "url"
       ],
       "title": "Source",
+      "type": "object"
+    },
+    "SplitCue": {
+      "additionalProperties": false,
+      "description": "Two painted scenes stacked, top and bottom (myth vs fact, before vs after, here vs there), each labelled; the\nbottom one wipes in on its label's word.",
+      "properties": {
+        "key": {
+          "description": "Kebab-case name of the second (bottom) scene; the top scene is shot.insert.",
+          "title": "Key",
+          "type": "string"
+        },
+        "scene": {
+          "description": "The second scene, painted WITHOUT people, 10-30 words.",
+          "title": "Scene",
+          "type": "string"
+        },
+        "labels": {
+          "description": "Two labels of 1-3 words: top, bottom (\"Myth\", \"Fact\").",
+          "items": {
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "anchors": {
+          "description": "Narration word where each label (and the bottom scene) appears.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Anchors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "scene",
+        "labels"
+      ],
+      "title": "SplitCue",
+      "type": "object"
+    },
+    "Staging": {
+      "additionalProperties": false,
+      "description": "What the beat needs from the libraries: which painted base (setting + pose per character), which verbs\non which words, which props. The base planner and the composer read these fields, not the prose.",
+      "properties": {
+        "setting": {
+          "description": "The place. \"other\" only when none of the listed settings fits.",
+          "enum": [
+            "cafe",
+            "bedroom",
+            "office",
+            "kitchen",
+            "living-room",
+            "doorway",
+            "street",
+            "park",
+            "classroom",
+            "gym",
+            "car",
+            "other"
+          ],
+          "title": "Setting",
+          "type": "string"
+        },
+        "setting_detail": {
+          "description": "For \"other\": the place in 3-6 words. Otherwise empty string.",
+          "title": "Setting Detail",
+          "type": "string"
+        },
+        "poses": {
+          "description": "One entry per cast id in shot.cast; empty for object-only inserts.",
+          "items": {
+            "$ref": "#/$defs/CastPose"
+          },
+          "title": "Poses",
+          "type": "array"
+        },
+        "actions": {
+          "description": "0-3 verbs, each on a narration word. Prefer the in-place verbs; lie_down/sit_up/stand_up/walk become a cut to another base.",
+          "items": {
+            "$ref": "#/$defs/ActionCue"
+          },
+          "title": "Actions",
+          "type": "array"
+        },
+        "props": {
+          "description": "0-4 props the picture needs beyond the base furniture.",
+          "items": {
+            "$ref": "#/$defs/PropCue"
+          },
+          "title": "Props",
+          "type": "array"
+        }
+      },
+      "required": [
+        "setting",
+        "setting_detail",
+        "poses",
+        "actions",
+        "props"
+      ],
+      "title": "Staging",
+      "type": "object"
+    },
+    "Storyline": {
+      "additionalProperties": false,
+      "description": "One way to tell the topic as a story (script v6): the user picks one of three before any script is written.",
+      "properties": {
+        "format": {
+          "enum": [
+            "mini_story",
+            "myth_vs_fact",
+            "what_if",
+            "countdown",
+            "mystery",
+            "pov",
+            "experiment",
+            "revelation"
+          ],
+          "title": "Format",
+          "type": "string"
+        },
+        "title": {
+          "description": "Working title, at most 60 characters.",
+          "title": "Title",
+          "type": "string"
+        },
+        "hook": {
+          "description": "The opening line, at most 8 words, honest, answered by the payoff.",
+          "title": "Hook",
+          "type": "string"
+        },
+        "pitch": {
+          "description": "The story in 2-3 short sentences: the setup and conflict, the twist, the payoff.",
+          "title": "Pitch",
+          "type": "string"
+        },
+        "conflict": {
+          "description": "The problem or tension that drives it, one sentence.",
+          "title": "Conflict",
+          "type": "string"
+        },
+        "stakes": {
+          "description": "How the stakes rise along the way, one sentence.",
+          "title": "Stakes",
+          "type": "string"
+        },
+        "twist": {
+          "description": "The surprise or turn, one sentence. It must be true (from the research).",
+          "title": "Twist",
+          "type": "string"
+        },
+        "payoff": {
+          "description": "How the ending answers the hook, one sentence.",
+          "title": "Payoff",
+          "type": "string"
+        },
+        "visuals": {
+          "description": "3-5 picture ideas in order, each a few words, mixing tools: a scene that animates, a close-up, a split screen, a map, an object the host holds or uses, a camera move, a diagram (at most one).",
+          "items": {
+            "type": "string"
+          },
+          "title": "Visuals",
+          "type": "array"
+        },
+        "fact_ids": {
+          "description": "Research fact ids the story stands on.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "title",
+        "hook",
+        "pitch",
+        "conflict",
+        "stakes",
+        "twist",
+        "payoff",
+        "visuals",
+        "fact_ids"
+      ],
+      "title": "Storyline",
       "type": "object"
     },
     "Voice": {
@@ -368,6 +1019,42 @@
       "default": "",
       "title": "Hook Promise",
       "type": "string"
+    },
+    "hook_options": {
+      "items": {
+        "$ref": "#/$defs/HookOption"
+      },
+      "title": "Hook Options",
+      "type": "array"
+    },
+    "hook_pick": {
+      "default": 0,
+      "title": "Hook Pick",
+      "type": "integer"
+    },
+    "storylines": {
+      "items": {
+        "$ref": "#/$defs/Storyline"
+      },
+      "title": "Storylines",
+      "type": "array"
+    },
+    "storyline_pick": {
+      "default": 0,
+      "title": "Storyline Pick",
+      "type": "integer"
+    },
+    "story_note": {
+      "default": "",
+      "title": "Story Note",
+      "type": "string"
+    },
+    "subject_settings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Subject Settings",
+      "type": "array"
     },
     "beats": {
       "items": {
