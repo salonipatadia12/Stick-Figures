@@ -247,6 +247,44 @@ def layout_report(summary: dict | None, slug: str) -> dict:
     return out
 
 
+def beat_place(beat: dict) -> str:
+    """Where a beat happens: its painted scene (insert or split) by key, else its library setting (and the detail of an
+    "other" place). '' when the episode predates staging."""
+    sh = beat.get('shot') or {}
+    if sh.get('visual') in ('insert', 'split') and (sh.get('insert') or {}).get('key'):
+        return 'scene:' + sh['insert']['key']
+    st = sh.get('staging') or {}
+    if not st.get('setting'):
+        return ''
+    return 'setting:' + st['setting'] + (f" ({st['setting_detail']})" if st.get('setting_detail') else '')
+
+
+def continuity_report(episode: dict) -> dict:
+    """Kaomei continuity (user 2026-11-11): a warning, never a failure, for each pair of adjacent beats that change place
+    with a hard cut and no named connection (the earlier beat's shot.continuity is empty). A whip or match cut is its
+    own connection; staying in the same place needs none."""
+    beats = episode.get('beats', [])
+    version = ((episode.get('meta') or {}).get('script') or {}).get('prompt_version', '')
+    m = re.fullmatch(r'script-v(\d+)', version or '')
+    if m and int(m.group(1)) < 7 and not any((b.get('shot') or {}).get('continuity') for b in beats):
+        return dict(pairs=max(len(beats) - 1, 0), named=0, flagged=[], warnings=[],
+                    note=f'written as {version}, before the continuity rule (script-v7): not checked')
+    flagged, named = [], 0
+    for a, b in zip(beats, beats[1:]):
+        link = ' '.join(str((a.get('shot') or {}).get('continuity') or '').split())
+        named += bool(link)
+        pa, pb = beat_place(a), beat_place(b)
+        cut = (b.get('shot') or {}).get('transition', 'cut') == 'cut'
+        if pa and pb and pa != pb and cut and not link:
+            flagged.append(dict(beats=f"{a['id']} -> {b['id']}", from_=pa, to=pb,
+                                note=f"{a['id']} -> {b['id']}: the place changes ({pa} -> {pb}) on a hard cut with no named "
+                                     'connection (a held pose, a moving object, a filled frame, a direction, a shape or a '
+                                     'camera move)'))
+    pairs = max(len(beats) - 1, 0)
+    return dict(pairs=pairs, named=named, flagged=flagged, warnings=[f['note'] for f in flagged],
+                note=f'{len(flagged)} of {pairs} cuts change place with no named connection' if flagged else '')
+
+
 HOST_TINT = 0.15      # the host's white may shift at most 15 % per channel (user 2026-11-09: white in every scene)
 
 
@@ -466,7 +504,7 @@ def contact_sheet(video: Path, plan: list, out: Path, cols: int = 5):
 
 def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, plan: list, voice: str,
         text_sizes: list | None = None, ledger: Path | None = None, library: dict | None = None,
-        promised: list | None = None) -> dict:
+        promised: list | None = None, episode: dict | None = None) -> dict:
     duration = probe_duration(video)
     target = float(tl.get('target', 45))
     loud = sfx.loudness(video)
@@ -499,6 +537,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         character=character_report(library),
         hook=hook_report(library),
         layout=layout_report(library, out_dir.name),
+        continuity=continuity_report(episode or {}),     # warnings only: no pass_, so not in the summary
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())

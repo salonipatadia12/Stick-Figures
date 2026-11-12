@@ -16,6 +16,19 @@ class Style:
     reference: dict = field(default_factory=dict)
     script_brief: str = ''
     voice: dict = field(default_factory=dict)
+    status: str = 'ready'          # 'direction': the writer gets the brief, but only cozy has painted art to render with
+    status_note: str = ''
+    writer_note: str = ''          # a short look note for the local writer's beat stage (cozy has none: prompts unchanged)
+    audio: dict = field(default_factory=dict)
+
+    @property
+    def render_ready(self) -> bool:
+        return self.status == 'ready'
+
+    @property
+    def music(self) -> bool:
+        """The style's default for the soft music bed (off unless the pack turns it on)."""
+        return bool(self.audio.get('music', False))
 
     @property
     def cast_ids(self):
@@ -55,4 +68,6 @@ def load(name):
     brief = (folder / spec['script_brief']).read_text() if spec.get('script_brief') else ''
     return Style(name=spec['name'], title=spec.get('title', name), folder=folder, cast=spec.get('cast', []),
                  pacing=spec.get('pacing', {}), reference=spec.get('reference', {}), script_brief=brief,
-                 voice=spec.get('voice', {}))
+                 voice=spec.get('voice', {}), status=spec.get('status', 'ready'),
+                 status_note=spec.get('status_note', ''), writer_note=spec.get('writer_note', ''),
+                 audio=spec.get('audio', {}))

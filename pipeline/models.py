@@ -26,7 +26,8 @@ HOST_ROLES = ('hook', 'promise', 'story', 'payoff', 'loop')
 # Script v6 (user 2026-11-09): a storyline is picked before the script, and the middle beats say what they do for the
 # story, so the script gate can check for a conflict, rising stakes, a twist and a payoff that answers the hook.
 STORY_ROLES = ('promise', 'setup', 'problem', 'stakes', 'clue', 'reason', 'twist', 'reveal', 'story')
-StoryFormat = Literal['mini_story', 'myth_vs_fact', 'what_if', 'countdown', 'mystery', 'pov', 'experiment']
+StoryFormat = Literal['mini_story', 'myth_vs_fact', 'what_if', 'countdown', 'mystery', 'pov', 'experiment',
+                      'revelation']
 FORMATS = {
     'mini_story': 'the host has a problem and solves it (setup, problem, attempts that raise the stakes, a twist, the fix)',
     'myth_vs_fact': 'a belief everyone holds, tested and overturned; the real story is better than the myth',
@@ -35,6 +36,10 @@ FORMATS = {
     'mystery': 'a puzzle in the hook; one clue per beat, each narrowing it down; the reveal at the end answers it',
     'pov': '"You\'re a farmer in 1816...": the viewer lives it in second person, the stakes rising, then the reveal of why',
     'experiment': 'the host runs an experiment on screen: a question, a setup, a prediction, a surprising result, why',
+    # adapted from kaomei's Heartbeat Engine (stickman-video-director, MIT; user 2026-11-11): docs/KAOMEI_INTEGRATION.md
+    'revelation': 'a counter-intuitive hook shatters what everyone thinks is true, then pulls back the curtain on the '
+                  'hidden mechanism, delivers the real truth with maximum payoff, and ends with a provocative question '
+                  'that sparks debate in the comments',
 }
 Framing = Literal['wide', 'medium', 'close', 'insert', 'top_down']
 Transition = Literal['cut', 'whip', 'match_cut']
@@ -244,6 +249,11 @@ class DraftShot(Strict):
     image_prompt: str = ''
     pose_variants: list[str] = Field(default_factory=list)
     transition: Transition = 'cut'
+    # Script v7 (kaomei continuity, user 2026-11-11): how this beat's last frame sets up the next beat's first frame.
+    continuity: str = Field('', description='How the last frame of this beat sets up the first frame of the next: a held '
+                                            'pose, a moving object, a filled frame, a travel direction, a shape or a camera '
+                                            'motion, naming both sides ("the host points up; the next beat opens on the '
+                                            'sky"). Empty string on the last beat.')
 
 
 class DraftBeat(Strict):
@@ -593,6 +603,8 @@ class Episode(Strict):
         for k, default in V4_DEFAULTS.items():          # script-v4 fields at their defaults: same digest as before v4
             if d.get(k) == default:
                 d.pop(k, None)
+        if d.get('continuity') == '':                   # v7 field at its default: same digest as v6
+            d.pop('continuity')
         if isinstance(d.get('host'), dict):             # v6 host fields at their defaults: same digest as v5
             for k, default in (('size', 'medium'), ('holds', '')):
                 if d['host'].get(k) == default:

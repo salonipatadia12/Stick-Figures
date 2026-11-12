@@ -305,6 +305,25 @@ class OllamaScript(unittest.TestCase):
         self.assertEqual(outline_calls[0]['format']['properties']['beats']['items']['properties']['source_ids']['items']['enum'],
                          ['s1', 's2'])
 
+    def test_continuity_is_kept_and_the_last_beat_hands_over_to_nothing(self):
+        self.bad_label = set()
+        route = self.fake.route
+
+        def with_links(body):                       # every staging answer names a link to the next beat (kaomei rule 8)
+            d = route(body)
+            if body['messages'][0]['content'] == script.SCRIPT_RULES_COMPACT_BEAT and isinstance(d, dict):
+                d = dict(d, continuity='the host lifts the jar; the next beat opens on it')
+            return d
+        self.fake.route = with_links
+        episode, _ = self.run_generate()
+        links = [b.shot.continuity for b in episode.beats]
+        self.assertTrue(all(l == 'the host lifts the jar; the next beat opens on it' for l in links[:-1]), links)
+        self.assertEqual(links[-1], '')
+        beat_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_COMPACT_BEAT]
+        self.assertIn('continuity', beat_calls[0]['format']['properties'])
+        self.assertIn('Next beat (continuity hands over to it): b02', beat_calls[0]['messages'][1]['content'])
+        self.assertEqual(episode.meta['script']['prompt_version'], 'script-v7')
+
     def test_an_outline_error_goes_back_to_the_outline_call(self):
         self.outlines = [free_outline(hook_line='So here is the long story of why your salary keeps on leaking away'),
                          free_outline()]

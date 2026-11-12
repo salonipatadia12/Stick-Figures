@@ -1,0 +1,54 @@
+{
+  "name": "lineart",
+  "title": "Line art — black ink on paper",
+  "default": false,
+  "status": "direction",
+  "status_note": "Visual direction only (2026-11-11): the writer gets this brief, but painted bases, the host cut-out, inserts and props exist only for cozy, so a render still uses the cozy art. Painting this pack's library is the next step before a lineart video.",
+  "reference": {
+    "note": "Visual direction adapted from kaomei/stickman-video-director (MIT), style B1 Minimal Hand-Drawn. Our own rig, painting and compositor; only the look is adapted. See docs/KAOMEI_INTEGRATION.md.",
+    "source": "https://github.com/kaomei/stickman-video-director/blob/main/skills/directing-stickman-videos/references/b1-minimal-handdrawn.md",
+    "license": "MIT"
+  },
+  "cast": [
+    {
+      "id": "lead",
+      "description": "the host: a slender black-ink stick figure, modest round head, black oval eyes, expressive brows"
+    },
+    {
+      "id": "friend",
+      "description": "a second slender ink figure with a short marker-red scarf"
+    }
+  ],
+  "palette": {
+    "paper": "near-white warm paper with an extremely faint square grid",
+    "ink": "fine, slightly irregular black pen lines",
+    "accents": {
+      "warm yellow": "discovery, the idea landing",
+      "marker red": "a problem, a warning, an idea ruled out",
+      "leaf green": "the answer, things going right"
+    },
+    "rule": "at most these three saturated accents in a video, each with its one meaning"
+  },
+  "text": {
+    "scene_text": "large, short hand-lettered words as the focal point (added by the compositor, never painted)",
+    "captions": "quiet sans-serif phrase captions in a calm paper band at the bottom"
+  },
+  "voice": {
+    "provider": "kokoro",
+    "default": "am_michael",
+    "alternates": [
+      "af_heart"
+    ],
+    "note": "Kokoro-82M (Apache-2.0), read at its native speed."
+  },
+  "audio": {
+    "music": false,
+    "note": "No music. Narration, captions and a few restrained action sound effects below the voice."
+  },
+  "pacing": {
+    "words_per_second": 2.7,
+    "note": "Kokoro's measured rate, as for cozy. Give an action time to settle: a hold after a move is part of the look."
+  },
+  "script_brief": "script_brief.md",
+  "writer_note": "Style lineart: black ink line drawings on near-white paper with a faint grid, hand-drawn props and curved arrows, at most three marker accents (yellow discovery, red problem, green answer). Describe scenes as simple ink drawings with one clear focal object and room for a big hand-lettered word; the host acts with the whole body and exaggerated faces."
+}

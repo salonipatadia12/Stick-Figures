@@ -1,0 +1,61 @@
+{
+  "name": "retro-tv",
+  "title": "Retro TV — glowing figures on a dark field",
+  "default": false,
+  "status": "direction",
+  "status_note": "Visual direction only (2026-11-11): the writer gets this brief, but painted bases, the host cut-out, inserts and props exist only for cozy, and the compositor has no CRT pass yet, so a render still uses the cozy art. Painting this pack's library and adding the television pass come before a retro-tv video.",
+  "reference": {
+    "note": "Visual direction adapted from kaomei/stickman-video-director (MIT), style B3 Retro TV. Our own rig, painting and compositor; only the look is adapted. See docs/KAOMEI_INTEGRATION.md.",
+    "source": "https://github.com/kaomei/stickman-video-director/blob/main/skills/directing-stickman-videos/references/b3-television.md",
+    "license": "MIT"
+  },
+  "cast": [
+    {
+      "id": "lead",
+      "description": "the host: a refined white figure with a blank circular head and rounded joints, glowing softly on the dark"
+    },
+    {
+      "id": "friend",
+      "description": "a second figure in light gray, same build, so the two read apart on the dark field"
+    }
+  ],
+  "palette": {
+    "field": "a deep dark charcoal field with generous negative space",
+    "figures": "white and soft gray silhouettes with gray overlap detail",
+    "accents": {
+      "signal red": "the one accent: a warning, a strike-through, the moment something goes wrong"
+    },
+    "rule": "one red accent at most, used sparingly; a gentle explainer may not need it at all"
+  },
+  "post": {
+    "television": {
+      "bloom": "soft, keeps mid-gray detail readable",
+      "scanlines": "faint",
+      "vignette": "gentle",
+      "signal_breaks": "brief interruptions as accents on a story beat, never a constant glitch",
+      "note": "Applied once over the finished composition, after the clean animation reads on its own."
+    }
+  },
+  "text": {
+    "scene_text": "sparse, compact uppercase headings",
+    "captions": "white uppercase sans-serif captions near the bottom, no label behind them"
+  },
+  "voice": {
+    "provider": "kokoro",
+    "default": "am_michael",
+    "alternates": [
+      "af_heart"
+    ],
+    "note": "Kokoro-82M (Apache-2.0), read at its native speed."
+  },
+  "audio": {
+    "music": true,
+    "note": "A quiet ambient bed under the voice (the compositor's soft bed, ducked). Signal noise is an accent, never the soundtrack."
+  },
+  "pacing": {
+    "words_per_second": 2.7,
+    "note": "Kokoro's measured rate, as for cozy."
+  },
+  "script_brief": "script_brief.md",
+  "writer_note": "Style retro-tv: white and gray glowing figures with blank round heads on a dark field, simple clear objects, lots of empty dark space, a restrained old-television finish. Describe scenes as a few white-line objects on the dark; use the one red accent only when something goes wrong; framed screen-in-screen inserts and progressive line diagrams suit this look."
+}

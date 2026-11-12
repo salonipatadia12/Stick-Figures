@@ -26,7 +26,7 @@ from . import config
 from .cost import token_cost, usage_dict
 from .models import Beat, Episode, ScriptDraft, Source, beat_range, digest, from_wire, wire_schema
 
-PROMPT_VERSION = 'script-v6'  # v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic); v5: host format, three hook options; v6: written from a picked storyline, story roles, visual variety
+PROMPT_VERSION = 'script-v7'  # v7: kaomei Director rules (three timed phases per beat, beat-to-beat continuity, pacing by length, the revelation format); v2: direct web search with URL citations; v3: staging fields (setting, poses, actions, props); v4: visual types (character, insert, graphic); v5: host format, three hook options; v6: written from a picked storyline, story roles, visual variety
 # The research cache is keyed on its own version: a script-prompt change must never re-run (and re-pay) research.
 # Frozen at the value the 2026-11-08 research runs were cached under.
 RESEARCH_VERSION = 'research-v6'  # v6: fact lines straight from cited results; source filtering in code (keep_reputable)
@@ -69,6 +69,9 @@ Rules:
    counting down), "twist" (the surprise), "reveal" -> one "payoff" beat that answers the hook -> one "loop" beat whose
    last words tie back to the hook line. A "promise" beat is allowed only when the format needs it, and is never "let
    me show you". Fill hook_promise with the question the hook opens.
+   A "revelation" storyline: the "problem" beat states what everyone believes and breaks it in one sentence; "clue"
+   beats pull back the curtain on the hidden mechanism; the "reveal" is the real truth; the loop ends on an open
+   question viewers will take sides on in the comments, still repeating a word of the hook.
 2. HOOK. The hook beat's narration is ONLY the hook line: at most 8 words, a question or a bold claim the payoff
    answers. It must be honest: never walked back or contradicted later. Frame 1 already shows the host in a
    surprising situation that makes the line land (e.g. "It's June. Why is it snowing?" with the host in a t-shirt
@@ -96,8 +99,15 @@ Rules:
    appears verbatim in that beat's narration. Continuous moves (push_in, pan_left, pan_right, parallax, breathe)
    take an empty anchor. Guide: push_in or pan to establish; punch_in on a key word; impact_shake for a shock;
    text_slam to land the on-screen text; number_counter when a quantity changes (detail "0 -> 31").
+   Structure each beat around three timed phases: [0-1s] establish or inherit from the previous
+   beat; [1-3s] transform, escalate, or act out the idea; [3-end] deliver the beat's point and
+   set up the next. Use at least three relevant visual devices per beat (here: a host action or held prop, a scene
+   effect, a camera move, a label, arrow or pin, a split reveal, a diagram item, on-screen text).
 8. TRANSITIONS. "cut" by default. "whip" only for a jump in time or place; "match_cut" only when two shots share a
    shape or object.
+   CONTINUITY: every beat's last frame sets up the next beat's first frame. Name the connection:
+   a held pose, a moving object, a filled frame, a travel direction, a shape, or a camera motion.
+   Write it in shot.continuity, naming both sides; empty on the last beat.
 9. SOUND. No music, no ambience. At most 5-6 sound effects in the whole video, each meaningful (an eruption thud,
    a door, a finger snap): 0-1 per beat, from pop, whoosh, ding, coin, thud, paper, typing, anchored to a word.
    No sound for every label or diagram item.
@@ -145,13 +155,18 @@ Rules:
    placements are for places (a room, a street, a landmark). Held props are hand-sized.
 17. NOTHING STATIC (user 2026-11-10). Nothing on screen holds still for more than 2.5 seconds (about 6 narration
    words): anchor a camera move, an effect, a label, a split reveal or a host gesture on a word in every longer stretch.
+18. PACING BY LENGTH. Scale narrative density to the target duration:
+   - 30s (7-8 beats): lightning hook → conflict → hidden mechanism + truth → comment question.
+   - 45s (9-11 beats): hook → disrupt assumption → 2-3 hidden details → truth → elevation.
+   - 60s (12-14 beats): full 5-stage structure. Most beats are inserts; at most 2 are diagrams.
+   The first two seconds and the last two seconds carry the most weight.
 
 Visual style of this channel:
 """
 
-# SCRIPT_RULES, compressed for a local model (SCRIPT_PROVIDER=ollama): the same 17 rules without the history notes,
-# overlapping rules merged, enum lists left to the output schema (which only allows the listed values). Under 1,200
-# words. Split in two because the local writer works in two stages: the outline (story, hook, narration, picture
+# SCRIPT_RULES, compressed for a local model (SCRIPT_PROVIDER=ollama): the same 18 rules without the history notes,
+# overlapping rules merged, enum lists left to the output schema (which only allows the listed values). About 1,300
+# words (1,124 before the kaomei rules of 2026-11-11). Split in two because the local writer works in two stages: the outline (story, hook, narration, picture
 # type, sources) and then each beat's staging, in parallel.
 SCRIPT_RULES_COMPACT_OUTLINE = """You write explainer Shorts: 30-60 s vertical videos, painted stick figures, a narrated voice, word-synced captions.
 The lead stick figure is the HOST: it talks to the viewer ("I", "you"), lips moving, and acts the story out inside the
@@ -163,6 +178,11 @@ rise, at least one true twist, a payoff that answers the hook. Beat roles in ord
 reasons, counting down), "twist" (the surprise), "reveal"; then ONE "payoff" beat that answers the hook; the LAST beat
 "loop", whose last words tie back to the hook line. "promise" only when the format needs it, never "let me show you".
 A mystery or countdown needs at least two "clue"/"reason" beats after the problem; other formats at least one "stakes".
+A revelation: "problem" breaks what everyone believes; "clue" beats show the hidden mechanism; "reveal" is the truth;
+the loop ends on an open question for the comments that repeats a word of the hook.
+PACING. 30 s, 7-8 beats: lightning hook, conflict, hidden mechanism and truth, comment question. 45 s, 9-11 beats: hook,
+disrupt the assumption, 2-3 hidden details, truth, elevation. 60 s, 12-14 beats: hook, disrupt, hidden secrets, truth,
+elevation. The first and last two seconds carry the most weight.
 HOOK. Beat 1's narration is ONLY the hook line: at most 8 words, a question or bold honest claim the payoff answers,
 never walked back. No greeting, no "in this video". Frame 1 already shows the host in a surprising situation that
 makes the line land. Write 3 different hook_options; option 1 is the storyline's hook and is beat 1's narration. Each
@@ -212,7 +232,11 @@ MOTION. 1-2 recipes. The picture changes on a key word at least every 2.5 s (abo
 effect, a label, a split reveal or a host action on a word in every longer stretch. Continuous moves (push_in, pan_left,
 pan_right, parallax, breathe) take anchor "". punch_in on a key word; impact_shake for a shock; text_slam lands the
 on-screen text (anchor: a word of it that is spoken); number_counter when a quantity changes (detail "0 -> 31"). Every
-anchor is a word of THIS beat's narration.
+anchor is a word of THIS beat's narration. Three phases: the first second inherits the previous beat; the next two act out
+or escalate the idea; the rest lands the point and sets up the next beat. At least three devices per beat (host action
+or held prop, scene effect, camera move, label/arrow/pin, diagram item, on-screen text).
+CONTINUITY. continuity: how this beat's last frame sets up the next beat's first frame (a held pose, a moving object, a
+filled frame, a travel direction, a shape or a camera motion), naming both sides; "" on the last beat.
 SOUND. 0-1 effect per beat, only when meaningful (a thud, a door, a finger snap), anchored to a word; at most 5-6 in
 the whole video, never one for every label.
 visual_intent: one sentence on how the picture SHOWS the idea through action, a metaphor or a diagram."""
@@ -682,6 +706,7 @@ def beat_schema(ob, index, cast_ids):
         props['graphic'] = _obj(dict(kind=_enum(kinds), items=_arr(_s(), 1, 4), anchors=_arr(w, 0, 4), detail=_s()))
     props['motion'] = _arr(_obj(dict(recipe=_enum(get_args(MotionRecipe)), anchor=w0, detail=_s())), 1, 2)
     props['sfx'] = _arr(_obj(dict(name=_enum(get_args(SfxName)), anchor=w)), 0, 1)
+    props['continuity'] = _s()
     return _obj(props)
 
 
@@ -692,11 +717,22 @@ def per_beat(words, lo, hi) -> str:
     return f'{max(5, mid - 2)}-{mid + 2}'
 
 
+PACING_BEATS = {30: (7, 8), 45: (9, 11), 60: (12, 14)}   # rule 18 (kaomei pacing by length, user 2026-11-11)
+
+
+def pacing_aim(seconds) -> tuple:
+    """The beats to aim for: rule 18's band at 30, 45 and 60 s, else one beat per 4-5.5 s inside beat_range."""
+    lo, hi = beat_range(seconds)
+    if seconds in PACING_BEATS:
+        return PACING_BEATS[seconds]
+    return max(lo, round(seconds / 5.5)), min(hi, round(seconds / 4))
+
+
 def _free_context(episode, style, facts) -> dict:
     from .models import FORMATS
     lo, hi = beat_range(episode.target_length)
     words = round(episode.target_length * style.words_per_second)
-    aim_lo, aim_hi = max(lo, round(episode.target_length / 5.5)), min(hi, round(episode.target_length / 4))
+    aim_lo, aim_hi = pacing_aim(episode.target_length)
     head = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} s: {lo}-{hi} beats (aim for {aim_lo}-{aim_hi}) and about {words} narration '
@@ -712,6 +748,8 @@ def _free_context(episode, style, facts) -> dict:
              f'Twist: {sl.twist}\nPayoff: {sl.payoff}\nIt was pitched from earlier research: cite only the facts above, '
              'and drop any line of it they do not support.') if sl else ''
     brief = f'Topic: {episode.topic}\n' + (f'Story ({sl.format}): {sl.title}. {sl.pitch}' if sl else '')
+    if style.writer_note:                         # the new style packs (2026-11-11); cozy has none, its prompts unchanged
+        brief += f'\n{style.writer_note}'
     return dict(outline_user=f'{head}\n\n{research}\n\n{story}'.strip(), beat_head=brief,
                 cast=list(style.cast_ids) or ['lead'], target=episode.target_length, wps=style.words_per_second)
 
@@ -745,6 +783,8 @@ def _draft_dict(o, details) -> dict:
     beats = [dict(role=ob['role'], narration=ob['narration'], on_screen_text=ob['on_screen_text'],
                   visual_intent=d['visual_intent'], shot=d['shot'], sfx=d['sfx'], source_ids=ob['source_ids'],
                   illustrative_numbers=bool(ob['illustrative_numbers'])) for ob, d in zip(o['beats'], details)]
+    if beats:                                     # rule 8: the last beat hands over to nothing
+        beats[-1]['shot'] = dict(beats[-1]['shot'], continuity='')
     opts = [dict(line=h['line'], frame_one=h['frame_one'], answer=h['answer'], loop_line=h['loop_line'])
             for h in o['hook_options']]
     return dict(title=o['title'], hook_promise=o['hook_promise'], hook_options=opts,
@@ -830,6 +870,9 @@ def _beat_prompt(ctx, o, i, schema, previous=None, issues=()):
             f'STAGE b{i + 1:02d} (role {ob["role"]}, picture type {ob["visual"]}).\nNarration: "{ob["narration"]}"\n'
             f'On-screen text: "{ob["on_screen_text"] or "(none)"}"\n'
             f'Suggested host placement: {side} {size} (pick another if the picture needs it).\n'
+            + (f'Next beat (continuity hands over to it): b{i + 2:02d} [{o["beats"][i + 1]["visual"]}]: '
+               f'{o["beats"][i + 1]["narration"]}\n' if i + 1 < len(o['beats']) else
+               'This is the last beat: continuity is "".\n') +
             f'Cast ids: {", ".join(ctx["cast"])}. Anchor fields take only words of this narration; put the actions, '
             'effects and motion anchors on different words spread across the line (a change about every 6 words).')
     if previous is not None:
@@ -883,7 +926,8 @@ def _detail_from(raw, ob, cast_ids):
                              actions=[a for a in st.get('actions') or [] if a['who'] in cast][:3],
                              props=[dict(name=p['name'], held_by=p['held_by'] if p['held_by'] in cast else '', where=p['where'])
                                     for p in st.get('props') or []][:4]),
-                motion=[dict(recipe=m['recipe'], anchor=m['anchor'], detail=m['detail']) for m in raw['motion']][:2])
+                motion=[dict(recipe=m['recipe'], anchor=m['anchor'], detail=m['detail']) for m in raw['motion']][:2],
+                continuity=' '.join(str(raw.get('continuity') or '').split())[:240])
     return dict(visual_intent=raw['visual_intent'], shot=shot,
                 sfx=[dict(name=s['name'], anchor=s['anchor']) for s in raw.get('sfx') or []][:1])
 

@@ -1,0 +1,51 @@
+{
+  "name": "colorful",
+  "title": "Colourful hand-drawn — a new place for every idea",
+  "default": false,
+  "status": "direction",
+  "status_note": "Visual direction only (2026-11-11): the writer gets this brief, but painted bases, the host cut-out, inserts and props exist only for cozy, so a render still uses the cozy art. Painting this pack's library is the next step before a colorful video.",
+  "reference": {
+    "note": "Visual direction adapted from kaomei/stickman-video-director (MIT), style B2 Colorful Hand-Drawn. Our own rig, painting and compositor; only the look is adapted. See docs/KAOMEI_INTEGRATION.md.",
+    "source": "https://github.com/kaomei/stickman-video-director/blob/main/skills/directing-stickman-videos/references/b2-colorful-handdrawn.md",
+    "license": "MIT"
+  },
+  "cast": [
+    {
+      "id": "lead",
+      "description": "the host: a round-headed stick figure with dot eyes and a short line mouth, a filled body in simple colourful clothes"
+    },
+    {
+      "id": "friend",
+      "description": "a second round-headed figure in clothes of a different colour"
+    }
+  ],
+  "palette": {
+    "paper": "warm cream paper",
+    "ink": "irregular fine ink contours",
+    "colour": "full colour, muted but varied: every prop and place has its own colours",
+    "rule": "no sterile dashboard, no glossy 3D, no black-and-white grid"
+  },
+  "text": {
+    "scene_text": "handwritten scene headings, kept out of the caption area",
+    "captions": "readable sans-serif in dark ink on a compact ivory paper label"
+  },
+  "voice": {
+    "provider": "kokoro",
+    "default": "af_heart",
+    "alternates": [
+      "am_michael"
+    ],
+    "note": "Kokoro-82M (Apache-2.0), af_heart by default for this pack, read at its native speed."
+  },
+  "audio": {
+    "music": false,
+    "music_optional": true,
+    "note": "Optional light acoustic bed under the voice (off by default; the compositor's soft bed when on). Restrained action sound effects below the narration."
+  },
+  "pacing": {
+    "words_per_second": 2.7,
+    "note": "Kokoro's measured rate, as for cozy."
+  },
+  "script_brief": "script_brief.md",
+  "writer_note": "Style colorful: warm cream paper, fine irregular ink lines, full-colour hand-drawn places and props, round-headed figures with dot eyes in simple colourful clothes. Give every idea its own recognizable place (a shop, a bus, a kitchen, a close-up of the object), never the same room with new props; keep physical contact real: a held thing is touched."
+}

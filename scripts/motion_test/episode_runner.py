@@ -346,10 +346,13 @@ class Runner:
         print(final, f"{tl['duration']:.2f}s", f'{time.perf_counter() - t_start:.0f}s', flush=True)
         if not args.no_qa:
             from pipeline import qa
+            ep_data = json.loads(self.episode_path.read_text())
             report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes,
                             ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary(),
-                            promised=qa.promised_texts(json.loads(self.episode_path.read_text())))
+                            promised=qa.promised_texts(ep_data), episode=ep_data)
             print(json.dumps(report['summary'], indent=1))
+            for w in report['continuity']['warnings']:
+                print('  continuity (warning):', w)
             lib = report['library']
             print(f"library: {lib['library_beats']}/{lib['beats']} beats from the libraries alone = {lib['library_pct']}% (target {lib['target_pct']}%)")
             sub = report['subject']
