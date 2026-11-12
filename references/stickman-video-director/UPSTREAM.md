@@ -32,3 +32,10 @@ Upstream approval gates and ten-second clip requirements belong to its
 external generation workflow. This adaptation uses an editable JSON storyboard
 and audio-length scenes. The director guidance informs the implementation;
 it is not a claim of executing the upstream skill verbatim.
+
+## 2026-11-11: Director rules, publishing kit and three style directions
+
+Revision `7af3957dff97914b2d762fb248ee2427d7fca72c` (retrieved 2026-11-11, MIT, same notice as `LICENSE`) was read
+for the pipeline-v2 Director integration: the revelation format, the visual-density and continuity rules, pacing by
+length, `stick package`, and the lineart, retro-tv and colorful style directions. No upstream files were copied in. What
+was and was not adapted: [docs/KAOMEI_INTEGRATION.md](../../docs/KAOMEI_INTEGRATION.md).

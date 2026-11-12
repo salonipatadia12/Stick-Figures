@@ -29,7 +29,9 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
 
 - **Git:** work on `pipeline-v2`. Never push to `main`, force-push or rewrite history.
 - **Nothing is deleted without asking.** Files are archived instead; the GitHub Release
-  `archive-2026-11` holds the first batch.
+  `archive-2026-11` holds the first batch. The one standing exception (user 2026-11-11) is the cleanup in §9: old
+  search and model caches, old shared page-cache entries, `__pycache__`, `git gc`, and stale per-beat clips after a
+  finished render. It never touches the repo, episodes, rendered videos, `.env` files or keys.
 - **Keys** come only from `.env`. With `SCRIPT_PROVIDER=ollama` (the default since 2026-11-10) none is needed;
   `ANTHROPIC_API_KEY` is used only by the paid path (`SCRIPT_PROVIDER=anthropic`). Nothing that needs a key, an
   account or a free tier is used for search.
@@ -59,7 +61,9 @@ Decisions and the audit behind this plan are in [AUDIT.md](AUDIT.md).
   - steady, character-dominant framing, changing picture about every 1.9 s
 
   The First Page, Two Minutes, the studio rig and the `reel.py` renders are not references.
-- **`lineart`:** later, as a second style.
+- **`lineart`, `retro-tv`, `colorful` (2026-11-11, direction only):** visual directions adapted from kaomei's
+  B1, B3 and B2 specs (§9). The writer follows them; the painted libraries exist only for cozy, so a render still
+  uses the cozy art until each pack's bases, host and inserts are painted.
 
 ## Phases
 
@@ -424,6 +428,41 @@ bottom-left -> bar chart -> loop) and told thin facts in order. Built 2026-11-09
   with labels, the second wiping in on its word); `focus` (a close-up push into one region); `pin` (a map pin on a
   painted map); at most two diagrams per video. QA `layout` notes (does not fail) a video whose format or layout
   pattern repeats the previous one (`renders/sample/layouts.json`).
+
+### 9. Kaomei Director integration and cleanup safety (user 2026-11-11; built)
+
+Adapted from [kaomei/stickman-video-director](https://github.com/kaomei/stickman-video-director) (MIT), Mode A
+(Director) ideas only. Details, credit, and what was not taken: [KAOMEI_INTEGRATION.md](KAOMEI_INTEGRATION.md).
+- **Story:** a `revelation` format (hook breaks a belief, then the hidden mechanism, the truth, a comment question).
+- **Script rules (script-v7):** rule 7 adds three timed phases per beat ([0-1s] inherit, [1-3s] transform, [3-end]
+  land and set up the next) and at least three visual devices; rule 8 adds continuity, so each beat names how its
+  last frame sets up the next (`shot.continuity`); rule 18 sets pacing by length (30 s: 7-8 beats, 45 s: 9-11,
+  60 s: 12-14), and the local writer's beat aim follows it. The rule changes invalidate cached script outputs (user:
+  fine). Research caches are keyed separately and are not re-run.
+- **QA:** `continuity` warns (never fails) when adjacent beats change place on a hard cut with no named link.
+  Scripts written before v7 are "not checked".
+- **`stick package <slug>`:** a thumbnail from the rendered video, 5 titles, description and hashtags, a pinned
+  comment and a pre-publish checklist in `episodes/<slug>/out/`. $0: rules by default, `--titles` makes one local
+  Ollama call. Nothing is uploaded; "your final approval" stays pending until you give it.
+- **Style packs:** `lineart`, `retro-tv`, `colorful` (direction only; see Style).
+
+Cleanup, so a lost or full disk never takes the work with it:
+- **`scripts/cleanup.sh`:** a dry run by default; `--apply` deletes and logs every file and the space freed to
+  `logs/cleanup.log`. It removes only:
+  - search and model caches older than 7 days, for episodes with a rendered video
+  - shared page-cache entries older than 7 days
+  - `__pycache__`
+  - plus a `git gc`
+  
+  The research, storyline and script records stay, as provenance. It deletes regular files one by one inside the
+  repo (no `rm -r`, no symlinks followed) and refuses to run anywhere that is not this repo.
+- **`deploy/com.stick-figures.cleanup.plist`:** a launchd agent that runs `cleanup.sh --apply` every Sunday at
+  04:00. It is not installed automatically; the install lines are in the file.
+- **After each Mac worker job (`macworker/cleanup.py`):** stale per-beat clips (`renders/sample/<slug>/shots/` files
+  that the finished render's `shots.txt` no longer lists, and older than it) are deleted. The listed clips are the
+  render cache, so editing one beat still re-renders only that beat. The Ollama model is unloaded when it is in
+  memory. Space freed is logged. On 2026-11-11 the existing renders held about 294 MB of stale clips; they go after
+  each episode's next render.
 
 ### Backlog
 

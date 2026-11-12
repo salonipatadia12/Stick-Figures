@@ -155,6 +155,10 @@ In the user's `Stick_Figures` checkout on `pipeline-v2`, with its venvs:
   is not touched), run `story.pitch` / `script.generate` there through `macworker/bridge.py` (the repo's `.venv`;
   `SCRIPT_PROVIDER=ollama`, an empty `ANTHROPIC_API_KEY`, a ledger that refuses any paid reservation), upload the
   new or changed `cache/` files, `done` with the episode and ledger;
+- after every job (`macworker/cleanup.py`, never fails or delays the report): a finished `render` deletes its stale
+  per-beat clips (files in `renders/sample/<slug>/shots/` that its `shots.txt` no longer lists and that are older than
+  it; the listed clips are the render cache); `OLLAMA_MODEL` is unloaded (`keep_alive: 0`) when `/api/ps` shows it
+  loaded; what was freed goes to `logs/cleanup.log`;
 - `caffeinate -i -w <pid>` only while a job runs; the launchd agent (`KeepAlive`) polls every 30 s while idle.
 - Never kills other processes; one job at a time; the token from the Keychain; logs in `~/Library/Logs/stick-worker.log`.
 

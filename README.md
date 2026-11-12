@@ -20,7 +20,13 @@ approval gate in the chat.
   ([schema](schemas/episode.schema.json)).
 - Every call goes through a per-video cost ledger, capped at `--budget` (default $2.00), with
   no automatic paid retries; local model calls and searches are recorded at $0.00.
-- The default look is `cozy`, taken from The Empty Chair.
+- The default look is `cozy`, taken from The Empty Chair. `lineart`, `retro-tv` and `colorful` are visual directions
+  adapted from kaomei's Stickman Video Director (MIT): the script follows them, but renders still use the cozy art
+  ([docs/KAOMEI_INTEGRATION.md](docs/KAOMEI_INTEGRATION.md)).
+- `.venv/bin/stick package <slug>` writes a publishing kit to `episodes/<slug>/out/`: thumbnail, 5 titles,
+  description and hashtags, pinned comment, pre-publish checklist. It costs $0 and uploads nothing.
+- `scripts/cleanup.sh` shows which old caches it would remove; `--apply` removes them. It never touches episodes,
+  videos, `.env` or keys. `deploy/com.stick-figures.cleanup.plist` runs it weekly.
 - **Phase 1** (the researched script plus the approval gate) is built. Images, voice, captions
   and compositing follow in Phases 2–4.
 
