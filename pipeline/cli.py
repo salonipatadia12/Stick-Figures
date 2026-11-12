@@ -120,6 +120,9 @@ def cmd_make(args):
     print(f'Audience: {episode.audience or "general"} · niche: {episode.niche or "general"} · '
           f'{episode.style} · {episode.aspect} · {episode.target_length}s')
     print(f'Budget ${usd(ledger.budget):.2f}, spent so far ${usd(ledger.spent()):.4f}')
+    if not style.render_ready:
+        print(f'Note: style "{style.name}" is visual direction only. The script follows its brief, but a render still '
+              f'uses the cozy art. {style.status_note}')
 
     needs_story = (not episode.beats and not episode.storyline_pick) or 'story' in regenerate
     needs_script = not episode.beats or bool(regenerate & {'script', 'research'})
@@ -501,6 +504,29 @@ def cmd_list(args):
     return 0
 
 
+def cmd_package(args):
+    """The publishing kit (pipeline/package.py): thumbnail, 5 titles, description and tags, pinned comment, checklist."""
+    from . import package
+    try:
+        res = package.build(args.episode, use_llm=args.titles)
+    except package.PackageError as exc:
+        print(f'package: {exc}', file=sys.stderr)
+        return 1
+    print(f'Publishing kit in {res["out"]}/ (nothing was published or uploaded)')
+    t = res['thumbnail']
+    print(f'  thumbnail.jpg: ' + (f'frame at {t["frame_s"]} s, "{t["text"]}" on the {t["side"]}' if t else 'not made'))
+    print('  titles.txt:')
+    for i, title in enumerate(res['titles'], 1):
+        print(f'    {i}. {title}')
+    print(f'  comment.txt: {res["comment"]}')
+    print('  description.txt')
+    c = res['counts']
+    print(f'  publish_checklist.json: {c["checked"]} checked, {c["pending"]} pending, {c["not_applicable"]} not applicable')
+    for n in res['notes']:
+        print(f'  note: {n}')
+    return 0
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog='stick', description='Make a narrated, captioned stick-figure Short from a topic.')
     sub = p.add_subparsers(dest='command', required=True)
@@ -577,6 +603,12 @@ def build_parser():
     bb.add_argument('names', nargs='*')
     bb.add_argument('--episode', help='only the bases this episode\'s plan uses')
     bb.set_defaults(func=cmd_build_bases)
+
+    pg = sub.add_parser('package', help='Publishing kit: thumbnail, 5 titles, description and tags, pinned comment, '
+                                         'pre-publish checklist (episodes/<slug>/out/; never uploads)')
+    pg.add_argument('episode')
+    pg.add_argument('--titles', action='store_true', help='write the titles with one local Ollama call (free) instead of rules')
+    pg.set_defaults(func=cmd_package)
 
     s = sub.add_parser('schema', help='Write the episode.json JSON schema')
     s.add_argument('--output')
