@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Weekly cleanup of the Stick_Figures repo: scripts/cleanup.sh apply, every Sunday at 04:00 (user 2026-11-11).
+  It removes only old search/model caches of rendered episodes, old shared page-cache entries, __pycache__ and runs
+  git gc; it never removes the repo, episodes, rendered videos, .env files or keys (see the script's header).
+  Every file it removes and the space freed are logged to __REPO__/logs/cleanup.log.
+
+  Install (fills in the paths, copies it to ~/Library/LaunchAgents and loads it):
+    REPO=$(pwd -P); sed -e "s#__REPO__#$REPO#g" -e "s#__HOME__#$HOME#g" deploy/com.stick-figures.cleanup.plist \
+      > ~/Library/LaunchAgents/com.stick-figures.cleanup.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.stick-figures.cleanup.plist
+  Try it once now:   launchctl kickstart gui/$(id -u)/com.stick-figures.cleanup
+  Uninstall:         launchctl bootout gui/$(id -u)/com.stick-figures.cleanup
+  If the Mac is asleep at 04:00 on Sunday, launchd runs it when the Mac wakes.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.stick-figures.cleanup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__REPO__/scripts/cleanup.sh</string>
+        <string>--apply</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <!-- Sunday (weekday 0) at 04:00 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>4</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>Nice</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/stick-cleanup.launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/stick-cleanup.launchd.log</string>
+</dict>
+</plist>

@@ -113,10 +113,11 @@ def job(job_id=7, kind='render', slug='why-honey-never-spoils', payload=None):
 
 
 def make_cfg(tmp: Path, repo: Path | None = None) -> config.Config:
+    # OLLAMA_HOST is a refused port, so the post-job unload (macworker/cleanup.py) never reaches this Mac's Ollama
     cfg = config.load(env=dict(STICK_SERVER='https://stick.test', STICK_WORKER_TOKEN=TOKEN,
                                STICK_REPO=str(repo or tmp / 'repo'), STICK_WORKER_STATE=str(tmp / 'state'),
                                STICK_WORKER_LOG=str(tmp / 'worker.log'), STICK_WORKER_CONFIG=str(tmp / 'none'),
-                               STICK_WORKER_POLL='0.05'),
+                               STICK_WORKER_POLL='0.05', OLLAMA_HOST='http://127.0.0.1:9'),
                       token_lookup=lambda: None)
     return cfg
 

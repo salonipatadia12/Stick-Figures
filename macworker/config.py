@@ -52,6 +52,7 @@ class Config:
     auto_pull: bool = False            # `git pull --ff-only` on pipeline-v2 while idle (off by default)
     job_timeout_s: float = 4 * 3600    # a stuck child is stopped after this long
     ollama_url: str = 'http://localhost:11434'   # pitch/script run on this (a Homebrew service on the Mac)
+    ollama_model: str = 'qwen3.5:9b'             # unloaded after each job (pipeline/config.py DEFAULT_OLLAMA_MODEL)
     token: str | None = field(default=None, repr=False)
     token_source: str = ''
 
@@ -110,6 +111,7 @@ def load(env: dict | None = None, token_lookup=keychain_token) -> Config:
     cfg.auto_pull = str(get('STICK_WORKER_PULL', '0')).lower() in ('1', 'true', 'yes')
     cfg.job_timeout_s = float(get('STICK_JOB_TIMEOUT', cfg.job_timeout_s))
     cfg.ollama_url = ollama_url(get('OLLAMA_HOST', cfg.ollama_url))
+    cfg.ollama_model = (get('OLLAMA_MODEL', cfg.ollama_model) or cfg.ollama_model).strip()
     if env.get('STICK_WORKER_TOKEN'):
         cfg.token, cfg.token_source = env['STICK_WORKER_TOKEN'], 'STICK_WORKER_TOKEN'
     else:

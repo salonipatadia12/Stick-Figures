@@ -19,7 +19,7 @@ import time
 import traceback
 from pathlib import Path
 
-from . import VERSION, config, proc
+from . import VERSION, cleanup, config, proc
 from .client import AuthError, Client, NetworkError, Rejected
 from .handlers import CLAIM_KINDS, HANDLERS, LLM_KINDS, OLLAMA_DOWN, Ctx, JobError, ollama_version
 from .util import Backoff, read_json, safe_name, write_json
@@ -35,8 +35,10 @@ class Stop(Exception):
 
 class Worker:
     def __init__(self, cfg: config.Config, client: Client, handlers: dict | None = None, sleep=time.sleep,
-                 awake=proc.Awake, runner=proc.run, max_report_tries: int | None = None, backoff: Backoff | None = None):
+                 awake=proc.Awake, runner=proc.run, max_report_tries: int | None = None, backoff: Backoff | None = None,
+                 after_job=cleanup.after_job):
         self.cfg, self.client = cfg, client
+        self.after_job = after_job                   # stale clips out, the model out of memory (macworker/cleanup.py)
         self.handlers = HANDLERS if handlers is None else handlers
         self.sleep, self.awake, self.runner = sleep, awake, runner
         self.max_report_tries = max_report_tries
@@ -130,6 +132,8 @@ class Worker:
                                  error=f'worker error: {type(e).__name__}: {e}\n' + ''.join(traceback.format_exc()[-1500:]))
                     log.exception('job %s crashed', job_id)
                 write_json(jdir / 'outcome.json', state)
+                if self.after_job:                   # never raises; the files to upload are not touched
+                    self.after_job(self.cfg.repo, job, state['status'], self.cfg.ollama_url, self.cfg.ollama_model)
                 return self.report(jdir)
         finally:
             stop.set()

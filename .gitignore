@@ -32,3 +32,10 @@ episodes/*/out/
 
 # Agent worktrees (coordinator lanes)
 .claude/worktrees/
+
+# cleanup logs (scripts/cleanup.sh, macworker/cleanup.py)
+logs/
+
+# SSH deploy keys never enter git
+deploy/stick-deploy-key
+deploy/*-key
