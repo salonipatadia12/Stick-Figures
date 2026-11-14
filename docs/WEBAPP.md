@@ -121,6 +121,54 @@ turn notifications on from there (iOS 16.4+).
 script and scenes (`POST /episodes/{slug}/render-again`, `/api/episodes/{slug}/render-again`), e.g. after renderer
 fixes on the Mac.
 
+## Topic understanding (user 2026-11-14)
+
+The first step of every pitch, on the Mac's local model (`pipeline/understand.py`, cached). A topic typed casually
+("how is crude oil naturally forming in th earth and not comig from the dinosaurs") becomes: the real question,
+the claims inside it, the misconception a viewer likely holds, the most interesting true angle, a clean title and
+slug, and the picture subjects that show the myth. Research searches the question and each claim; each claim is then
+labelled supported, mainstream-disputed, fringe/false or unverified from the cited facts. It never waits for the user.
+
+- The episode moves from the typed slug to the clean one when the pitch comes back (`Service.rename_after_pitch`:
+  row, jobs, files, spend approvals and folders); the typed slug stays in `episodes.renamed_from` and old links
+  redirect (307). The page and the history show the clean title (`episodes.title`) with "Typed as: ..." under it.
+- The storyline and script prompts get the interpretation (`understand.brief`): true claims are told straight; a
+  myth or fringe idea is shown only as an idea. myth_vs_fact, mystery and revelation are offered first, and Auto picks
+  one of them for a topic that corrects a myth. The script check fails a beat that states a disputed or false claim as
+  fact without framing it.
+- QA `story_match`: every painted scene must show what its beat says, and a picture of the myth must be marked as the
+  myth on screen. The self-repair loop adds the MYTH mark or repaints the scene from the beat.
+- The episode page shows "What it understood": question, angle, misconception, each claim with its verdict.
+- If the local model is down, the topic is used tidied, nothing is renamed, and the episode goes on.
+
+## Self-repair after every render (user 2026-11-14)
+
+After QA, `pipeline/repair.py` diagnoses each failed check, applies a fix and renders again (only the beats it
+touched; the rest come from the clip cache), at most two rounds. Fixes are per-beat hints in
+`episodes/<slug>/repairs.json`, applied in memory by the composer; the approved script is untouched except by the
+duration fix, which is logged in the approval log as `self-repair (QA duration)` and sent back to the server.
+
+| check | fix |
+|---|---|
+| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x |
+| text | round 1 moves it (host to the other side and smaller, or an insert label away from the host); round 2 drops that label |
+| duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
+| story_match | a MYTH mark on a myth picture; a new scene painted from the beat when the picture shows something else |
+
+What is still wrong after two rounds is listed in plain words on the phone ("Still wrong after the self-repair"),
+with the repairs made under "Fixed automatically"; the episode is "Done, QA failed". qa.json carries `repairs`
+(round, check, beat, cause, fix), `repair_rounds` and `still_wrong`. The script writer's word target follows Kokoro's
+measured speaking rate (`pipeline/pacing.py`: the median of the latest renders, about 2.5 words per second).
+
+## Paint never stops an episode (2026-11-14)
+
+Every FLUX file name is sanitised and ends in `.png`, and every saved file is decoded before it counts
+(`pipeline/paintsafe.py`). A scene or prop with no passing seed is painted again on a new seed, then from a simplified
+prompt, then becomes a placeholder (a gradient in the scene's mood with what it would show; a card for a prop),
+flagged `placeholder: true` in its library, badged on the scenes page and failed by QA's `placeholders` check so it
+is never posted by accident. Redo it with a note to paint it again. Base candidates get the same file checks and one
+retry on new seeds.
+
 ## HTTP API
 
 Browser routes (session cookie, HTML; mobile-first, no build step, plain HTML + a little JS, polling every 3 s):
