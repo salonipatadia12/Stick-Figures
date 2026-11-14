@@ -2,15 +2,17 @@
 
 Created at startup when missing (create_all == CREATE TABLE IF NOT EXISTS). Times are naive UTC.
 Additions to the contract (lane B): episodes.spend_limit_usd and episodes.waiting (the spend-approval stop), and the
-spend_approvals table (who allowed how much more, when).
+spend_approvals table (who allowed how much more, when). 2026-11-13: episodes.auto and episodes.auto_note (Auto mode:
+topic to finished video with no stops; why it stopped when it had to) and push_subscriptions (Web Push to the phone).
+Columns added to an existing table are added at startup (`add_missing_columns`): create_all never alters a table.
 """
 from __future__ import annotations
 
 import datetime as dt
 import time
 
-from sqlalchemy import (JSON, Column, DateTime, Float, ForeignKey, Integer, MetaData, String, Table, Text,
-                        create_engine, event)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, MetaData, String, Table, Text,
+                        create_engine, event, inspect, text)
 from sqlalchemy.exc import OperationalError, ProgrammingError, IntegrityError
 
 metadata = MetaData()
@@ -28,6 +30,8 @@ episodes = Table(
     Column('error', Text),
     Column('spend_limit_usd', Float),           # null = SPEND_PREAPPROVED_USD
     Column('waiting', JSON),                    # spend stop: {kind, job_id, step, estimate_usd, spent_usd, need_usd, message}
+    Column('auto', Boolean, nullable=False, default=False),   # Auto mode: every gate decided by pipeline/auto.py rules
+    Column('auto_note', Text),                  # Auto mode: why it stopped at a gate (null while it runs)
 )
 
 jobs = Table(
@@ -77,6 +81,20 @@ spend_approvals = Table(
 )
 
 
+push_subscriptions = Table(
+    'push_subscriptions', metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('endpoint', Text, nullable=False, unique=True),
+    Column('p256dh', Text, nullable=False),
+    Column('auth', Text, nullable=False),
+    Column('created_at', DateTime, nullable=False),
+    Column('last_ok_at', DateTime),
+)
+
+# Columns added to existing tables after their first release: name -> SQL type and default, per dialect.
+ADDED_COLUMNS = {'episodes': {'auto': ('BOOLEAN', 'FALSE'), 'auto_note': ('TEXT', None)}}
+
+
 def now() -> dt.datetime:
     return dt.datetime.now(dt.timezone.utc).replace(tzinfo=None, microsecond=0)
 
@@ -109,11 +127,31 @@ def init(engine):
     for attempt in range(5):
         try:
             metadata.create_all(engine, checkfirst=True)
+            add_missing_columns(engine)
             return
         except (OperationalError, ProgrammingError, IntegrityError):
             if attempt == 4:
                 raise
             time.sleep(1 + attempt)
+
+
+def add_missing_columns(engine):
+    """ALTER TABLE ... ADD COLUMN for the columns in ADDED_COLUMNS that an older database lacks (idempotent)."""
+    insp = inspect(engine)
+    for table, cols in ADDED_COLUMNS.items():
+        have = {c['name'] for c in insp.get_columns(table)}
+        for name, (sqltype, default) in cols.items():
+            if name in have:
+                continue
+            dflt = f' NOT NULL DEFAULT {default}' if default is not None else ''
+            if engine.dialect.name == 'sqlite' and default == 'FALSE':
+                dflt = ' NOT NULL DEFAULT 0'
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {sqltype}{dflt}'))
+            except (OperationalError, ProgrammingError):     # added by the other process starting at the same time
+                if name not in {c['name'] for c in inspect(engine).get_columns(table)}:
+                    raise
 
 
 def ping(engine) -> bool:

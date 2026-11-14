@@ -2,7 +2,7 @@
 
 Browser pages and the JSON API share one signed session cookie (HttpOnly, SameSite=Lax, Secure when PUBLIC_URL is
 https). The worker API accepts only `Authorization: Bearer <token>` whose sha256 equals WORKER_TOKEN_SHA256.
-Every gate is a user action; nothing here approves anything on its own.
+Every gate is a user action, except in an episode the user started with Auto on (core.Service.after_step).
 """
 from __future__ import annotations
 
@@ -182,10 +182,11 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
             return Response('cross-site request refused', status_code=403)
         form = await request.form()
         data = {k: str(form.get(k, '')) for k in ('topic', 'niche', 'audience')}
+        auto = str(form.get('auto', '')).lower() in ('1', 'on', 'true', 'yes')
         try:
-            slug = service.create_episode(**data)
+            slug = service.create_episode(**data, auto=auto)
         except core.GateError as exc:
-            return page(request, 'new.html', status=400, error=' '.join(exc.errors), form=data)
+            return page(request, 'new.html', status=400, error=' '.join(exc.errors), form=dict(data, auto=auto))
         return RedirectResponse(f'/episodes/{slug}', status_code=303)
 
     def episode_page(request, slug, errors=(), status=200):
@@ -235,6 +236,10 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
     @app.post('/episodes/{slug}/retry')
     async def retry_form(request: Request, slug: str):
         return await form_action(request, slug, lambda f: service.retry(slug))
+
+    @app.post('/episodes/{slug}/render-again')
+    async def rerender_form(request: Request, slug: str):
+        return await form_action(request, slug, lambda f: service.rerender(slug, by=f'{user_of(request)} (web)'))
 
     @app.post('/episodes/{slug}/spend/allow')
     async def spend_form(request: Request, slug: str):
@@ -287,7 +292,7 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
         api_user(request)
         data = await body_json(request)
         slug = service.create_episode(str(data.get('topic', '')), str(data.get('niche') or ''),
-                                      str(data.get('audience') or ''))
+                                      str(data.get('audience') or ''), auto=data.get('auto') is True)
         return {'ok': True, 'slug': slug}
 
     @app.get('/api/episodes')
@@ -332,6 +337,54 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
         api_user(request)
         service.retry(slug)
         return {'ok': True}
+
+    @app.post('/api/episodes/{slug}/render-again')
+    async def api_rerender(request: Request, slug: str):
+        api_user(request)
+        service.rerender(slug, by=f'{user_of(request)} (web)')
+        return {'ok': True}
+
+    # ------------------------------------------------------------------ notifications (Web Push; webapp/push.py)
+    @app.get('/api/push/key')
+    def push_key(request: Request):
+        api_user(request)
+        return no_store(JSONResponse({'enabled': settings.push_enabled, 'public_key': settings.vapid_public_key,
+                                      'devices': service.push_count()}))
+
+    @app.post('/api/push/subscribe')
+    async def push_subscribe(request: Request):
+        api_user(request)
+        if not same_origin(request):
+            return Response('cross-site request refused', status_code=403)
+        service.push_subscribe((await body_json(request)).get('subscription') or {})
+        return {'ok': True}
+
+    @app.post('/api/push/unsubscribe')
+    async def push_unsubscribe(request: Request):
+        api_user(request)
+        if not same_origin(request):
+            return Response('cross-site request refused', status_code=403)
+        service.push_unsubscribe((await body_json(request)).get('endpoint'))
+        return {'ok': True}
+
+    @app.post('/api/push/test')
+    async def push_test(request: Request):
+        api_user(request)
+        if not same_origin(request):
+            return Response('cross-site request refused', status_code=403)
+        service.notify('', 'Notifications are on', 'You will hear from Stick Figures when a video is ready.', url='/')
+        return {'ok': True}
+
+    # the service worker must be served from the root to control every page; the manifest makes the site installable
+    @app.get('/sw.js')
+    def service_worker():
+        r = FileResponse(HERE / 'static' / 'sw.js', media_type='application/javascript')
+        r.headers['Cache-Control'] = 'no-cache'
+        return r
+
+    @app.get('/manifest.webmanifest')
+    def manifest():
+        return FileResponse(HERE / 'static' / 'manifest.webmanifest', media_type='application/manifest+json')
 
     @app.post('/api/episodes/{slug}/spend/allow')
     async def api_spend(request: Request, slug: str):

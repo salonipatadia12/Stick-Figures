@@ -1,8 +1,10 @@
 """Episodes, the job queue, the Mac worker and the gates (docs/WEBAPP.md). Used by the web app and the VPS runner.
 
 Every gate is an explicit user action that goes through the pipeline's own gate code (`stick approve ... --by
-'user (web)'`), so the episode's approval log is written exactly as on the command line. Nothing here approves on its
-own. Where pitch/script run follows SCRIPT_PROVIDER (settings.vps_kinds / settings.mac_kinds): with `anthropic` they
+'user (web)'`), so the episode's approval log is written exactly as on the command line. The one exception is an
+episode the user started with Auto on (user 2026-11-13): then `after_step` makes each gate's decision by the fixed
+rules in pipeline/auto.py, through the same gate code, logged with by 'auto (web)'; when a rule cannot decide (a script
+that fails its checks, a scene that failed QA) it stops at that gate and says why (episodes.auto_note). Where pitch/script run follows SCRIPT_PROVIDER (settings.vps_kinds / settings.mac_kinds): with `anthropic` they
 are paid VPS steps that never retry on their own (a lease that runs out fails them; Retry is a button); with `ollama`
 (the default) the Mac runs them like paint/render. A lease that runs out on a Mac job (free work) re-queues it, at
 most `max_attempts` times.
@@ -22,7 +24,7 @@ from pathlib import Path
 from sqlalchemy import and_, func, select, update
 
 from . import db
-from .db import episodes as E, files as F, jobs as J, spend_approvals as S, worker as W
+from .db import episodes as E, files as F, jobs as J, push_subscriptions as P, spend_approvals as S, worker as W
 
 RESEARCHING, STORYLINES, SCRIPTING, SCRIPT = 'researching', 'storylines', 'scripting', 'script'
 PAINTING, SCENES, RENDERING = 'painting', 'scenes', 'rendering'
@@ -35,6 +37,10 @@ LLM_KINDS = ('pitch', 'script')
 # SCRIPT_PROVIDER=anthropic routing; the live routing is settings.vps_kinds / settings.mac_kinds
 VPS_KINDS, MAC_KINDS = LLM_KINDS, ('paint', 'render')
 BY = 'user (web)'
+AUTO_BY = 'auto (web)'
+# the stepper an Auto episode shows: (label, the states that are this step)
+AUTO_STEPS = (('Research', ('researching',)), ('Storyline', ('storylines',)), ('Script', ('scripting', 'script')),
+              ('Paint', ('painting', 'scenes')), ('Render', ('rendering',)), ('Done', ('done', 'done_qa_failed')))
 NAME_RE = re.compile(r'^[a-z0-9._-]+$')
 FILE_KINDS = ('mp4', 'srt', 'qa', 'contact_sheet', 'scene_preview')
 CACHE_KIND = 'cache'                   # a pitch/script job's episodes/<slug>/cache/ file (not a user download)
@@ -142,7 +148,7 @@ class Service:
         return Decimal(str(lim)) if lim is not None else self.settings.spend_preapproved_usd
 
     # ------------------------------------------------------------------ episodes
-    def create_episode(self, topic, niche='', audience=''):
+    def create_episode(self, topic, niche='', audience='', auto=False):
         from pipeline import config, store
         from pipeline.models import Episode
         topic = ' '.join((topic or '').split())
@@ -162,7 +168,7 @@ class Service:
             store.save(episode, store.folder(slug))
             t = db.now()
             conn.execute(E.insert().values(slug=slug, topic=topic, niche=niche, audience=audience, state=RESEARCHING,
-                                           created_at=t, updated_at=t, cost_usd=0.0, error=None))
+                                           created_at=t, updated_at=t, cost_usd=0.0, error=None, auto=bool(auto)))
             self._enqueue(conn, slug, 'pitch')
         return slug
 
@@ -173,7 +179,8 @@ class Service:
             for f in conn.execute(select(F.c.slug, F.c.name, F.c.kind)).mappings():
                 names.setdefault(f['slug'], {})[f['kind']] = f['name']
         return [dict(slug=r['slug'], topic=r['topic'], state=r['state'], cost_usd=round(r['cost_usd'] or 0, 4),
-                     created_at=db.iso(r['created_at']), files=names.get(r['slug'], {})) for r in rows]
+                     created_at=db.iso(r['created_at']), files=names.get(r['slug'], {}), auto=bool(r.get('auto')))
+                for r in rows]
 
     # ------------------------------------------------------------------ queue
     def sweep(self):
@@ -181,6 +188,7 @@ class Service:
         max_attempts); VPS (paid) jobs fail."""
         t = db.now()
         mac = self.mac_kinds
+        failed = []
         with self.engine.begin() as conn:
             stale = conn.execute(select(J).where(and_(J.c.status == 'running', J.c.lease_until < t))).mappings().all()
             for j in stale:
@@ -199,6 +207,9 @@ class Service:
                     why = (f'The {j["kind"]} step stopped before it finished. Paid steps are never retried on their '
                            'own: press Retry to run it again.')
                 self._fail_job(conn, j, why)
+                failed.append(j['slug'])
+        for slug in failed:
+            self.after_step(slug)
 
     def _fail_job(self, conn, job, error, state=FAILED, waiting=None):
         t = db.now()
@@ -278,21 +289,28 @@ class Service:
         t = db.now()
         with self.engine.begin() as conn:
             j = self._running_mac_job(conn, job_id)
-            if j['kind'] in LLM_KINDS:
-                return self._llm_done(conn, j, result)
-            conn.execute(update(J).where(J.c.id == job_id).values(
-                status='done', result=result, finished_at=t, lease_until=None,
-                progress=dict(stage='done', pct=100, message='Finished', at=db.iso(t))))
-            conn.execute(update(W).where(W.c.busy_job_id == job_id).values(busy_job_id=None))
             slug = j['slug']
-            if j['kind'] == 'paint':
-                if result.get('new') or result.get('failed'):
-                    self._set_state(conn, slug, SCENES, error=None)
-                else:                                      # nothing new to look at: straight to rendering
-                    self._set_state(conn, slug, RENDERING, error=None)
-                    self._enqueue(conn, slug, 'render', {})
+            if j['kind'] in LLM_KINDS:
+                self._llm_done(conn, j, result)
             else:
-                self._set_state(conn, slug, DONE if result.get('qa_pass') is True else DONE_QA_FAILED, error=None)
+                self._mac_done(conn, j, result, t)
+        self.after_step(slug)
+
+    def _mac_done(self, conn, j, result, t):
+        """A paint or render job the Mac finished: the scenes gate (or straight to rendering), or done."""
+        job_id, slug = j['id'], j['slug']
+        conn.execute(update(J).where(J.c.id == job_id).values(
+            status='done', result=result, finished_at=t, lease_until=None,
+            progress=dict(stage='done', pct=100, message='Finished', at=db.iso(t))))
+        conn.execute(update(W).where(W.c.busy_job_id == job_id).values(busy_job_id=None))
+        if j['kind'] == 'paint':
+            if result.get('new') or result.get('failed'):
+                self._set_state(conn, slug, SCENES, error=None)
+            else:                                      # nothing new to look at: straight to rendering
+                self._set_state(conn, slug, RENDERING, error=None)
+                self._enqueue(conn, slug, 'render', {})
+        else:
+            self._set_state(conn, slug, DONE if result.get('qa_pass') is True else DONE_QA_FAILED, error=None)
 
     def _llm_done(self, conn, j, result):
         """A pitch/script job the Mac ran (SCRIPT_PROVIDER=ollama): the result carries the updated episode.json and
@@ -389,6 +407,7 @@ class Service:
         with self.engine.begin() as conn:
             j = self._running_mac_job(conn, job_id)
             self._fail_job(conn, j, error)
+        self.after_step(j['slug'])
 
     def heartbeat(self, host, version, busy_job_id=None):
         t = db.now()
@@ -462,7 +481,7 @@ class Service:
                      download_url=f'/files/{slug}/{r["name"]}?dl=1') for r in rows]
 
     # ------------------------------------------------------------------ gates (explicit user actions only)
-    def pick_storyline(self, slug, story):
+    def pick_storyline(self, slug, story, by=BY):
         with self.gate_lock:
             row = self.episode_row(slug)
             if row['state'] != STORYLINES:
@@ -471,12 +490,12 @@ class Service:
             n = _int(story)
             if not episode.storylines or not 1 <= n <= len(episode.storylines):
                 raise GateError(f'Pick a storyline 1-{len(episode.storylines)}.')
-            code, out = _run_cli(['approve', slug, '--gate', 'storyline', '--story', str(n), '--by', BY])
+            code, out = _run_cli(['approve', slug, '--gate', 'storyline', '--story', str(n), '--by', by])
             episode, _ = self._load(slug)
             if code != 0 or episode.storyline_pick != n:
                 raise GateError(_clean(out) or f'The storyline gate refused the pick (exit {code}).')
             with self.engine.begin() as conn:
-                if not self._set_state(conn, slug, SCRIPTING, expect=STORYLINES, error=None):
+                if not self._set_state(conn, slug, SCRIPTING, expect=STORYLINES, error=None, auto_note=None):
                     raise GateError('The episode changed while picking; reload the page.')
                 self._enqueue(conn, slug, 'script')
 
@@ -505,13 +524,13 @@ class Service:
                                        f'(stick bases {episode.slug} --candidates), or edit the script.'))
         return errors
 
-    def approve_script(self, slug, hook):
+    def approve_script(self, slug, hook, by=BY):
         with self.gate_lock:
             row = self.episode_row(slug)
             if row['state'] != SCRIPT:
                 raise GateError(f'This episode is at "{row["state"]}", not at the script gate.')
             episode, _ = self._load(slug)
-            argv = ['approve', slug, '--gate', 'script', '--by', BY]
+            argv = ['approve', slug, '--gate', 'script', '--by', by]
             if episode.hook_options:
                 n = _int(hook)
                 if not 1 <= n <= len(episode.hook_options):
@@ -527,7 +546,7 @@ class Service:
             if code != 0 or not episode.is_approved('script'):
                 raise GateError(_clean(out) or f'The script gate refused (exit {code}).')
             with self.engine.begin() as conn:
-                if not self._set_state(conn, slug, PAINTING, expect=SCRIPT, error=None):
+                if not self._set_state(conn, slug, PAINTING, expect=SCRIPT, error=None, auto_note=None):
                     raise GateError('The episode changed while approving; reload the page.')
                 self._enqueue(conn, slug, 'paint', {})
 
@@ -551,7 +570,7 @@ class Service:
                                          round=j['id'])
         return list(out.values())
 
-    def approve_scenes(self, slug):
+    def approve_scenes(self, slug, by=BY):
         from pipeline import store
         from pipeline.models import digest
         with self.gate_lock:
@@ -565,11 +584,11 @@ class Service:
             episode, base = self._load(slug)
             keys = sorted(s['key'] for s in scenes)
             episode.meta.setdefault('approval_log', []).append(dict(
-                gate='scenes', by=BY, at=time.strftime('%Y-%m-%dT%H:%M:%S'), keys=keys,
+                gate='scenes', by=by, at=time.strftime('%Y-%m-%dT%H:%M:%S'), keys=keys,
                 digest=digest([dict(key=s['key'], name=s.get('name'), round=s.get('round')) for s in scenes])[:12]))
             store.save(episode, base)
             with self.engine.begin() as conn:
-                if not self._set_state(conn, slug, RENDERING, expect=SCENES, error=None):
+                if not self._set_state(conn, slug, RENDERING, expect=SCENES, error=None, auto_note=None):
                     raise GateError('The episode changed while approving; reload the page.')
                 self._enqueue(conn, slug, 'render', {})
 
@@ -590,7 +609,7 @@ class Service:
                                                                   at=time.strftime('%Y-%m-%dT%H:%M:%S')))
             store.save(episode, base)
             with self.engine.begin() as conn:
-                if not self._set_state(conn, slug, PAINTING, expect=SCENES, error=None):
+                if not self._set_state(conn, slug, PAINTING, expect=SCENES, error=None, auto_note=None):
                     raise GateError('The episode changed; reload the page.')
                 self._enqueue(conn, slug, 'paint', {'redo': {key: note}})
 
@@ -607,7 +626,7 @@ class Service:
             conn.execute(update(J).where(J.c.id == j['id']).values(
                 status='queued', attempts=0, error=None, lease_until=None, started_at=None, finished_at=None,
                 progress=dict(stage='queued', pct=0, message='Queued again by you', at=db.iso(t))))
-            self._set_state(conn, slug, KIND_STATE[j['kind']], expect=FAILED, error=None, waiting=None)
+            self._set_state(conn, slug, KIND_STATE[j['kind']], expect=FAILED, error=None, waiting=None, auto_note=None)
 
     def allow_spend(self, slug, more_usd=None, by=BY):
         """The user allows the episode to spend more than the pre-approved amount; the stopped step is queued again."""
@@ -635,6 +654,130 @@ class Service:
             self._set_state(conn, slug, KIND_STATE[j['kind']], expect=SPEND_APPROVAL, error=None, waiting=None,
                             spend_limit_usd=float(limit))
 
+    def rerender(self, slug, by=BY):
+        """Render a finished video again (e.g. after renderer fixes on the Mac): the same approved script and scenes."""
+        with self.gate_lock, self.engine.begin() as conn:
+            row = self._episode_row(conn, slug)
+            if row['state'] not in (DONE, DONE_QA_FAILED):
+                raise GateError(f'Only a finished video can be rendered again; this one is at "{row["state"]}".')
+            if not self._set_state(conn, slug, RENDERING, expect=(DONE, DONE_QA_FAILED), error=None, auto_note=None):
+                raise GateError('The episode changed; reload the page.')
+            self._enqueue(conn, slug, 'render', {'again': True, 'by': by})
+
+    # ------------------------------------------------------------------ auto mode
+    def after_step(self, slug):
+        """Called after every step finishes (or fails). For an Auto episode, make the decision of the gate it reached
+        (pipeline/auto.py rules) or note why it cannot; then notify the phone when there is something to look at.
+        Never raises: the step itself is already recorded."""
+        try:
+            row = self.episode_row(slug)
+        except NotFound:
+            return
+        if row.get('auto') and row['state'] in (STORYLINES, SCRIPT, SCENES):
+            try:
+                self._auto_advance(slug, row['state'])
+            except GateError as exc:
+                self._auto_stop(slug, f'Auto mode stopped at "{STATE_LABELS.get(row["state"], row["state"])}": '
+                                      + '; '.join(exc.errors)[:1500])
+            except Exception as exc:                  # noqa: BLE001
+                self._auto_stop(slug, f'Auto mode stopped: {type(exc).__name__}: {str(exc)[:500]}')
+            row = self.episode_row(slug)
+        state = row['state']
+        if state in (DONE, DONE_QA_FAILED):
+            self.notify(slug, 'Your video is ready', f'{row["topic"]}: ' + (
+                'every QA check passed' if state == DONE else 'done, but some QA checks failed'))
+        elif state == FAILED:
+            self.notify(slug, 'A step failed', f'{row["topic"]}: {(row.get("error") or "")[:140]}')
+        elif row.get('auto') and row.get('auto_note'):
+            self.notify(slug, 'Auto mode needs you', f'{row["topic"]}: {row["auto_note"][:160]}')
+
+    def _auto_advance(self, slug, state):
+        from pipeline import auto, store, styles
+        episode, base = self._load(slug)
+        if state == STORYLINES:
+            n, why = auto.first_storyline(episode)
+            if n is None:
+                return self._auto_stop(slug, f'Auto mode stopped at the storylines: {why}. Pick one yourself.')
+            self.pick_storyline(slug, n, by=AUTO_BY)
+        elif state == SCRIPT and not episode.is_approved('script'):
+            notes = auto.resolve_bases(episode)
+            for n in notes:
+                auto.note(episode, 'bases', n, by=AUTO_BY)
+            if notes:
+                store.save(episode, base)
+            hook, problems = auto.pick_hook(episode, styles.load(episode.style))
+            if hook is None:
+                return self._auto_stop(slug, 'Auto mode stopped at the script: it fails these checks, so it was not '
+                                             'approved: ' + '; '.join(problems[:6]))
+            self.approve_script(slug, hook or None, by=AUTO_BY)
+        elif state == SCENES:
+            failed = [s['key'] for s in self.scenes(slug) if s['status'] == 'failed']
+            if failed:
+                return self._auto_stop(slug, f'Auto mode stopped at the scenes: {", ".join(failed)} failed QA on the '
+                                             'Mac, and the video cannot be rendered without them. Redo them with a note.')
+            self.approve_scenes(slug, by=AUTO_BY)
+
+    def _auto_stop(self, slug, note):
+        with self.engine.begin() as conn:
+            conn.execute(update(E).where(E.c.slug == slug).values(auto_note=note[:2000], updated_at=db.now()))
+
+    # ------------------------------------------------------------------ push notifications (webapp/push.py)
+    push_sender = None                                # tests: a stand-in for push.send
+    push_sync = False                                 # tests: send in this thread
+
+    def push_subscribe(self, sub):
+        if not self.settings.push_enabled:
+            raise GateError('Notifications are not set up on the server (VAPID keys).', status=400)
+        keys = (sub or {}).get('keys') or {}
+        endpoint, p256dh, auth_ = str(sub.get('endpoint') or ''), str(keys.get('p256dh') or ''), str(keys.get('auth') or '')
+        if not endpoint.startswith('https://') or len(endpoint) > 2000 or not p256dh or not auth_ \
+                or len(p256dh) > 200 or len(auth_) > 100:
+            raise GateError('That is not a push subscription.', status=400)
+        with self.engine.begin() as conn:
+            conn.execute(P.delete().where(P.c.endpoint == endpoint))
+            conn.execute(P.insert().values(endpoint=endpoint, p256dh=p256dh, auth=auth_, created_at=db.now()))
+            n = conn.execute(select(func.count()).select_from(P)).scalar_one()
+            if n > 20:                                # one user: keep the newest twenty devices
+                old = [r[0] for r in conn.execute(select(P.c.id).order_by(P.c.id).limit(n - 20))]
+                conn.execute(P.delete().where(P.c.id.in_(old)))
+
+    def push_unsubscribe(self, endpoint):
+        with self.engine.begin() as conn:
+            conn.execute(P.delete().where(P.c.endpoint == str(endpoint or '')))
+
+    def push_count(self) -> int:
+        with self.engine.connect() as conn:
+            return conn.execute(select(func.count()).select_from(P)).scalar_one()
+
+    def notify(self, slug, title, body, url=None):
+        """A notification to every subscribed device; dead subscriptions (404/410) are removed. Never raises."""
+        if not self.settings.push_enabled:
+            return
+        with self.engine.connect() as conn:
+            subs = [dict(r) for r in conn.execute(select(P)).mappings()]
+        if not subs:
+            return
+        payload = dict(title=title[:80], body=body[:240], url=url or (f'/episodes/{slug}' if slug else '/'), tag=slug or 'stick')
+        from . import push
+        send = self.push_sender or push.send
+
+        def run():
+            for s in subs:
+                code = send(dict(endpoint=s['endpoint'], keys=dict(p256dh=s['p256dh'], auth=s['auth'])), payload,
+                            self.settings.vapid_private_key, self.settings.push_subject)
+                try:
+                    with self.engine.begin() as conn:
+                        if code in (404, 410):
+                            conn.execute(P.delete().where(P.c.id == s['id']))
+                        elif 200 <= code < 300:
+                            conn.execute(update(P).where(P.c.id == s['id']).values(last_ok_at=db.now()))
+                except Exception:                     # noqa: BLE001
+                    pass
+        if self.push_sync:
+            run()
+        else:
+            threading.Thread(target=run, daemon=True, name='push').start()
+
     # ------------------------------------------------------------------ views
     def current_job(self, slug):
         with self.engine.connect() as conn:
@@ -649,11 +792,27 @@ class Service:
         self.sweep()
         row = self.episode_row(slug)
         state = row['state']
+        job = self.current_job(slug)
         return dict(slug=slug, topic=row['topic'], niche=row['niche'], audience=row['audience'], state=state,
                     state_label=STATE_LABELS.get(state, state), cost_usd=round(row['cost_usd'] or 0, 4),
                     error=row['error'], created_at=db.iso(row['created_at']), updated_at=db.iso(row['updated_at']),
-                    job=self.current_job(slug), worker=self.worker_status(),
-                    spend=dict(limit_usd=float(self.spend_limit(row)), waiting=row.get('waiting')))
+                    job=job, worker=self.worker_status(),
+                    spend=dict(limit_usd=float(self.spend_limit(row)), waiting=row.get('waiting')),
+                    auto=bool(row.get('auto')), auto_note=row.get('auto_note'),
+                    steps=self.steps(state, job) if row.get('auto') else [])
+
+    @staticmethod
+    def steps(state, job=None):
+        """The Auto stepper: each step done, current, failed or to do."""
+        here = next((i for i, (_, states) in enumerate(AUTO_STEPS) if state in states), None)
+        failed = state in (FAILED, SPEND_APPROVAL)
+        if here is None and job:                      # failed or waiting: the step of the job that stopped
+            here = next((i for i, (_, states) in enumerate(AUTO_STEPS) if KIND_STATE.get(job['kind']) in states), 0)
+        here = 0 if here is None else here
+        done_all = state in (DONE, DONE_QA_FAILED)
+        return [dict(label=label, status=('done' if i < here or done_all else
+                                          ('failed' if failed else 'current') if i == here else 'todo'))
+                for i, (label, _) in enumerate(AUTO_STEPS)]
 
     def detail(self, slug):
         out = self.status(slug)

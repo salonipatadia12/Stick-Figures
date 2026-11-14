@@ -45,6 +45,18 @@ class Settings:
     # `ollama`: pitch/script run on the Mac worker (free, local model; the VPS only queues them).
     # `anthropic`: pitch/script run on the VPS runner (paid; the spend rule; never retried on their own).
     script_provider: str = 'ollama'
+    # Web Push (webapp/push.py): off unless both keys are set (python -m webapp.push keys)
+    vapid_public_key: str = ''
+    vapid_private_key: str = ''
+
+    @property
+    def push_enabled(self) -> bool:
+        return bool(self.vapid_public_key and self.vapid_private_key)
+
+    @property
+    def push_subject(self) -> str:
+        """VAPID's contact claim: the site's own URL (no email address is sent anywhere)."""
+        return self.public_url or 'https://localhost'
 
     @property
     def llm_on_mac(self) -> bool:
@@ -90,6 +102,8 @@ class Settings:
                    spend_preapproved_usd=Decimal(os.getenv('SPEND_PREAPPROVED_USD', '0.50') or '0.50'),
                    fake_anthropic=_flag('STICK_FAKE_ANTHROPIC'),
                    script_provider=provider_from_env(),
+                   vapid_public_key=os.getenv('VAPID_PUBLIC_KEY', '').strip(),
+                   vapid_private_key=os.getenv('VAPID_PRIVATE_KEY', '').strip(),
                    # tests only: a short Mac lease so lease expiry can be exercised (default 15 min)
                    mac_lease_minutes=float(os.getenv('WORKER_LEASE_SECONDS', '900') or '900') / 60)
 

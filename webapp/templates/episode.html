@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{ ep.topic }} · Stick Figures{% endblock %}
-{% block body_attrs %}data-slug="{{ ep.slug }}" data-state="{{ ep.state }}"{% endblock %}
+{% block body_attrs %}data-slug="{{ ep.slug }}" data-state="{{ ep.state }}" data-auto-note="{{ 1 if ep.auto_note else 0 }}"{% endblock %}
 {% block content %}
 {% set job = ep.job %}
 {% set worker = ep.worker %}
 <p class="small"><a href="/">← Your videos</a></p>
 <div class="spread">
-  <span class="badge b-{{ ep.state }}">{{ ep.state_label }}</span>
+  <span class="row">{% if ep.auto %}<span class="badge">Auto</span>{% endif %}<span class="badge b-{{ ep.state }}">{{ ep.state_label }}</span></span>
   <span class="muted small">Spent <strong data-cost>${{ '%.4f'|format(ep.cost_usd) }}</strong></span>
 </div>
 <h1>{{ ep.topic }}</h1>
@@ -17,6 +17,15 @@
   <ul>{% for e in errors %}<li><pre>{{ e }}</pre></li>{% endfor %}</ul></div>
 {% endif %}
 {% if ep.episode_error %}<div class="notice bad">The episode file could not be read: {{ ep.episode_error }}</div>{% endif %}
+
+{# ---------------------------------------------------------------- auto mode #}
+{% if ep.auto %}
+<ol class="steps" data-steps aria-label="Auto mode progress">
+  {% for s in ep.steps %}<li class="step {{ s.status }}">{{ s.label }}</li>{% endfor %}
+</ol>
+{% if ep.auto_note %}<div class="notice warn" role="status"><strong>Auto mode needs you.</strong> {{ ep.auto_note }}</div>
+{% elif ep.state not in ('done', 'done_qa_failed', 'failed') %}<p class="muted small">Auto mode: every step runs on its own. You will get a notification when the video is ready; you can close this page.</p>{% endif %}
+{% endif %}
 
 {# ---------------------------------------------------------------- live progress #}
 {% if job and job.status in ('queued', 'running') %}
@@ -222,6 +231,10 @@
   {% else %}<p class="small">{{ 'Pass' if ep.render and ep.render.qa_pass else 'No per-check summary was sent.' }}</p>{% endif %}
 </div>
 {% if sheet %}<details class="card"><summary>Contact sheet</summary><img class="thumb wide" src="{{ sheet.url }}" alt="contact sheet" loading="lazy"></details>{% endif %}
+<form method="post" action="/episodes/{{ ep.slug }}/render-again"
+      data-confirm="Render this video again on the Mac? The approved script and scenes stay as they are; the new video replaces this one.">
+  <button class="btn block" type="submit">Render again</button>
+</form>
 {% endif %}
 
 {# ---------------------------------------------------------------- the script, read-only, once approved #}

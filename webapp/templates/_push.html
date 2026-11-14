@@ -1,0 +1,13 @@
+{# Notifications (Web Push): app.js fills this in; hidden when the browser cannot do push. #}
+<div class="card small push" data-push hidden>
+  <div class="spread">
+    <span><strong>Notifications</strong> <span class="muted" data-push-state>checking...</span></span>
+    <span class="row">
+      <button class="btn small" type="button" data-push-on hidden>Turn on</button>
+      <button class="btn small" type="button" data-push-test hidden>Test</button>
+      <button class="btn small" type="button" data-push-off hidden>Turn off</button>
+    </span>
+  </div>
+  <p class="muted small" data-push-ios hidden>On an iPhone: tap Share, then <strong>Add to Home Screen</strong>, open Stick
+    Figures from the Home Screen, and turn notifications on there.</p>
+</div>

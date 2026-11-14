@@ -11,8 +11,17 @@
   <input id="niche" name="niche" type="text" maxlength="200" value="{{ form.niche or '' }}" placeholder="history, science, money...">
   <label for="audience">Audience <span class="muted small">(optional)</span></label>
   <input id="audience" name="audience" type="text" maxlength="200" value="{{ form.audience or '' }}" placeholder="curious adults">
-  <p class="muted small">Next: {% if llm_on_mac %}the Mac researches the topic (free, on its local model){% else %}Claude researches the topic{% endif %} and pitches three storylines for you to pick from. You approve the
+  <label class="switch" for="auto">
+    <input id="auto" name="auto" type="checkbox" value="1" {% if form.auto %}checked{% endif %} data-auto-toggle>
+    <span class="slider" aria-hidden="true"></span>
+    <span><strong>Auto</strong> <span class="muted small">topic to finished video, no stops</span></span>
+  </label>
+  <p class="muted small" data-auto-off>Next: {% if llm_on_mac %}the Mac researches the topic (free, on its local model){% else %}Claude researches the topic{% endif %} and pitches three storylines for you to pick from. You approve the
     script and the painted scenes before anything is rendered.</p>
+  <p class="muted small" data-auto-on hidden>Auto: {% if llm_on_mac %}the Mac researches the topic (free){% else %}Claude researches the topic{% endif %},
+    picks the first storyline, approves the script only if every check passes, paints and renders. You get a notification
+    when the video is ready, and review the finished video. If a check fails, it stops there and tells you why.</p>
   <p><button class="btn primary block" type="submit">Start</button></p>
 </form>
+{% include "_push.html" %}
 {% endblock %}

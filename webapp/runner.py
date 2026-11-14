@@ -175,6 +175,7 @@ class Runner:
             conn.execute(update(E).where(E.c.slug == slug).values(state=next_state, error=None, waiting=None,
                                                                   cost_usd=float(usd(ledger.spent())), updated_at=t))
         log.info('job %s %s %s done -> %s', job_id, kind, slug, next_state)
+        svc.after_step(slug)                         # Auto mode decides the gate it reached; the phone is notified
 
     def _finish_failed(self, job, error, state, waiting, ledger):
         from pipeline.cost import usd
@@ -182,6 +183,7 @@ class Runner:
             self.service._fail_job(conn, job, error[:4000], state=state, waiting=waiting)
             conn.execute(update(E).where(E.c.slug == job['slug']).values(cost_usd=float(usd(ledger.spent()))))
         log.warning('job %s %s %s -> %s: %s', job['id'], job['kind'], job['slug'], state, error)
+        self.service.after_step(job['slug'])
 
     def fail_orphans(self):
         """At start: a VPS job still `running` belongs to a runner that died mid-step. Paid: fail it, never re-run.
