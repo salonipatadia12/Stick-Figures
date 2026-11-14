@@ -422,9 +422,12 @@ def story_match_report(episode: dict) -> dict:
                              + list(sp.get('labels') or []) + list(g.get('items') or []) + [b.get('on_screen_text', '')])
             if not MYTH_MARK.search(marks):
                 unmarked.append(dict(beat=b.get('id'), shows=sorted(shown & subjects), visual=vis))
-    notes = [f"{x['beat']}: the scene \"{x['key']}\" does not show what the beat says (\"{x['narration'][:60]}\")" for x in off]
-    notes += [f"{x['beat']}: shows the myth ({', '.join(x['shows'])}) without marking it as the myth" for x in unmarked]
-    return dict(off_subject=off, unmarked_myth=unmarked, notes=notes, pass_=not off and not unmarked)
+    notes = [f"{x['beat']}: shows the myth ({', '.join(x['shows'])}) without marking it as the myth" for x in unmarked]
+    # a word test cannot judge a painting well enough to fail it or repaint it on its own (2026-11-14: it flagged
+    # good sunset skies, and the repaint made them worse): a possible mismatch is a warning to look at
+    warnings = [f"{x['beat']}: check that the scene \"{x['key']}\" shows what the beat says (\"{x['narration'][:60]}\")"
+                for x in off]
+    return dict(off_subject=off, unmarked_myth=unmarked, notes=notes, warnings=warnings, pass_=not unmarked)
 
 
 def placeholder_report(episode: dict, scenes: dict | None = None, props: dict | None = None) -> dict:

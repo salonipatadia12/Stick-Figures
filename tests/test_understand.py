@@ -127,13 +127,17 @@ class PicturesMatchTheStory(unittest.TestCase):
                                scene='a busy city street at night'))
         r = qa.story_match_report(ep)
         self.assertEqual([x['beat'] for x in r['off_subject']], ['b06'])
+        self.assertTrue(r['pass_'])                               # a warning to look at, not a failure
+        self.assertIn('b06', r['warnings'][0])
 
     def test_a_picture_about_the_topic_is_not_off_subject(self):
         # 2026-11-14: sunsets b01/b05 were flagged and repainted (with figures) although they showed sunset skies
         ep = dict(topic='explain why sunsets are colorful', meta={}, beats=[
             beat('b01', 'Sunlight travels far. What happens?', key='space-sunset-beam', scene='a beam of light from space'),
             beat('b05', 'The light bends as it travels.', key='sky-twilight-red', scene='a red twilight sky over hills')])
-        self.assertTrue(qa.story_match_report(ep)['pass_'])
+        r = qa.story_match_report(ep)
+        self.assertTrue(r['pass_'])
+        self.assertEqual([x['beat'] for x in r['off_subject']], ['b05'])        # b01 shares "sunset" with the topic
 
     def test_the_repair_marks_the_myth_and_qa_then_passes(self):
         b = beat('b02', 'Everyone imagines oil comes from beasts.', key='dinosaurs-museum-display',
@@ -150,27 +154,6 @@ class PicturesMatchTheStory(unittest.TestCase):
         self.assertEqual(shown['beats'][0]['shot']['insert']['effects'][0]['detail'], 'MYTH')
         self.assertEqual(shown['beats'][1]['on_screen_text'], 'Myth: Timeline Mismatch!')
         self.assertIn('text_slam', [m['recipe'] for m in shown['beats'][1]['shot']['motion']])
-
-    def test_an_off_subject_scene_is_painted_again_from_its_beat(self):
-        import tempfile
-        from pipeline import config
-        ep = self.episode(beat('b06', 'Tiny marine plants lived in the ancient ocean.', key='city-street-night',
-                               scene='a busy city street at night', intent='tiny plankton drifting in an ancient sea'))
-        report = dict(summary=dict(story_match=False, all=False), story_match=qa.story_match_report(ep),
-                      duration=dict(seconds=45, target=45, pass_=True))
-        painted = []
-        with tempfile.TemporaryDirectory() as t, mock.patch.object(config, 'EPISODES_DIR', Path(t)):
-            (Path(t) / 'x').mkdir()
-            (Path(t) / 'x/episode.json').write_text(json.dumps(ep))
-            applied = repair.run_round('x', report, dict(beats=[]), 1, paint=lambda want, slug: painted.append(want) or {})
-            hints = repair.load('x')['beats']['b06']
-        self.assertEqual(len(applied), 1)
-        key = next(iter(painted[0]))
-        self.assertIn('plankton', painted[0][key]['scene'])
-        self.assertEqual(hints['insert_key'], key)
-        self.assertIn('no people', hints['insert_scene'])
-        self.assertNotIn('host', hints['insert_scene'].lower())
-
 
 class Rename(unittest.TestCase):
     """The web app: the typed slug becomes the clean one after the pitch; the old link redirects."""

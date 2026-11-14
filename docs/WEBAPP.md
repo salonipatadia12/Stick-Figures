@@ -137,7 +137,8 @@ labelled supported, mainstream-disputed, fringe/false or unverified from the cit
   one of them for a topic that corrects a myth. The script check fails a beat that states a disputed or false claim as
   fact without framing it.
 - QA `story_match`: every painted scene must show what its beat says, and a picture of the myth must be marked as the
-  myth on screen. The self-repair loop adds the MYTH mark or repaints the scene from the beat.
+  myth on screen (fails; the self-repair loop adds the MYTH mark). A scene that shares no word with its beat or the
+  topic is listed as a warning to look at, never repainted automatically.
 - The episode page shows "What it understood": question, angle, misconception, each claim with its verdict.
 - If the local model is down, the topic is used tidied, nothing is renamed, and the episode goes on.
 
@@ -153,7 +154,7 @@ duration fix, which is logged in the approval log as `self-repair (QA duration)`
 | words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x |
 | text | round 1 moves it (host to the other side and smaller, or an insert label away from the host); round 2 drops that label |
 | duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
-| story_match | a MYTH mark on a myth picture; a new scene painted from the beat when the picture shows something else |
+| story_match | a MYTH mark on a picture of the myth (a scene that may not show its beat is a warning to look at: a word test cannot judge a painting well enough to repaint it) |
 
 What is still wrong after two rounds is listed in plain words on the phone ("Still wrong after the self-repair"),
 with the repairs made under "Fixed automatically"; the episode is "Done, QA failed". qa.json carries `repairs`

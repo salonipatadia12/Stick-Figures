@@ -9,6 +9,8 @@ The fixes per check:
   again once, a little slower (`voice_speed`), which changes the audio Whisper hears.
 * text: a label on the host or on another text. Round 1 moves it: the host goes to the other side and smaller, an
   insert label moves to the region away from the host. Round 2 drops that label (the narration still says it).
+* story_match: a picture of the myth (pipeline/understand.py) that nothing on screen marks as the myth gets a MYTH
+  label (an insert), "Myth" on a split's first half, or "Myth:" before a diagram's text.
 * duration: a video more than 15 % under its target gets one short sentence on the one or two thinnest middle beats,
   written by the local model from the facts those beats already cite (no new facts, no new numbers); only those beats
   are voiced again. The writer's own word target follows the speaking rate Kokoro really has (`pipeline.pacing`).
@@ -116,10 +118,6 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
                 if e.get('kind') == 'label' and e.get('detail') == tidy_label(text):
                     e['at'] = region
                     notes.append(f'{b.id}: label "{e["detail"]}" moved to {region}')
-        if h.get('insert_key') and shot.get('insert'):
-            shot['insert']['key'] = h['insert_key']
-            shot['insert']['scene'] = h.get('insert_scene') or shot['insert'].get('scene', '')
-            notes.append(f"{b.id}: scene repainted as {h['insert_key']}")
         if h.get('myth_mark'):
             notes.append(f'{b.id}: marked as the myth')
             mark_myth(shot, spec)
@@ -179,9 +177,6 @@ def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
         for box, k in list(_texts(shot)):
             box[k] = tidy_label(box[k])
         h = beats.get(b.get('id')) or {}
-        if h.get('insert_key') and shot.get('insert'):
-            shot['insert']['key'] = h['insert_key']
-            shot['insert']['scene'] = h.get('insert_scene') or shot['insert'].get('scene', '')
         if h.get('myth_mark'):
             mark_myth(shot, b)
         drop = {tidy_label(x) for x in h.get('drop') or []}
@@ -280,18 +275,6 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
                                 hint=dict(myth_mark=True)))
         else:
             actions.append(dict(check='story_match', beat=x['beat'], cause='the myth is still not marked on screen', fix=None, hint=None))
-    for x in sm.get('off_subject') or []:
-        h = beats_h.get(x['beat']) or {}
-        spec = next((b for b in ep_data.get('beats', []) if b.get('id') == x['beat']), {})
-        scene = scene_from_beat(spec)
-        if not h.get('insert_key') and scene:
-            new_key = re.sub(r'[^a-z0-9]+', '-', f"{x['key']}-{x['beat']}".lower()).strip('-')[:60]
-            actions.append(dict(check='story_match', beat=x['beat'], cause=f"the scene \"{x['key']}\" does not show what the beat says",
-                                fix=f'paint a new scene from the beat: "{scene[:80]}"',
-                                hint=dict(repaint=dict(key=new_key, scene=scene))))
-        else:
-            actions.append(dict(check='story_match', beat=x['beat'], cause=f"the scene \"{x['key']}\" still does not match its beat",
-                                fix=None, hint=None))
     dur = report.get('duration') or {}
     if dur and not dur.get('pass_'):
         sec, target = float(dur.get('seconds', 0)), float(dur.get('target', 45))
@@ -388,27 +371,7 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     return added
 
 
-PERSON = re.compile(r'\b(host|lead|friend|he|him|his|she|her|they|person|people|man|woman|men|women|figure|character|'
-                    r'characters|someone|viewer|stands?|standing|holds?|holding|points?|pointing|waves?|looks?|looking)\b', re.I)
-
-
-def scene_from_beat(spec: dict) -> str:
-    """A painted-scene description for a beat: the parts of its visual intent that are about the place or thing
-    (every clause about the host or a person dropped), else its narration; never people, never text."""
-    parts = re.split(r'(?<=[.;])\s+|,\s+|\s+while\s+|\s+as\s+', str(spec.get('visual_intent') or ''))
-    keep = [p.strip(' .;,') for p in parts if p.strip(' .;,') and not PERSON.search(p) and not re.search(r"['\"]", p)]
-    core = '; '.join(keep) or ' '.join(str(spec.get('narration') or '').split()).rstrip('.?!')
-    if not core:
-        return ''
-    return f'{core[:220]}. A place or thing only: no people, no figures, no characters, no text or letters.'
-
-
-def _paint(want: dict, slug: str) -> dict:
-    from . import inserts
-    return inserts.paint(want, slug)
-
-
-def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: float = 2.45, write=None, paint=None) -> list:
+def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: float = 2.45, write=None) -> list:
     """Diagnose the report, apply every automatic fix and log it. Returns the applied log entries (empty: nothing
     left to try)."""
     from . import store
@@ -437,17 +400,6 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             entry['beat'] = ', '.join(i for i, _ in added)
             entry['fix'] = 'added: ' + ' | '.join(f'{i}: "{s}"' for i, s in added)
-        elif 'repaint' in a['hint']:
-            want = a['hint']['repaint']
-            try:
-                res = (paint or _paint)({want['key']: dict(scene=want['scene'], beats=[a['beat']], base=None)}, slug)
-            except Exception as e:                  # FLUX unavailable: report it, never crash the render
-                entry['fix'] = f'could not repaint ({type(e).__name__}: {str(e)[:120]})'
-                repairs.setdefault('log', []).append(entry)
-                continue
-            if want['key'] in (res.get('placeholders') or {}):
-                entry['fix'] += ' (it would not paint: a placeholder is shown)'
-            merge(repairs, a['beat'], dict(insert_key=want['key'], insert_scene=want['scene']))
         else:
             merge(repairs, a['beat'], a['hint'])
         repairs.setdefault('log', []).append(entry)
