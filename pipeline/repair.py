@@ -118,6 +118,7 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
                     notes.append(f'{b.id}: label "{e["detail"]}" moved to {region}')
         if h.get('insert_key') and shot.get('insert'):
             shot['insert']['key'] = h['insert_key']
+            shot['insert']['scene'] = h.get('insert_scene') or shot['insert'].get('scene', '')
             notes.append(f"{b.id}: scene repainted as {h['insert_key']}")
         if h.get('myth_mark'):
             notes.append(f'{b.id}: marked as the myth')
@@ -180,6 +181,7 @@ def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
         h = beats.get(b.get('id')) or {}
         if h.get('insert_key') and shot.get('insert'):
             shot['insert']['key'] = h['insert_key']
+            shot['insert']['scene'] = h.get('insert_scene') or shot['insert'].get('scene', '')
         if h.get('myth_mark'):
             mark_myth(shot, b)
         drop = {tidy_label(x) for x in h.get('drop') or []}
@@ -281,12 +283,12 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     for x in sm.get('off_subject') or []:
         h = beats_h.get(x['beat']) or {}
         spec = next((b for b in ep_data.get('beats', []) if b.get('id') == x['beat']), {})
-        scene = ' '.join(str(spec.get('visual_intent') or spec.get('narration') or '').split())
+        scene = scene_from_beat(spec)
         if not h.get('insert_key') and scene:
             new_key = re.sub(r'[^a-z0-9]+', '-', f"{x['key']}-{x['beat']}".lower()).strip('-')[:60]
             actions.append(dict(check='story_match', beat=x['beat'], cause=f"the scene \"{x['key']}\" does not show what the beat says",
                                 fix=f'paint a new scene from the beat: "{scene[:80]}"',
-                                hint=dict(repaint=dict(key=new_key, scene=scene + ' No people, no characters, no text.'))))
+                                hint=dict(repaint=dict(key=new_key, scene=scene))))
         else:
             actions.append(dict(check='story_match', beat=x['beat'], cause=f"the scene \"{x['key']}\" still does not match its beat",
                                 fix=None, hint=None))
@@ -386,6 +388,21 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     return added
 
 
+PERSON = re.compile(r'\b(host|lead|friend|he|him|his|she|her|they|person|people|man|woman|men|women|figure|character|'
+                    r'characters|someone|viewer|stands?|standing|holds?|holding|points?|pointing|waves?|looks?|looking)\b', re.I)
+
+
+def scene_from_beat(spec: dict) -> str:
+    """A painted-scene description for a beat: the parts of its visual intent that are about the place or thing
+    (every clause about the host or a person dropped), else its narration; never people, never text."""
+    parts = re.split(r'(?<=[.;])\s+|,\s+|\s+while\s+|\s+as\s+', str(spec.get('visual_intent') or ''))
+    keep = [p.strip(' .;,') for p in parts if p.strip(' .;,') and not PERSON.search(p) and not re.search(r"['\"]", p)]
+    core = '; '.join(keep) or ' '.join(str(spec.get('narration') or '').split()).rstrip('.?!')
+    if not core:
+        return ''
+    return f'{core[:220]}. A place or thing only: no people, no figures, no characters, no text or letters.'
+
+
 def _paint(want: dict, slug: str) -> dict:
     from . import inserts
     return inserts.paint(want, slug)
@@ -430,7 +447,7 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             if want['key'] in (res.get('placeholders') or {}):
                 entry['fix'] += ' (it would not paint: a placeholder is shown)'
-            merge(repairs, a['beat'], dict(insert_key=want['key']))
+            merge(repairs, a['beat'], dict(insert_key=want['key'], insert_scene=want['scene']))
         else:
             merge(repairs, a['beat'], a['hint'])
         repairs.setdefault('log', []).append(entry)

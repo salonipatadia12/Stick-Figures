@@ -128,6 +128,13 @@ class PicturesMatchTheStory(unittest.TestCase):
         r = qa.story_match_report(ep)
         self.assertEqual([x['beat'] for x in r['off_subject']], ['b06'])
 
+    def test_a_picture_about_the_topic_is_not_off_subject(self):
+        # 2026-11-14: sunsets b01/b05 were flagged and repainted (with figures) although they showed sunset skies
+        ep = dict(topic='explain why sunsets are colorful', meta={}, beats=[
+            beat('b01', 'Sunlight travels far. What happens?', key='space-sunset-beam', scene='a beam of light from space'),
+            beat('b05', 'The light bends as it travels.', key='sky-twilight-red', scene='a red twilight sky over hills')])
+        self.assertTrue(qa.story_match_report(ep)['pass_'])
+
     def test_the_repair_marks_the_myth_and_qa_then_passes(self):
         b = beat('b02', 'Everyone imagines oil comes from beasts.', key='dinosaurs-museum-display',
                  scene='a museum hall with dinosaur skeletons', intent='a dinosaur museum display')
@@ -160,7 +167,9 @@ class PicturesMatchTheStory(unittest.TestCase):
         self.assertEqual(len(applied), 1)
         key = next(iter(painted[0]))
         self.assertIn('plankton', painted[0][key]['scene'])
-        self.assertEqual(hints, {'insert_key': key})
+        self.assertEqual(hints['insert_key'], key)
+        self.assertIn('no people', hints['insert_scene'])
+        self.assertNotIn('host', hints['insert_scene'].lower())
 
 
 class Rename(unittest.TestCase):

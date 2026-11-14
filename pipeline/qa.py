@@ -398,6 +398,11 @@ def story_match_report(episode: dict) -> dict:
     myth on screen: a MYTH/false/not label or split label, or an on-screen text that says so."""
     interp = (episode.get('meta') or {}).get('interpretation') or {}
     subjects = {_stem(w) for s in interp.get('myth_subjects') or [] for w in content_words(s)}
+    # the topic's own words: a picture that shares one is about the topic (a sunset sky in a sunset video), even when
+    # this beat's sentence names it differently. Only a picture about neither is off subject (2026-11-14: a word
+    # test against the beat alone flagged two good sunset skies and the repaint made them worse)
+    topic = content_words(' '.join([episode.get('topic', ''), episode.get('title', ''), interp.get('question', ''),
+                                    interp.get('title', '')]))
     off, unmarked = [], []
     for b in episode.get('beats', []):
         sh = b.get('shot') or {}
@@ -408,7 +413,7 @@ def story_match_report(episode: dict) -> dict:
         said = content_words(' '.join([b.get('narration', ''), b.get('visual_intent', ''), b.get('on_screen_text', '')]))
         if vis in ('insert', 'split') and ins.get('key'):
             pic = content_words(ins.get('key', '') + ' ' + ins.get('scene', ''))
-            if pic and not pic & said:
+            if pic and not pic & said and not pic & topic:
                 off.append(dict(beat=b.get('id'), key=ins.get('key'), narration=b.get('narration', '')))
         shown = content_words(' '.join([ins.get('key', ''), ins.get('scene', ''), sp.get('key', ''), sp.get('scene', ''),
                                         ' '.join(g.get('items') or []), g.get('detail', '')]))
