@@ -238,35 +238,44 @@ if __name__ == '__main__':
 
 
 class InsertRunTest(unittest.TestCase):
-    def test_a_scene_that_failed_in_the_first_stage_still_draws_on_the_failed_sheet_after_the_variants(self):
+    def test_scenes_that_fail_every_retry_in_both_stages_become_placeholders(self):
+        # 2026-11-14: was "failed scenes go on a sheet and stop the episode"; now new seed -> simplified prompt -> placeholder
         import tempfile
         from unittest import mock
-        from pipeline import inserts
+        from pipeline import inserts, paintsafe
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
-            files = {}
-            for name in ('a-1', 'a-2', 'v-1', 'v-2', 'ok-1', 'ok-2'):
-                files[name] = str(tmp / f'{name}.png')
-                Image.new('RGB', (90, 160), (200, 180, 150)).save(files[name])
+            good = {}
+            for name in ('ok-1', 'ok-2'):
+                good[name] = str(tmp / f'{name}.png')
+                Image.new('RGB', (90, 160), (200, 180, 150)).save(good[name])
             want = {'a': dict(scene='scene a', beats=['b01']), 'ok': dict(scene='scene ok', beats=['b02']),
                     'v': dict(scene='variant', beats=['b03'], base='ok')}
-            found = iter([{'a': [files['a-1'], files['a-2']], 'ok': [files['ok-1'], files['ok-2']]},
-                          {'v': [files['v-1'], files['v-2']]}])
+            rounds = []
+
+            def jobs(part, rnd=1, direction=None):
+                return {k: dict(job=f'{k}-r{rnd}', prompt=(direction or {}).get(k, 'p'), seeds=[1, 2]) for k in part}
+
+            def render(jm, slug):
+                rounds.append(sorted(jm))
+                return {k: (list(good.values()) if k == 'ok' else [str(tmp / f'{k}-{len(rounds)}.png')]) for k in jm}
             verdict = lambda ps: {p: dict(path=p, ok='ok-' in p, reasons=['too dark'], score=1, stats={}) for p in ps}
             with mock.patch.object(inserts, 'needed', return_value=want), \
-                 mock.patch.object(inserts, 'jobs', side_effect=lambda part: {k: dict(prompt='p') for k in part}), \
-                 mock.patch.object(inserts, 'render', side_effect=lambda jm, slug: next(found)), \
+                 mock.patch.object(inserts, 'jobs', side_effect=jobs), \
+                 mock.patch.object(inserts, 'render', side_effect=render), \
                  mock.patch.object(inserts, 'qa', side_effect=verdict), \
                  mock.patch.object(inserts, 'save_library'), \
                  mock.patch.object(inserts, 'DIR', tmp / 'lib'), \
-                 mock.patch.object(inserts, 'ROOT', tmp), \
-                 mock.patch.object(inserts, 'sheet', wraps=inserts.sheet) as sheet:
-                (tmp / 'renders/inserts').mkdir(parents=True)
-                result = inserts.run(mock.Mock(slug='t'), generate=True, lib={})
-        self.assertEqual(set(result['failed']), {'a', 'v'})
-        self.assertEqual(set(result['made']), {'ok'})
-        self.assertTrue(result['sheet'].endswith('t-inserts-failed.jpg'))
-        self.assertEqual(sheet.call_count, 2)
+                 mock.patch.object(inserts, 'ROOT', tmp):
+                (tmp / 'lib').mkdir()
+                lib = {}
+                result = inserts.run(mock.Mock(slug='t'), generate=True, lib=lib)
+            self.assertEqual(rounds, [['a', 'ok'], ['a'], ['a'], ['v'], ['v'], ['v']])
+            self.assertEqual(result['failed'], {})
+            self.assertEqual(set(result['made']), {'ok'})
+            self.assertEqual(set(result['placeholders']), {'a', 'v'})
+            self.assertTrue(lib['a']['placeholder'] and lib['v']['placeholder'])
+            self.assertTrue(paintsafe.is_image(tmp / lib['a']['file']))
 
     def test_a_scene_in_space_is_not_asked_for_ground(self):
         from pipeline import inserts

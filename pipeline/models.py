@@ -963,6 +963,9 @@ class Episode(Strict):
                 err(where, f'split needs two labels of 1-3 words; got {sh.split.labels}')
             if not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.split.key or ''):
                 err(where, f'split key "{sh.split.key}" must be kebab-case')
+            if not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.insert.key or '') or not sh.insert.scene.strip():
+                err(where, f'split top scene (insert key "{sh.insert.key}") needs a kebab-case key and a scene '
+                           'description; the bottom scene is the split')
             for a in sh.split.anchors:
                 if a and a.casefold() not in spoken:
                     err(where, f'split anchor "{a}" is not in the narration')

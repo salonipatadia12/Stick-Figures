@@ -194,9 +194,13 @@ def paint(ctx: Ctx) -> Outcome:
             continue
         beats = (uses[kind].get(key) or need[kind].get(key) or {}).get('beats', [])
         new.append(dict(key=key, kind=kind, name=name, scene=entry.get('scene') if kind == 'scene' else entry.get('name', key),
-                        beats=beats))
+                        beats=beats, **({'placeholder': True} if entry.get('placeholder') else {})))
         files.append(dict(path=str(path), name=name, kind='scene_preview'))
     result = dict(new=new, failed=[dict(key=k, why=w) for k, w in failed.items()])
+    held = [n['key'] for n in new if n.get('placeholder')]
+    if held:                                  # pipeline/paintsafe.py: would not paint after 2 seeds and 2 retries
+        result['note'] = ('placeholders (would not paint after two seeds and two retries; repaint with a note): '
+                          + ', '.join(held))
     if redo:
         stale = sorted({v for k, m in (ans.get('made') or {}).items() for v in m.get('stale_variants', [])})
         if stale:

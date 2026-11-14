@@ -80,16 +80,19 @@ def render_plates(names: list, lib: dict | None = None) -> dict:
     jobs = {}
     for n in names:
         jobs.update(plate_jobs(n, lib[n]))
-    todo = [j for j, d in jobs.items() if not all((FLUX_OUT / f'{j}-s{s}.png').exists() for s in d['seeds'])]
+    from . import paintsafe as PS
+    todo = [j for j, d in jobs.items() if not all(PS.is_image(PS.flux_png(FLUX_OUT, j, s)) for s in d['seeds'])]
     if todo:
         B.CANDIDATES.mkdir(parents=True, exist_ok=True)
         jobs_file = B.CANDIDATES / 'plate-jobs.json'
         old = json.loads(jobs_file.read_text()) if jobs_file.exists() else {}
         old.update(jobs)
         jobs_file.write_text(json.dumps(old, indent=1))
-        subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_bases.py'), str(jobs_file), *todo], check=True)
-    return {n: dict(arms=[str(FLUX_OUT / f'plate-{n}-arms-s{s}.png') for s in jobs[f'plate-{n}-arms']['seeds']],
-                    empty=[str(FLUX_OUT / f'plate-{n}-empty-s{s}.png') for s in jobs[f'plate-{n}-empty']['seeds']]) for n in names}
+        rc = subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_bases.py'), str(jobs_file), *todo]).returncode
+        if rc:
+            print(f'WARNING: FLUX (flux_bases.py) stopped with exit {rc}; plates it did not paint are left out', flush=True)
+    made = lambda job: [str(PS.flux_png(FLUX_OUT, job, s)) for s in jobs[job]['seeds'] if PS.is_image(PS.flux_png(FLUX_OUT, job, s))]
+    return {n: dict(arms=made(f'plate-{n}-arms'), empty=made(f'plate-{n}-empty')) for n in names}
 
 
 def build(names: list, lib: dict | None = None) -> list:

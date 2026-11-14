@@ -10,7 +10,10 @@ A crossfade effect names a changed version of the same place ("the same street a
 FLUX edit of the first scene so the two line up, and stored under `<key>--<slug of the change>`.
 
 QA as for props: two seeds per scene, `scripts/motion_test/scene_qa.py` (painted detail, exposure, no character,
-no text block) picks the better passing seed; a sheet and a question only when both fail.
+no text block) picks the better passing seed. A scene with no passing seed is never a dead end (2026-11-14, see
+`pipeline/paintsafe.py`): it is painted again on a new seed, then from a simplified prompt, and if that fails too it
+gets a placeholder (a gradient in the scene's mood with what it would show written on it), entered in the library
+with `placeholder: true` so the video renders and its QA report names the beat.
 """
 from __future__ import annotations
 
@@ -20,7 +23,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from . import config
+from . import config, paintsafe
 
 ROOT = config.ROOT
 DIR = ROOT / 'styles/cozy/inserts'
@@ -78,24 +81,39 @@ def variant_key(key: str, change: str) -> str:
     return f'{key}--{slug(change)}'
 
 
+def lacks(lib: dict, key: str, slug: str = '') -> bool:
+    """True when the library cannot serve this scene: no entry, or a placeholder made for another episode (a
+    placeholder is painted again for every new video that wants the scene)."""
+    e = lib.get(key)
+    return e is None or bool(isinstance(e, dict) and e.get('placeholder') and e.get('episode') != slug)
+
+
+def split_top_missing(shot) -> bool:
+    """A split whose top scene (the insert) has no key: the composer shows the bottom scene alone
+    (compose_beats.split_fallback), so there is nothing to paint for the top."""
+    return shot.visual == 'split' and (shot.insert is None or not (shot.insert.key or '').strip())
+
+
 def needed(episode, lib: dict | None = None) -> dict:
     """Scenes the episode's insert beats need that the library does not have: key -> dict(scene, beats, base).
-    `base` is set for crossfade variants (made as an edit of that scene)."""
+    `base` is set for crossfade variants (made as an edit of that scene). A scene with no key or no description is
+    never queued (2026-11-14: an empty split-top key was painted from an empty prompt and saved as `.png`)."""
     lib = library() if lib is None else lib
+    slug = getattr(episode, 'slug', '')
     out = {}
     for b in episode.beats:
         sp = b.shot.split if b.shot.visual == 'split' else None
-        if sp and sp.key and sp.key not in lib:                # a split's bottom scene
-            out.setdefault(sp.key, dict(scene=sp.scene, beats=[], base=None))['beats'].append(b.id)
+        if sp and sp.key and sp.key.strip() and lacks(lib, sp.key, slug):       # a split's bottom scene
+            out.setdefault(sp.key, dict(scene=sp.scene or sp.key.replace('-', ' '), beats=[], base=None))['beats'].append(b.id)
         ins = b.shot.insert if b.shot.visual in ('insert', 'split') else None
-        if ins is None:
+        if ins is None or not (ins.key or '').strip():
             continue
-        if ins.key not in lib:
-            out.setdefault(ins.key, dict(scene=ins.scene, beats=[], base=None))['beats'].append(b.id)
+        if lacks(lib, ins.key, slug):
+            out.setdefault(ins.key, dict(scene=ins.scene or ins.key.replace('-', ' '), beats=[], base=None))['beats'].append(b.id)
         for e in ins.effects:
             if e.kind == 'crossfade' and e.detail:
                 k = variant_key(ins.key, e.detail)
-                if k not in lib:
+                if lacks(lib, k, slug):
                     out.setdefault(k, dict(scene=e.detail, beats=[], base=ins.key))['beats'].append(b.id)
     return out
 
@@ -106,7 +124,7 @@ def jobs(want: dict, rnd: int = 1, direction: dict | None = None) -> dict:
     out = {}
     for key, d in want.items():
         s0 = sum(ord(c) for c in key) % 700 + 100 + 1000 * (rnd - 1)
-        name = f'scene-{key}' + ('' if rnd == 1 else f'-r{rnd}')
+        name = paintsafe.safe_stem(f'scene-{key}' + ('' if rnd == 1 else f'-r{rnd}'))
         scene = direction.get(key, d['scene'])
         if d.get('base'):
             out[key] = dict(job=name, seeds=[s0, s0 + 1], prompt=EDIT.format(change=scene), images=[str(DIR / f"{d['base']}.png")])
@@ -119,24 +137,32 @@ def jobs(want: dict, rnd: int = 1, direction: dict | None = None) -> dict:
 
 
 def render(job_map: dict, tag: str) -> dict:
-    """Run the jobs with no output yet; key -> [png paths]."""
+    """Run the jobs with no good output yet; key -> [png paths] (a path may be missing if FLUX could not paint it:
+    the caller treats that seed as failed). A FLUX crash is a warning here, never an exception."""
     spec = {j['job']: {k: v for k, v in j.items() if k != 'job'} for j in job_map.values()}
-    todo = [n for n, j in spec.items() if not all((FLUX_OUT / f'{n}-s{s}.png').exists() for s in j['seeds'])]
+    todo = [n for n, j in spec.items() if not all(paintsafe.is_image(paintsafe.flux_png(FLUX_OUT, n, s)) for s in j['seeds'])]
     if todo:
         FLUX_OUT.mkdir(parents=True, exist_ok=True)
-        jobs_file = FLUX_OUT.parent / f'{tag}-scene-jobs.json'
+        jobs_file = FLUX_OUT.parent / f'{paintsafe.safe_stem(tag)}-scene-jobs.json'
         jobs_file.write_text(json.dumps(spec, indent=1))
-        subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_scenes.py'), str(jobs_file), *todo], check=True)
-    return {k: [str(FLUX_OUT / f"{j['job']}-s{s}.png") for s in j['seeds']] for k, j in job_map.items()}
+        rc = subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_scenes.py'), str(jobs_file), *todo]).returncode
+        if rc:
+            print(f'WARNING: FLUX (flux_scenes.py) stopped with exit {rc}; the scenes it did not paint go to the fallback', flush=True)
+    return {k: [str(paintsafe.flux_png(FLUX_OUT, j['job'], s)) for s in j['seeds']] for k, j in job_map.items()}
 
 
 def qa(paths: list) -> dict:
-    """path -> QA dict, from scripts/motion_test/scene_qa.py (OpenCV env)."""
+    """path -> QA dict, from scripts/motion_test/scene_qa.py (OpenCV env). A missing or unreadable file fails
+    without being sent to the checker."""
     if not paths:
         return {}
+    res = {p: dict(path=p, ok=False, reasons=['FLUX did not make a readable image'], score=0)
+           for p in paths if not paintsafe.is_image(p)}
+    paths = [p for p in paths if p not in res]
+    if not paths:
+        return res
     out = subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/scene_qa.py'), *paths],
                          capture_output=True, text=True)
-    res = {}
     for line in out.stdout.splitlines():
         if line.startswith('{'):
             d = json.loads(line)
@@ -158,46 +184,91 @@ def sheet(failed: dict, results: dict, tag: str) -> Path:
         d.text((12, y + 8), f'{key} (failed QA on both seeds)', font=font, fill=(30, 30, 50))
         for c, f in enumerate(files):
             x = 12 + c * (tw + 12)
-            im.paste(Image.open(f).convert('RGB').resize((tw, th)), (x, y + 36))
+            if paintsafe.is_image(f):
+                im.paste(Image.open(f).convert('RGB').resize((tw, th)), (x, y + 36))
             d.text((x, y + 40 + th), '; '.join(results[f]['reasons'])[:60], font=font, fill=(150, 30, 30))
     out = ROOT / 'renders/inserts' / f'{tag}-inserts-failed.jpg'
     im.save(out, quality=88)
     return out
 
 
+RETRIES = (('new seed', False), ('simplified prompt', True))     # after the first two seeds, in this order
+
+
+def _best(found: dict, results: dict) -> dict:
+    """key -> the best passing file, for the keys that have one."""
+    out = {}
+    for key, files in found.items():
+        ok = [f for f in files if results.get(f, {}).get('ok') and paintsafe.is_image(f)]
+        if ok:
+            out[key] = max(ok, key=lambda f: results[f]['score'])
+    return out
+
+
 def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
+    """Paint every scene the episode needs. Never stops the episode over one scene: a scene that fails both seeds is
+    retried on a new seed, then from a simplified prompt, then becomes a placeholder (`result['placeholders']`)."""
     lib = library() if lib is None else lib
     want = needed(episode, lib)
-    result = dict(needed=want, made={}, failed={}, sheet=None)
+    result = dict(needed=want, made={}, failed={}, placeholders={}, retried={}, sheet=None)
     if not generate or not want:
         return result
     DIR.mkdir(parents=True, exist_ok=True)
-    seen = {}                                        # QA of every stage: the failed sheet covers both stages
+    from PIL import Image
     for stage in ('scenes', 'variants'):             # variants are edits of scenes, so scenes go first
         part = {k: d for k, d in want.items() if bool(d.get('base')) == (stage == 'variants')
                 and (stage == 'scenes' or d['base'] in lib)}   # a variant waits for its scene to exist
         if not part:
             continue
+        on_placeholder = {k for k, d in part.items() if d.get('base') and (lib.get(d['base']) or {}).get('placeholder')}
+        part = {k: d for k, d in part.items() if k not in on_placeholder}
+        for key in sorted(on_placeholder):           # an edit of a placeholder is no picture: a placeholder too
+            dst = paintsafe.placeholder_scene(paintsafe.png_path(DIR, key), want[key]['scene'])
+            lib[key] = dict(scene=want[key]['scene'], base=want[key]['base'], file=str(dst.relative_to(ROOT)), placeholder=True,
+                            why='its base scene is a placeholder', made=time.strftime('%Y-%m-%d'), episode=episode.slug)
+            result['placeholders'][key] = 'its base scene is a placeholder'
+        if not part:
+            save_library(lib)
+            continue
         jm = jobs(part)
         found = render(jm, episode.slug)
         results = qa([f for fs in found.values() for f in fs])
-        seen.update(results)
-        for key, files in found.items():
-            ok = [f for f in files if results[f]['ok']]
-            if not ok:
-                result['failed'][key] = files
+        best = _best(found, results)
+        prompts = {k: jm[k]['prompt'] for k in best}
+        for n, (how, simple) in enumerate(RETRIES, 2):
+            left = {k: d for k, d in part.items() if k not in best}
+            if not left:
+                break
+            direction = {k: paintsafe.simplify(d['scene']) for k, d in left.items()} if simple else None
+            jr = jobs(left, rnd=n, direction=direction)
+            for j in jr.values():
+                j['seeds'] = j['seeds'][:1]          # one image per retry
+            print(f'Retry {n - 1} ({how}) for {len(left)} scene(s): ' + ', '.join(
+                f'{k}' + (f' as "{direction[k]}"' if direction else '') for k in left), flush=True)
+            fr = render(jr, f'{episode.slug}-retry{n - 1}')
+            rr = qa([f for fs in fr.values() for f in fs])
+            results.update(rr)
+            for k, f in _best(fr, rr).items():
+                best[k], prompts[k] = f, jr[k]['prompt']
+                result['retried'][k] = how
+            for k in left:
+                found[k] = list(found[k]) + fr[k]
+        for key, d in part.items():
+            dst = paintsafe.png_path(DIR, key)
+            entry = dict(scene=d['scene'], base=d.get('base'), made=time.strftime('%Y-%m-%d'), episode=episode.slug)
+            if key in best:
+                Image.open(best[key]).convert('RGB').save(dst, optimize=True)
+                lib[key] = dict(entry, source=str(Path(best[key]).relative_to(ROOT)), file=str(dst.relative_to(ROOT)),
+                                prompt=prompts[key], qa=results[best[key]].get('stats'))
+                result['made'][key] = str(dst.relative_to(ROOT))
                 continue
-            best = max(ok, key=lambda f: results[f]['score'])
-            dst = DIR / f'{key}.png'
-            from PIL import Image
-            Image.open(best).convert('RGB').save(dst, optimize=True)
-            lib[key] = dict(scene=part[key]['scene'], source=str(Path(best).relative_to(ROOT)), file=str(dst.relative_to(ROOT)),
-                            prompt=jm[key]['prompt'], base=part[key].get('base'), qa=results[best]['stats'],
-                            made=time.strftime('%Y-%m-%d'), episode=episode.slug)
-            result['made'][key] = str(dst.relative_to(ROOT))
-        save_library(lib)
-        if result['failed']:
-            result['sheet'] = str(sheet(result['failed'], seen, episode.slug).relative_to(ROOT))
+            why = ' | '.join('; '.join(results.get(f, {}).get('reasons') or ['no result']) for f in found[key]) or 'not painted'
+            paintsafe.placeholder_scene(dst, d['scene'])
+            lib[key] = dict(entry, file=str(dst.relative_to(ROOT)), placeholder=True, why=why[:500],
+                            tried=[str(Path(f).relative_to(ROOT)) for f in found[key] if Path(f).exists()])
+            result['placeholders'][key] = why
+            print(f'WARNING: scene {key} would not paint after 2 seeds and 2 retries; using a placeholder ({why[:160]})', flush=True)
+        save_library(lib)                            # after each stage: the variants need their scene in the library
     return result
 
 
@@ -209,6 +280,10 @@ def view(result: dict) -> str:
     lines.append(f'Insert scenes to make ({len(want)}): ' + ', '.join(f"{k} [{', '.join(d['beats'])}]" for k, d in want.items()))
     for k, f in result['made'].items():
         lines.append(f'  + {k}: {f} (passed QA)')
+    for k, how in result.get('retried', {}).items():
+        lines.append(f'    ({k} passed on a retry: {how})')
+    for k, why in result.get('placeholders', {}).items():
+        lines.append(f'  ~ {k}: PLACEHOLDER (would not paint after 2 seeds and 2 retries: {why[:160]})')
     for k in result['failed']:
         lines.append(f'  ! {k}: failed QA on both seeds')
     if result.get('sheet'):

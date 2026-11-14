@@ -186,7 +186,8 @@
 {% for s in ep.scenes %}
 <div class="card stack">
   {% if s.url %}<a href="{{ s.url }}" target="_blank" rel="noopener"><img class="thumb" src="{{ s.url }}" alt="{{ s.key }}" loading="lazy"></a>{% endif %}
-  <div class="spread"><strong>{{ s.key }}</strong><span class="badge {{ 'bad' if s.status == 'failed' else '' }}">{{ s.kind or 'scene' }}{% if s.status == 'failed' %} · failed{% endif %}</span></div>
+  <div class="spread"><strong>{{ s.key }}</strong><span class="badge {{ 'bad' if s.status == 'failed' else '' }}">{{ s.kind or 'scene' }}{% if s.status == 'failed' %} · failed{% endif %}{% if s.placeholder %} · placeholder{% endif %}</span></div>
+  {% if s.placeholder %}<p class="notice warn small">Placeholder: this would not paint after two seeds and two retries, so the video shows a plain card here. Redo it with a note to paint it again.</p>{% endif %}
   {% if s.why %}<p class="notice bad small">{{ s.why }}</p>{% endif %}
   {% if s.scene %}<p class="small">{{ s.scene }}</p>{% endif %}
   {% if s.note %}<p class="small muted">Your note: {{ s.note }}</p>{% endif %}

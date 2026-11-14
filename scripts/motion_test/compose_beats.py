@@ -1590,11 +1590,37 @@ def make_class(spec: dict, row: dict, base_name: str, after_cut: bool = False):
                 dict(base_name=base_name, cast=cast, spec=spec, plan_row=row, after_cut=after_cut))
 
 
+def split_fallback(episode, specs: dict) -> list:
+    """A split whose top scene (the insert) has no key is shown as its bottom scene alone, as an insert that keeps
+    the top's effects; in memory only, episode.json is not touched. 2026-11-14: "Explain why sunsets are colorful"
+    b06 had a split with an empty top key, which first broke the paint step and would then have stopped the render
+    ("split scene '' is not in the library"). Returns notes for the log."""
+    from pipeline.models import InsertCue
+    notes = []
+    for b in episode.beats:
+        sh = b.shot
+        if sh.visual != 'split' or (sh.insert is not None and (sh.insert.key or '').strip()):
+            continue
+        if sh.split is None or not (sh.split.key or '').strip():
+            continue                                  # nothing to show at all: the gate's error, not ours
+        effects = list(sh.insert.effects) if sh.insert else []
+        sh.insert = InsertCue(key=sh.split.key, scene=sh.split.scene, effects=effects)
+        sh.visual, sh.split = 'insert', None
+        spec = specs[b.id]['shot']
+        spec['insert'] = dict(key=sh.insert.key, scene=sh.insert.scene,
+                              effects=list((spec.get('insert') or {}).get('effects') or []))
+        spec['visual'], spec['split'] = 'insert', None
+        notes.append(f'{b.id}: the split has no top scene; shown as its bottom scene "{sh.insert.key}" alone')
+    return notes
+
+
 def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = None):
     """BEATS, shots(tl), word_times and LIBRARY_REPORT for the runner, composed from the episode's script."""
     episode, _ = store.load(slug)
     raw = json.loads((ROOT / 'episodes' / slug / 'episode.json').read_text())
     specs = {b['id']: b for b in raw['beats']}
+    for note in split_fallback(episode, specs):
+        print('note:', note)
     lib = BASES.library() if lib is None else lib
     if episode.host_format:
         return host_episode(episode, specs, lib, slug)

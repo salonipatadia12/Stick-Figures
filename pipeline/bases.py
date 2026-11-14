@@ -304,15 +304,40 @@ def candidate_jobs(miss: dict, lib: dict | None = None, rejected: dict | None = 
 
 def render_candidates(jobs: dict, slug: str) -> dict:
     """Run the jobs that have no output yet (FLUX in .venvs/mlx), then return wanted -> [png paths]."""
+    from . import paintsafe as PS
     spec = {j['job']: dict(images=j['images'], seeds=j['seeds'], prompt=j['prompt']) for j in jobs.values()}
-    todo = [name for name, j in spec.items() if not all((FLUX_OUT / f'{name}-s{s}.png').exists() for s in j['seeds'])]
-    if todo:
+
+    def flux(spec, tag):
+        todo = [name for name, j in spec.items() if not all(PS.is_image(PS.flux_png(FLUX_OUT, name, s)) for s in j['seeds'])]
+        if not todo:
+            return
         CANDIDATES.mkdir(parents=True, exist_ok=True)
-        rnd = max(j.get('round', 1) for j in jobs.values())
-        jobs_file = CANDIDATES / (f'{slug}-jobs.json' if rnd == 1 else f'{slug}-jobs-r{rnd}.json')
+        jobs_file = CANDIDATES / f'{PS.safe_stem(tag)}.json'
         jobs_file.write_text(json.dumps(spec, indent=1))
-        subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_bases.py'), str(jobs_file), *todo], check=True)
-    return {w: [str((FLUX_OUT / f"{j['job']}-s{s}.png").relative_to(ROOT)) for s in j['seeds']] for w, j in jobs.items()}
+        rc = subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_bases.py'), str(jobs_file), *todo]).returncode
+        if rc:
+            print(f'WARNING: FLUX (flux_bases.py) stopped with exit {rc}; candidates it did not paint are retried once', flush=True)
+
+    rnd = max(j.get('round', 1) for j in jobs.values())
+    flux(spec, f'{slug}-jobs' if rnd == 1 else f'{slug}-jobs-r{rnd}')
+    good = lambda job, seeds: [s for s in seeds if PS.is_image(PS.flux_png(FLUX_OUT, job, s))]
+    # 2026-11-14: a candidate FLUX did not make (or made unreadable) is painted again on a new seed, once; a base
+    # with no candidate after that is left off the sheet with a warning, never an exception
+    retry = {}
+    for j in jobs.values():
+        lost = len(j['seeds']) - len(good(j['job'], j['seeds']))
+        if lost:
+            retry[j['job']] = dict(spec[j['job']], seeds=[s + 5000 for s in j['seeds']][:lost])
+    if retry:
+        print(f'Retrying {sum(len(r["seeds"]) for r in retry.values())} base candidate(s) on new seeds: {sorted(retry)}', flush=True)
+        flux(retry, f'{slug}-jobs-retry')
+    out = {}
+    for w, j in jobs.items():
+        seeds = good(j['job'], j['seeds']) + good(j['job'], (retry.get(j['job']) or {}).get('seeds', []))
+        if not seeds:
+            print(f'WARNING: base {w}: FLUX made no readable candidate after a retry; it stays missing', flush=True)
+        out[w] = [str(PS.flux_png(FLUX_OUT, j['job'], s).relative_to(ROOT)) for s in seeds]
+    return out
 
 
 def sheet(found: dict, slug: str, rnd: int = 1) -> Path:
@@ -321,7 +346,7 @@ def sheet(found: dict, slug: str, rnd: int = 1) -> Path:
     from PIL import Image, ImageDraw, ImageFont
     font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf', 22)
     tw, th, pad, gap = 360, 640, 44, 12
-    cols = max(len(v) for v in found.values())
+    cols = max([len(v) for v in found.values()] + [1])
     row_h = th + pad * 2
     im = Image.new('RGB', (cols * (tw + gap) + gap, len(found) * row_h), (246, 238, 222))
     d = ImageDraw.Draw(im)

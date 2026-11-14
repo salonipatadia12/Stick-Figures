@@ -353,6 +353,8 @@ class Runner:
             print(json.dumps(report['summary'], indent=1))
             for w in report['continuity']['warnings']:
                 print('  continuity (warning):', w)
+            for x in report['placeholders']['beats']:
+                print(f"  PLACEHOLDER {x['beat']}: {', '.join(x['placeholder'])} (repaint it with a note)")
             lib = report['library']
             print(f"library: {lib['library_beats']}/{lib['beats']} beats from the libraries alone = {lib['library_pct']}% (target {lib['target_pct']}%)")
             sub = report['subject']

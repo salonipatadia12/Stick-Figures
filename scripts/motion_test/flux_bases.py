@@ -228,18 +228,24 @@ def main(names):
     mx.set_cache_limit(2 * 1024 ** 3)          # keep peak memory down on a 16 GB Mac
     model = Flux2KleinEdit(model_config=ModelConfig.flux2_klein_4b(), model_path=MODEL)
     print(f'model loaded in {time.time() - t0:.0f}s', flush=True)
+    import importlib.util                      # pipeline/paintsafe.py by path: this env has no pydantic
+    spec = importlib.util.spec_from_file_location('stick_paintsafe', ROOT / 'pipeline/paintsafe.py')
+    ps = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ps)
     for name in names:
         job = JOBS[name]
         for seed in job['seeds']:
-            dst = OUT / f'{name}-s{seed}.png'
-            if dst.exists():
+            dst = ps.flux_png(OUT, name, seed)            # always <safe name>-s<seed>.png
+            if ps.is_image(dst):
                 print('cached', dst.name)
                 continue
+            dst.unlink(missing_ok=True)
             t1 = time.time()
-            image = model.generate_image(seed=seed, prompt=job['prompt'], image_paths=[str(EC / p if (EC / p).exists() else OUT / p) for p in job['images']],
-                                         num_inference_steps=4, width=944, height=1680)
-            image.save(str(dst))
-            print(f'{dst.name}: {time.time() - t1:.0f}s', flush=True)
+            images = [str(EC / p if (EC / p).exists() else OUT / p) for p in job['images']]
+            paint = lambda d, seed=seed: model.generate_image(seed=seed, prompt=job['prompt'], image_paths=images,
+                                                              num_inference_steps=4, width=944, height=1680).save(str(d))
+            if ps.save_checked(paint, dst, log=lambda m: print(m, flush=True)):
+                print(f'{dst.name}: {time.time() - t1:.0f}s', flush=True)
         log[name] = dict(model=MODEL, licence='apache-2.0', steps=4, size=[944, 1680], **job)
         log_path.write_text(json.dumps(log, indent=2) + '\n')
 

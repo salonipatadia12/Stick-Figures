@@ -8,8 +8,10 @@ shared sprites, the prop library (`styles/cozy/props/library.json`) or the code-
    about 25 s each at 512 px),
 2. cuts the object out (`props.key_neutral` + `props.clean_alpha`),
 3. checks the sprite: one object, a sensible share of the canvas, not touching the border, in the palette,
-4. on the first pass, enters it in the prop library with its provenance; if both seeds fail, puts the prop on a
-   one-row sheet for the user. That is the only time props prompt the user.
+4. on the first pass, enters it in the prop library with its provenance. If both seeds fail (2026-11-14, see
+   `pipeline/paintsafe.py`) it is painted again on a new seed, then from a simplified name, and if that fails too
+   it gets a placeholder sprite (a card with its name) entered with `placeholder: true`, so the video still
+   renders and its QA report names the beat. A prop never stops the episode.
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from . import config
+from . import config, paintsafe
 
 ROOT = config.ROOT
 LIBRARY = ROOT / 'styles/cozy/props/library.json'
@@ -75,7 +77,8 @@ def needed(episode, lib: dict | None = None) -> dict:
             key = prop_key(p.name)
             if b.shot.visual != 'character' and not p.held_by:
                 continue          # a painted insert/split/graphic shows its own things; only held props are drawn on it
-            if key in base_props or key in BUILT_IN or key in lib:
+            stale = (lib.get(key) or {}).get('placeholder') and lib[key].get('episode') != episode.slug
+            if key in base_props or key in BUILT_IN or (key in lib and not stale):
                 continue
             out.setdefault(key, dict(name=p.name, beats=[]))['beats'].append(b.id)
     return out
@@ -84,7 +87,7 @@ def needed(episode, lib: dict | None = None) -> dict:
 def jobs(keys: dict, rnd: int = 1) -> dict:
     out = {}
     for key, d in keys.items():
-        job = f'prop-{key}' + ('' if rnd == 1 else f'-r{rnd}')
+        job = paintsafe.safe_stem(f'prop-{key}' + ('' if rnd == 1 else f'-r{rnd}'))
         s0 = sum(ord(c) for c in key) % 700 + 100 + 50 * (rnd - 1)
         out[key] = dict(job=job, seeds=[s0, s0 + 1], size=512, prompt=PROMPT.format(name=d['name']), round=rnd)
     return out
@@ -92,13 +95,15 @@ def jobs(keys: dict, rnd: int = 1) -> dict:
 
 def render(job_map: dict, slug: str) -> dict:
     spec = {j['job']: dict(prompt=j['prompt'], seeds=j['seeds'], size=j['size']) for j in job_map.values()}
-    todo = [n for n, j in spec.items() if not all((FLUX_OUT / f'{n}-s{s}.png').exists() for s in j['seeds'])]
+    todo = [n for n, j in spec.items() if not all(paintsafe.is_image(paintsafe.flux_png(FLUX_OUT, n, s)) for s in j['seeds'])]
     if todo:
         SHEETS.mkdir(parents=True, exist_ok=True)
-        jobs_file = SHEETS / f'{slug}-prop-jobs.json'
+        jobs_file = SHEETS / f'{paintsafe.safe_stem(slug)}-prop-jobs.json'
         jobs_file.write_text(json.dumps(spec, indent=1))
-        subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_props.py'), str(jobs_file), *todo], check=True)
-    return {k: [FLUX_OUT / f"{j['job']}-s{s}.png" for s in j['seeds']] for k, j in job_map.items()}
+        rc = subprocess.run([str(ROOT / '.venvs/mlx/bin/python'), str(ROOT / 'scripts/motion_test/flux_props.py'), str(jobs_file), *todo]).returncode
+        if rc:
+            print(f'WARNING: FLUX (flux_props.py) stopped with exit {rc}; the props it did not paint go to the fallback', flush=True)
+    return {k: [paintsafe.flux_png(FLUX_OUT, j['job'], s) for s in j['seeds']] for k, j in job_map.items()}
 
 
 def cut(path: Path) -> Image.Image:
@@ -170,7 +175,8 @@ def sheet(rows: list, slug: str) -> Path:
         d.text((12, y + 8), f'{name}  (failed QA on both seeds; tell me how it should look, or name a stand-in)', font=font, fill=(30, 30, 50))
         for c, (png, sprite, chk) in enumerate(cands):
             x = 12 + c * 2 * (tw + 12)
-            im.paste(Image.open(png).convert('RGB').resize((tw, tw)), (x, y + pad))
+            if paintsafe.is_image(png):
+                im.paste(Image.open(png).convert('RGB').resize((tw, tw)), (x, y + pad))
             tile = Image.new('RGB', (tw, tw), (200, 230, 200))
             sp = sprite.copy()
             sp.thumbnail((tw - 8, tw - 8))
@@ -183,38 +189,71 @@ def sheet(rows: list, slug: str) -> Path:
     return out
 
 
+def _try(png) -> tuple:
+    """(png, sprite, check) for one FLUX file; a missing or unreadable file fails the check without cutting."""
+    if not paintsafe.is_image(png):
+        return png, Image.new('RGBA', (8, 8)), dict(pass_=False, reasons=['FLUX did not make a readable image'])
+    try:
+        sprite = cut(png)
+    except Exception as e:                           # a cut that crashes is a failed candidate, not a failed episode
+        return png, Image.new('RGBA', (8, 8)), dict(pass_=False, reasons=[f'cut failed: {type(e).__name__}: {e}'])
+    return png, sprite, check(sprite)
+
+
+RETRIES = (('new seed', False), ('simplified prompt', True))
+
+
 def run(episode, lib: dict | None = None, generate: bool = True) -> dict:
-    """Generate, cut and check every prop the script needs and no library has. Returns what was added and what failed."""
+    """Generate, cut and check every prop the script needs and no library has. Returns what was added, what passed
+    on a retry and what became a placeholder (`failed` stays empty: a prop never stops the episode)."""
     lib = library() if lib is None else lib
     need = needed(episode, lib)
-    result = dict(needed=need, added={}, failed={}, sheet=None)
+    result = dict(needed=need, added={}, failed={}, placeholders={}, retried={}, sheet=None)
     if not need or not generate:
         return result
-    found = render(jobs(need), episode.slug)
     SPRITES.mkdir(parents=True, exist_ok=True)
-    failed_rows = []
-    for key, pngs in found.items():
-        tried = []
-        for png in pngs:
-            sprite = cut(png)
-            chk = check(sprite)
-            tried.append((png, sprite, chk))
-            if chk['pass_']:
-                dst = SPRITES / f'{key}.png'
-                sprite.save(dst)
-                lib[key] = dict(sprite=str(dst.relative_to(ROOT)), width=0.4, name=need[key]['name'], source=str(png.relative_to(ROOT)),
-                                qa=chk, made=time.strftime('%Y-%m-%d'), licence='apache-2.0 (FLUX.2 klein output)',
-                                note='generated by the props step; width is the default 0.4 head diameters')
-                result['added'][key] = lib[key]
-                break
-        else:
-            result['failed'][key] = dict(name=need[key]['name'], candidates=[str(p.relative_to(ROOT)) for p, _, _ in tried],
-                                         reasons=[c['reasons'] for _, _, c in tried])
-            failed_rows.append((key, need[key]['name'], tried))
-    if result['added']:
+    tried = {k: [] for k in need}
+    passed = {}                                      # key -> (png, sprite, check, prompt)
+    for n, (how, simple) in enumerate(((None, False),) + RETRIES, 1):
+        left = {k: d for k, d in need.items() if k not in passed}
+        if not left:
+            break
+        want = {k: dict(d, name=paintsafe.simplify(d['name'])) for k, d in left.items()} if simple else left
+        jm = jobs(want, rnd=n)
+        if n > 1:
+            for j in jm.values():
+                j['seeds'] = j['seeds'][:1]
+            print(f'Retry {n - 1} ({how}) for {len(left)} prop(s): ' + ', '.join(
+                k + (f' as "{want[k]["name"]}"' if simple else '') for k in left), flush=True)
+        found = render(jm, episode.slug if n == 1 else f'{episode.slug}-retry{n - 1}')
+        for key, pngs in found.items():
+            for png in pngs:
+                cand = _try(png)
+                tried[key].append(cand)
+                if cand[2]['pass_']:
+                    passed[key] = cand + (jm[key]['prompt'],)
+                    if how:
+                        result['retried'][key] = how
+                    break
+    for key, d in need.items():
+        dst = paintsafe.png_path(SPRITES, key)
+        if key in passed:
+            png, sprite, chk, prompt = passed[key]
+            sprite.save(dst)
+            lib[key] = dict(sprite=str(dst.relative_to(ROOT)), width=0.4, name=d['name'], source=str(Path(png).relative_to(ROOT)),
+                            qa=chk, made=time.strftime('%Y-%m-%d'), licence='apache-2.0 (FLUX.2 klein output)', episode=episode.slug,
+                            note='generated by the props step; width is the default 0.4 head diameters')
+            result['added'][key] = lib[key]
+            continue
+        why = ' | '.join('; '.join(c[2]['reasons']) for c in tried[key]) or 'not painted'
+        paintsafe.placeholder_prop(d['name']).save(dst)
+        lib[key] = dict(sprite=str(dst.relative_to(ROOT)), width=0.4, name=d['name'], placeholder=True, why=why[:500],
+                        made=time.strftime('%Y-%m-%d'), episode=episode.slug,
+                        tried=[str(Path(c[0]).relative_to(ROOT)) for c in tried[key] if Path(c[0]).exists()])
+        result['placeholders'][key] = why
+        print(f'WARNING: prop {d["name"]} would not paint after 2 seeds and 2 retries; using a placeholder ({why[:160]})', flush=True)
+    if result['added'] or result['placeholders']:
         save_library(lib)
-    if failed_rows:
-        result['sheet'] = str(sheet(failed_rows, episode.slug).relative_to(ROOT))
     return result
 
 
@@ -226,6 +265,10 @@ def view(result: dict) -> str:
     lines.append(f'Props to make ({len(need)}): ' + ', '.join(f"{d['name']} [{', '.join(d['beats'])}]" for d in need.values()))
     for k, e in result['added'].items():
         lines.append(f'  + {k}: {e["sprite"]} (passed QA, from {Path(e["source"]).name})')
+    for k, how in result.get('retried', {}).items():
+        lines.append(f'    ({k} passed on a retry: {how})')
+    for k, why in result.get('placeholders', {}).items():
+        lines.append(f'  ~ {k}: PLACEHOLDER (would not paint after 2 seeds and 2 retries: {why[:160]})')
     for k, f in result['failed'].items():
         lines.append(f'  ! {k} ({f["name"]}): failed QA on both seeds: ' + ' | '.join('; '.join(r) for r in f['reasons']))
     if result['sheet']:

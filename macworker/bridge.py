@@ -96,11 +96,13 @@ def redo_insert(key: str, note: str, slug: str, ins, today: str) -> tuple[str | 
         why = ' | '.join('; '.join(results[f].get('reasons', [])) for f in found[key]) or 'failed QA'
         return None, f'round {rnd} failed QA on both seeds ({why}); round {rnd - 1} kept', {}
     best = max(ok, key=lambda f: results[f]['score'])
-    dst = ins.DIR / f'{key}.png'
+    from pipeline.paintsafe import png_path
+    dst = png_path(ins.DIR, key)
     archived = _archive(dst, ins.DIR, key, entry, rnd - 1, today)
     Image.open(best).convert('RGB').save(dst, optimize=True)
     rel = lambda p: _rel(p, ins.ROOT)
     lib = ins.library()                       # re-read: nothing else should have changed it, but keep other edits
+    entry = {k: v for k, v in entry.items() if k not in ('placeholder', 'why', 'tried')}    # a real painting now
     lib[key] = dict(entry, source=rel(best), file=rel(dst), prompt=jm[key]['prompt'], qa=results[best].get('stats'),
                     made=time.strftime('%Y-%m-%d'), round=rnd, direction=note.strip(), episode=slug,
                     history=list(entry.get('history', [])) + ([dict(round=rnd - 1, file=rel(archived))] if archived else []))
@@ -127,11 +129,13 @@ def redo_prop(key: str, note: str, slug: str, pg, today: str) -> tuple[str | Non
         sprite = pg.cut(png)
         chk = pg.check(sprite)
         if chk.get('pass_'):
-            dst = pg.SPRITES / f'{key}.png'
+            from pipeline.paintsafe import png_path
+            dst = png_path(pg.SPRITES, key)
             archived = _archive(dst, pg.SPRITES, key, entry, rnd - 1, today)
             sprite.save(dst)
             rel = lambda p: _rel(p, pg.ROOT)
             lib = pg.library()
+            entry = {k: v for k, v in entry.items() if k not in ('placeholder', 'why', 'tried')}
             lib[key] = dict(entry, sprite=rel(dst), source=rel(png), qa=chk, made=time.strftime('%Y-%m-%d'), round=rnd,
                             direction=note.strip(), history=list(entry.get('history', [])) +
                             ([dict(round=rnd - 1, file=rel(archived))] if archived else []))

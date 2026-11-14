@@ -280,6 +280,30 @@ def beat_place(beat: dict) -> str:
     return 'setting:' + st['setting'] + (f" ({st['setting_detail']})" if st.get('setting_detail') else '')
 
 
+def placeholder_report(episode: dict, scenes: dict | None = None, props: dict | None = None) -> dict:
+    """Beats that show a placeholder instead of a painting (pipeline/paintsafe.py, 2026-11-14): a scene or prop that
+    would not paint after two seeds and two retries. Fails, so the phone shows it before the video is posted; the
+    fix is a repaint with a note on the scenes page."""
+    if scenes is None:
+        from . import inserts
+        scenes = inserts.library()
+    if props is None:
+        from . import propgen
+        props = propgen.library()
+    beats = []
+    for b in episode.get('beats', []):
+        sh = b.get('shot') or {}
+        keys = [k for k in ((sh.get('insert') or {}).get('key'), (sh.get('split') or {}).get('key')) if k]
+        hits = [f'scene {k}' for k in keys if (scenes.get(k) or {}).get('placeholder')]
+        names = [p.get('name', '') for p in ((sh.get('staging') or {}).get('props') or [])]
+        hits += [f'prop {n}' for n in names if any((e or {}).get('placeholder') and (e or {}).get('name') == n for e in props.values())]
+        if hits:
+            beats.append(dict(beat=b.get('id'), placeholder=hits))
+    return dict(beats=beats, pass_=not beats,
+                note='every scene and prop is painted' if not beats else
+                'placeholder: ' + '; '.join(f"{x['beat']} ({', '.join(x['placeholder'])})" for x in beats))
+
+
 def continuity_report(episode: dict) -> dict:
     """Kaomei continuity (user 2026-11-11): a warning, never a failure, for each pair of adjacent beats that change place
     with a hard cut and no named connection (the earlier beat's shot.continuity is empty). A whip or match cut is its
@@ -559,6 +583,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         hook=hook_report(library),
         layout=layout_report(library, out_dir.name),
         continuity=continuity_report(episode or {}),     # warnings only: no pass_, so not in the summary
+        placeholders=placeholder_report(episode or {}),
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())
