@@ -279,6 +279,9 @@ class OllamaScript(unittest.TestCase):
         system, user = body['messages'][0]['content'], body['messages'][1]['content']
         if system == script.SCRIPT_RULES_COMPACT_OUTLINE:
             return self.outlines.pop(0) if len(self.outlines) > 1 else self.outlines[0]
+        from pipeline import entail
+        if system == entail.CHECK_SYSTEM:              # the fact check before the gate: every cited line holds here
+            return dict(states_a_fact=True, supported=True, why='the fact says it')
         i = int(user.split('STAGE b')[1][:2]) - 1
         ob = OUTLINE_BEATS[i]
         bad = i in self.bad_label and 'THE CHECKER FOUND' not in user

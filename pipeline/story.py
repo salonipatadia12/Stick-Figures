@@ -17,7 +17,7 @@ import time
 from typing import get_args
 
 from . import config, store
-from .models import FORMATS, Episode, StoryFormat, StoryPitch, digest
+from .models import FORMATS, Episode, Source, StoryFormat, StoryPitch, digest
 
 STORY_VERSION = 'story-v1'
 STORY_MAX_TOKENS = 8_000
@@ -253,6 +253,9 @@ def _pitch(episode, base, ledger, client, regenerate, prov):
         raise ScriptError('No fact came from a government, university or peer-reviewed source, so no storylines were '
                           'pitched.')
     interp['verdicts'] = understand.verify(interp, facts, cache=for_episode(base), ledger=ledger)
+    if prov == 'ollama':
+        facts, more = claim_followup(episode, interp, facts, base, ledger)
+        notes += more
     episode.meta['interpretation'] = interp
     notes += [f'  claim "{v["claim"]}": {v["verdict"]}' for v in interp['verdicts']]
     allowed, why = allowed_formats(episode.slug)
@@ -287,6 +290,46 @@ def _pitch(episode, base, ledger, client, regenerate, prov):
                                version=STORY_VERSION, allowed=allowed))
         cached = False
     return _finish(episode, data, path, cached, facts, allowed, notes)
+
+
+def claim_followup(episode, interp, facts, base, ledger, search_claim=None, verify=None):
+    """A claim inside the topic that came back unverified because no fact mentions it gets two targeted searches of
+    its own (user 2026-11-14) before it is left unverified. New facts join the research (meta['claim_facts'], so the
+    script step has them under the same ids) and the claim is checked again. Returns (facts, notes)."""
+    from . import search, understand
+    from .cache import for_episode
+    from .script import keep_reputable
+    cache = for_episode(base)
+    search_claim = search_claim or (lambda c: search.claim_followup(c, interp.get('question', ''), cache, ledger))
+    verify = verify or (lambda i, f: understand.verify(i, f, cache=cache, ledger=ledger))
+    done = episode.meta.setdefault('claim_followup', [])
+    notes, facts = [], list(facts)
+    for k, v in enumerate(interp.get('verdicts') or []):
+        if v['verdict'] != 'unverified' or v.get('fact_ids') or any(d['claim'] == v['claim'] for d in done):
+            continue
+        queries, found = search_claim(v['claim'])
+        import difflib
+        new = []
+        for f in found:                               # the same fact twice (two pages of one site): kept once
+            seen = [x.claim.lower() for x in facts] + [x['claim'].lower() for x in new]
+            if f['quote'] not in {x.quote for x in facts} and \
+                    not any(difflib.SequenceMatcher(None, f['claim'].lower(), c).ratio() > 0.8 for c in seen):
+                new.append(f)
+        kept, _ = keep_reputable([Source(id='s0', claim=f['claim'], url=f['url'], title=f.get('title') or '',
+                                         quote=f['quote']) for f in new])
+        kept = [f.model_copy(update=dict(id=f's{len(facts) + i}')) for i, f in enumerate(kept, 1)]
+        facts += kept
+        episode.meta.setdefault('claim_facts', []).extend(f.model_dump(exclude={'id'}) for f in kept)
+        done.append(dict(claim=v['claim'], queries=queries, facts=[f.id for f in kept]))
+        again = verify(dict(interp, claims=[v['claim']]), facts) if kept else []
+        if again and again[0]['verdict'] != 'unverified':
+            interp['verdicts'][k] = again[0]
+        else:
+            v['why'] = (f'no fact mentions it, even after two searches for it ({"; ".join(queries)})'
+                        + (f'; {len(kept)} new fact(s) did not settle it' if kept else ''))
+        notes.append(f'  claim "{v["claim"]}": searched again ({"; ".join(queries)}), {len(kept)} new fact(s) -> '
+                     f'{interp["verdicts"][k]["verdict"]}')
+    return facts, notes
 
 
 def _finish(episode, data, path, cached, facts, allowed, notes):

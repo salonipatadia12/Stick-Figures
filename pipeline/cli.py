@@ -458,6 +458,43 @@ def cmd_validate(args):
     return EXIT_CHECKS if errors else 0
 
 
+def cmd_fact_check(args):
+    """Run the fact entailment check (pipeline/entail.py) on an existing episode's script. A script that Auto mode
+    approved is re-stamped (it is the same automatic rule); one a person approved goes back to its gate."""
+    from . import entail
+    from .cache import for_episode
+    episode, base = store.load(args.episode)
+    was = episode.is_approved('script')
+    log = [e for e in episode.meta.get('approval_log') or [] if e.get('gate') == 'script']
+    interp = (episode.meta or {}).get('interpretation') or {}
+    if interp.get('verdicts') and episode.sources:     # researched before the claim follow-up search: run it now
+        from . import story
+        n = len(episode.sources)
+        facts, notes = story.claim_followup(episode, interp, episode.sources, base, None)
+        episode.sources = facts
+        episode.meta['interpretation'] = interp
+        for line in notes:
+            print(line.strip())
+        for f in facts[n:]:
+            print(f'  new fact {f.id}: {f.claim} ({f.url})')
+    by_auto = bool(log) and str(log[-1].get('by', '')).startswith(('auto', 'self-repair', 'fact check'))
+    result = entail.check(episode, cache=for_episode(base))
+    episode.meta['fact_check'] = result
+    print(f'fact check: {result["checked"]} cited sentence(s), {len(result["changed"])} changed')
+    for line in entail.view(result) + result['notes']:
+        print(' ', line)
+    if result['changed']:
+        if was and by_auto:
+            episode.approvals['script'] = episode.script_digest()
+            episode.meta.setdefault('approval_log', []).append(dict(
+                gate='script', by='fact check (auto)', at=time.strftime('%Y-%m-%dT%H:%M:%S'),
+                digest=episode.approvals['script'][:12], changed=result['changed']))
+        elif was:
+            print('the script changed, so it needs approving again (stick approve --gate script)')
+    store.save(episode, base)
+    return 0
+
+
 def cmd_approve(args):
     episode, base = store.load(args.episode)
     if args.gate == 'bases':
@@ -625,6 +662,11 @@ def build_parser():
         c = sub.add_parser(name, help=text)
         c.add_argument('episode')
         c.set_defaults(func=func)
+
+    fc = sub.add_parser('fact-check', help="Check each cited sentence against its fact's quote; rewrite or drop what "
+                                           'the fact does not say (local model)')
+    fc.add_argument('episode')
+    fc.set_defaults(func=cmd_fact_check)
 
     a = sub.add_parser('approve', help='Approve a gate for the current content')
     a.add_argument('episode')

@@ -532,6 +532,20 @@ def keep_reputable(facts):
 
 
 def research(episode, base, ledger, client, regenerate=False):
+    """(facts, cache path, cached): the research step's facts, plus the facts the follow-up searches found for a claim
+    inside the topic that no fact mentioned (pipeline/story.py `claim_followup`, kept in meta['claim_facts'])."""
+    facts, path, cached = _research(episode, base, ledger, client, regenerate)
+    return with_claim_facts(episode, facts), path, cached
+
+
+def with_claim_facts(episode, facts):
+    extra = [Source.model_validate(dict(f, id='s0')) for f in (episode.meta or {}).get('claim_facts') or []]
+    quotes = {f.quote for f in facts}
+    extra = [f for f in extra if f.quote not in quotes]
+    return list(facts) + [f.model_copy(update=dict(id=f's{len(facts) + i}')) for i, f in enumerate(extra, 1)]
+
+
+def _research(episode, base, ledger, client, regenerate=False):
     if provider(client) == 'ollama':                   # free: DuckDuckGo + the local model (pipeline/search.py)
         return research_free(episode, base, ledger, regenerate)
     request = research_request(episode)
@@ -1182,4 +1196,13 @@ def _generate(episode, style, base, ledger, client, prov, use_research, regenera
         beats=[Beat.from_draft(i, b) for i, b in enumerate(draft.beats)],
         approvals={k: v for k, v in episode.approvals.items() if k != 'script'},
         meta=episode.meta | dict(script=script_meta)))
-    return Episode.model_validate(updated.model_dump()), notes
+    out = Episode.model_validate(updated.model_dump())
+    if prov == 'ollama' and facts:
+        # fact entailment (pipeline/entail.py): every sentence that cites a fact is checked against its quote
+        from . import entail
+        from .cache import for_episode
+        result = entail.check(out, cache=for_episode(base), ledger=ledger)
+        out.meta['fact_check'] = result
+        notes.append(f'fact check: {result["checked"]} cited sentence(s), {len(result["changed"])} changed')
+        notes += [f'  {x}' for x in entail.view(result) + result['notes']]
+    return out, notes

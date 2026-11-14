@@ -6,9 +6,12 @@ The fixes per check:
 
 * words: the checker first puts the script and the transcript in one canonical form (pipeline/qa.py `canonical`:
   numbers, symbols, units, chemical formulas, plurals). A word still missing is truly unheard: its beat is voiced
-  again once, a little slower (`voice_speed`), which changes the audio Whisper hears.
-* text: a label on the host or on another text. Round 1 moves it: the host goes to the other side and smaller, an
-  insert label moves to the region away from the host. Round 2 drops that label (the narration still says it).
+  again once, a little slower (`voice_speed`), which changes the audio Whisper hears. Still not heard after that:
+  the local model picks a plainer synonym that keeps the meaning (`swap_word`), the narration (so the captions),
+  labels and anchors get it, and the beat is voiced again.
+* text: a label on the host: round 1 moves it (the host goes to the other side and smaller, an insert label moves to
+  the region away from the host); round 2 drops that label (the narration still says it). Two texts on each other:
+  only the less important one is dropped (`importance`: a myth mark, then the beat's key term, outrank the rest).
 * story_match: a picture of the myth (pipeline/understand.py) that nothing on screen marks as the myth gets a MYTH
   label (an insert), "Myth" on a split's first half, or "Myth:" before a diagram's text.
 * duration: a video more than 15 % under its target gets one short sentence on the one or two thinnest middle beats,
@@ -16,8 +19,8 @@ The fixes per check:
   are voiced again. The writer's own word target follows the speaking rate Kokoro really has (`pipeline.pacing`).
 
 The fixes are hints in `episodes/<slug>/repairs.json` ({"beats": {id: hints}, "log": [...]}) that the composer applies
-in memory (`apply_hints`), so the approved script is untouched; only the duration fix edits the narration, and records
-that in the approval log as `self-repair (QA duration)`.
+in memory (`apply_hints`), so the approved script is untouched; only the duration and the word fixes edit the
+narration, and record that in the approval log as `self-repair (QA duration)` / `self-repair (QA words)`.
 """
 from __future__ import annotations
 
@@ -220,6 +223,25 @@ def _host_side(ep_data: dict, beat: str, hints: dict) -> str:
     return hints.get('host_side') or host.get('side') or 'centre'
 
 
+def _content(text: str) -> set:
+    from .qa import _stem, content_words
+    return {_stem(w) for w in content_words(str(text or ''))}
+
+
+def importance(text: str, spec: dict, ep_data: dict | None = None) -> tuple:
+    """How much a text matters on its beat, for an overlap (user 2026-11-14: drop only the less important one):
+    a myth mark first (the story needs it to read as the myth), then the beat's key term (its on-screen text, or a
+    label naming what the narration says), then the more of the narration's words it carries; a tie keeps the longer."""
+    from .qa import MYTH_MARK
+    t = tidy_label(text)
+    said = _content(spec.get('narration', ''))
+    words = _content(t)
+    is_ost = tidy_label(spec.get('on_screen_text') or '') == t
+    shared = len(words & said)
+    key = is_ost or shared > 0
+    return (bool(MYTH_MARK.search(t)), key, is_ost, shared, len(t))
+
+
 def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     """One action per failed thing: dict(check, beat, cause, fix, hint) where hint is the change to the beat's hints
     (None when there is no automatic fix; `fix` then says what to do by hand)."""
@@ -229,9 +251,13 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     for w in words.get('missing') or []:
         beat = beat_of_word(tl, w)
         h = beats_h.get(beat) or {}
+        swapped = h.get('swapped') or {}
         if beat and not h.get('voice_speed'):
             actions.append(dict(check='words', beat=beat, cause=f'Whisper did not hear "{w}" (no spelling rule explains it)',
                                 fix=f'voice {beat} again at speed {SLOWER}', hint=dict(voice_speed=SLOWER)))
+        elif beat and w.lower() not in swapped and w.lower() not in {x.lower() for x in swapped.values()}:
+            actions.append(dict(check='words', beat=beat, cause=f'"{w}" was still not heard after the beat was voiced again',
+                                fix=f'say a plainer word for "{w}" and voice {beat} again', hint=dict(swap_word=w)))
         else:
             actions.append(dict(check='words', beat=beat, cause=f'"{w}" was still not heard after the beat was voiced again',
                                 fix=None, hint=None))
@@ -240,11 +266,22 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     problems = [(x, 'on the host') for x in text.get('text_on_character') or []] + \
                [(x, 'on another text') for x in text.get('overlapping_text') or []]
     expanded = []
-    for item, where in problems:                     # an overlap names its texts as "A / B" (or a list): one action each
+    for item, where in problems:
         texts = item.get('texts')
-        if texts and not item.get('text'):
+        if texts and not item.get('text'):           # an overlap ("A / B"): only the less important text gives way
             parts = texts if isinstance(texts, list) else [x.strip() for x in str(texts).split(' / ')]
-            expanded += [(dict(item, text=x), where) for x in parts if x]
+            on_caption = 'caption' in parts
+            parts = [x for x in parts if x and x != 'caption']          # the caption itself never gives way
+            beat = beat_at(tl, float(item.get('t', 0)))
+            spec = next((b for b in ep_data.get('beats', []) if b.get('id') == beat), {})
+            if on_caption and parts:
+                expanded += [(dict(item, text=x, keep='the caption'), where) for x in parts]
+            elif len(parts) > 1:
+                ranked = sorted(parts, key=lambda x: importance(x, spec, ep_data), reverse=True)
+                keep, give = ranked[0], ranked[-1]
+                expanded.append((dict(item, text=give, keep=keep), where))
+            else:
+                expanded += [(dict(item, text=x), where) for x in parts]
         else:
             expanded.append((item, where))
     for item, where in expanded:
@@ -259,7 +296,14 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
         is_insert_label = any(e.get('kind') == 'label' and tidy_label(e.get('detail')) == tidy_label(label)
                               for e in (shot.get('insert') or {}).get('effects') or [])
         moved = h.get('host_side') or (h.get('label_at') or {}).get(label)
-        if not moved:
+        if item.get('keep'):                         # on another text: moving the host would not part them
+            if label not in (h.get('drop') or []):
+                hint = dict(drop=[label])
+                fix = f'drop the label "{tidy_label(label)}"; keep ' + ('the caption' if item['keep'] == 'the caption' else
+                                                                         f'"{tidy_label(item["keep"])}", the more important text')
+            else:
+                hint, fix = None, None
+        elif not moved:
             side = _host_side(ep_data, beat, h)
             if is_insert_label:
                 hint = dict(label_at={label: AWAY.get(side, 'top')})
@@ -334,7 +378,7 @@ def merge(repairs: dict, beat: str, hint: dict):
             h[k] = v
 
 
-def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, write=None) -> list:
+def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, write=None, ask=None) -> list:
     """Add one short sentence to the 1-2 thinnest middle beats, from the facts they cite, and re-stamp the script
     approval as the self-repair. `write(system, user, schema)` -> dict (the local model; a stand-in in tests).
     Returns [(beat id, sentence)] actually added."""
@@ -355,10 +399,12 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     user = json.dumps(dict(title=episode.title or episode.topic, beats=rows), ensure_ascii=False)
     schema = dict(type='object', required=['beats'], properties=dict(beats=dict(type='array', items=dict(
         type='object', required=['id', 'sentence'], properties=dict(id=dict(type='string'), sentence=dict(type='string'))))))
+    from . import entail
     if write is None:
         from .cache import for_episode
         cache = for_episode(config.EPISODES_DIR / slug)
         write = lambda s, u, sc: llm.generate_json(s, u, sc, 600, cache=cache, step='repair-duration', temperature=0.3)
+        ask = ask or entail.default_ask(cache)        # each added sentence is fact-checked like the script's own
     was = episode.is_approved('script')               # before the narration changes
     answer = write(system, user, schema)
     allowed_numbers = set(re.findall(r'\d[\d,.]*', ' '.join(r['narration'] + ' ' + ' '.join(r['facts']) for r in rows)))
@@ -372,6 +418,9 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
             continue                                # a number the facts don't have: not added
         if sentence[-1] not in '.!?':
             sentence += '.'
+        research = entail.research_text(b.source_ids, episode.sources)
+        if ask is not None and research and entail.supported(sentence, research, ask)[0] is False:
+            continue                                # says more than the cited fact: not added
         b.narration = f'{b.narration.rstrip()} {sentence}'
         added.append((b.id, sentence))
     if added:
@@ -383,6 +432,62 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
                 digest=episode.approvals['script'][:12], added=[dict(beat=i, sentence=s) for i, s in added]))
         store.save(episode, base)
     return added
+
+
+SWAP_SYSTEM = ('A speech recogniser keeps mishearing one word of a narrated line in an explainer video. Give ONE plainer, '
+               'common word (or a two-word phrase) to say instead: easy to pronounce, the same meaning in this line, and '
+               'the same grammar (tense, singular or plural), so the line still reads naturally. Not the same word.')
+SWAP_SCHEMA = dict(type='object', required=['replacement'], properties=dict(replacement=dict(type='string')))
+
+
+def _swap_in(text: str, word: str, new: str) -> str:
+    """`word` replaced by `new` as a whole word, keeping a capital first letter."""
+    def sub(m):
+        got = m.group(0)
+        return new[:1].upper() + new[1:] if got[:1].isupper() else new
+    return re.sub(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", sub, text, flags=re.I)
+
+
+def swap_word(slug: str, episode, beat_id: str, word: str, write=None) -> str:
+    """A word Whisper still did not hear after a slower take: the local model picks a plainer synonym that keeps the
+    meaning; the narration (so the captions too, which follow it), the on-screen text, labels and anchors that use the
+    word get it, and the script approval is re-stamped as the self-repair. Returns the new word ('' when none)."""
+    from . import llm, store
+    b = next((x for x in episode.beats if x.id == beat_id), None)
+    if b is None or not re.search(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", b.narration, re.I):
+        return ''
+    if write is None:
+        from .cache import for_episode
+        cache = for_episode(config.EPISODES_DIR / slug)
+        write = lambda s_, u, sc: llm.generate_json(s_, u, sc, 80, cache=cache, step='repair-words', temperature=0.2)
+    answer = write(SWAP_SYSTEM, json.dumps(dict(line=b.narration, word=word), ensure_ascii=False), SWAP_SCHEMA) or {}
+    new = ' '.join(str(answer.get('replacement') or '').split()).strip('"\'.,!? ')
+    if (not new or len(new.split()) > 2 or not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new)
+            or new.lower() == word.lower() or new.lower()[:5] == word.lower()[:5]):
+        return ''
+    was = episode.is_approved('script')               # before the narration changes
+    old_line = b.narration
+    b.narration = _swap_in(b.narration, word, new)
+    b.on_screen_text = _swap_in(b.on_screen_text or '', word, new)
+    sh = b.shot
+    for m in sh.motion:
+        m.anchor = _swap_in(m.anchor or '', word, new)
+    if sh.insert:
+        for e in sh.insert.effects:
+            e.detail, e.anchor = _swap_in(e.detail or '', word, new), _swap_in(e.anchor or '', word, new)
+    if sh.graphic:
+        sh.graphic.items = [_swap_in(x, word, new) for x in sh.graphic.items]
+        sh.graphic.anchors = [_swap_in(x, word, new) for x in sh.graphic.anchors]
+    if sh.split:
+        sh.split.labels = [_swap_in(x, word, new) for x in sh.split.labels]
+        sh.split.anchors = [_swap_in(x, word, new) for x in sh.split.anchors]
+    if was:
+        episode.approvals['script'] = episode.script_digest()
+        episode.meta.setdefault('approval_log', []).append(dict(
+            gate='script', by='self-repair (QA words)', at=time.strftime('%Y-%m-%dT%H:%M:%S'),
+            digest=episode.approvals['script'][:12], swapped=dict(beat=beat_id, word=word, now=new, was=old_line)))
+    store.save(episode, config.EPISODES_DIR / slug)
+    return new
 
 
 def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: float = 2.45, write=None) -> list:
@@ -414,6 +519,23 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             entry['beat'] = ', '.join(i for i, _ in added)
             entry['fix'] = 'added: ' + ' | '.join(f'{i}: "{s}"' for i, s in added)
+        elif 'swap_word' in a['hint']:
+            episode, _ = store.load(slug)
+            word = a['hint']['swap_word']
+            try:
+                now = swap_word(slug, episode, a['beat'], word, write=write)
+            except Exception as e:                  # the local model is down: report it, never crash the render
+                now, entry['fix'] = '', f'could not pick a plainer word ({type(e).__name__}: {str(e)[:120]})'
+            if not now:
+                entry['fix'] = entry['fix'] if entry['fix'].startswith('could not') else \
+                    f'no usable plainer word for "{word}"'
+                merge(repairs, a['beat'], dict(swapped={**(repairs.get('beats', {}).get(a['beat'], {}).get('swapped') or {}),
+                                                        word.lower(): ''}))
+                repairs.setdefault('log', []).append(entry)
+                continue
+            merge(repairs, a['beat'], dict(swapped={**(repairs.get('beats', {}).get(a['beat'], {}).get('swapped') or {}),
+                                                    word.lower(): now}))
+            entry['fix'] = f'said "{now}" instead of "{word}" and voiced {a["beat"]} again (captions follow)'
         else:
             merge(repairs, a['beat'], a['hint'])
         repairs.setdefault('log', []).append(entry)

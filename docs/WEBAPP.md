@@ -127,7 +127,11 @@ The first step of every pitch, on the Mac's local model (`pipeline/understand.py
 ("how is crude oil naturally forming in th earth and not comig from the dinosaurs") becomes: the real question,
 the claims inside it, the misconception a viewer likely holds, the most interesting true angle, a clean title and
 slug, and the picture subjects that show the myth. Research searches the question and each claim; each claim is then
-labelled supported, mainstream-disputed, fringe/false or unverified from the cited facts. It never waits for the user.
+labelled supported, mainstream-disputed, fringe/false or unverified from the cited facts. A claim that comes back
+unverified because no fact mentions it gets two targeted searches of its own on .edu/.gov pages (`story.claim_followup`;
+"dinosaur myth crude oil origin" found only blogs, which are never cited, until it was searched there); new facts join
+the research (`meta.claim_facts`, so the script step has them under the same ids) and the claim is checked again. It
+never waits for the user.
 
 - The episode moves from the typed slug to the clean one when the pitch comes back (`Service.rename_after_pitch`:
   row, jobs, files, spend approvals and folders); the typed slug stays in `episodes.renamed_from` and old links
@@ -142,17 +146,36 @@ labelled supported, mainstream-disputed, fringe/false or unverified from the cit
 - The episode page shows "What it understood": question, angle, misconception, each claim with its verdict.
 - If the local model is down, the topic is used tidied, nothing is renamed, and the episode goes on.
 
+## Fact check before the script gate (user 2026-11-14)
+
+At the end of the script step on the Mac (`pipeline/entail.py`), every narrated sentence of a beat that cites a fact
+is checked against that fact's quote: one short call to the local model per sentence (cached), which lists what the
+sentence adds to the research; leaving a detail out is fine. A sentence that fails is
+
+1. kept and re-cited when another fact of the research says it (the candidates are picked in code by their words);
+2. else rewritten (two versions in one call: the unsupported part taken out, or the same point made with the
+   research's closest fact) and checked again; a version with a new number or that repeats another line is refused;
+3. else its claim is dropped and the beat kept: the sentence is removed, or a one-sentence beat gets a short line that
+   states no fact (a question or a transition), or the cited fact as research wrote it.
+
+Each change is in `meta.fact_check` and the job notes, and on the episode page ("Fact check"). Anchors the new line no
+longer says are re-anchored. The self-repair's added sentences (duration) get the same check. `stick fact-check SLUG`
+runs it, with the claim follow-up first, on an existing script (an Auto-approved script is re-stamped
+`fact check (auto)`; one a person approved goes back to its gate). Sentences of beats that cite nothing, and
+on-screen text, are not checked.
+
 ## Self-repair after every render (user 2026-11-14)
 
 After QA, `pipeline/repair.py` diagnoses each failed check, applies a fix and renders again (only the beats it
 touched; the rest come from the clip cache), at most two rounds. Fixes are per-beat hints in
 `episodes/<slug>/repairs.json`, applied in memory by the composer; the approved script is untouched except by the
-duration fix, which is logged in the approval log as `self-repair (QA duration)` and sent back to the server.
+duration and word fixes, which are logged in the approval log as `self-repair (QA duration)` / `(QA words)` and sent
+back to the server.
 
 | check | fix |
 |---|---|
-| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x |
-| text | round 1 moves it (host to the other side and smaller, or an insert label away from the host); round 2 drops that label |
+| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again |
+| text | a label on the host: round 1 moves it (host to the other side and smaller, or an insert label away from the host), round 2 drops it; two texts on each other: only the less important one is dropped (a myth mark, then the beat's key term: its on-screen text or a label naming what the narration says) |
 | duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
 | story_match | a MYTH mark on a picture of the myth (a scene that may not show its beat is a warning to look at: a word test cannot judge a painting well enough to repaint it) |
 

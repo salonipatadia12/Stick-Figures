@@ -884,6 +884,9 @@ class Service:
         if interp:                                     # what topic understanding read from the typed topic
             from pipeline import understand
             out['interpretation'] = understand.view(interp)
+        fc = (episode.meta or {}).get('fact_check')
+        if fc:                                         # cited sentences the fact check rewrote or dropped
+            out['fact_check'] = dict(checked=fc.get('checked', 0), changed=fc.get('changed') or [])
         if episode.storylines:
             out['storylines'] = self.storylines_view(episode)
         if episode.beats:

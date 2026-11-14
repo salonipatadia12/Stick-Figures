@@ -23,6 +23,14 @@
   {% if interpretation.note %}<p class="muted small">{{ interpretation.note }}</p>{% endif %}
 </details>
 {% endif %}
+{% if ep.fact_check and ep.fact_check.changed %}
+<details class="card">
+  <summary><strong>Fact check</strong> <span class="muted small">({{ ep.fact_check.changed|length }} of {{ ep.fact_check.checked }} cited sentences fixed to say only what their fact says)</span></summary>
+  <ul class="list small">{% for c in ep.fact_check.changed %}
+    <li><strong>{{ c.beat }}</strong> <span class="muted">({{ c.fact_ids|join(', ') }})</span>: <s>{{ c.was }}</s>{% if c.now %} → {{ c.now }}{% endif %} <span class="badge">{{ c.action }}</span></li>
+  {% endfor %}</ul>
+</details>
+{% endif %}
 {% if ep.niche or ep.audience %}<p class="muted small">{% if ep.niche %}Niche: {{ ep.niche }}{% endif %}{% if ep.niche and ep.audience %} · {% endif %}{% if ep.audience %}Audience: {{ ep.audience }}{% endif %}</p>{% endif %}
 
 {% if errors %}

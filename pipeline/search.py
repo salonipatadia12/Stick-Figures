@@ -441,3 +441,54 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
             break
     timings['facts'] = len(facts)
     return facts
+
+
+# ------------------------------------------------------------------ a claim no fact mentions
+CLAIM_QUERY_SYSTEM = ('A claim inside a video topic was not covered by the research. Write 2 web search queries that '
+                      'would find a university, government or journal page saying whether it is true, including the '
+                      'myth or misconception it may be (e.g. "oil from dinosaurs myth plankton geology"). Each query is '
+                      '4-8 plain words. No quotes, no site: operators.')
+CLAIM_PAGES = 3                # reputable pages read per follow-up search
+
+
+def claim_queries(claim: str, topic: str = '', cache=None, ledger=None) -> list:
+    """Two searches for one claim: from the local model, else built from the claim's own words."""
+    try:
+        data = llm.generate_json(CLAIM_QUERY_SYSTEM, f'Topic: {topic}\nClaim: {claim}\nWrite 2 search queries.',
+                                 QUERY_SCHEMA, 120, cache=cache, ledger=ledger, step='research',
+                                 detail='claim follow-up queries', seed=5)
+        got = [' '.join(str(q).replace('"', '').split()) for q in data.get('queries', []) if str(q).strip()][:2]
+    except llm.LLMError:
+        got = []
+    words = ' '.join(w for w in re.findall(r"[A-Za-z][A-Za-z'-]+", claim) if w.lower() not in STOP)
+    for q in (f'{words} myth science', f'{words} evidence research'):
+        if len(got) < 2 and q.lower() not in {g.lower() for g in got}:
+            got.append(q)
+    # 2026-11-14: "dinosaur myth crude oil origin" found only blogs and magazines (never cited); the same words on
+    # .edu/.gov found EIA and the North Dakota Geological Survey
+    return [f'{q} site:edu OR site:gov' for q in got[:2]]
+
+
+def claim_followup(claim: str, topic: str = '', cache=None, ledger=None) -> tuple[list, list]:
+    """(queries, facts): two targeted searches for a claim that came back unverified because no fact mentions it; the
+    facts (dicts like page_facts) come only from reputable pages, read with the claim as the focus."""
+    from .script import doi_link, reputable
+    queries = claim_queries(claim, topic, cache, ledger)
+    pages = {}
+    for q in queries:
+        results, _, _ = cached_search(q, cache)
+        for r in [r for r in results if reputable(doi_link(r['href']))][:CLAIM_PAGES]:
+            pages.setdefault(doi_link(r['href']), r)
+    facts = []
+    for url, r in pages.items():
+        if r.get('text'):                             # an open-index abstract: no page to fetch
+            text, title = r['text'], r.get('title', '')
+        else:
+            text, title = fetch_page(url, FETCH_TIMEOUT_S, cache)
+            title = title or r.get('title', '')
+        if len(text or '') >= MIN_PAGE_CHARS:
+            facts += page_facts(f'{topic} {claim}'.strip(), url, title, text, cache=cache, ledger=ledger, focus=[claim])
+    if ledger is not None:
+        ledger.record_free('research', 'duckduckgo', 'ddgs', f'{len(queries)} follow-up searches for the claim '
+                           f'"{claim[:60]}", {len(pages)} reputable pages')
+    return queries, facts

@@ -57,8 +57,10 @@ class Words(unittest.TestCase):
         a = repair.diagnose(rep, TL, EP, {})
         self.assertEqual([(x['check'], x['beat'], x['hint']) for x in a], [('words', 'b02', {'voice_speed': repair.SLOWER})])
         again = repair.diagnose(rep, TL, EP, {'beats': {'b02': {'voice_speed': repair.SLOWER}}})
-        self.assertIsNone(again[0]['hint'])                           # once only
-        self.assertIn('still not heard', repair.still_wrong(rep, again)[0])
+        self.assertEqual(again[0]['hint'], {'swap_word': 'imagines'})   # once slower; then a plainer word
+        done = repair.diagnose(rep, TL, EP, {'beats': {'b02': {'voice_speed': repair.SLOWER, 'swapped': {'imagines': ''}}}})
+        self.assertIsNone(done[0]['hint'])                            # one swap only
+        self.assertIn('still not heard', repair.still_wrong(rep, done)[0])
 
 
 class Text(unittest.TestCase):
@@ -71,11 +73,12 @@ class Text(unittest.TestCase):
         r['beats']['b02']['drop'] = ['The Myth']
         self.assertIsNone(repair.diagnose(rep, TL, EP, r)[0]['hint'])
 
-    def test_an_overlap_names_each_of_its_texts(self):
-        # 2026-11-14 crude oil: "MYTH / Myth: Big Vertebrates" was read as the label "M"
+    def test_an_overlap_drops_only_the_less_important_text(self):
+        # 2026-11-14 crude oil: "MYTH / Myth: Big Vertebrates" was read as the label "M", then both were dropped
         rep = failing(text=dict(overlapping_text=[dict(texts='The Myth / Other', t=3.0)], pass_=False))
-        labels = [a['cause'] for a in repair.diagnose(rep, TL, EP, {})]
-        self.assertTrue(any('"The Myth"' in c for c in labels) and any('"Other"' in c for c in labels), labels)
+        a = repair.diagnose(rep, TL, EP, {})
+        self.assertEqual([(x['beat'], x['hint']) for x in a], [('b02', {'drop': ['Other']})])
+        self.assertIn('keep "The Myth"', a[0]['fix'])
 
     def test_a_dropped_split_label_is_gone(self):
         ep = dict(beats=[dict(id='b07', narration='x', shot=dict(visual='split', insert=dict(key='a', scene='', effects=[]),
