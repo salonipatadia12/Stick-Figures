@@ -25,9 +25,20 @@ class CliFlow(unittest.TestCase):
         p = mock.patch.object(script, 'make_client', lambda: self.client)
         p.start()
         self.addCleanup(p.stop)
+        self.renders = []                        # --auto paints and renders after the script: never for real in a test
+        p = mock.patch.object(cli, 'auto_render', lambda slug: self.renders.append(slug) or 0)
+        p.start()
+        self.addCleanup(p.stop)
 
     def to_script(self, *extra):
-        """Story before script: make pitches three storylines and waits; pick one; make writes the script."""
+        """Story before script: make pitches three storylines and waits; pick one; make writes the script. With --auto
+        one make does it all (user 2026-11-13): the storyline and the script are approved by "auto", then it renders."""
+        if '--auto' in extra:
+            code, out = self.run_cli('make', TOPIC, *extra)
+            self.assertEqual(code, 0, out)
+            self.assertIn('--auto: picked storyline 1', out)
+            self.assertEqual(self.renders, [SLUG])
+            return code, out
         code, out = self.run_cli('make', TOPIC, *extra)
         self.assertEqual(code, cli.EXIT_GATE)
         self.assertIn('WAITING AT GATE: storyline', out)

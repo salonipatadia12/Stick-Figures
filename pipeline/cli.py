@@ -152,13 +152,23 @@ def cmd_make(args):
         print(f'  worst case before the storyline gate: ${usd(total):.4f} of ${usd(ledger.remaining()):.4f} remaining '
               '(research is skipped when it is already cached)')
         return 0
-    if needs_story:                                  # a pitch is not an approval: --auto never picks a storyline
+    if needs_story:                                  # with --auto the first storyline the gate accepts is picked below
         from .story import pitch, view
         episode, notes = pitch(episode, base, ledger, regenerate='story' in regenerate)
         store.save(episode, base)
         for note in notes:
             print('  ' + note)
         print(f'  ledger: spent ${usd(ledger.spent()):.4f} of ${usd(ledger.budget):.2f}')
+    if args.auto and not episode.beats and not episode.storyline_pick and episode.storylines:
+        from . import auto
+        n, why = auto.first_storyline(episode)
+        if n is None:
+            print(f'\n--auto cannot pick a storyline: {why}. Re-pitch with --regenerate story.')
+            return EXIT_GATE
+        if _approve(episode.slug, 'storyline', story=n) != 0:
+            return EXIT_GATE
+        episode, base = store.load(base)
+        print(f'--auto: picked {why}')
     if not episode.beats and not episode.storyline_pick:
         from .story import view
         if not episode.storylines:
@@ -196,11 +206,22 @@ def cmd_make(args):
     style, issues = check(episode)
     if not episode.is_approved('script'):
         if args.auto:
-            if errors_of(issues):
+            from . import auto
+            for line in auto.resolve_bases(episode):
+                print('--auto: ' + line)
+            store.save(episode, base)
+            hook, problems = auto.pick_hook(episode, style)
+            if hook is None:
+                style, issues = check(episode)
                 print(script_view(episode, style, issues))
-                print('\n--auto will not approve a script that fails the checks. Fix episode.json, then rerun.')
+                print('\n--auto will not approve a script that fails the checks:\n  ' + '\n  '.join(problems)
+                      + f'\nFix {base / "episode.json"}, then rerun.')
                 return EXIT_CHECKS
-            record_approval(episode, base, 'script', 'auto')
+            if _approve(episode.slug, 'script', hook=hook or None) != 0:
+                return EXIT_CHECKS
+            episode, base = store.load(base)
+            if hook:
+                print(f'--auto: script approved with hook {hook} ("{episode.hook_options[hook - 1].line}")')
         elif 'script' in gates:
             if sys.stdin.isatty() and sys.stdout.isatty():
                 if not interactive_gate(episode, base):
@@ -221,8 +242,50 @@ def cmd_make(args):
         print(f'\nWAITING AT GATE: bases. Make candidates with\n  stick bases {episode.slug} --candidates\n'
               f'then pick one per base:\n  stick approve {episode.slug} --gate bases --pick <base>=<candidate.png> ...')
         return EXIT_GATE
+    if args.auto:
+        return auto_render(episode.slug)
     print('\nBases ready. Next: build any newly approved base into layers (scripts/motion_test/build_bases.py), '
           'then render the episode (see docs/RIG.md).')
+    return 0
+
+
+def _approve(slug, gate, story=None, hook=None, by='auto'):
+    """An auto decision through the gate's own code (cmd_approve), recorded with by="auto"."""
+    return cmd_approve(argparse.Namespace(episode=slug, gate=gate, story=story, hook=hook, by=by, pick=None, reject=None))
+
+
+def auto_render(slug, run=None) -> int:
+    """--auto after the script: paint the scenes and props the script needs (local FLUX), then render and print the QA
+    summary. The same commands the Mac worker runs for the web app's paint and render jobs."""
+    if run is None and config.EPISODES_DIR.resolve() != (config.ROOT / 'episodes').resolve():
+        # the paint and render commands read the repo's episodes/; never let them act on another episode of the same
+        # name (2026-11-13: a test with a temporary EPISODES_DIR started rendering the real salary episode)
+        print(f'--auto: not painting or rendering: the episodes folder is {config.EPISODES_DIR}, not the repo\'s.')
+        return EXIT_ERROR
+    run = run or (lambda cmd: subprocess.call([str(c) for c in cmd], cwd=config.ROOT))
+    for what, cmd in (('scenes', 'inserts'), ('props', 'props')):
+        print(f'\n--auto: painting the {what} ...', flush=True)
+        code = run([sys.executable, '-m', 'pipeline', cmd, slug, '--generate'])
+        if code == EXIT_GATE:
+            print(f'--auto stopped: some {what} failed QA on both seeds, and the video cannot be rendered without them. '
+                  f'See the output above; repaint with stick {cmd} {slug} --generate.')
+            return EXIT_GATE
+        if code != 0:
+            print(f'--auto stopped: stick {cmd} {slug} --generate failed (exit {code}).')
+            return EXIT_ERROR
+    print('\n--auto: rendering ...', flush=True)
+    code = run([sys.executable, 'scripts/motion_test/episode_compose.py', slug, '--workers', '4'])
+    if code != 0:
+        print(f'--auto stopped: the render failed (exit {code}).')
+        return EXIT_ERROR
+    out = config.ROOT / 'renders' / 'sample' / slug
+    try:
+        summary = json.loads((out / 'qa.json').read_text()).get('summary', {})
+    except (OSError, ValueError):
+        summary = {}
+    failed = [k for k, v in summary.items() if k != 'all' and v is False]
+    print(f'\nDone: {out / (slug + ".mp4")}\nQA: ' + ('all checks pass' if summary.get('all') else
+                                                  'failed: ' + ', '.join(failed) if failed else 'no report'))
     return 0
 
 
@@ -545,7 +608,9 @@ def build_parser():
     m.add_argument('--budget', type=float, help=f'per-video cap in USD (default {config.DEFAULT_BUDGET_USD:.2f})')
     m.add_argument('--voice-id', help='Kokoro narrator voice (default: the style default, am_michael; alternate: af_heart)')
     m.add_argument('--approve', help='comma-separated gates to stop at (default "script"; "none" to skip)')
-    m.add_argument('--auto', action='store_true', help='skip all gates (still refuses scripts that fail checks)')
+    m.add_argument('--auto', action='store_true', help='no stops: pick the first storyline the gate accepts, approve the '
+                   'script only if every check passes, use library bases (a missing one becomes a painted scene), '
+                   'paint and render (default: stop at the approval gates)')
     m.add_argument('--no-research', action='store_true', help='skip web research; the script may then use no statistics')
     m.add_argument('--facts', help='JSON list of {claim, url, title, quote} checked by hand from their sources: used '
                    'instead of the research call (only the script is paid)')

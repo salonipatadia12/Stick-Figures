@@ -10,7 +10,7 @@ from unittest import mock
 
 from pipeline import cli, config, qa, script, story
 from pipeline.models import Episode, Storyline, from_wire
-from pipeline_fixtures import FakeClient, anthropic_provider, research_response, story_pitch, story_response, storyline
+from pipeline_fixtures import FakeClient, anthropic_provider, research_response, script_response, story_pitch, story_response, storyline
 from test_host_format import episode as host_episode
 
 
@@ -202,16 +202,39 @@ class RotationTest(unittest.TestCase):
         self.assertIn('same format', out)
         self.assertEqual(run_cli('approve', 'new-one', '--gate', 'storyline', '--story', '2', '--by', 'test')[0], 0)
 
-    def test_make_pitches_and_waits_and_auto_never_picks(self):
+    def test_make_pitches_and_waits_without_auto(self):
         client = FakeClient([research_response(), story_response()])
         with mock.patch.object(script, 'make_client', lambda: client):
-            code, out = run_cli('make', 'Why honey never spoils', '--auto')
+            code, out = run_cli('make', 'Why honey never spoils')
         self.assertEqual(code, cli.EXIT_GATE)
         self.assertIn('WAITING AT GATE: storyline', out)
         self.assertIn('[mini_story]', out)
         sent = client.messages.created[1]
         self.assertIn('Allowed formats', sent['messages'][0]['content'])
         self.assertEqual(json.loads(Path(self.dir.name, 'why-honey-never-spoils', 'episode.json').read_text())['storyline_pick'], 0)
+
+    def test_auto_picks_the_first_storyline_the_gate_accepts_and_goes_on(self):
+        # user 2026-11-13: auto mode has no stops. The last video was a mystery, so storyline 1 (a mystery) is skipped.
+        self.save('old-one', ['mystery', 'pov', 'countdown'], pick=1)
+        client = FakeClient([research_response(), story_response(story_pitch(('mystery', 'myth_vs_fact', 'pov'))),
+                             script_response()])
+        renders = []
+        with mock.patch.object(script, 'make_client', lambda: client), \
+                mock.patch.object(cli, 'auto_render', lambda slug: renders.append(slug) or 0):
+            code, out = run_cli('make', 'Why honey never spoils', '--auto')
+        data = json.loads(Path(self.dir.name, 'why-honey-never-spoils', 'episode.json').read_text())
+        self.assertEqual(data['storyline_pick'], 2, out)
+        self.assertIn('--auto: picked storyline 2 [myth_vs_fact]', out)
+        log = data['meta']['approval_log']
+        self.assertEqual([(e['gate'], e['by']) for e in log][0], ('storyline', 'auto'))
+        self.assertEqual(len(client.messages.created), 3)             # research, storylines, then the script
+        if code == 0:                                                 # the fixture script passes: approved by auto, rendered
+            self.assertEqual([(e['gate'], e['by']) for e in log][1], ('script', 'auto'))
+            self.assertEqual(renders, ['why-honey-never-spoils'])
+        else:
+            self.assertEqual(code, cli.EXIT_CHECKS)
+            self.assertIn('--auto will not approve a script that fails the checks', out)
+            self.assertEqual(renders, [])
 
     def test_a_topic_that_cannot_carry_a_story_says_so(self):
         pitch = story_pitch()
