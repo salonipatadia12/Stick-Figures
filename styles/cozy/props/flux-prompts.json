@@ -446,5 +446,61 @@
     "model": "mflux-community/flux2-klein-4b-mflux-q8",
     "licence": "apache-2.0",
     "steps": 4
+  },
+  "prop-red_highlight_marker": {
+    "prompt": "A single red_highlight_marker, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      799,
+      800
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-bundle of sticks": {
+    "prompt": "A single bundle of sticks, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      268,
+      269
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-small infant": {
+    "prompt": "A single small infant, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      609,
+      610
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
+  },
+  "prop-shield_prop": {
+    "prompt": "A single shield_prop, alone, centred, seen from slightly above, on a plain flat light grey background and nothing else. Children's-book painterly illustration: soft brush texture, simple shapes, a thin dark navy outline, warm palette of rust, cream, teal and wood brown, like a cozy hand-painted cartoon. No text, no letters, no people, no hands, no table, no ground shadow.",
+    "seeds": [
+      577,
+      578
+    ],
+    "size": [
+      512,
+      512
+    ],
+    "model": "mflux-community/flux2-klein-4b-mflux-q8",
+    "licence": "apache-2.0",
+    "steps": 4
   }
 }

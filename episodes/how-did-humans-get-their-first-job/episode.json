@@ -1,0 +1,1112 @@
+{
+ "schema_version": 1,
+ "slug": "how-did-humans-get-their-first-job",
+ "topic": "How Did Humans Get Their First Job?",
+ "niche": "",
+ "audience": "",
+ "style": "cozy",
+ "aspect": "9:16",
+ "target_length": 45,
+ "voice": {
+  "provider": "kokoro",
+  "voice_id": ""
+ },
+ "title": "The First Team Job",
+ "hook_promise": "Why did we stop just hunting?",
+ "hook_options": [
+  {
+   "line": "We stopped being lone hunters.",
+   "frame_one": "Host holding a spear, looking confused at an empty campfire.",
+   "host_doing": "",
+   "scene_key": "",
+   "scene": "",
+   "answer": "Cooperative breeding allowed mothers to forage while others held infants safely.",
+   "loop_line": "It wasn't about the hunt; it was us."
+  },
+  {
+   "line": "Hunting alone just didn't work.",
+   "frame_one": "Host standing next to a large animal carcass with only 20% highlighted in red.",
+   "host_doing": "",
+   "scene_key": "",
+   "scene": "",
+   "answer": "Aggressive scavenging yielded low returns, forcing humans to change their strategy entirely.",
+   "loop_line": "We needed each other."
+  },
+  {
+   "line": "Why did our jobs change?",
+   "frame_one": "Host looking at a map of the Ice Age landscape with an empty basket.",
+   "host_doing": "",
+   "scene_key": "",
+   "scene": "",
+   "answer": "The shift from lone hunting to cooperative breeding secured more food and saved lives.",
+   "loop_line": "Our first job was teamwork."
+  }
+ ],
+ "hook_pick": 1,
+ "storylines": [
+  {
+   "format": "mini_story",
+   "title": "The Scavenger's Dilemma",
+   "hook": "Why did we stop just hunting?",
+   "pitch": "Early humans relied on big game, but aggressive scavenging only gave us 20% of the carcass. The stakes rose when mothers needed to forage while keeping infants safe.",
+   "conflict": "A single hunter cannot secure enough food or protect a baby alone against predators and scarcity.",
+   "stakes": "Starvation for the group if one person fails; death for the infant without protection.",
+   "twist": "The solution wasn't better weapons, but trusted others holding infants while mothers worked—a shift from lone hunting to cooperative breeding.",
+   "payoff": "This cooperation secured more food and saved lives, marking our first 'job' as a team player.",
+   "visuals": [
+    "Host stands in front of a painted savanna scene with snow falling lightly.",
+    "Close-up on the host holding two sticks representing an infant and pointing to them being held by another stick figure.",
+    "Split screen: left shows one hunter struggling (myth), right shows cooperative group hunting (fact).",
+    "Camera moves from a wide shot of hunters to a close-up of hands passing food."
+   ],
+   "fact_ids": [
+    "s1",
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "format": "countdown",
+   "title": "Three Reasons We Worked Together",
+   "hook": "The last reason changes everything.",
+   "pitch": "Counting down the reasons humans got their first job: three to protect, two to survive, one to thrive forever.",
+   "conflict": "Hunting alone is dangerous and inefficient; resources are scarce after the Ice Age ends.",
+   "stakes": "Without a system, infants die in foraging trips and food goes to waste on carcasses we can't carry all of.",
+   "twist": "Number one isn't just sharing meat, but cooperative breeding where others hold babies so mothers can hunt or gather safely.",
+   "payoff": "This division of labor created the first stable human job: a caregiver and hunter working as a unit.",
+   "visuals": [
+    "Host stands center stage holding up three painted stones for 'reason 3'.",
+    "Painted map with pins dropping to show hunting grounds shrinking over time (7950-3950 BCE).",
+    "Close-up of host swapping a stone for an infant stick figure held by another hand.",
+    "Host shrinks slightly in the frame as they explain 'reason 1', emphasizing intimacy and trust."
+   ],
+   "fact_ids": [
+    "s2",
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "format": "mystery",
+   "title": "The Missing Hunter",
+   "hook": "Who was holding the baby?",
+   "pitch": "In 7950 BCE, we find a mother foraging but no hunter nearby. The puzzle is how she survived without her partner.",
+   "conflict": "A lone mother cannot safely gather food in dangerous terrain while carrying an infant alone.",
+   "stakes": "The baby faces immediate danger from predators or the elements if left unattended during long trips.",
+   "twist": "We discover a 'trusted other' holding the child, revealing that our first jobs were defined by social trust before money existed.",
+   "payoff": "This mystery solves itself: humans got their first job through cooperative breeding networks, not just hunting skills.",
+   "visuals": [
+    "Host stands in front of a painted forest scene with a question mark drawn above the host's head.",
+    "Camera zooms into a detail on the ground showing footprints leading away from a central camp.",
+    "Split screen: top shows a lone mother (myth), bottom reveals another figure holding an infant stick figure (fact).",
+    "Host holds up two sticks representing 'mother' and 'guardian' connecting them with string."
+   ],
+   "fact_ids": [
+    "s2",
+    "s4"
+   ]
+  }
+ ],
+ "storyline_pick": 1,
+ "story_note": "",
+ "subject_settings": [
+  "ice age camp"
+ ],
+ "beats": [
+  {
+   "id": "b01",
+   "role": "hook",
+   "narration": "We stopped being lone hunters.",
+   "on_screen_text": "",
+   "visual_intent": "Host holding a spear, looking confused at an empty campfire.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "centre",
+     "size": "medium",
+     "holds": "",
+     "doing": "Host holding a spear, looking confused at an empty campfire.",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "savanna-empty-sky",
+     "scene": "wide shot of a barren savanna under a pale sky with no other animals or humans visible, emphasizing isolation and the vastness of the hunt.",
+     "effects": [
+      {
+       "kind": "dim",
+       "anchor": "",
+       "at": "",
+       "detail": "cool blue tones"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "vast prehistoric savanna with distant mountains",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "look_up",
+       "target": "",
+       "anchor": "We"
+      },
+      {
+       "who": "lead",
+       "verb": "shake_head",
+       "target": "",
+       "anchor": "stopped"
+      }
+     ],
+     "props": []
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "being",
+      "detail": "slowly zooming into the lone figure to emphasize their solitude before the scene shifts."
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b02",
+   "role": "setup",
+   "narration": "After the Ice Age ended, we were big game hunters in this area.",
+   "on_screen_text": "Ice Age Hunters",
+   "visual_intent": "A painted scene shows early humans standing in a vast Ice Age landscape with mammoths and bison, establishing their role as big game hunters.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "left",
+     "size": "small",
+     "holds": "",
+     "doing": "stands pointing to the distant herd of mammoths and bison.",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "ice-age-landscape",
+     "scene": "vast snowy plain with large mammoths and bison herds under a pale sky, time of day is morning light.",
+     "effects": [
+      {
+       "kind": "pan",
+       "anchor": "area",
+       "at": "",
+       "detail": "left to right across the herd"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "Ice Age savannah with herds in background",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "point",
+       "target": "herd of mammoths and bison",
+       "anchor": "hunters"
+      },
+      {
+       "who": "lead",
+       "verb": "look_up",
+       "target": "sky showing ice age ending",
+       "anchor": "ended"
+      }
+     ],
+     "props": []
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "Ice",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [
+    "s1"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b03",
+   "role": "problem",
+   "narration": "But aggressive scavenging only gave us twenty percent of the carcass.",
+   "on_screen_text": "Only 20% Food!",
+   "visual_intent": "A painted diagram shows a large carcass with only a small red section labeled '20%' highlighted, while the host gestures to emphasize the scarcity of food.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "right",
+     "size": "large",
+     "holds": "",
+     "doing": "points at a small red section on a large carcass diagram",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "carcass-diagram-low-yield",
+     "scene": "a large grey animal carcass with a small red patch on the left side and text labels for percentages floating above it, overcast sky background",
+     "effects": [
+      {
+       "kind": "label",
+       "anchor": "",
+       "at": "top",
+       "detail": "Only 20% Food!"
+      },
+      {
+       "kind": "arrow",
+       "anchor": "twenty",
+       "at": "left",
+       "detail": "from carcass -> red patch"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "a painted food distribution chart",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "point",
+       "target": "small red section",
+       "anchor": "twenty"
+      },
+      {
+       "who": "lead",
+       "verb": "shake_head",
+       "target": "",
+       "anchor": "only"
+      }
+     ],
+     "props": [
+      {
+       "name": "carcass_diagram",
+       "held_by": "",
+       "where": "centre"
+      },
+      {
+       "name": "red_highlight_marker",
+       "held_by": "lead",
+       "where": "right_hand"
+      }
+     ]
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "scavenging",
+      "detail": ""
+     },
+     {
+      "recipe": "punch_in",
+      "anchor": "twenty",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "thud",
+     "anchor": "carcass"
+    }
+   ],
+   "source_ids": [
+    "s3"
+   ],
+   "illustrative_numbers": true,
+   "duration": null
+  },
+  {
+   "id": "b04",
+   "role": "stakes",
+   "narration": "Stakes rose when mothers needed to forage while keeping infants safe.",
+   "on_screen_text": "Mothers Need Safety",
+   "visual_intent": "A mother figure stands protectively over a small infant while gesturing towards distant food sources, visually representing the tension between foraging needs and childcare safety.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "centre",
+     "size": "medium",
+     "holds": "",
+     "doing": "stands protectively over an infant",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "savanna-daylight",
+     "scene": "wide shot of a sunlit savanna with scattered acacia trees and distant herds, clear blue sky above.",
+     "effects": [
+      {
+       "kind": "label",
+       "anchor": "",
+       "at": "top",
+       "detail": "Mothers Need Safety"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "prehistoric savanna with distant trees",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "gaze",
+       "target": "distant food sources",
+       "anchor": "forage"
+      },
+      {
+       "who": "lead",
+       "verb": "shiver",
+       "target": "",
+       "anchor": "safe"
+      }
+     ],
+     "props": [
+      {
+       "name": "bundle of sticks",
+       "held_by": "lead",
+       "where": "right hand"
+      },
+      {
+       "name": "small infant",
+       "held_by": "lead",
+       "where": "left arm"
+      }
+     ]
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "Stakes",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b05",
+   "role": "clue",
+   "narration": "Better weapons wouldn't help if we couldn't protect the babies.",
+   "on_screen_text": "Weapons Fail?",
+   "visual_intent": "A diagram shows a spear breaking against a shield while two figures cradle an infant, illustrating that physical force fails without social protection.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "left",
+     "size": "medium",
+     "holds": "",
+     "doing": "gestures at the broken spear diagram",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "graphic",
+    "insert": null,
+    "graphic": {
+     "kind": "bars",
+     "items": [
+      "Spear Power: Low",
+      "Protection Need: High"
+     ],
+     "anchors": [],
+     "detail": "3 | 5"
+    },
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "abstract whiteboard with diagrams",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "point",
+       "target": "broken spear diagram",
+       "anchor": "weapons"
+      },
+      {
+       "who": "lead",
+       "verb": "shake_head",
+       "target": "",
+       "anchor": "wouldn't"
+      }
+     ],
+     "props": [
+      {
+       "name": "shield_prop",
+       "held_by": "lead",
+       "where": "right hand"
+      },
+      {
+       "name": "baby_wrap",
+       "held_by": "",
+       "where": ""
+      }
+     ]
+    },
+    "motion": [
+     {
+      "recipe": "punch_in",
+      "anchor": "weapons",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b06",
+   "role": "reason",
+   "narration": "One reason is that trusted others could hold the infants securely.",
+   "on_screen_text": "Trusted Others Hold Baby",
+   "visual_intent": "A painted scene shows a friendly figure securely holding an infant while another trusted friend stands guard nearby, illustrating the safety of cooperative care.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "right",
+     "size": "small",
+     "holds": "",
+     "doing": "points to the safe pair",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "cave-safe-hold",
+     "scene": "two stick figures in a warm cave, one cradling an infant wrapped in cloth while the other stands protectively close.",
+     "effects": [
+      {
+       "kind": "focus",
+       "anchor": "securely",
+       "at": "centre",
+       "detail": "tighten on hands holding baby"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "warm cave interior with soft light",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      },
+      {
+       "who": "friend",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "gaze",
+       "target": "infant",
+       "anchor": "trusted"
+      },
+      {
+       "who": "friend",
+       "verb": "reach",
+       "target": "baby",
+       "anchor": "hold"
+      }
+     ],
+     "props": [
+      {
+       "name": "blanket",
+       "held_by": "lead",
+       "where": "wrapping infant"
+      },
+      {
+       "name": "stone tool",
+       "held_by": "",
+       "where": "on ground nearby"
+      }
+     ]
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     },
+     {
+      "recipe": "text_slam",
+      "anchor": "hold",
+      "detail": "Trusted Others Hold Baby"
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [
+    {
+     "name": "ding",
+     "anchor": "securely"
+    }
+   ],
+   "source_ids": [
+    "s4"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b07",
+   "role": "twist",
+   "narration": "The solution wasn't better weapons, but trusted others holding infants.",
+   "on_screen_text": "Not Weapons! People!",
+   "visual_intent": "A split screen contrasts a discarded weapon on the left with two stick figures gently cradling babies in their arms, visually proving that human connection was the real solution.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "centre",
+     "size": "medium",
+     "holds": "",
+     "doing": "gestures between a dropped spear and two babies held by the friend.",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "split",
+    "insert": {
+     "key": "tools-vs-families",
+     "scene": "left side shows a pile of sharp stones and spears fading away, right side shows warm glowing families huddled together under soft light.",
+     "effects": [
+      {
+       "kind": "focus",
+       "anchor": "",
+       "at": "centre",
+       "detail": "blur weapons sharpen focus on babies"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": {
+     "key": "tools-vs-families-split",
+     "scene": "left side shows a pile of sharp stones and spears fading away, right side shows warm glowing families huddled together under soft light.",
+     "labels": [
+      "Not Weapons!",
+      "People!"
+     ],
+     "anchors": [
+      "weapons",
+      "others"
+     ]
+    },
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "a split background showing tools vs families",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "drink",
+       "target": "",
+       "anchor": "solution"
+      }
+     ],
+     "props": [
+      {
+       "name": "stone spear",
+       "held_by": "",
+       "where": "ground left"
+      },
+      {
+       "name": "babies",
+       "held_by": "",
+       "where": "arms centre"
+      }
+     ]
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b08",
+   "role": "reveal",
+   "narration": "This shift moved us from lone hunting to a lifestyle of cooperative breeding.",
+   "on_screen_text": "Cooperative Breeding!",
+   "visual_intent": "The scene visually contrasts a lone figure hunting with a group standing together holding infants, illustrating the shift to cooperative breeding.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "left",
+     "size": "medium",
+     "holds": "",
+     "doing": "gestures from a lone hunter to a group holding babies",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "savanna-cooperative-breeding",
+     "scene": "a wide savanna landscape with a large carcass in the center, two adult figures standing protectively around three infants under their arms, bright daylight.",
+     "effects": [
+      {
+       "kind": "label",
+       "anchor": "lifestyle",
+       "at": "centre",
+       "detail": "Cooperative Breeding"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "savanna with carcass and infants",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      },
+      {
+       "who": "friend",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "point",
+       "target": "lone hunter diagram",
+       "anchor": "from"
+      },
+      {
+       "who": "friend",
+       "verb": "gaze",
+       "target": "group holding babies",
+       "anchor": "to"
+      }
+     ],
+     "props": []
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "shift",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [
+    "s2"
+   ],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b09",
+   "role": "payoff",
+   "narration": "This cooperation secured more food and saved lives, marking our first job as a team player.",
+   "on_screen_text": "First Job: Teamwork!",
+   "visual_intent": "The host and friend stand together in a circle around a glowing pile of food props to visually represent 'cooperation' securing resources.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "right",
+     "size": "medium",
+     "holds": "",
+     "doing": "gestures broadly at the shared food pile.",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "clearing-food-share",
+     "scene": "grassy clearing with a large animal carcass split in two, warm sunlight filtering through trees, dust motes dancing in the air.",
+     "effects": [
+      {
+       "kind": "label",
+       "anchor": "team",
+       "at": "top",
+       "detail": "First Job: Teamwork!"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "a grassy clearing with a large carcass in center",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "point",
+       "target": "food pile",
+       "anchor": "secured"
+      }
+     ],
+     "props": [
+      {
+       "name": "carcass halves",
+       "held_by": "",
+       "where": "ground center"
+      },
+      {
+       "name": "baby doll",
+       "held_by": "",
+       "where": "chest level"
+      }
+     ]
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "player",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  },
+  {
+   "id": "b10",
+   "role": "loop",
+   "narration": "It wasn't about the hunt; it was us.",
+   "on_screen_text": "Teamwork Wins",
+   "visual_intent": "The host and friend stand together in a warm circle against the sunset landscape to visually represent that human connection, not hunting tools, is the true source of our success.",
+   "shot": {
+    "host": {
+     "where": "scene",
+     "side": "centre",
+     "size": "small",
+     "holds": "",
+     "doing": "gestures to both characters in a circle",
+     "to_camera": true,
+     "cut_on": ""
+    },
+    "visual": "insert",
+    "insert": {
+     "key": "savannah-sunset-circle",
+     "scene": "wide shot of savannah at sunset with two stick figures standing close together in a circle facing each other, warm orange sky filling the background.",
+     "effects": [
+      {
+       "kind": "grade",
+       "anchor": "",
+       "at": "sky",
+       "detail": "warm -> golden"
+      }
+     ]
+    },
+    "graphic": null,
+    "split": null,
+    "reaction_anchor": "",
+    "framing": "medium",
+    "cast": [
+     "lead",
+     "friend"
+    ],
+    "staging": {
+     "setting": "other",
+     "setting_detail": "sunset savannah with distant herd",
+     "poses": [
+      {
+       "who": "lead",
+       "pose": "standing"
+      },
+      {
+       "who": "friend",
+       "pose": "standing"
+      }
+     ],
+     "actions": [
+      {
+       "who": "lead",
+       "verb": "point",
+       "target": "the group circle",
+       "anchor": "us"
+      },
+      {
+       "who": "friend",
+       "verb": "nod",
+       "target": "",
+       "anchor": "It"
+      }
+     ],
+     "props": []
+    },
+    "motion": [
+     {
+      "recipe": "push_in",
+      "anchor": "us",
+      "detail": ""
+     }
+    ],
+    "image_prompt": "",
+    "pose_variants": [],
+    "transition": "cut",
+    "continuity": "",
+    "layers": []
+   },
+   "sfx": [],
+   "source_ids": [],
+   "illustrative_numbers": false,
+   "duration": null
+  }
+ ],
+ "sources": [
+  {
+   "id": "s1",
+   "claim": "After the last Ice Age ended around 8000 BCE, early humans in this area were likely large game hunters.",
+   "url": "https://www.nps.gov/cure/learn/historyculture/earliest-humans.htm",
+   "title": "Earliest Humans - Curecanti National Recreation Area (U.S. National Park Service)",
+   "quote": "Native American presence in this area began as early as the Paleo-Indians around 8000 BCE (10,000 years ago). After the last Ice Age, the earliest people were likely large game hunters."
+  },
+  {
+   "id": "s2",
+   "claim": "During the Early to Middle Archaic Period from roughly 7950 to 3950 BCE, humans lived a lifestyle defined by hunting and gathering.",
+   "url": "https://www.nps.gov/cure/learn/historyculture/earliest-humans.htm",
+   "title": "Earliest Humans - Curecanti National Recreation Area (U.S. National Park Service)",
+   "quote": "The most extensive occupation of Curecanti took place during the Early to Middle Archaic Period, approximately 7,950 to 3,950 BCE. This period is defined by hunting and gathering lifestyle and seasonal migrations."
+  },
+  {
+   "id": "s3",
+   "claim": "Early humans acquired about 20% of big game carcasses through aggressive scavenging.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5875731/",
+   "title": "Hunter-gatherer studies and human evolution: a very selective review",
+   "quote": "Of the big carcasses taken by people we were with, 20% were acquired by aggressive scavenging."
+  },
+  {
+   "id": "s4",
+   "claim": "Cooperative breeding allowed mothers to forage while trusted others held their infants safely.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5875731/",
+   "title": "Hunter-gatherer studies and human evolution: a very selective review",
+   "quote": "when social relationships assure the infant will be safely returned, mothers can net fitness benefits by foraging unencumbered while trusted others hold their infant"
+  }
+ ],
+ "approvals": {
+  "storyline": "95aa87221f926a1d4f5eca7021ab4dcf9ff47ac6146e723578bb4337ed743bca",
+  "script": "f917333155be3475b54afba5c21853c5e272c9376214d666dc03ecdfc1824ab4"
+ },
+ "meta": {
+  "story": {
+   "allowed": [
+    "mini_story",
+    "countdown",
+    "mystery",
+    "pov"
+   ],
+   "version": "story-v1",
+   "generated": "2026-11-11T12:24:02"
+  },
+  "approval_log": [
+   {
+    "gate": "storyline",
+    "by": "user (web)",
+    "at": "2026-11-11T17:28:54",
+    "pick": 1,
+    "format": "mini_story",
+    "digest": "95aa87221f92"
+   },
+   {
+    "gate": "script",
+    "by": "user (web)",
+    "at": "2026-11-14T01:14:39",
+    "digest": "f917333155be"
+   },
+   {
+    "gate": "scenes",
+    "by": "user (web)",
+    "at": "2026-11-14T01:48:04",
+    "keys": [
+     "bundle of sticks",
+     "carcass-diagram-low-yield",
+     "cave-safe-hold",
+     "clearing-food-share",
+     "ice-age-landscape",
+     "red_highlight_marker",
+     "savanna-cooperative-breeding",
+     "savanna-daylight",
+     "savanna-empty-sky",
+     "savannah-sunset-circle",
+     "shield_prop",
+     "small infant",
+     "tools-vs-families",
+     "tools-vs-families-split"
+    ],
+    "digest": "45b09972bf71"
+   }
+  ],
+  "script": {
+   "model": "qwen3.5:9b",
+   "prompt_version": "script-v6",
+   "research": true,
+   "generated": "2026-11-11T12:37:11",
+   "provider": "ollama",
+   "writer": "script-free-v2"
+  }
+ }
+}

@@ -1,0 +1,343 @@
+{
+ "budget_usd": 2.0,
+ "spent_usd": 0.0,
+ "prices_verified": "2026-11-04",
+ "entries": [
+  {
+   "id": 1,
+   "step": "research",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "search queries",
+   "usage": {
+    "input": 87,
+    "output": 21,
+    "seconds": 8.87,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:22:25"
+  },
+  {
+   "id": 2,
+   "step": "research",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "facts from https://www.science.gov/",
+   "usage": {
+    "input": 262,
+    "output": 10,
+    "seconds": 1.3,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:22:26"
+  },
+  {
+   "id": 3,
+   "step": "research",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "facts from https://www.nps.gov/cure/learn/historyculture/earliest-humans.htm",
+   "usage": {
+    "input": 739,
+    "output": 204,
+    "seconds": 13.58,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:22:40"
+  },
+  {
+   "id": 4,
+   "step": "research",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "facts from https://pmc.ncbi.nlm.nih.gov/articles/PMC5875731/",
+   "usage": {
+    "input": 732,
+    "output": 138,
+    "seconds": 9.28,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:22:49"
+  },
+  {
+   "id": 5,
+   "step": "research",
+   "provider": "duckduckgo",
+   "model": "ddgs",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "6 searches (auto), 6 reputable pages, 3 with text",
+   "usage": null,
+   "at": "2026-11-11T12:22:49"
+  },
+  {
+   "id": 6,
+   "step": "storyline",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "three storylines",
+   "usage": {
+    "input": 839,
+    "output": 961,
+    "seconds": 72.85,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:24:02"
+  },
+  {
+   "id": 7,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "outline",
+   "usage": {
+    "input": 1465,
+    "output": 1028,
+    "seconds": 70.03,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:30:30"
+  },
+  {
+   "id": 8,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "outline (repair 1)",
+   "usage": {
+    "input": 2238,
+    "output": 1028,
+    "seconds": 55.0,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:31:25"
+  },
+  {
+   "id": 9,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "outline (repair 2)",
+   "usage": {
+    "input": 2231,
+    "output": 1022,
+    "seconds": 57.4,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:32:23"
+  },
+  {
+   "id": 10,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b01 staging",
+   "usage": {
+    "input": 1668,
+    "output": 424,
+    "seconds": 27.26,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:32:50"
+  },
+  {
+   "id": 11,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b02 staging",
+   "usage": {
+    "input": 1641,
+    "output": 439,
+    "seconds": 24.02,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:33:14"
+  },
+  {
+   "id": 12,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b03 staging",
+   "usage": {
+    "input": 1748,
+    "output": 606,
+    "seconds": 33.46,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:33:48"
+  },
+  {
+   "id": 13,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b04 staging",
+   "usage": {
+    "input": 1733,
+    "output": 488,
+    "seconds": 27.93,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:34:15"
+  },
+  {
+   "id": 14,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b05 staging",
+   "usage": {
+    "input": 1714,
+    "output": 439,
+    "seconds": 26.7,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:34:42"
+  },
+  {
+   "id": 15,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b06 staging",
+   "usage": {
+    "input": 1724,
+    "output": 572,
+    "seconds": 40.09,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:35:22"
+  },
+  {
+   "id": 16,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b07 staging",
+   "usage": {
+    "input": 1774,
+    "output": 588,
+    "seconds": 34.11,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:35:56"
+  },
+  {
+   "id": 17,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b08 staging",
+   "usage": {
+    "input": 1641,
+    "output": 455,
+    "seconds": 25.61,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:36:22"
+  },
+  {
+   "id": 18,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b09 staging",
+   "usage": {
+    "input": 1646,
+    "output": 491,
+    "seconds": 25.87,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:36:48"
+  },
+  {
+   "id": 19,
+   "step": "script",
+   "provider": "ollama",
+   "model": "qwen3.5:9b",
+   "estimate_usd": 0.0,
+   "actual_usd": 0.0,
+   "status": "ok",
+   "detail": "b10 staging",
+   "usage": {
+    "input": 1697,
+    "output": 449,
+    "seconds": 23.21,
+    "num_ctx": 4096,
+    "done_reason": "stop"
+   },
+   "at": "2026-11-11T12:37:11"
+  }
+ ]
+}

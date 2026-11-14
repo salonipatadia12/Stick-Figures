@@ -1164,5 +1164,145 @@
   "made": "2026-11-10",
   "episode": "why-paying-only-the-minimum-keeps-you-in-debt",
   "round": 2
+ },
+ "savanna-empty-sky": {
+  "scene": "wide shot of a barren savanna under a pale sky with no other animals or humans visible, emphasizing isolation and the vastness of the hunt.",
+  "source": "renders/inserts/flux/scene-savanna-empty-sky-s436.png",
+  "file": "styles/cozy/inserts/savanna-empty-sky.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: wide shot of a barren savanna under a pale sky with no other animals or humans visible, emphasizing isolation and the vastness of the hunt. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0805,
+   "contrast": 49.3,
+   "mean": 186.9
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "ice-age-landscape": {
+  "scene": "vast snowy plain with large mammoths and bison herds under a pale sky, time of day is morning light.",
+  "source": "renders/inserts/flux/scene-ice-age-landscape-s336.png",
+  "file": "styles/cozy/inserts/ice-age-landscape.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: vast snowy plain with large mammoths and bison herds under a pale sky, time of day is morning light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0666,
+   "contrast": 35.1,
+   "mean": 208.5
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "carcass-diagram-low-yield": {
+  "scene": "a large grey animal carcass with a small red patch on the left side and text labels for percentages floating above it, overcast sky background",
+  "source": "renders/inserts/flux/scene-carcass-diagram-low-yield-s469.png",
+  "file": "styles/cozy/inserts/carcass-diagram-low-yield.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a large grey animal carcass with a small red patch on the left side and text labels for percentages floating above it, overcast sky background. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0565,
+   "contrast": 52.9,
+   "mean": 152.7
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "savanna-daylight": {
+  "scene": "wide shot of a sunlit savanna with scattered acacia trees and distant herds, clear blue sky above.",
+  "source": "renders/inserts/flux/scene-savanna-daylight-s343.png",
+  "file": "styles/cozy/inserts/savanna-daylight.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: wide shot of a sunlit savanna with scattered acacia trees and distant herds, clear blue sky above. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1186,
+   "contrast": 48.4,
+   "mean": 158.5
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "cave-safe-hold": {
+  "scene": "two stick figures in a warm cave, one cradling an infant wrapped in cloth while the other stands protectively close.",
+  "source": "renders/inserts/flux/scene-cave-safe-hold-s744.png",
+  "file": "styles/cozy/inserts/cave-safe-hold.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: two stick figures in a warm cave, one cradling an infant wrapped in cloth while the other stands protectively close. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.113,
+   "contrast": 56.5,
+   "mean": 109.6
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "tools-vs-families-split": {
+  "scene": "left side shows a pile of sharp stones and spears fading away, right side shows warm glowing families huddled together under soft light.",
+  "source": "renders/inserts/flux/scene-tools-vs-families-split-s328.png",
+  "file": "styles/cozy/inserts/tools-vs-families-split.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: left side shows a pile of sharp stones and spears fading away, right side shows warm glowing families huddled together under soft light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0729,
+   "contrast": 62.8,
+   "mean": 141.8
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "tools-vs-families": {
+  "scene": "left side shows a pile of sharp stones and spears fading away, right side shows warm glowing families huddled together under soft light.",
+  "source": "renders/inserts/flux/scene-tools-vs-families-s427.png",
+  "file": "styles/cozy/inserts/tools-vs-families.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: left side shows a pile of sharp stones and spears fading away, right side shows warm glowing families huddled together under soft light. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0745,
+   "contrast": 53.9,
+   "mean": 133.3
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "savanna-cooperative-breeding": {
+  "scene": "a wide savanna landscape with a large carcass in the center, two adult figures standing protectively around three infants under their arms, bright daylight.",
+  "source": "renders/inserts/flux/scene-savanna-cooperative-breeding-s151.png",
+  "file": "styles/cozy/inserts/savanna-cooperative-breeding.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: a wide savanna landscape with a large carcass in the center, two adult figures standing protectively around three infants under their arms, bright daylight. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.0979,
+   "contrast": 58.6,
+   "mean": 173.5
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "clearing-food-share": {
+  "scene": "grassy clearing with a large animal carcass split in two, warm sunlight filtering through trees, dust motes dancing in the air.",
+  "source": "renders/inserts/flux/scene-clearing-food-share-s583.png",
+  "file": "styles/cozy/inserts/clearing-food-share.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: grassy clearing with a large animal carcass split in two, warm sunlight filtering through trees, dust motes dancing in the air. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.1003,
+   "contrast": 64.1,
+   "mean": 131.7
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
+ },
+ "savannah-sunset-circle": {
+  "scene": "wide shot of savannah at sunset with two stick figures standing close together in a circle facing each other, warm orange sky filling the background.",
+  "source": "renders/inserts/flux/scene-savannah-sunset-circle-s239.png",
+  "file": "styles/cozy/inserts/savannah-sunset-circle.png",
+  "prompt": "Paint a completely new picture in exactly the painting style of this image (its brushwork, warm light, palette and texture), but with none of its content and NO people, characters or animals: wide shot of savannah at sunset with two stick figures standing close together in a circle facing each other, warm orange sky filling the background. Vertical portrait composition with open sky or open space in the top third and clear, level open ground across the lower third (room for a person to stand there later, eye-level camera). No text, no letters, no signs, no logos.",
+  "base": null,
+  "qa": {
+   "edges": 0.102,
+   "contrast": 34.3,
+   "mean": 137.2
+  },
+  "made": "2026-11-13",
+  "episode": "how-did-humans-get-their-first-job"
  }
 }
