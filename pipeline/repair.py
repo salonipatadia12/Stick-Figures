@@ -434,10 +434,26 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     return added
 
 
-SWAP_SYSTEM = ('A speech recogniser keeps mishearing one word of a narrated line in an explainer video. Give ONE plainer, '
-               'common word (or a two-word phrase) to say instead: easy to pronounce, the same meaning in this line, and '
-               'the same grammar (tense, singular or plural), so the line still reads naturally. Not the same word.')
-SWAP_SCHEMA = dict(type='object', required=['replacement'], properties=dict(replacement=dict(type='string')))
+SWAP_SYSTEM = ('A speech recogniser keeps mishearing one word of a narrated line in an explainer video. Say the line '
+               'again with that word replaced by a plainer, common word (or two) that is easy to pronounce and keeps '
+               'the meaning. Change the words right next to it only if the grammar needs it (e.g. "sank to turn into '
+               'fuel" -> "sank to become fuel"); keep every other word as it is. Give the new line and the word(s) used '
+               'in place of the misheard one.')
+SWAP_SCHEMA = dict(type='object', required=['line', 'replacement'],
+                   properties=dict(line=dict(type='string'), replacement=dict(type='string')))
+WORD = re.compile(r"[A-Za-z0-9']+")
+
+
+def swapped_line(old: str, word: str, new_line: str, new: str) -> bool:
+    """The model's line is usable: the misheard word is gone, the replacement is in it, at most three words changed
+    (2026-11-14: a one-word swap gave "sank to become into fuel"), and no new number."""
+    import difflib
+    a, b = [w.lower() for w in WORD.findall(old)], [w.lower() for w in WORD.findall(new_line)]
+    if word.lower() in b or not all(w in b for w in WORD.findall(new.lower())):
+        return False
+    changed = sum(max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b).get_opcodes()
+                  if tag != 'equal')
+    return 1 <= changed <= 3 and not (set(re.findall(r'\d+', new_line)) - set(re.findall(r'\d+', old)))
 
 
 def _swap_in(text: str, word: str, new: str) -> str:
@@ -462,12 +478,19 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None) -> str:
         write = lambda s_, u, sc: llm.generate_json(s_, u, sc, 80, cache=cache, step='repair-words', temperature=0.2)
     answer = write(SWAP_SYSTEM, json.dumps(dict(line=b.narration, word=word), ensure_ascii=False), SWAP_SCHEMA) or {}
     new = ' '.join(str(answer.get('replacement') or '').split()).strip('"\'.,!? ')
+    line = ' '.join(str(answer.get('line') or '').split()).strip('"\' ')
     if (not new or len(new.split()) > 2 or not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new)
             or new.lower() == word.lower() or new.lower()[:5] == word.lower()[:5]):
         return ''
+    if not line:                                      # no line given: the word alone is swapped
+        line = _swap_in(b.narration, word, new)
+    if not swapped_line(b.narration, word, line, new):
+        return ''
+    if line[-1] not in '.!?' and b.narration.rstrip()[-1:] in '.!?':
+        line += b.narration.rstrip()[-1]
     was = episode.is_approved('script')               # before the narration changes
     old_line = b.narration
-    b.narration = _swap_in(b.narration, word, new)
+    b.narration = line
     b.on_screen_text = _swap_in(b.on_screen_text or '', word, new)
     sh = b.shot
     for m in sh.motion:

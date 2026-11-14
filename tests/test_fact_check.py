@@ -298,7 +298,8 @@ class SwapWord(unittest.TestCase):
     def test_a_word_still_unheard_after_a_slower_take_is_swapped(self):
         repair.save(self.ep.slug, {'beats': {self.beat: {'voice_speed': repair.SLOWER}}})
         asked = []
-        write = lambda s, u, sc: asked.append(json.loads(u)) or dict(replacement='thinks')
+        write = lambda s, u, sc: asked.append(json.loads(u)) or dict(replacement='thinks',
+                                                                    line='Everyone thinks oil comes from dinosaurs.')
         applied = repair.run_round(self.ep.slug, self.report('imagines'), self.tl, 1, write=write)
         self.assertEqual(asked[0]['word'], 'imagines')
         self.assertIn('said "thinks" instead of "imagines"', applied[0]['fix'])
@@ -312,6 +313,18 @@ class SwapWord(unittest.TestCase):
         ep_data = json.loads((Path(self.tmp.name) / self.ep.slug / 'episode.json').read_text())
         again = repair.diagnose(self.report('thinks'), self.tl, ep_data, repair.load(self.ep.slug))
         self.assertIsNone(again[0]['hint'])                                          # one swap per word
+
+    def test_the_words_around_it_follow_the_grammar(self):
+        # 2026-11-14 crude oil b02: "turn" -> "become" gave "sank to become into fuel"
+        old = 'Many thought giant sea creatures sank to turn into fuel.'
+        self.assertTrue(repair.swapped_line(old, 'turn', 'Many thought giant sea creatures sank to become fuel.', 'become'))
+        self.assertFalse(repair.swapped_line(old, 'turn', 'Many thought giant sea creatures sank to turn into fuel.', 'become'))
+        self.assertFalse(repair.swapped_line(old, 'turn', 'People long believed that huge animals became our fuel.', 'became'))
+        self.ep.beats[1].narration = old
+        now = repair.swap_word(self.ep.slug, self.ep, self.beat, 'turn',
+                               write=lambda *a: dict(replacement='become', line='Many thought giant sea creatures sank to become fuel.'))
+        self.assertEqual(now, 'become')
+        self.assertEqual(self.ep.beats[1].narration, 'Many thought giant sea creatures sank to become fuel.')
 
     def test_a_useless_answer_changes_nothing(self):
         for answer in ('imagines', 'imagine', 'pictures in the mind', '42', ''):
