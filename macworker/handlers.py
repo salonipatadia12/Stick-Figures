@@ -264,7 +264,14 @@ def render(ctx: Ctx) -> Outcome:
         duration = (read_json(out_dir / 'timeline.json', {}) or {}).get('duration')
     ctx.report('upload', 96, 'uploading the video')
     summary = qa_summary(qa)
-    return Outcome(dict(duration=duration, qa_pass=bool(summary['all']), qa_summary=summary), files)
+    result = dict(duration=duration, qa_pass=bool(summary['all']), qa_summary=summary,
+                  repairs=qa.get('repairs') or [], still_wrong=qa.get('still_wrong') or [])
+    # the self-repair loop may have lengthened the narration (pipeline/repair.py): the server keeps that script
+    sent = (ctx.job.get('episode') or {}).get('beats') or []
+    now = read_json(repo / 'episodes' / slug / 'episode.json', {}) or {}
+    if sent and [b.get('narration') for b in now.get('beats') or []] != [b.get('narration') for b in sent]:
+        result['episode'] = now
+    return Outcome(result, files)
 
 
 # ---- pitch / script (SCRIPT_PROVIDER=ollama) -----------------------------------------------------------

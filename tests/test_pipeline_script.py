@@ -248,6 +248,11 @@ class OllamaScript(unittest.TestCase):
         from pipeline.models import Source
         self.dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.dir.cleanup)
+        # the fixture outline is 92 words for a 30 s video at the style's 2.7 w/s. The writer's rate is measured from renders/sample
+        # (pipeline/pacing.py); pinned here so the test does not depend on the videos on this machine
+        rate = mock.patch('pipeline.pacing.writer_rate', return_value=2.7)
+        rate.start()
+        self.addCleanup(rate.stop)
         self.base = Path(self.dir.name)
         self.style = styles.load('cozy')
         self.episode = Episode(slug='salary', topic='Why your salary disappears by the 20th', niche='personal finance',

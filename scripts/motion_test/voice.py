@@ -14,11 +14,15 @@ SLUG, OUT, VOICE, BEATS = sys.argv[1], Path(sys.argv[2]), sys.argv[3], sys.argv[
 OUT.mkdir(parents=True, exist_ok=True)
 episode = json.loads((ROOT / 'episodes' / SLUG / 'episode.json').read_text())
 beats = {b['id']: b for b in episode['beats']}
+try:                                   # the self-repair loop voices a beat again a little slower (pipeline/repair.py)
+    repairs = json.loads((ROOT / 'episodes' / SLUG / 'repairs.json').read_text()).get('beats') or {}
+except (OSError, ValueError):
+    repairs = {}
 pipe = KPipeline(lang_code='a' if VOICE.startswith('a') else 'b', repo_id='hexgrad/Kokoro-82M')
 for beat_id in BEATS:
     text = beats[beat_id]['narration']
     audio, words, offset = [], [], 0.0
-    for result in pipe(text, voice=VOICE, speed=1.0):
+    for result in pipe(text, voice=VOICE, speed=float((repairs.get(beat_id) or {}).get('voice_speed') or 1.0)):
         chunk = result.audio.numpy() if hasattr(result.audio, 'numpy') else np.asarray(result.audio)
         for token in result.tokens or []:
             if token.start_ts is not None and token.text.strip() and any(c.isalnum() for c in token.text):

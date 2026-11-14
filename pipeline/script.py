@@ -281,7 +281,9 @@ def research_request(episode):
 def script_request(episode, style, facts):
     from anthropic import transform_schema
     lo, hi = beat_range(episode.target_length)
-    words = round(episode.target_length * style.words_per_second)
+    from .pacing import writer_rate
+    wps = writer_rate(style)
+    words = round(episode.target_length * wps)
     if facts:
         fact_lines = '\n'.join(f'{f.id}: {f.claim} (source: {f.title or f.url})' for f in facts)
         research = f'Research facts (cite by id):\n{fact_lines}'
@@ -290,7 +292,7 @@ def script_request(episode, style, facts):
     user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Target length: {episode.target_length} seconds: {lo}-{hi} beats and about {words} narration words '
-            f'(the narrator reads about {style.words_per_second} words per second).\n'
+            f'(the narrator reads about {wps} words per second).\n'
             f'Aspect: {episode.aspect}\nCast ids: {", ".join(style.cast_ids) or "none"}\n\n{research}')
     sl = episode.storyline
     if sl:
@@ -731,12 +733,14 @@ def pacing_aim(seconds) -> tuple:
 def _free_context(episode, style, facts) -> dict:
     from .models import FORMATS
     lo, hi = beat_range(episode.target_length)
-    words = round(episode.target_length * style.words_per_second)
+    from .pacing import writer_rate
+    wps = writer_rate(style)            # measured from the finished videos (Kokoro's real pace), else the style's
+    words = round(episode.target_length * wps)
     aim_lo, aim_hi = pacing_aim(episode.target_length)
     head = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} s: {lo}-{hi} beats (aim for {aim_lo}-{aim_hi}) and about {words} narration '
-            f'words in total ({round(words * 0.85)}-{round(words * 1.15)}; the narrator reads {style.words_per_second} '
+            f'words in total ({round(words * 0.9)}-{round(words * 1.15)}; the narrator reads {wps} '
             f'words per second). The hook is at most 8 words; every other beat is one or two short sentences of about '
             f'{per_beat(words, aim_lo, aim_hi)} words.\nCast ids: {", ".join(style.cast_ids)} (lead is the host).')
     if facts:
@@ -812,8 +816,10 @@ def _outline_issues(episode, style, facts, o) -> list:
         return [f'the outline does not fit the script shape: {str(exc)[:300]}']
     msgs = [f'{i.where}: {i.message}' for i in ep.check(style.cast_ids, style.words_per_second)
             if i.severity == 'error' and _is_outline_issue(i)]
-    words, expected = ep.word_count(), episode.target_length * style.words_per_second
-    if not 0.75 * expected <= words <= 1.2 * expected:
+    from .pacing import writer_rate
+    words, expected = ep.word_count(), episode.target_length * writer_rate(style)
+    # 2026-11-14: 0.75 let a 90-word script through that ran 37 s (QA allows 15 % under the target)
+    if not 0.88 * expected <= words <= 1.2 * expected:
         n = max(1, len(o['beats']) - 1)
         each = round((expected - len(o['beats'][0]['narration'].split())) / n)
         msgs.append(f'beats: the narration has {words} words in total but the video needs about {round(expected)} '

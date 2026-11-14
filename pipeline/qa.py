@@ -143,16 +143,102 @@ def heard_tokens(heard: list) -> list:
 
 SIBILANT = re.compile(r"^(s|z|sh|c[eiy])", re.I)
 
+# ---- normalisation rules (2026-11-14, the self-repair loop): both the script and the transcript are put in one
+# canonical form before they are compared, so a word said right is never reported missing for how it is written.
+# Add a rule here when a diagnosis finds a new way of writing the same spoken words; it then holds for every video.
+SMALL = {'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+         'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15, 'sixteen': 16,
+         'seventeen': 17, 'eighteen': 18, 'nineteen': 19}
+TENS = {'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90}
+UNITS = {'km': ['kilometers'], 'kms': ['kilometers'], 'kg': ['kilograms'], 'kgs': ['kilograms'], 'cm': ['centimeters'],
+         'mm': ['millimeters'], 'm': ['meters'], 'mi': ['miles'], 'lb': ['pounds'], 'lbs': ['pounds'], 'g': ['grams'],
+         'mph': ['miles', 'per', 'hour'], 'kmh': ['kilometers', 'per', 'hour'], 'kph': ['kilometers', 'per', 'hour'],
+         'c': ['degrees', 'celsius'], 'f': ['degrees', 'fahrenheit'], 'k': ['thousand'], 'bn': ['billion'],
+         'ft': ['feet'], 'hrs': ['hours'], 'hr': ['hours'], 'mins': ['minutes'], 'min': ['minutes'], 'yrs': ['years']}
+SYMBOLS = {'%': 'percent', '&': 'and', '+': 'plus', '°': 'degrees', '=': 'equals', '@': 'at', '×': 'times'}
+FORMULA = re.compile(r'^(?:[A-Z][a-z]?\d*){1,4}$')          # CO2, H2O, CH4, O3: a chemical formula, said letter by letter
+SINGULAR_UNIT = {'kilometer', 'kilogram', 'centimeter', 'millimeter', 'meter', 'mile', 'pound', 'gram', 'foot', 'hour',
+                 'minute', 'year', 'degree'}
+
+
+def _raw_pieces(word: str) -> list:
+    """One written word as the pieces a listener hears, before number words are joined: "CO2" -> c o 2, "20%" ->
+    20 percent, "5km" -> 5 kilometers, "$5" -> 5 dollars, "sixty-five" -> sixty five, "65million" -> 65 million."""
+    w = str(word).strip()
+    if FORMULA.match(w.strip('.,!?;:"\'')) and any(c.isdigit() for c in w) and any(c.isupper() for c in w):
+        return [x.lower() for x in re.findall(r'[A-Z][a-z]?|\d+', w.strip('.,!?;:"\''))]
+    dollars = '$' in w
+    for sym, said in SYMBOLS.items():
+        w = w.replace(sym, f' {said} ')
+    out = []
+    for part in re.split(r'[\s/–—-]+', w):
+        part = norm(part)
+        if not part:
+            continue
+        m = re.fullmatch(r'(\d+(?:\.\d+)?)([a-z]+)', part)          # 5km, 65million, 1990s
+        if m and m.group(2) not in ('s', 'st', 'nd', 'rd', 'th'):
+            out += [m.group(1)] + UNITS.get(m.group(2), [m.group(2)])
+        elif out and re.fullmatch(r'\d+(?:\.\d+)?', out[-1]) and part in UNITS:
+            out += UNITS[part]                                     # "5 km"
+        else:
+            out.append(part)
+    if dollars and out and out[0][:1].isdigit():
+        out.append('dollars')
+    return out
+
+
+def _join_numbers(pairs: list) -> list:
+    """[(token, origin)] with spelled-out numbers below a thousand as digits ("sixty five" -> 65, "three hundred and
+    twelve" -> 312), the figure keeping the origin of its first word. Million, billion and thousand stay words, as the
+    recogniser writes "65 million"; 'one' stays a word unless it starts a number ("one hundred")."""
+    tok = [t for t, _ in pairs]
+    num = lambda t: SMALL.get(t, TENS.get(t))
+
+    def tens_unit(j):                                  # "sixty" [+ "five"] at j -> (value, next j) or None
+        if j >= len(tok) or num(tok[j]) is None:
+            return None
+        val, j2 = num(tok[j]), j + 1
+        if tok[j] in TENS and j2 < len(tok) and tok[j2] in SMALL and 0 < SMALL[tok[j2]] < 10:
+            val, j2 = val + SMALL[tok[j2]], j2 + 1
+        return val, j2
+    out, i = [], 0
+    while i < len(tok):
+        first = tens_unit(i)
+        if first is None:
+            out.append(pairs[i])
+            i += 1
+            continue
+        val, j = first
+        if j < len(tok) and tok[j] == 'hundred':
+            val, j = val * 100, j + 1
+            k = j + 1 if j < len(tok) and tok[j] == 'and' else j
+            rest = tens_unit(k)
+            if rest:
+                val, j = val + rest[0], rest[1]
+        if tok[i] == 'one' and j == i + 1:
+            out.append(pairs[i])                       # "one of them": a word, not a figure
+        else:
+            out.append((str(val), pairs[i][1]))
+        i = j
+    return out
+
+
+def canonical(words: list) -> list:
+    """[(token, index of the written word it came from)]: the written words in the one form both sides share."""
+    return _join_numbers([(p, n) for n, w in enumerate(words) for p in _raw_pieces(w)])
+
 
 def words_check(script_words: list, heard: list) -> dict:
-    """Every script word must be heard, in order. Whisper writes numbers as digits and may split them
-    ('$1' ',500'), so a word also matches two or three heard tokens joined, or its number. A plural whose final s runs
-    into a following s sound ("infants securely") may be heard as the singular: the two are the same sound."""
-    h = heard_tokens(heard)
-    missing, j = [], 0
-    for n_w, w in enumerate(script_words):
-        k = norm(w)
-        nxt = norm(script_words[n_w + 1]) if n_w + 1 < len(script_words) else ''
+    """Every script word must be heard, in order. Both sides are put in one canonical form first (`canonical`:
+    numbers, symbols, units, chemical formulas), then a word also matches two or three heard tokens joined, or its
+    number. A plural whose final s runs into a following s sound ("infants securely") may be heard as the singular:
+    the two are the same sound. `missing` lists the written script words."""
+    script = canonical(script_words)
+    h = [t for t, _ in canonical([str(x['w']) for x in heard])]
+    missing, j, lost = [], 0, set()
+    for n_w, (k, origin) in enumerate(script):
+        w = script_words[origin]
+        nxt = script[n_w + 1][0] if n_w + 1 < len(script) else ''
         alts = {k, NUMBER_WORDS.get(k, k), DIGIT_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k),
                 k.replace("'", '')}   # control's ~ controls; a script 3 heard as three
         found = None
@@ -174,8 +260,13 @@ def words_check(script_words: list, heard: list) -> dict:
                 break
         if found is None and k in ('a', 'an', 'the'):     # the recogniser often drops an article; the line still reads
             continue
+        if found is None and k.endswith('s') and k[:-1] in SINGULAR_UNIT:
+            alts.add(k[:-1])                              # "1 kilometer" written by the recogniser for "one km"
+            found = next((i for i in range(j, min(len(h), j + reach)) if h[i] == k[:-1]), None)
         if found is None:
-            missing.append(w)
+            if origin not in lost:
+                missing.append(w)
+                lost.add(origin)
         else:
             j = found + 1
     return dict(script_words=len(script_words), heard_words=len(h), missing=missing, pass_=len(missing) == 0)

@@ -230,6 +230,10 @@
   {% if ep.render and ep.render.qa_checks %}
   <ul class="list small">{% for c in ep.render.qa_checks %}<li class="{{ 'check-ok' if c.ok == true else ('check-bad' if c.ok == false else 'check-unk') }}"><strong>{{ c.name }}</strong>{% if c.detail %}: {{ c.detail }}{% endif %}</li>{% endfor %}</ul>
   {% else %}<p class="small">{{ 'Pass' if ep.render and ep.render.qa_pass else 'No per-check summary was sent.' }}</p>{% endif %}
+  {% if ep.render and ep.render.still_wrong %}<div class="notice warn small"><strong>Still wrong after the self-repair:</strong>
+  <ul class="list">{% for w in ep.render.still_wrong %}<li>{{ w }}</li>{% endfor %}</ul></div>{% endif %}
+  {% if ep.render and ep.render.repairs %}<details class="small"><summary>Fixed automatically ({{ ep.render.repairs|length }})</summary>
+  <ul class="list">{% for r in ep.render.repairs %}<li>{{ r }}</li>{% endfor %}</ul></details>{% endif %}
 </div>
 {% if sheet %}<details class="card"><summary>Contact sheet</summary><img class="thumb wide" src="{{ sheet.url }}" alt="contact sheet" loading="lazy"></details>{% endif %}
 <form method="post" action="/episodes/{{ ep.slug }}/render-again"

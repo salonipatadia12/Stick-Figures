@@ -310,6 +310,15 @@ class Service:
                 self._set_state(conn, slug, RENDERING, error=None)
                 self._enqueue(conn, slug, 'render', {})
         else:
+            if isinstance(result.get('episode'), dict):   # the self-repair loop lengthened the narration (pipeline/repair.py)
+                from pipeline import store
+                from pipeline.models import Episode
+                try:
+                    episode = Episode.model_validate(result['episode'])
+                    if episode.slug == slug:
+                        store.save(episode, store.folder(slug))
+                except ValueError:
+                    pass                                   # the video is done either way; the old script stays
             self._set_state(conn, slug, DONE if result.get('qa_pass') is True else DONE_QA_FAILED, error=None)
 
     def _llm_done(self, conn, j, result):
@@ -839,8 +848,9 @@ class Service:
             out['files'] = files
         render = self._last_result(slug, 'render')
         if render is not None:
+            wrong, fixes = self.qa_extra(slug, render)
             out['render'] = dict(duration=render.get('duration'), qa_pass=render.get('qa_pass'),
-                                 qa_checks=self.qa_checks(slug, render))
+                                 qa_checks=self.qa_checks(slug, render), still_wrong=wrong, repairs=fixes)
         return out
 
     def _last_result(self, slug, kind):
@@ -871,6 +881,20 @@ class Service:
         elif isinstance(render.get('qa_summary'), str):
             checks.append(dict(name='summary', ok=render.get('qa_pass'), detail=render['qa_summary'][:500]))
         return checks
+
+    def qa_extra(self, slug, render):
+        """(still wrong, repairs made) from the render result, else from the stored qa.json: plain-words lines."""
+        wrong, fixes = render.get('still_wrong'), render.get('repairs')
+        if wrong is None or fixes is None:
+            try:
+                qa = json.loads((self.settings.outputs_dir / slug / 'qa.json').read_text())
+            except (OSError, ValueError):
+                qa = {}
+            wrong = qa.get('still_wrong') if wrong is None else wrong
+            fixes = qa.get('repairs') if fixes is None else fixes
+        fixes = [f"{(r.get('beat') or '').strip() + ': ' if r.get('beat') else ''}{r.get('cause', '')} -> {r.get('fix', '')}"
+                 for r in (fixes or []) if isinstance(r, dict)]
+        return [str(w)[:300] for w in (wrong or [])][:30], [f[:300] for f in fixes][:30]
 
     def storylines_view(self, episode):
         from pipeline import story

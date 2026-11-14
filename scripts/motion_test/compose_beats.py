@@ -1621,6 +1621,9 @@ def for_episode(slug: str, overrides: dict | None = None, lib: dict | None = Non
     specs = {b['id']: b for b in raw['beats']}
     for note in split_fallback(episode, specs):
         print('note:', note)
+    from pipeline import repair
+    for note in repair.apply_hints(episode, specs, repair.load(slug)):     # the self-repair loop's fixes, in memory
+        print('repair:', note)
     lib = BASES.library() if lib is None else lib
     if episode.host_format:
         return host_episode(episode, specs, lib, slug)

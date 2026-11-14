@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from pipeline import captions as C  # noqa: E402
 from pipeline import overlays as O  # noqa: E402
+from pipeline import repair  # noqa: E402
 from pipeline import sfx  # noqa: E402
 
 W, H, FPS = 1080, 1920, 30
@@ -98,7 +99,7 @@ class Runner:
         path = self.voice_dir / f'{voice}-{beat}.wav'
         if not path.exists():
             return False
-        narration = next(b['narration'] for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == beat)
+        narration = self.voice_text(beat)
         side = path.with_suffix('.text')
         if side.exists():
             return side.read_text() != narration
@@ -110,6 +111,12 @@ class Runner:
         if same:
             side.write_text(narration)
         return not same
+
+    def voice_text(self, beat: str) -> str:
+        """What a take is voiced from: the narration, plus the speed when the self-repair slowed this beat down."""
+        narration = next(b['narration'] for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == beat)
+        speed = repair.hints_for(self.slug, beat).get('voice_speed')
+        return narration + (f'\n[speed {speed}]' if speed else '')
 
     def voice_clip(self, voice: str, beat: str):
         path = self.voice_dir / f'{voice}-{beat}.wav'
@@ -130,7 +137,7 @@ class Runner:
         words = json.loads((self.voice_dir / f'{voice}-{beat}.words.json').read_text())
         side = path.with_suffix('.text')
         if not side.exists():
-            side.write_text(next(b['narration'] for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == beat))
+            side.write_text(self.voice_text(beat))
         return a, sr, words
 
     @staticmethod
@@ -198,6 +205,9 @@ class Runner:
         h.update(self.bases_hash().encode())
         spec = next((b for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == name[:3]), None)
         h.update(json.dumps(spec, sort_keys=True).encode())
+        hints = repair.hints_for(self.slug, name[:3])
+        if hints:                                       # a self-repair re-renders only the beats it changed
+            h.update(json.dumps(hints, sort_keys=True).encode())
         h.update(json.dumps([(l.text, round(l.start, 3), round(l.end, 3)) for l in lines]).encode())
         return h.hexdigest()[:16]
 
@@ -286,7 +296,11 @@ class Runner:
         ap.add_argument('--workers', type=int, default=4)
         ap.add_argument('--music', action='store_true', help='add the soft music bed (off by default)')
         ap.add_argument('--no-qa', action='store_true')
+        ap.add_argument('--no-repair', action='store_true', help='QA only: do not run the self-repair loop')
         args = ap.parse_args(argv)
+        rnd = getattr(self, '_repair_round', 0)
+        if rnd == 0:
+            self._repairs_done = []
         self.out.mkdir(parents=True, exist_ok=True)
         t_start = time.perf_counter()
         tl = self.timeline(args.voice)
@@ -347,9 +361,10 @@ class Runner:
         if not args.no_qa:
             from pipeline import qa
             ep_data = json.loads(self.episode_path.read_text())
+            shown = repair.repaired_episode_dict(ep_data, repair.load(self.slug))     # tidy and dropped labels as drawn
             report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes,
                             ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary(),
-                            promised=qa.promised_texts(ep_data), episode=ep_data)
+                            promised=qa.promised_texts(shown), episode=ep_data)
             print(json.dumps(report['summary'], indent=1))
             for w in report['continuity']['warnings']:
                 print('  continuity (warning):', w)
@@ -369,3 +384,33 @@ class Runner:
             lay = report.get('layout') or {}
             if lay.get('note'):
                 print(f"QA NOTE (layout): {lay['note']}")
+            self.after_qa(report, tl, args, argv)
+
+    def after_qa(self, report: dict, tl: dict, args, argv):
+        """The self-repair loop (pipeline/repair.py): fix what failed, render again (cached shots stay), at most
+        repair.MAX_ROUNDS rounds; then qa.json gets the repairs made and what is still wrong, in plain words."""
+        rnd = getattr(self, '_repair_round', 0)
+        if not report['summary']['all'] and not args.no_repair and rnd < repair.MAX_ROUNDS:
+            from pipeline import pacing
+            applied = repair.run_round(self.slug, report, tl, rnd + 1,
+                                       words_per_second=pacing.measured_rate() or 2.45)
+            if applied:
+                print(f'SELF-REPAIR round {rnd + 1}:', flush=True)
+                for a in applied:
+                    print(f"  {a['check']} {a['beat'] or ''}: {a['cause']} -> {a['fix']}", flush=True)
+                self._repairs_done += applied
+                self._repair_round = rnd + 1
+                self._composed = None                       # compose again with the new hints
+                self._bases_hash = None
+                return self.main(argv)
+        actions = repair.diagnose(report, tl, json.loads(self.episode_path.read_text()), repair.load(self.slug)) \
+            if not report['summary']['all'] else []
+        report['repairs'] = list(self._repairs_done)
+        report['repair_rounds'] = rnd
+        report['still_wrong'] = repair.still_wrong(report, actions)
+        (self.out / 'qa.json').write_text(json.dumps(report, indent=1))
+        self._repair_round = 0
+        if report['repairs']:
+            print(f"self-repair: {len(report['repairs'])} fix(es) in {rnd} round(s); QA {'passes' if report['summary']['all'] else 'still fails'}")
+        for line in report['still_wrong']:
+            print('  STILL WRONG:', line)
