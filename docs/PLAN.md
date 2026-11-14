@@ -464,6 +464,15 @@ Cleanup, so a lost or full disk never takes the work with it:
   memory. Space freed is logged. On 2026-11-11 the existing renders held about 294 MB of stale clips; they go after
   each episode's next render.
 
+### 10. Auto mode (user 2026-11-13; built)
+
+`stick make "<topic>" --auto` and the web app's **Auto** switch take a topic to a finished MP4 with no stops: the first
+storyline the gate accepts, the script approved only when every check passes (first passing hook), library bases (a
+missing one becomes a painted scene of the place), the scenes accepted as painted, then paint and render. Every auto
+decision goes through the gate's own code and is logged `by="auto"` / `"auto (web)"`; where a rule cannot decide it
+stops at that gate and says why. The gates stay the default. The phone gets a Web Push notification when the video is
+done, a step fails, or Auto stops. Rules: `pipeline/auto.py`; details: [WEBAPP.md](WEBAPP.md#auto-mode-user-2026-11-13).
+
 ### Backlog
 
 - Character polish: fingers and hands (user 2026-11-09: later, not now).

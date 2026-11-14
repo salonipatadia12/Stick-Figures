@@ -82,7 +82,7 @@ Episode states: `researching` → `storylines` (gate) → `scripting` → `scrip
 never retry on their own).
 If painting finds nothing new, the episode goes straight to `rendering`.
 
-## Gates (the user decides; the app never approves on its own)
+## Gates (the user decides, unless the user started the video with Auto on)
 
 - **storyline**: show `pipeline.story.view` content as cards (format, hook, pitch, conflict/stakes/twist/payoff,
   facts with links). Pick = the pipeline's storyline gate (rotation rule: a refused format shows the reason).
@@ -92,7 +92,34 @@ If painting finds nothing new, the episode goes straight to `rendering`.
 - **scenes**: thumbnails of every newly painted scene/prop (uploaded by the Mac), each with its beats and scene
   text. "Approve all" queues `render`; "Redo" on one scene takes a short note and queues `paint` with
   `payload.redo = {key: note}` (the Mac repaints that key as a round-2 art direction, `inserts.jobs(rnd, direction)`).
-- Every approval writes the pipeline's own approval log entry. No auto-approval anywhere.
+- Every approval writes the pipeline's own approval log entry.
+
+## Auto mode (user 2026-11-13)
+
+The New Video page has an **Auto** switch (`POST /episodes` field `auto=1`; `POST /api/episodes {"auto": true}`;
+stored as `episodes.auto`). With it on, the topic goes to a finished MP4 with no stops. After every step
+(`Service.after_step`) the gate it reached is decided by `pipeline/auto.py`, through the same gate code, logged with
+`by='auto (web)'`:
+- storyline: the first storyline the gate accepts (the rotation rule still applies);
+- script: approved only if every check passes, trying the hooks in order; a beat whose base is not in the library
+  becomes a painted scene of the same place (the paint step makes it);
+- scenes: accepted as painted.
+
+When a rule cannot decide (a script that fails its checks, a scene that failed QA, every storyline refused) the episode
+stays at that gate with `episodes.auto_note` saying why; the user acts there as usual, and auto carries on after. A
+paid spend stop (`spend_approval`) is never passed automatically. The episode page shows a stepper (Research,
+Storyline, Script, Paint, Render, Done) above the live job progress. Without Auto every gate waits for the user.
+
+**Notifications (Web Push, `webapp/push.py`):** the phone is notified when a video is done (QA passed or not), when a
+step fails, and when Auto stops at a gate. No account or paid service: the server signs with its own VAPID key pair
+(`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` in `/srv/stick/.env`; `python -m webapp.push keys` makes one) and the
+browser's push service delivers. `/sw.js` (service worker), `/manifest.webmanifest` (installable),
+`GET /api/push/key`, `POST /api/push/subscribe|unsubscribe|test`. On an iPhone, add the site to the Home Screen and
+turn notifications on from there (iOS 16.4+).
+
+**Render again:** a finished episode (`done`, `done_qa_failed`) can be queued for a new render with the same approved
+script and scenes (`POST /episodes/{slug}/render-again`, `/api/episodes/{slug}/render-again`), e.g. after renderer
+fixes on the Mac.
 
 ## HTTP API
 

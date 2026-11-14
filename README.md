@@ -23,6 +23,9 @@ approval gate in the chat.
 - The default look is `cozy`, taken from The Empty Chair. `lineart`, `retro-tv` and `colorful` are visual directions
   adapted from kaomei's Stickman Video Director (MIT): the script follows them, but renders still use the cozy art
   ([docs/KAOMEI_INTEGRATION.md](docs/KAOMEI_INTEGRATION.md)).
+- `.venv/bin/stick make "<topic>" --auto` goes from topic to finished MP4 with no stops: it picks the first storyline,
+  approves the script only if every check passes, then paints and renders. The phone app's **Auto** switch does the
+  same and notifies you when the video is ready. Without `--auto` the approval gates stay.
 - `.venv/bin/stick package <slug>` writes a publishing kit to `episodes/<slug>/out/`: thumbnail, 5 titles,
   description and hashtags, pinned comment, pre-publish checklist. It costs $0 and uploads nothing.
 - `scripts/cleanup.sh` shows which old caches it would remove; `--apply` removes them. It never touches episodes,
