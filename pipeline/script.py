@@ -243,6 +243,23 @@ visual_intent: one sentence on how the picture SHOWS the idea through action, a 
 
 SCRIPT_RULES_COMPACT = SCRIPT_RULES_COMPACT_OUTLINE + '\n\n' + SCRIPT_RULES_COMPACT_BEAT
 
+# Fact-first (user 2026-11-14, pipeline/grounding.py): the beats' roles, kinds, facts and claims are planned before the
+# outline, so the outline writes each beat's narration from its plan line instead of from the facts at large.
+FACT_FIRST_FACTS = """FACTS. The beats are PLANNED (the plan below is fixed: one line per beat, in order, with its role
+and kind). A fact beat says its claim in story voice: your own short spoken words, not copied word for word, adding
+nothing the claim does not say, and naming every thing the claim names with the claim's own words (a claim about "tiny
+sea plants and animals" is never told as "bacteria", "microbes" or "bugs"). A beat of any other kind states NO fact
+about the world: a question, a transition, a reaction, a callback to the hook, or the myth said as a belief ("Many
+think..."). A number that is not in a claim is framed as an example ("say you earn 3,000") with
+illustrative_numbers=true."""
+FACT_FIRST_TEXT = """ON-SCREEN TEXT. 0-5 words that punch the beat's claim (often its number or the turn) in the claim's
+words, or mark the myth ("MYTH: ..."); empty when the picture says it. Never a fact the beat's narration does not say."""
+SCRIPT_RULES_FACT_FIRST_OUTLINE = re.sub(
+    r'ON-SCREEN TEXT\..*?Numbers on screen are numbers the beat says\.', lambda _: FACT_FIRST_TEXT,
+    re.sub(r'FACTS\. Use only.*?Any storyline line the facts do not support is dropped\.', lambda _: FACT_FIRST_FACTS,
+           SCRIPT_RULES_COMPACT_OUTLINE, flags=re.S), flags=re.S)
+assert FACT_FIRST_FACTS in SCRIPT_RULES_FACT_FIRST_OUTLINE and FACT_FIRST_TEXT in SCRIPT_RULES_FACT_FIRST_OUTLINE
+
 
 class ScriptError(RuntimeError):
     pass
@@ -621,9 +638,10 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
 # beat's call only. No rule is loosened: what still fails after the last round is shown at the script gate.
 
 FREE_RESEARCH_VERSION = 'research-free-v1'
-FREE_SCRIPT_VERSION = 'script-free-v2'   # v2: longer beats ask for word-anchored actions and effects
+FREE_SCRIPT_VERSION = 'script-free-v3'   # v3: fact-first plan; v2: longer beats ask for word-anchored actions and effects
 FREE_REPAIR_ROUNDS = 3          # rounds of "here are the checker's errors, fix them" after the first draft
 OUTLINE_REPAIRS = 2             # repairs of the outline before any beat is staged
+OUTLINE_REPAIRS_FACT_FIRST = 3  # fact-first: the judge's findings on the narration go back to the outline too
 OUTLINE_MAX_TOKENS, BEAT_MAX_TOKENS = 1400, 900     # measured: outline ~860 tokens, a beat ~270-420
 OUTLINE_ROLES = ['hook', 'setup', 'problem', 'stakes', 'clue', 'reason', 'twist', 'reveal', 'promise', 'payoff', 'loop']
 OUTLINE_LEVEL = ('on-screen text has', 'empty narration', 'cites unknown sources', 'with no source', 'greeting',
@@ -684,7 +702,14 @@ def _kebab(text: str) -> str:
     return '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))[:60]
 
 
-def outline_schema(fact_ids, lo, hi):
+def outline_schema(fact_ids, lo, hi, plan=None):
+    if plan:                                      # fact-first: the roles and facts are the plan's; one beat per plan line
+        hook = _obj(dict(line=_s(), frame_one=_s(), answer=_s(), loop_line=_s()))
+        beat = _obj(dict(narration=_s(), on_screen_text=_s(), visual=_enum(['insert', 'graphic', 'split', 'character']),
+                         illustrative_numbers={'type': 'boolean'}))
+        n = len(plan['beats'])
+        return _obj(dict(title=_s(), hook_promise=_s(), hook_options=_arr(hook, 3, 3),
+                         subject_settings=_arr(_s(), 0, 2), beats=_arr(beat, n, n)))
     src = _arr(_enum(fact_ids)) if fact_ids else _arr(_s(), 0, 0)
     hook = _obj(dict(line=_s(), frame_one=_s(), answer=_s(), loop_line=_s()))
     beat = _obj(dict(role=_enum(OUTLINE_ROLES), narration=_s(), on_screen_text=_s(),
@@ -746,7 +771,18 @@ def pacing_aim(seconds) -> tuple:
     return max(lo, round(seconds / 5.5)), min(hi, round(seconds / 4))
 
 
-def _free_context(episode, style, facts) -> dict:
+def plan_lines(plan) -> str:
+    """The fact-first plan as the outline reads it: one line per beat."""
+    rows = []
+    for k, b in enumerate(plan['beats'], 1):
+        if b['kind'] == 'fact':
+            rows.append(f'b{k:02d} {b["role"]} [fact beat, {", ".join(b["fact_ids"])}]: claim: "{b["claim"]}"')
+        else:
+            rows.append(f'b{k:02d} {b["role"]} [{b["kind"]}: states no fact]')
+    return '\n'.join(rows)
+
+
+def _free_context(episode, style, facts, plan=None) -> dict:
     from .models import FORMATS
     lo, hi = beat_range(episode.target_length)
     from .pacing import writer_rate
@@ -760,19 +796,37 @@ def _free_context(episode, style, facts) -> dict:
             f'words in total ({round(words * 0.9)}-{round(words * 1.15)}; the narrator reads {wps} '
             f'words per second). The hook is at most 8 words; every other beat is one or two short sentences of about '
             f'{per_beat(words, aim_lo, aim_hi)} words.\nCast ids: {", ".join(style.cast_ids)} (lead is the host).')
-    if facts:
+    sl = episode.storyline
+    if plan:
+        head = head.replace(f'{lo}-{hi} beats (aim for {aim_lo}-{aim_hi})', f'{len(plan["beats"])} beats (planned)')
+        research = ('THE PLAN (fixed; write each beat from its line, in order):\n' + plan_lines(plan))
+        story = (f'PICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nHook: {sl.hook}\n'
+                 f'Payoff: {sl.payoff}') if sl else ''
+    elif facts:
         research = 'Research facts (cite by id):\n' + '\n'.join(f'{f.id}: {f.claim} <{f.url}>' for f in facts)
     else:
         research = 'No research facts were gathered. Do not state statistics or claims that need a source.'
-    sl = episode.storyline
-    story = (f'PICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nHook: {sl.hook}\nPitch: {sl.pitch}\n'
-             f'Twist: {sl.twist}\nPayoff: {sl.payoff}\nIt was pitched from earlier research: cite only the facts above, '
-             'and drop any line of it they do not support.') if sl else ''
+    if not plan:
+        story = (f'PICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nHook: {sl.hook}\nPitch: {sl.pitch}\n'
+                 f'Twist: {sl.twist}\nPayoff: {sl.payoff}\nIt was pitched from earlier research: cite only the facts above, '
+                 'and drop any line of it they do not support.') if sl else ''
     brief = f'{topic_text(episode)}\n' + (f'Story ({sl.format}): {sl.title}. {sl.pitch}' if sl else '')
     if style.writer_note:                         # the new style packs (2026-11-11); cozy has none, its prompts unchanged
         brief += f'\n{style.writer_note}'
     return dict(outline_user=f'{head}\n\n{research}\n\n{story}'.strip(), beat_head=brief,
-                cast=list(style.cast_ids) or ['lead'], target=episode.target_length, wps=style.words_per_second)
+                cast=list(style.cast_ids) or ['lead'], target=episode.target_length, wps=style.words_per_second,
+                plan=plan, outline_system=SCRIPT_RULES_FACT_FIRST_OUTLINE if plan else SCRIPT_RULES_COMPACT_OUTLINE)
+
+
+def _apply_plan(o, plan):
+    """The plan's roles and fact ids on the outline's beats (fact-first: the outline writes only the words)."""
+    if plan:
+        o['_plan'] = plan['beats']
+        o['beats'] = list(o.get('beats') or [])[:len(plan['beats'])]
+        for ob, pb in zip(o['beats'], plan['beats']):
+            ob['role'], ob['source_ids'] = pb['role'], list(pb['fact_ids'])
+            ob.setdefault('illustrative_numbers', False)
+    return o
 
 
 def _normalise_outline(o):
@@ -844,12 +898,91 @@ def _outline_issues(episode, style, facts, o) -> list:
                     (f'make every beat after the hook about {each} words (add a second short sentence that says what the '
                      'beat shows), keeping the facts as they are' if words < expected else
                      f'cut every beat after the hook to about {each} words'))
+    msgs += precision_issues(episode, facts, o)
     from .models import _shares_word
     for k, h in enumerate(o.get('hook_options') or [], 1):   # a checker warning the writer can fix: the loop ties back
         if not _shares_word(h.get('loop_line', ''), h.get('line', '')):
             msgs.append(f'hook {k}: the loop line "{h.get("loop_line", "")}" must repeat a word of the hook "{h.get("line", "")}"'
                         + (" (it is also the last beat's narration)" if k == 1 else ''))
     return msgs
+
+
+COPY_RATIO = 0.9                  # a narration sentence this close to its fact's line is the line copied
+COPY_MIN_WORDS = 9                # short lines may match their claim ("Oil formed before the dinosaurs.")
+
+
+def copies(narration: str, lines) -> str:
+    """The research line or claim a narration sentence copies word for word (user 2026-11-14: "written from that
+    claim, in story voice, not copied word for word"), or ''."""
+    import difflib
+    from .entail import sentences
+    norm = lambda t: ' '.join(re.findall(r'[a-z0-9]+', t.lower()))
+    for sent in sentences(narration):
+        if len(sent.split()) < COPY_MIN_WORDS:
+            continue
+        for line in lines:
+            if line and difflib.SequenceMatcher(None, norm(sent), norm(line)).ratio() >= COPY_RATIO:
+                return line
+    return ''
+
+
+def narration_issues(episode, facts, o, ask) -> list:
+    """Fact-first: the yes/no judge (pipeline/entail.py) on the outline's narration, BEFORE any beat is staged, so the
+    writer fixes its own lines in story voice and the check after writing confirms (2026-11-14 scratch run: "black
+    liquid gold", "buried ... very quickly" made the final check rewrite 33 % of the lines)."""
+    from . import entail, grounding
+    if ask is None:
+        return []
+    plan = plan_of(o)
+    out = []
+    probe = Episode.model_validate(dict(slug='probe', topic='probe topic', sources=[f.model_dump() for f in facts],
+                                        meta=dict(interpretation=(episode.meta or {}).get('interpretation') or {})))
+    for k, b in enumerate(o.get('beats') or [], 1):
+        ids = list(b.get('source_ids') or [])
+        claim = plan[k - 1].get('claim', '') if k <= len(plan) else ''
+        research = entail.research_text(ids, facts)
+        allowed = entail.allowed_groups(probe, ids)
+        for sent in entail.sentences(b.get('narration', '')):
+            ok, why = entail.verdict(sent, research, allowed, ask, entail.CHECK_SYSTEM if ids else entail.NONFACT_SYSTEM)
+            if ok is not False:
+                continue
+            if ids:
+                out.append(f'b{k:02d}: "{sent}" says more than its claim ({why}); say only what the claim says, in '
+                           f'story voice: "{claim}"')
+            else:
+                kind = plan[k - 1].get('kind', 'transition') if k <= len(plan) else 'transition'
+                out.append(f'b{k:02d}: "{sent}" states a fact, but b{k:02d} has none (it is a {kind}); make it a '
+                           'question, a transition, a reaction or a callback to the hook')
+    return out
+
+
+def plan_of(o):
+    return (o or {}).get('_plan') or []
+
+
+def precision_issues(episode, facts, o) -> list:
+    """Word precision (pipeline/grounding.py) on the outline's narration and on-screen text: a group of living things
+    the beat's facts do not name ("bacteria" for plankton), in code, before any beat is staged."""
+    from . import grounding
+    if not facts:
+        return []
+    interp = (episode.meta or {}).get('interpretation') or {}
+    myth = grounding.myth_groups(interp, facts)
+    out = []
+    for k, b in enumerate(o.get('beats') or [], 1):
+        ids = set(b.get('source_ids') or [])
+        allowed = grounding.allowed_for(grounding.fact_texts(facts, ids or None)) | myth
+        claim = ((plan_of(o) or [{}] * k)[k - 1] if plan_of(o) and k <= len(plan_of(o)) else {}).get('claim', '')
+        copied = copies(b.get('narration', ''), [f.claim for f in facts if f.id in ids] + ([claim] if claim else []))
+        if copied:
+            out.append(f'b{k:02d}: the narration copies "{copied}" word for word; say it in story voice, in your own '
+                       'short spoken words (keep what it says)')
+        for field in ('narration', 'on_screen_text'):
+            bad = grounding.imprecise(b.get(field, ''), allowed)
+            if bad:
+                out.append(f'b{k:02d}: the {field.replace("_", "-")} "{b.get(field, "")}" '
+                           + grounding.precision_why(bad, allowed))
+    return out
 
 
 def _cap_graphics(o) -> list:
@@ -868,12 +1001,13 @@ def _outline_call(ctx, schema, cache, ledger, previous=None, issues=(), attempt=
     from . import llm
     user = ctx['outline_user']
     if previous is not None:
+        previous = {k: v for k, v in previous.items() if k != '_plan'}
         user += ('\n\nYOUR PREVIOUS OUTLINE:\n' + json.dumps(previous, ensure_ascii=False, separators=(',', ':'))
                  + '\n\nTHE CHECKER FOUND THESE PROBLEMS. Fix every one and keep everything else:\n'
                  + '\n'.join(f'- {m}' for m in issues))
     user += '\n\nAnswer with JSON only: ' + shape(schema)
     try:
-        return llm.generate_json(SCRIPT_RULES_COMPACT_OUTLINE, user, schema, OUTLINE_MAX_TOKENS,
+        return llm.generate_json(ctx.get('outline_system') or SCRIPT_RULES_COMPACT_OUTLINE, user, schema, OUTLINE_MAX_TOKENS,
                                  temperature=0.4 if previous is None else 0.3, seed=21 + attempt, cache=cache,
                                  ledger=ledger, step='script', detail='outline' + (f' (repair {attempt})' if attempt else ''))
     except llm.LLMError as exc:
@@ -885,13 +1019,26 @@ def _placement(i, visual='insert'):
     return SIDES[i % len(SIDES)], sizes[i % len(sizes)]
 
 
+def _claim_line(ctx, i) -> str:
+    """Fact-first: what the beat's texts may say (its planned claim), for the staging call."""
+    plan = ctx.get('plan')
+    if not plan or i >= len(plan['beats']):
+        return ''
+    pb = plan['beats'][i]
+    if pb['kind'] == 'fact':
+        return (f'This beat\'s claim (from the research): "{pb["claim"]}". Labels, split labels and diagram items name '
+                'only things this claim or the narration says, in their words.\n')
+    return (f'This beat states no fact ({pb["kind"]}): labels only name what the picture shows, or mark the myth '
+            '("MYTH").\n')
+
+
 def _beat_prompt(ctx, o, i, schema, previous=None, issues=()):
     ob = o['beats'][i]
     side, size = _placement(i, ob['visual'])
     lines = '\n'.join(f'b{k + 1:02d} {b["role"]} [{b["visual"]}]: {b["narration"]}' for k, b in enumerate(o['beats']))
     user = (f'{ctx["beat_head"]}\nThe whole video:\n{lines}\n\n'
             f'STAGE b{i + 1:02d} (role {ob["role"]}, picture type {ob["visual"]}).\nNarration: "{ob["narration"]}"\n'
-            f'On-screen text: "{ob["on_screen_text"] or "(none)"}"\n'
+            f'On-screen text: "{ob["on_screen_text"] or "(none)"}"\n' + _claim_line(ctx, i) +
             f'Suggested host placement: {side} {size} (pick another if the picture needs it).\n'
             + (f'Next beat (continuity hands over to it): b{i + 2:02d} [{o["beats"][i + 1]["visual"]}]: '
                f'{o["beats"][i + 1]["narration"]}\n' if i + 1 < len(o['beats']) else
@@ -931,7 +1078,7 @@ def _detail_from(raw, ob, cast_ids):
                                for e in ins.get('effects') or []][:4])
     if ob['visual'] == 'split' and raw.get('split'):
         sp = raw['split']
-        split = dict(key=_kebab(sp['key']) or _kebab(sp['scene'])[:40], scene=sp['scene'], labels=list(sp['labels']),
+        split = dict(key=_kebab(sp['key']) or _kebab(sp['scene'])[:40], scene=sp['scene'], labels=split_labels(sp['labels']),
                      anchors=list(sp.get('anchors') or []))
     if ob['visual'] == 'graphic' and raw.get('graphic'):
         g = raw['graphic']
@@ -953,6 +1100,26 @@ def _detail_from(raw, ob, cast_ids):
                 continuity=' '.join(str(raw.get('continuity') or '').split())[:240])
     return dict(visual_intent=raw['visual_intent'], shot=shot,
                 sfx=[dict(name=s['name'], anchor=s['anchor']) for s in raw.get('sfx') or []][:1])
+
+
+def split_labels(labels) -> list:
+    """Two split labels of 1-3 words, cut in code (2026-11-14: "MYTH: Dinosaurs made it" failed three repair rounds):
+    a longer "Myth: ..." label becomes its prefix, another is cut to 3 words; an empty label facing a myth label is
+    "Fact"."""
+    out = []
+    for lab in (list(labels) + ['', ''])[:2]:
+        lab = ' '.join(str(lab or '').split()).rstrip('.!')
+        if len(lab.split()) > MAX_LABEL_WORDS:
+            head = re.match(r'^([A-Za-z ]{2,16}):', lab)
+            lab = head.group(1).strip().title() if head else ' '.join(lab.split()[:MAX_LABEL_WORDS])
+        out.append(lab)
+    for k in (0, 1):
+        other = out[1 - k].lower()
+        if not out[k] and re.match(r'(myth|old belief|false)', other):
+            out[k] = 'Fact'
+        elif not out[k] and other.startswith('fact'):
+            out[k] = 'Myth'
+    return out
 
 
 def _vary_placement(details):
@@ -983,28 +1150,41 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     """The two-stage local writer with the bounded repair loop. Returns (ScriptDraft, cache path, cached)."""
     from .cache import for_episode
     cache = for_episode(base)
-    ctx = _free_context(episode, style, facts)
+    t0 = time.time()
+    plan = None
+    if facts:                                     # fact-first (pipeline/grounding.py): facts and claims before words
+        from . import grounding
+        plan = grounding.make_plan(episode, facts, pacing_aim(episode.target_length), cache=cache, ledger=ledger)
+    ctx = _free_context(episode, style, facts, plan)
     model = config.ollama_model()
-    key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS])
+    from .entail import ENTAIL_VERSION
+    key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS]
+                 + ([OUTLINE_REPAIRS_FACT_FIRST, ENTAIL_VERSION, 'outline-judge'] if plan else []))
     path = _cache(base, 'script', key)
     if path.exists() and not regenerate:
         data = json.loads(path.read_text())
         LAST_RUN['script'] = dict(cached=True, timings=data.get('timings', {}), repairs=data.get('repairs', []),
-                                  remaining=data.get('remaining', []))
+                                  remaining=data.get('remaining', []), plan=data.get('plan'))
         return ScriptDraft.model_validate(data['draft']), path, True
     lo, hi = beat_range(episode.target_length)
-    oschema = outline_schema([f.id for f in facts], lo, hi)
+    oschema = outline_schema([f.id for f in facts], lo, hi, plan)
     times, log = {}, []
+    times['plan_s'] = round(time.time() - t0, 1)
     t0 = time.time()
-    o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger))
+    norm = lambda x: _normalise_outline(_apply_plan(x, plan))
+    o = norm(_outline_call(ctx, oschema, cache, ledger))
     times['outline_s'] = round(time.time() - t0, 1)
-    for attempt in range(1, OUTLINE_REPAIRS + 1):
-        issues = _outline_issues(episode, style, facts, o)
+    judge = None
+    if plan:
+        from . import entail
+        judge = entail.default_ask(cache, ledger)
+    for attempt in range(1, (OUTLINE_REPAIRS_FACT_FIRST if plan else OUTLINE_REPAIRS) + 1):
+        issues = _outline_issues(episode, style, facts, o) + (narration_issues(episode, facts, o, judge) if plan else [])
         if not issues:
             break
         t = time.time()
         log.append(dict(stage='outline', attempt=attempt, issues=issues))
-        o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger, o, issues, attempt))
+        o = norm(_outline_call(ctx, oschema, cache, ledger, o, issues, attempt))
         log[-1]['seconds'] = round(time.time() - t, 1)
     times['outline_repairs_s'] = round(time.time() - t0 - times['outline_s'], 1)
     capped = _cap_graphics(o)
@@ -1034,8 +1214,8 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
         restage = []
         if outline_errs:
             before = [(b['role'], b['narration'], b['visual']) for b in o['beats']]
-            o = _normalise_outline(_outline_call(ctx, oschema, cache, ledger, o, [f'{e.where}: {e.message}' for e in outline_errs],
-                                                 10 + rnd))
+            o = norm(_outline_call(ctx, oschema, cache, ledger, o, [f'{e.where}: {e.message}' for e in outline_errs],
+                                   10 + rnd))
             after = [(b['role'], b['narration'], b['visual']) for b in o['beats']]
             restage = [i for i in range(len(after)) if i >= len(before) or after[i] != before[i]]
             details = (details + [None] * len(after))[:len(after)]
@@ -1069,8 +1249,9 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     remaining = [str(e) for e in errors]
     _write_json(path, dict(draft=draft.model_dump(), created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=model,
                            provider='ollama', prompt_version=PROMPT_VERSION, writer=FREE_SCRIPT_VERSION,
-                           outline=o, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats)))
-    LAST_RUN['script'] = dict(cached=False, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats))
+                           outline=o, plan=plan, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats)))
+    LAST_RUN['script'] = dict(cached=False, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats),
+                              plan=plan)
     return draft, path, False
 
 
@@ -1118,7 +1299,7 @@ def free_notes(kind: str) -> list:
             out.append(f'  search engines: {", ".join(t["engines"])}; {t.get("reputable_pages", 0)} reputable pages, '
                        f'{t.get("pages_with_text", 0)} with text')
     else:
-        out = [f'  script timing: outline {t.get("outline_s", "-")} s, outline repairs {t.get("outline_repairs_s", "-")} s, '
+        out = [f'  script timing: fact plan {t.get("plan_s", "-")} s, outline {t.get("outline_s", "-")} s, outline repairs {t.get("outline_repairs_s", "-")} s, '
                f'beat staging {t.get("details_s", "-")} s, repairs {t.get("repairs_s", "-")} s, total {t.get("total_s", "-")} s'
                + (' [from the script cache]' if run.get('cached') else '')]
         for e in run.get('repairs', []):
@@ -1197,12 +1378,24 @@ def _generate(episode, style, base, ledger, client, prov, use_research, regenera
         approvals={k: v for k, v in episode.approvals.items() if k != 'script'},
         meta=episode.meta | dict(script=script_meta)))
     out = Episode.model_validate(updated.model_dump())
+    plan = (LAST_RUN.get('script') or {}).get('plan')
+    if plan:
+        from . import grounding
+        out.meta['fact_plan'] = plan
+        notes.append(f'fact plan ({len(plan["beats"])} beats, twist fact {plan.get("twist") or "none"}; '
+                     f'{len(plan.get("attempts") or [])} call(s)):')
+        notes += [f'  {x}' for x in grounding.plan_view(plan) + plan.get('notes', [])]
+        notes += [f'  plan still off: {x}' for x in plan.get('remaining', [])]
+    else:
+        out.meta.pop('fact_plan', None)
     if prov == 'ollama' and facts:
         # fact entailment (pipeline/entail.py): every sentence that cites a fact is checked against its quote
         from . import entail
         from .cache import for_episode
         result = entail.check(out, cache=for_episode(base), ledger=ledger)
         out.meta['fact_check'] = result
-        notes.append(f'fact check: {result["checked"]} cited sentence(s), {len(result["changed"])} changed')
+        notes.append(f'fact check: {result["checked"]} sentence(s) and {result["text_checked"]} text(s) checked, '
+                     f'{len(result["changed"])} changed; rewrite rate {round(100 * result["rate"])} %'
+                     + (' (above 20 %: the fact plan failed)' if result['plan_failed'] else ''))
         notes += [f'  {x}' for x in entail.view(result) + result['notes']]
     return out, notes

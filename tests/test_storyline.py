@@ -258,7 +258,10 @@ class OllamaPitchTest(unittest.TestCase):
         from pipeline import understand
         heard = dict(question='Why does honey never spoil?', title='Why Honey Never Spoils', claims=[], misconception='',
                      angle='its low water starves microbes', myth_subjects=[])
-        fake = FakeOllama(lambda body: heard if body['messages'][0]['content'] == understand.SYSTEM else answers.pop(0))
+        from pipeline import entail
+        judge = dict(states_a_fact=True, adds=[], supported=True, why='s1 says it')     # the twist checked against s1
+        fake = FakeOllama(lambda body: heard if body['messages'][0]['content'] == understand.SYSTEM else
+                          judge if body['messages'][0]['content'] == entail.CHECK_SYSTEM else answers.pop(0))
         with tempfile.TemporaryDirectory() as d, patched(fake), \
                 mock.patch.dict(os.environ, {'SCRIPT_PROVIDER': 'ollama', 'ANTHROPIC_API_KEY': '', 'STICK_CACHE_DIR': d}), \
                 mock.patch.object(script, 'research', lambda *a, **k: (src, Path(d) / 'r.json', True)), \
@@ -270,8 +273,11 @@ class OllamaPitchTest(unittest.TestCase):
         self.assertEqual(fake.chats[0]['messages'][0]['content'], understand.SYSTEM)     # topic understanding first
         self.assertEqual(ep.title, 'Why Honey Never Spoils')
         self.assertIn('Why does honey never spoil?', fake.chats[1]['messages'][1]['content'])
-        chats = fake.chats[1:]
+        chats = [c for c in fake.chats if c['messages'][0]['content'].startswith(story.STORY_SYSTEM)]
         self.assertEqual(len(chats), 2)
+        self.assertIn('TWIST FACT (picked from the research): s1: Honey has very little water.', chats[0]['messages'][1]['content'])
+        self.assertEqual(ep.meta['story_check']['twist_fact'], 's1')
+        self.assertTrue(all('s1' in s.fact_ids for s in ep.storylines))
         self.assertIn('share a format', chats[1]['messages'][1]['content'])
         self.assertEqual(chats[0]['format']['properties']['storylines']['items']['properties']['format']['enum'],
                          story.ALL_FORMATS)

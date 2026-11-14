@@ -99,6 +99,18 @@ def allowed_formats(slug: str) -> tuple[list, list]:
     return allowed, notes
 
 
+def twist_rules(episode) -> str:
+    """The fact-first lines of the pitch prompt: the twist fact picked in code and the word-precision rule."""
+    twist = ((episode.meta or {}).get('interpretation') or {}).get('twist') or {}
+    out = ''
+    if twist.get('claim'):
+        out += (f'\n\nTWIST FACT (picked from the research): {twist["id"]}: {twist["claim"]}\nEvery storyline\'s twist '
+                'IS this fact, told in plain words; cite it. The payoff stands on research facts too.')
+    return out + ('\nWORDS: when a fact names a group of things ("animals and plants (diatoms)", "marine"), use that '
+                  "group's own words or a direct plain-English equivalent (\"tiny sea plants and animals\", "
+                  '"plankton"), never a broader or different category ("bacteria", "microbes", "bugs").')
+
+
 def story_request(episode: Episode, facts, allowed):
     from anthropic import transform_schema
     fact_lines = '\n'.join(f'{f.id}: {f.claim} (source: {f.title or f.url})' for f in facts)
@@ -107,7 +119,7 @@ def story_request(episode: Episode, facts, allowed):
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} seconds.\n'
             f'Allowed formats (pick 3 different ones that fit this topic best): {", ".join(allowed)}\n\n'
-            f'Research facts (cite by id):\n{fact_lines}')
+            f'Research facts (cite by id):\n{fact_lines}' + twist_rules(episode))
     return dict(model=config.SCRIPT_MODEL, max_tokens=STORY_MAX_TOKENS, system=STORY_SYSTEM + format_guide(allowed),
                 messages=[{'role': 'user', 'content': user}], thinking={'type': 'adaptive'},
                 output_config={'format': {'type': 'json_schema', 'schema': transform_schema(StoryPitch)}, 'effort': 'high'})
@@ -166,7 +178,7 @@ def _pitch_free(episode, facts, allowed, base, ledger, regenerate):
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} seconds.\n'
             f'Allowed formats (pick 3 different ones that fit this topic best): {", ".join(allowed)}\n\n'
-            f'Research facts (cite by id):\n{fact_lines}')
+            f'Research facts (cite by id):\n{fact_lines}' + twist_rules(episode))
     schema = story_schema(allowed, [f.id for f in facts])
     model = config.ollama_model()
     key = digest([STORY_VERSION, 'ollama', model, system, user, STORY_REPAIRS])
@@ -256,8 +268,14 @@ def _pitch(episode, base, ledger, client, regenerate, prov):
     if prov == 'ollama':
         facts, more = claim_followup(episode, interp, facts, base, ledger)
         notes += more
+    from . import grounding
+    tid = grounding.twist_fact(interp, facts)     # fact-first (user 2026-11-14): the twist is a fact, picked in code
+    by = {f.id: f for f in facts}
+    interp['twist'] = dict(id=tid, claim=by[tid].claim) if tid in by else {}
     episode.meta['interpretation'] = interp
     notes += [f'  claim "{v["claim"]}": {v["verdict"]}' for v in interp['verdicts']]
+    if tid in by:
+        notes.append(f'twist fact: {tid}: {by[tid].claim}')
     allowed, why = allowed_formats(episode.slug)
     allowed = understand.preferred_formats(interp, allowed)   # a myth to correct: myth_vs_fact, mystery, revelation first
     notes += [f'formats: {", ".join(allowed)}'] + [f'  ({w})' for w in why]
@@ -332,8 +350,52 @@ def claim_followup(episode, interp, facts, base, ledger, search_claim=None, veri
     return facts, notes
 
 
+def check_storylines(episode, sp, facts, ask=None) -> list:
+    """Fact-first (user 2026-11-14): each storyline's twist must be the twist fact (word precision in code, then the
+    yes/no judge against its quote), else it becomes the fact as research wrote it; a sentence of the pitch, conflict,
+    stakes or payoff that names a group of living things no fact names ("tiny microbes") is cut, and a field left
+    empty that way says the twist fact. Returns the changes [{storyline, field, was, now, why}] (in place)."""
+    from . import entail, grounding
+    interp = (episode.meta or {}).get('interpretation') or {}
+    twist = interp.get('twist') or {}
+    by = {f.id: f for f in facts}
+    myth = grounding.myth_groups(interp, facts)
+    every = grounding.allowed_for(grounding.fact_texts(facts)) | myth
+    out = []
+    for k, s in enumerate(sp.storylines, 1):
+        if twist.get('id') in by:
+            tid = twist['id']
+            allowed = grounding.allowed_for(grounding.fact_texts(facts, {tid})) | myth
+            ok, why = entail.verdict(s.twist, entail.research_text([tid], facts), allowed, ask) if ask else (
+                not grounding.imprecise(s.twist, allowed), 'word precision')
+            if ok is False:
+                out.append(dict(storyline=k, field='twist', was=s.twist, now=by[tid].claim, why=why))
+                s.twist = by[tid].claim
+            if tid not in s.fact_ids:
+                s.fact_ids = list(s.fact_ids) + [tid]
+        for field in ('pitch', 'conflict', 'stakes', 'payoff'):
+            text = getattr(s, field)
+            parts = entail.sentences(text)
+            keep = [p for p in parts if not grounding.imprecise(p, every)]
+            if len(keep) == len(parts):
+                continue
+            now = ' '.join(keep) or (twist.get('claim') or '')
+            bad = sorted({w for p in parts for w in grounding.imprecise(p, every)})
+            out.append(dict(storyline=k, field=field, was=text, now=now, why=grounding.precision_why(bad, every)))
+            setattr(s, field, now)
+    return out
+
+
 def _finish(episode, data, path, cached, facts, allowed, notes):
     sp = StoryPitch.model_validate(data)
+    from . import entail
+    from .script import provider
+    from .cache import for_episode
+    changes = check_storylines(episode, sp, facts, entail.default_ask(for_episode(path.parent.parent))
+                               if provider() == 'ollama' else None)
+    episode.meta['story_check'] = dict(twist_fact=((episode.meta.get('interpretation') or {}).get('twist') or {}).get('id', ''),
+                                       changes=changes)
+    notes += [f'storyline {c["storyline"]} {c["field"]}: "{c["was"]}" -> "{c["now"]}" ({c["why"]})' for c in changes]
     fact_ids = {f.id for f in facts}
     for k, s in enumerate(sp.storylines, 1):
         if s.format not in allowed:

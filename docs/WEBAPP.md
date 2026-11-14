@@ -146,23 +146,69 @@ never waits for the user.
 - The episode page shows "What it understood": question, angle, misconception, each claim with its verdict.
 - If the local model is down, the topic is used tidied, nothing is renamed, and the episode goes on.
 
+## Fact-first writing (user 2026-11-14)
+
+The facts are chosen before any narration is written (`pipeline/grounding.py`), so the fact check after writing
+confirms instead of rewrites.
+
+1. **Twist fact, in code.** After research and the claim checks, the fact that settles the topic's claim and names
+   what the thing really is becomes the twist fact (crude oil: EIA's "remains of animals and plants (diatoms) ...
+   before dinosaurs existed"). The storylines are pitched on it, and each storyline's twist is checked against it
+   (else it becomes the fact as written). A sentence of a pitch, conflict, stakes or payoff that names a group of
+   living things no fact names is cut. The model's own "angle" no longer reaches the writers.
+2. **The plan.** The story roles come from the format and length (`skeleton`: hook, setup, problem, rising beats,
+   twist, reveal, payoff, loop). The fact of every fact beat is assigned in code (`assign_facts`):
+   - the twist beat gets the twist fact;
+   - the problem gets the fact that breaks the myth;
+   - the payoff gets the fact closest to the question;
+   - the reveal gets the fact of how it works;
+   - the clues get the most relevant facts left.
+
+   Each fact is used once; near-duplicates and facts that share nothing with the topic are skipped. One local-model
+   call writes each fact beat's **claim** in plain words and picks the **kind** of the other beats (question,
+   transition, reaction, callback, myth). Those beats state no fact and cite nothing. Each claim gets the word check
+   in code, then the yes/no judge against its fact's quote. After two repairs, a claim that still fails becomes the
+   fact's own line from research. The plan is in `meta.fact_plan` and on the episode page.
+3. **The outline** gets the plan, not the facts at large. Each beat's narration is written from its claim in story
+   voice, with the roles and cited facts fixed. Before any beat is staged, the outline goes back to the writer (up to
+   3 repairs) with three kinds of finding:
+   - a line that copies its fact or claim word for word;
+   - a line the judge finds says more than its claim;
+   - a line in a no-fact beat that states a fact.
+
+   That way the writer fixes its own lines and the final check confirms. The staging prompt tells each beat what its
+   labels may say; split labels are cut to 1-3 words in code.
+4. **Word precision.** When a fact names a group (diatoms, plankton, marine, organisms), a line uses that group's own
+   words or a direct plain-English equivalent ("plankton", "tiny sea plants and animals", "microscopic"). It never
+   uses a broader or different category ("bacteria", "microbes", "bugs"). This is a fixed table, checked in code on
+   claims, narration and every on-screen text. The equivalents also go to the judge with the research.
+
 ## Fact check before the script gate (user 2026-11-14)
 
-At the end of the script step on the Mac (`pipeline/entail.py`), every narrated sentence of a beat that cites a fact
-is checked against that fact's quote: one short call to the local model per sentence (cached), which lists what the
-sentence adds to the research; leaving a detail out is fine. A sentence that fails is
+At the end of the script step on the Mac (`pipeline/entail.py`), every narrated sentence and every text on screen is
+checked against the facts its beat cites: word precision in code, then one short local-model call per line (cached).
 
-1. kept and re-cited when another fact of the research says it (the candidates are picked in code by their words);
-2. else rewritten (two versions in one call: the unsupported part taken out, or the same point made with the
-   research's closest fact) and checked again; a version with a new number or that repeats another line is refused;
-3. else its claim is dropped and the beat kept: the sentence is removed, or a one-sentence beat gets a short line that
-   states no fact (a question or a transition), or the cited fact as research wrote it.
+* **A sentence of a beat that cites facts** must say only what they say; leaving a detail out is fine. One that fails:
+  1. is kept and re-cited when another fact says it (the candidates are picked in code by their words);
+  2. else is rewritten (two versions in one call) and checked again; a version with a new number, a wrong group word,
+     or that repeats another line is refused;
+  3. else the beat says its planned claim (checked before writing);
+  4. else its claim is dropped and the beat kept: the sentence is removed, or a one-sentence beat gets a short line
+     that states no fact (never the payoff, twist or reveal), or the cited fact as research wrote it.
+* **A beat that cites nothing** may hold only lines that state no fact. A line there that states one is cited to the
+  fact that says it, else replaced by a line that states none, else dropped.
+* **Every text on screen** (on-screen text, split labels, diagram items, label and pin effects, drawn text recipes)
+  gets the same check against its beat's facts. A text that only marks the myth ("MYTH", "Myth: Dinosaurs") or only
+  repeats words its narration says passes in code. A text that fails is rewritten short and checked again, else
+  removed.
+
+The **rewrite rate** (changed lines / checked lines) is logged per episode in `meta.fact_check.rate` and on the
+episode page. Above 20 % means the fact-first plan failed for that episode.
 
 Each change is in `meta.fact_check` and the job notes, and on the episode page ("Fact check"). Anchors the new line no
 longer says are re-anchored. The self-repair's added sentences (duration) get the same check. `stick fact-check SLUG`
 runs it, with the claim follow-up first, on an existing script (an Auto-approved script is re-stamped
-`fact check (auto)`; one a person approved goes back to its gate). Sentences of beats that cite nothing, and
-on-screen text, are not checked.
+`fact check (auto)`; one a person approved goes back to its gate).
 
 ## Self-repair after every render (user 2026-11-14)
 

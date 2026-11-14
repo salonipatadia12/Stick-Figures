@@ -480,7 +480,8 @@ def cmd_fact_check(args):
     by_auto = bool(log) and str(log[-1].get('by', '')).startswith(('auto', 'self-repair', 'fact check'))
     result = entail.check(episode, cache=for_episode(base))
     episode.meta['fact_check'] = result
-    print(f'fact check: {result["checked"]} cited sentence(s), {len(result["changed"])} changed')
+    print(f'fact check: {result["checked"]} sentence(s) and {result.get("text_checked", 0)} text(s), '
+          f'{len(result["changed"])} changed')
     for line in entail.view(result) + result['notes']:
         print(' ', line)
     if result['changed']:

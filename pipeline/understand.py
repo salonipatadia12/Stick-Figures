@@ -175,7 +175,12 @@ def brief(interp: dict) -> str:
     lines = [f'What the viewer asked (typed as "{interp.get("topic", "")}"): {interp.get("question", "")}']
     # 2026-11-14: the local model's angle said "marine bacteria (zooplankton)" and "10-25 million years" with no
     # source: the angle and misconception steer the story; only the research facts may be stated
-    if interp.get('angle'):
+    twist = interp.get('twist') or {}
+    if twist.get('claim'):
+        # fact-first (user 2026-11-14): the angle the model wrote from memory ("microscopic marine bacteria") no
+        # longer reaches the writers once a research fact is the twist; the twist fact is the angle
+        lines.append(f'The true answer, from the research (the twist of the story): {twist["id"]}: {twist["claim"]}')
+    elif interp.get('angle'):
         lines.append(f'Angle to aim for (a direction only, not a source: state nothing from it that no research fact '
                      f'says): {interp["angle"]}')
     if interp.get('misconception'):

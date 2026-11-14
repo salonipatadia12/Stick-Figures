@@ -8,7 +8,7 @@ from unittest import mock
 import anthropic
 import httpx2
 
-from pipeline import script, styles
+from pipeline import grounding, script, styles
 from pipeline.cost import BudgetExceeded, Ledger
 from pipeline.models import Episode, Storyline
 from pipeline_fixtures import FakeClient, anthropic_provider, research_response, script_response, storyline
@@ -202,9 +202,8 @@ OUTLINE_BEATS = [
     ('setup', 'Payday feels huge, so the first week feels like permission to spend a little.', 'insert', []),
     ('problem', 'Then the jar is nearly empty by the twentieth, and nothing big happened.', 'insert', []),
     ('stakes', "Small buys don't feel like spending, so they keep adding up all month.", 'insert', []),
-    ('stakes', 'Spending tends to rise as income rises, so a raise leaks too.', 'insert', ['s1']),
+    ('clue', 'Spending tends to rise as income rises, so a raise leaks too.', 'insert', ['s1']),
     ('twist', 'That pattern has a name: lifestyle inflation.', 'graphic', ['s1']),
-    ('reveal', 'No big buy did it. The small ones did, together.', 'character', []),
     ('payoff', 'So pay yourself first: move savings out before any spending starts.', 'insert', ['s2']),
     ('loop', "Next payday, your salary won't leak.", 'insert', []),
 ]
@@ -221,6 +220,14 @@ def free_outline(hook_line="Your salary didn't shrink. It leaked."):
                 subject_settings=[],
                 beats=[dict(role=r, narration=n, on_screen_text='', visual=v, source_ids=s, illustrative_numbers=False)
                        for r, n, v, s in OUTLINE_BEATS])
+
+
+def free_plan():
+    """The model's part of the fact-first plan for the fixture: a kind and a claim per beat (the roles and the facts
+    are chosen in code: s1, the twist fact, on the twist beat; s2 on the payoff)."""
+    claims = {5: 'Spending tends to rise as income rises.', 6: 'Paying yourself first moves savings out before spending.'}
+    return dict(beats=[dict(kind='fact' if i in claims else 'transition', claim=claims.get(i, ''))
+                       for i in range(len(OUTLINE_BEATS))])
 
 
 def free_staging(i, visual, words, label=''):
@@ -277,11 +284,15 @@ class OllamaScript(unittest.TestCase):
 
     def route(self, body):
         system, user = body['messages'][0]['content'], body['messages'][1]['content']
-        if system == script.SCRIPT_RULES_COMPACT_OUTLINE:
+        if system in (script.SCRIPT_RULES_COMPACT_OUTLINE, script.SCRIPT_RULES_FACT_FIRST_OUTLINE):
             return self.outlines.pop(0) if len(self.outlines) > 1 else self.outlines[0]
-        from pipeline import entail
-        if system == entail.CHECK_SYSTEM:              # the fact check before the gate: every cited line holds here
-            return dict(states_a_fact=True, supported=True, why='the fact says it')
+        from pipeline import entail, grounding
+        if system == grounding.PLAN_SYSTEM:            # the fact-first plan, before the outline
+            return free_plan()
+        if system in (entail.CHECK_SYSTEM, entail.TEXT_SYSTEM):   # the fact check: every cited line holds here
+            return dict(states_a_fact=True, adds=[], supported=True, why='the fact says it')
+        if system == entail.NONFACT_SYSTEM:            # and every uncited line states no fact
+            return dict(states_a_fact=False, adds=[], supported=True, why='a transition')
         i = int(user.split('STAGE b')[1][:2]) - 1
         ob = OUTLINE_BEATS[i]
         bad = i in self.bad_label and 'THE CHECKER FOUND' not in user
@@ -292,12 +303,12 @@ class OllamaScript(unittest.TestCase):
 
     def test_two_stages_then_a_repair_of_only_the_failing_beat(self):
         episode, notes = self.run_generate(client=FakeClient([]))          # a passed client is ignored under ollama
-        self.assertEqual(len(episode.beats), 9)
+        self.assertEqual(len(episode.beats), 8)
         self.assertEqual([i for i in episode.check(self.style.cast_ids, self.style.words_per_second) if i.severity == 'error'], [])
-        outline_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_COMPACT_OUTLINE]
+        outline_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_FACT_FIRST_OUTLINE]
         beat_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_COMPACT_BEAT]
         self.assertEqual(len(outline_calls), 1)
-        self.assertEqual(len(beat_calls), 9 + 1)                            # nine beats, then b03 alone again
+        self.assertEqual(len(beat_calls), 8 + 1)                            # eight beats, then b03 alone again
         repair = beat_calls[-1]['messages'][1]['content']
         self.assertIn('STAGE b03', repair)
         self.assertIn('"38" is drawn on screen', repair)
@@ -310,8 +321,17 @@ class OllamaScript(unittest.TestCase):
         anchor = schema['properties']['staging']['properties']['actions']['items']['properties']['anchor']
         self.assertEqual(anchor['enum'], script.anchor_words(OUTLINE_BEATS[0][1]))   # anchors can only be spoken words
         self.assertNotIn('off', schema['properties']['host']['properties']['where']['enum'])  # frame 1 shows the host
-        self.assertEqual(outline_calls[0]['format']['properties']['beats']['items']['properties']['source_ids']['items']['enum'],
-                         ['s1', 's2'])
+        plan_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == grounding.PLAN_SYSTEM]
+        self.assertEqual(len(plan_calls), 1)                                # the facts are chosen before any narration
+        self.assertNotIn('fact_ids', plan_calls[0]['format']['properties']['beats']['items']['properties'])  # chosen in code
+        self.assertIn('FACT BEAT on s1', plan_calls[0]['messages'][1]['content'])
+        self.assertNotIn('source_ids', outline_calls[0]['format']['properties']['beats']['items']['properties'])
+        self.assertIn('claim: "Paying yourself first moves savings out before spending."', outline_calls[0]['messages'][1]['content'])
+        plan = episode.meta['fact_plan']
+        self.assertEqual([b.source_ids for b in episode.beats], [b['fact_ids'] for b in plan['beats']])  # the plan's facts
+        self.assertEqual([b.role for b in episode.beats], [r for r, _, _, _ in OUTLINE_BEATS])
+        self.assertEqual(episode.meta['fact_plan']['twist'], 's1')
+        self.assertEqual(episode.meta['fact_check']['rate'], 0.0)            # the check confirms, rewrites nothing
 
     def test_continuity_is_kept_and_the_last_beat_hands_over_to_nothing(self):
         self.bad_label = set()
@@ -337,7 +357,7 @@ class OllamaScript(unittest.TestCase):
                          free_outline()]
         self.bad_label = set()
         episode, notes = self.run_generate()
-        outline_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_COMPACT_OUTLINE]
+        outline_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_FACT_FIRST_OUTLINE]
         self.assertEqual(len(outline_calls), 2)
         self.assertIn('at most 8', outline_calls[1]['messages'][1]['content'])
         self.assertEqual(episode.beats[0].narration, "Your salary didn't shrink. It leaked.")
@@ -365,7 +385,7 @@ class OllamaScript(unittest.TestCase):
         episode, notes = self.run_generate()
         self.assertEqual(len(self.fake.chats), n)
         self.assertTrue(any('script cache' in n for n in notes))
-        self.assertEqual(len(episode.beats), 9)
+        self.assertEqual(len(episode.beats), 8)
 
     def test_regenerate_script_reuses_the_model_cache_per_call(self):
         self.run_generate()

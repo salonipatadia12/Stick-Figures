@@ -24,11 +24,19 @@ PLAIN = 'Oil comes from heated organic matter that was once alive.'
 class Judge:
     """A stand-in local model: supported only when the sentence is in `ok`; the rewrite answers `rewrites` in turn."""
 
-    def __init__(self, ok=(), rewrites=(), facts=True):
+    def __init__(self, ok=(), rewrites=(), facts=True, uncited_facts=()):
         self.ok, self.rewrites, self.facts, self.calls = set(ok), list(rewrites), facts, []
+        self.uncited_facts = set(uncited_facts)       # lines of uncited beats that state a fact (others state none)
+
+    def checks(self):
+        return [(s, u) for s, u in self.calls if s == entail.CHECK_SYSTEM]
 
     def __call__(self, system, user, schema):
         self.calls.append((system, user))
+        if system in (entail.NONFACT_SYSTEM, entail.TEXT_SYSTEM):
+            line = user.split('\n', 1)[0].split(': ', 1)[1]
+            facty = line in self.uncited_facts
+            return dict(states_a_fact=facty, supported=not facty, adds=[line] if facty else [], why='')
         if system.startswith(entail.CHECK_SYSTEM):
             sentence = user.split('\n', 1)[0].removeprefix('Sentence: ')
             ok = sentence in self.ok
@@ -53,9 +61,9 @@ class Entailment(unittest.TestCase):
         judge = Judge(ok={PLAIN}, rewrites=[PLAIN])
         out = entail.check(ep, ask=judge)
         self.assertEqual(ep.beats[1].narration, PLAIN)
-        self.assertEqual(out['changed'], [dict(beat=ep.beats[1].id, was=BACTERIA, fact_ids=['s3'], why=mock.ANY,
+        self.assertEqual(out['changed'], [dict(beat=ep.beats[1].id, field='narration', was=BACTERIA, fact_ids=['s3'], why=mock.ANY,
                                                action='rewritten', now=PLAIN)])
-        self.assertIn('quote: "biogenic', judge.calls[0][1])          # checked against the fact's quote
+        self.assertIn('quote: "biogenic', judge.checks()[0][1])       # checked against the fact's quote
         self.assertIn('rewritten', entail.view(out)[0])
 
     def test_a_rewrite_that_still_fails_drops_the_claim_and_keeps_the_beat(self):
@@ -93,6 +101,8 @@ class Entailment(unittest.TestCase):
                                  quote='Heat and pressure from these layers turned the remains into what we now call crude oil.'))
 
         def ask(system, user, schema):
+            if system in (entail.NONFACT_SYSTEM, entail.TEXT_SYSTEM):   # the other beats' lines state no fact
+                return dict(states_a_fact=False, supported=True, adds=[], why='')
             if 's6:' in user:                        # checked against s3 and the fact that says heat and pressure
                 return dict(states_a_fact=True, supported=True, adds=[], why='s6 says it')
             return dict(states_a_fact=True, supported=False, adds=['Heat and pressure'], why='s3 does not say heat')
@@ -132,7 +142,7 @@ class Entailment(unittest.TestCase):
         judge = Judge(facts=False)
         out = entail.check(ep, ask=judge)
         self.assertEqual(out['changed'], [])
-        self.assertEqual(len(judge.calls), 1)                          # the question needs no call
+        self.assertEqual(len(judge.checks()), 1)                       # the question needs no call
 
     def test_the_second_version_is_tried_when_the_first_fails(self):
         ep = episode_with({1: BACTERIA})
@@ -151,13 +161,24 @@ class Entailment(unittest.TestCase):
                                         lambda *a: dict(sentences=['Oil formed 300 million years ago from organisms.'])), '')
 
     def test_the_model_being_down_keeps_the_sentence(self):
+        line = 'Modern geochemistry finds oil starts with heated rock.'
+        ep = episode_with({1: line})
+
+        def down(*a):
+            raise RuntimeError('Ollama is not reachable')
+        out = entail.check(ep, ask=down)
+        self.assertEqual(ep.beats[1].narration, line)
+        self.assertIn('not checked', out['notes'][0])
+
+    def test_word_precision_needs_no_model(self):
+        # user 2026-11-14: "bacteria", "microbes", "bugs" are wrong for a fact about organisms or plankton
         ep = episode_with({1: BACTERIA})
 
         def down(*a):
             raise RuntimeError('Ollama is not reachable')
         out = entail.check(ep, ask=down)
-        self.assertEqual(ep.beats[1].narration, BACTERIA)
-        self.assertIn('not checked', out['notes'][0])
+        self.assertEqual(ep.beats[1].narration, S3.claim)                  # the fact as research wrote it
+        self.assertIn("'bacteria'", out['changed'][0]['why'])
 
     def test_an_anchor_no_longer_said_is_re_anchored(self):
         ep = episode_with({1: BACTERIA})
@@ -165,6 +186,231 @@ class Entailment(unittest.TestCase):
         ep.beats[1].shot.motion = [Motion(recipe='punch_in', anchor='bacteria', detail='')]
         entail.check(ep, ask=Judge(ok={PLAIN}, rewrites=[PLAIN]))
         self.assertIn(ep.beats[1].shot.motion[0].anchor.casefold(), PLAIN.casefold())
+
+
+S7 = Source(id='s7', claim='Crude oil formed from animal and plant remains that lived millions of years ago before dinosaurs existed.',
+            url='https://www.eia.gov/kids/energy-sources/oil/', quote='formed from the remains of animals and plants (diatoms) '
+            'that lived millions of years ago in a marine environment before dinosaurs existed')
+
+
+class Precision(unittest.TestCase):
+    """Word precision (pipeline/grounding.py): a fact's group of living things in its own words or a plain equivalent."""
+
+    def test_plain_equivalents_pass_and_other_categories_fail(self):
+        from pipeline import grounding
+        allowed = grounding.allowed_for(grounding.fact_texts([S7]))
+        for ok in ('Oil came from plankton.', 'Tiny sea plants and animals made it.', 'Microscopic algae sank.',
+                   'Diatoms piled up on the sea floor.'):
+            self.assertEqual(grounding.imprecise(ok, allowed), [], ok)
+        for bad, word in (('It was the bugs!', 'bugs'), ('Fact: Microbes', 'microbes'), ('Tiny marine bacteria.', 'bacteria')):
+            self.assertEqual(grounding.imprecise(bad, allowed), [word])
+        self.assertEqual(grounding.imprecise('Oil came from plankton.', grounding.allowed_for([S3.quote])), ['plankton'])
+        self.assertIn('microscopic', entail.research_text(['s7'], [S7]))   # the judge sees the plain equivalents
+
+    def test_the_myth_may_be_named_but_not_what_the_facts_say_it_really_is(self):
+        from pipeline import grounding
+        interp = dict(myth_subjects=['dinosaurs'], claims=['Crude oil does not come from dinosaurs.'],
+                      misconception='Oil is formed from sea creatures like dinosaurs and plankton.')
+        self.assertEqual(grounding.myth_groups(interp, [S3, S7]), {'dinosaurs'})
+
+    def test_the_twist_fact_names_what_it_really_is(self):
+        from pipeline import grounding
+        s5 = Source(id='s5', claim='Crude oil formed before dinosaurs existed.', url='https://www.eia.gov/a', quote='before dinosaurs')
+        interp = dict(question='How does crude oil form without dinosaurs?', claims=['Crude oil does not come from dinosaurs.'],
+                      myth_subjects=['dinosaurs'], verdicts=[dict(claim='x', verdict='supported', fact_ids=['s5', 's7'])])
+        self.assertEqual(grounding.twist_fact(interp, [S3, s5, S7]), 's7')
+
+
+S5 = Source(id='s5', claim='Crude oil formed before dinosaurs existed.', url='https://www.eia.gov/a',
+            quote='formed before the existence of dinosaurs')
+S8 = Source(id='s8', claim='Heat and pressure turned the remains into crude oil.', url='https://www.eia.gov/b',
+            quote='Heat and pressure from these layers turned the remains into what we now call crude oil.')
+OIL = [S3, S5, S7, S8]
+DINO = 'Crude oil does not come from dinosaurs.'
+
+
+def plan_episode():
+    from pipeline.models import Episode, Storyline
+    sl = Storyline(format='myth_vs_fact', title='Oil', hook='Did dinosaurs make your gas?', pitch='p', conflict='c',
+                   stakes='s', twist='t', payoff='p', visuals=['a', 'b', 'c'], fact_ids=['s7'])
+    return Episode(slug='oil', topic='crude oil', target_length=45, storylines=[sl], storyline_pick=1,
+                   meta=dict(interpretation=dict(source='model', question='Where does oil come from?', claims=[DINO],
+                                                 myth_subjects=['dinosaurs'], misconception='Oil comes from dinosaurs.',
+                                                 verdicts=[dict(claim=DINO, verdict='supported', fact_ids=['s5', 's7'],
+                                                                why='EIA')])))
+
+
+GOOD = {2: 'Oil formed before the dinosaurs were even here.', 6: 'Oil came from tiny sea plants and animals.',
+        7: 'Heat and pressure turned their remains into oil.', 8: 'Oil comes from heated matter of living organisms.'}
+
+
+def answers(claims=None, kinds=None):
+    claims = {**GOOD, **(claims or {})}
+    kinds = kinds or {}
+    return dict(beats=[dict(kind=kinds.get(k, 'fact' if k in claims else 'question'), claim=claims.get(k, ''))
+                       for k in range(10)])
+
+
+class Plan(unittest.TestCase):
+    """The fact-first plan (pipeline/grounding.py): roles and facts chosen in code, claims written by the model."""
+
+    def setUp(self):
+        self.answers, self.users = [], []
+
+    def generate(self, system, user, schema, attempt):
+        from pipeline import grounding
+        self.assertEqual(system, grounding.PLAN_SYSTEM)
+        self.users.append(user)
+        return self.answers.pop(0)
+
+    def plan(self, ok=GOOD.values()):
+        from pipeline import grounding
+        return grounding.make_plan(plan_episode(), OIL, (9, 11), ask=Judge(ok=set(ok)), generate=self.generate)
+
+    def test_roles_and_facts_are_chosen_in_code(self):
+        from pipeline import grounding
+        roles = grounding.skeleton('myth_vs_fact', 10)
+        self.assertEqual(roles, ['hook', 'setup', 'problem', 'stakes', 'clue', 'clue', 'twist', 'reveal', 'payoff', 'loop'])
+        interp = plan_episode().meta['interpretation']
+        got = grounding.assign_facts(roles, OIL, 's7', interp)
+        self.assertEqual(got, {6: 's7', 2: 's5', 7: 's8', 8: 's3'})    # twist, myth-breaker, how it works, the answer
+        self.assertEqual(grounding.skeleton('mystery', 8).count('clue'), 2)
+        abiogenic = Source(id='s9', claim='Abiogenic methane forms by geologic processes.', url='https://x.gov/m', quote='')
+        self.assertNotIn('s9', grounding.assign_facts(roles, OIL + [abiogenic], 's7', interp).values())  # off topic
+
+    def test_a_precise_plan_passes_in_one_call_and_other_beats_cite_nothing(self):
+        self.answers = [answers(kinds={1: 'myth', 3: 'fact'}, claims={3: 'A claim with no fact.'})]
+        plan = self.plan()
+        self.assertEqual(len(self.users), 1)
+        self.assertIn('FACT BEAT on s7', self.users[0])
+        self.assertIn('microscopic', self.users[0])                      # the plain equivalents of "diatoms"
+        self.assertEqual(plan['twist'], 's7')
+        self.assertEqual(plan['beats'][6], dict(role='twist', kind='fact', fact_ids=['s7'], claim=GOOD[6]))
+        self.assertEqual(plan['beats'][1], dict(role='setup', kind='myth', fact_ids=[], claim=''))
+        self.assertEqual(plan['beats'][3], dict(role='stakes', kind='transition', fact_ids=[], claim=''))  # no fact left
+        self.assertEqual(plan['remaining'], [])
+
+    def test_an_imprecise_claim_goes_back_then_becomes_the_facts_own_line(self):
+        from pipeline import grounding
+        bad = {6: 'Oil came from tiny marine bacteria.'}
+        self.answers = [answers(bad), answers({**bad, 2: "garbled"}), answers(bad)]
+        plan = self.plan()
+        self.assertEqual(len(self.users), 1 + grounding.PLAN_REPAIRS)
+        self.assertIn("'bacteria'", self.users[1])                          # the repair says what is wrong
+        self.assertEqual(plan['beats'][6]['claim'], S7.claim)
+        self.assertEqual(plan['beats'][2]['claim'], GOOD[2])               # a claim that passed is kept
+        self.assertTrue(any('the fact as research wrote it' in n for n in plan['notes']))
+
+    def test_the_outline_gets_the_claims_not_the_facts_at_large(self):
+        from pipeline import script, styles
+        self.answers = [answers()]
+        plan = self.plan()
+        ep = plan_episode()
+        ctx = script._free_context(ep, styles.load('cozy'), OIL, plan)
+        self.assertIn(f'b07 twist [fact beat, s7]: claim: "{GOOD[6]}"', ctx['outline_user'])
+        self.assertIn('b01 hook [question: states no fact]', ctx['outline_user'])
+        self.assertNotIn('Research facts', ctx['outline_user'])
+        self.assertEqual(ctx['outline_system'], script.SCRIPT_RULES_FACT_FIRST_OUTLINE)
+        o = script._apply_plan(dict(beats=[dict(narration='x', on_screen_text='', visual='insert') for _ in range(10)]), plan)
+        self.assertEqual([b['role'] for b in o['beats']][:3], ['hook', 'setup', 'problem'])
+        self.assertEqual(o['beats'][6]['source_ids'], ['s7'])
+        self.assertIn('bacteria', ' '.join(script.precision_issues(ep, OIL, dict(beats=[
+            dict(narration='Tiny bacteria made it.', on_screen_text='', source_ids=['s7'])]))))
+
+
+class WriterGuards(unittest.TestCase):
+    """2026-11-14 scratch run: narration copied research lines, split labels of 4 words, the "MYTH" label rewritten."""
+
+    def test_a_narration_that_copies_its_fact_goes_back_to_the_outline(self):
+        from pipeline import script
+        o = dict(beats=[dict(narration=S3.claim, on_screen_text='', source_ids=['s3'])])
+        self.assertTrue(any('word for word' in m for m in script.precision_issues(plan_episode(), OIL, o)))
+        o['beats'][0]['narration'] = 'Turns out, oil starts as stuff that was once alive, cooked slowly.'
+        self.assertFalse(any('word for word' in m for m in script.precision_issues(plan_episode(), OIL, o)))
+
+    def test_split_labels_are_cut_in_code(self):
+        from pipeline import script
+        self.assertEqual(script.split_labels(['Myth: Big monsters sank here.', '']), ['Myth', 'Fact'])
+        self.assertEqual(script.split_labels(['Then', 'Now']), ['Then', 'Now'])
+
+    def test_a_text_that_only_marks_the_myth_needs_no_check(self):
+        ep = plan_episode()
+        ep.sources = list(OIL)
+        for text in ('MYTH', 'Myth: Dinosaurs', 'MYTH: Dinosaurs?'):
+            self.assertTrue(entail.marks_myth(text, ep), text)
+        for text in ('Myth: Big Vertebrates', 'Fact: Microbes', 'Tiny sea life'):
+            self.assertFalse(entail.marks_myth(text, ep), text)
+
+    def test_the_twist_fact_may_be_one_the_verdict_did_not_cite(self):
+        from pipeline import grounding
+        interp = dict(plan_episode().meta['interpretation'])
+        interp['verdicts'] = [dict(claim=DINO, verdict='supported', fact_ids=['s5'], why='')]
+        self.assertEqual(grounding.twist_fact(interp, OIL), 's7')
+
+    def test_a_long_model_claim_goes_back(self):
+        from pipeline import grounding
+        b = dict(role='clue', kind='fact', fact_ids=['s3'], claim=S3.claim + ' It took a long time underground too.')
+        self.assertIn('at most 16', grounding.claim_problem(b, OIL, set(), None))
+        self.assertEqual(grounding.claim_problem(dict(b, claim=S3.claim, from_research=True), OIL, set(), None), '')
+
+
+class OutlineStage(unittest.TestCase):
+    """The judge runs on the outline before staging, so the writer fixes its own lines (2026-11-14 scratch run: 33 %)."""
+
+    def test_lines_that_say_more_go_back_to_the_outline_with_the_claim(self):
+        from pipeline import script
+        o = dict(_plan=[dict(role='reveal', kind='fact', fact_ids=['s8'], claim='Heat and pressure turned the remains into oil.'),
+                        dict(role='clue', kind='transition', fact_ids=[], claim='')],
+                 beats=[dict(narration='Heat and pressure cooked them into black liquid gold.', source_ids=['s8']),
+                        dict(narration='This mix gets buried very quickly.', source_ids=[])])
+        judge = Judge(uncited_facts={'This mix gets buried very quickly.'})
+        got = script.narration_issues(plan_episode(), OIL, o, judge)
+        self.assertIn('say only what the claim says, in story voice: "Heat and pressure turned the remains into oil."', got[0])
+        self.assertIn('b02 has none (it is a transition)', got[1])
+
+    def test_a_fact_beat_falls_back_to_its_planned_claim_not_a_question(self):
+        ep = episode_with({1: 'So oil came from the skeletons of giants!'})
+        ep.beats[1].role = 'payoff'
+        ep.meta['fact_plan'] = dict(beats=[dict(role=b.role, kind='fact' if b.source_ids else 'transition',
+                                                fact_ids=list(b.source_ids),
+                                                claim='Oil comes from living organisms.' if b.source_ids else '')
+                                           for b in ep.beats])
+        out = entail.check(ep, ask=Judge(ok={'Oil comes from living organisms.'}, rewrites=['Giants again, sure.']))
+        self.assertEqual(ep.beats[1].narration, 'Oil comes from living organisms.')
+        self.assertEqual(out['changed'][0]['action'], "said the beat's planned claim")
+
+    def test_a_text_that_echoes_the_narration_needs_no_judge(self):
+        self.assertTrue(entail.echoes('Tiny Life', 'Oil came from tiny life in the sea.', {'organisms'}))
+        self.assertFalse(entail.echoes('Pre-dino era', 'Oil came from tiny life in the sea.', {'organisms'}))
+        self.assertFalse(entail.echoes('Tiny bugs', 'Oil came from tiny bugs.', {'organisms'}))   # the word rule first
+
+
+class UncitedAndTexts(unittest.TestCase):
+    def test_an_uncited_line_that_states_a_fact_is_replaced_by_one_that_states_none(self):
+        ep = episode_with({})
+        ep.beats[2].narration = 'Oil comes from rocks.'
+        judge = Judge(uncited_facts={'Oil comes from rocks.'}, rewrites=['So where does oil come from?'])
+        out = entail.check(ep, ask=judge)
+        self.assertEqual(ep.beats[2].narration, 'So where does oil come from?')
+        self.assertTrue(out['changed'][0]['action'].startswith('claim dropped'))
+
+    def test_texts_on_screen_get_the_same_check(self):
+        ep = episode_with({1: 'Oil starts with living organisms.'})
+        ep.beats[1].on_screen_text = 'Fact: Microbes'
+        out = entail.check(ep, ask=Judge(ok={'Oil starts with living organisms.'}, rewrites=['Fact: Living Organisms']))
+        self.assertEqual(ep.beats[1].on_screen_text, 'Fact: Living Organisms')
+        c = [x for x in out['changed'] if x['field'] == 'on-screen text'][0]
+        self.assertEqual((c['was'], c['action']), ('Fact: Microbes', 'text rewritten'))
+        self.assertIn("'microbes'", c['why'])
+
+    def test_a_text_that_cannot_be_fixed_is_removed_and_the_rate_is_logged(self):
+        ep = episode_with({1: 'Oil starts with living organisms.'})
+        ep.beats[1].on_screen_text = 'It Was The Bugs!'
+        out = entail.check(ep, ask=Judge(ok={'Oil starts with living organisms.'}, rewrites=['The Bugs Again']))
+        self.assertEqual(ep.beats[1].on_screen_text, '')
+        self.assertGreater(out['rate'], 0)
+        self.assertEqual(out['plan_failed'], out['rate'] > entail.RATE_LIMIT)
+        self.assertIn('rewrite rate', out['notes'][-1] if not out['notes'][-1].startswith('b') else ' '.join(out['notes']))
 
 
 class ReAnchor(unittest.TestCase):

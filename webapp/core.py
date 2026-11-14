@@ -886,7 +886,12 @@ class Service:
             out['interpretation'] = understand.view(interp)
         fc = (episode.meta or {}).get('fact_check')
         if fc:                                         # cited sentences the fact check rewrote or dropped
-            out['fact_check'] = dict(checked=fc.get('checked', 0), changed=fc.get('changed') or [])
+            from pipeline import grounding
+            plan = (episode.meta or {}).get('fact_plan') or {}
+            out['fact_check'] = dict(checked=fc.get('checked', 0), texts=fc.get('text_checked', 0),
+                                     changed=fc.get('changed') or [], rate=round(100 * (fc.get('rate') or 0)),
+                                     plan_failed=bool(fc.get('plan_failed')), has_rate='rate' in fc,
+                                     plan=grounding.plan_view(plan), twist=plan.get('twist', ''))
         if episode.storylines:
             out['storylines'] = self.storylines_view(episode)
         if episode.beats:
