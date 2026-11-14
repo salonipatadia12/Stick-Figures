@@ -173,10 +173,13 @@ def brief(interp: dict) -> str:
     if not interp:
         return ''
     lines = [f'What the viewer asked (typed as "{interp.get("topic", "")}"): {interp.get("question", "")}']
+    # 2026-11-14: the local model's angle said "marine bacteria (zooplankton)" and "10-25 million years" with no
+    # source: the angle and misconception steer the story; only the research facts may be stated
     if interp.get('angle'):
-        lines.append(f'Most interesting true angle: {interp["angle"]}')
+        lines.append(f'Angle to aim for (a direction only, not a source: state nothing from it that no research fact '
+                     f'says): {interp["angle"]}')
     if interp.get('misconception'):
-        lines.append(f'Likely misconception to correct: {interp["misconception"]}')
+        lines.append(f'Likely misconception to correct (as the viewer holds it): {interp["misconception"]}')
     verdicts = interp.get('verdicts') or []
     if verdicts:
         lines.append('Claims inside the topic, checked against the research:')
