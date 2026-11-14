@@ -174,6 +174,10 @@ class Runner:
                 progress=dict(stage='done', pct=100, message='Finished', at=db.iso(t))))
             conn.execute(update(E).where(E.c.slug == slug).values(state=next_state, error=None, waiting=None,
                                                                   cost_usd=float(usd(ledger.spent())), updated_at=t))
+            if episode.title:
+                conn.execute(update(E).where(E.c.slug == slug).values(title=episode.title[:200]))
+            if kind == 'pitch':
+                slug = svc.rename_after_pitch(conn, slug, episode)
         log.info('job %s %s %s done -> %s', job_id, kind, slug, next_state)
         svc.after_step(slug)                         # Auto mode decides the gate it reached; the phone is notified
 

@@ -259,7 +259,8 @@ def make_client():
 # ------------------------------------------------------------------ prompts
 
 def research_request(episode):
-    user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+    from .understand import question
+    user = (f'Topic: {question(episode)}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}')
     focus = episode.meta.get('research_focus') or {}
     if focus.get('find'):                      # the user's own list of events the story needs (user 2026-11-10)
@@ -289,7 +290,8 @@ def script_request(episode, style, facts):
         research = f'Research facts (cite by id):\n{fact_lines}'
     else:
         research = 'No research facts were gathered. Do not state statistics or claims that need a source.'
-    user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+    from .understand import topic_text
+    user = (f'{topic_text(episode)}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Target length: {episode.target_length} seconds: {lo}-{hi} beats and about {words} narration words '
             f'(the narrator reads about {wps} words per second).\n'
@@ -737,7 +739,8 @@ def _free_context(episode, style, facts) -> dict:
     wps = writer_rate(style)            # measured from the finished videos (Kokoro's real pace), else the style's
     words = round(episode.target_length * wps)
     aim_lo, aim_hi = pacing_aim(episode.target_length)
-    head = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+    from .understand import topic_text
+    head = (f'{topic_text(episode)}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} s: {lo}-{hi} beats (aim for {aim_lo}-{aim_hi}) and about {words} narration '
             f'words in total ({round(words * 0.9)}-{round(words * 1.15)}; the narrator reads {wps} '
@@ -751,7 +754,7 @@ def _free_context(episode, style, facts) -> dict:
     story = (f'PICKED STORYLINE (format {sl.format}: {FORMATS[sl.format]}):\nHook: {sl.hook}\nPitch: {sl.pitch}\n'
              f'Twist: {sl.twist}\nPayoff: {sl.payoff}\nIt was pitched from earlier research: cite only the facts above, '
              'and drop any line of it they do not support.') if sl else ''
-    brief = f'Topic: {episode.topic}\n' + (f'Story ({sl.format}): {sl.title}. {sl.pitch}' if sl else '')
+    brief = f'{topic_text(episode)}\n' + (f'Story ({sl.format}): {sl.title}. {sl.pitch}' if sl else '')
     if style.writer_note:                         # the new style packs (2026-11-11); cozy has none, its prompts unchanged
         brief += f'\n{style.writer_note}'
     return dict(outline_user=f'{head}\n\n{research}\n\n{story}'.strip(), beat_head=brief,
@@ -1063,7 +1066,9 @@ def research_free(episode, base, ledger, regenerate=False):
     from .cache import for_episode
     cache = for_episode(base)
     focus = episode.meta.get('research_focus') or {}
-    key = digest([FREE_RESEARCH_VERSION, config.ollama_model(), episode.topic, episode.niche, episode.audience, focus,
+    from .understand import question
+    topic = question(episode)                     # the interpreted question (pipeline/understand.py), else the topic
+    key = digest([FREE_RESEARCH_VERSION, config.ollama_model(), topic, episode.niche, episode.audience, focus,
                   search.QUERY_TEMPLATES, search.FACT_SYSTEM])
     path = _cache(base, 'research', key)
     if path.exists() and not regenerate:
@@ -1071,7 +1076,7 @@ def research_free(episode, base, ledger, regenerate=False):
         LAST_RUN['research'] = dict(cached=True, timings=data.get('timings', {}), notes=data.get('notes', []))
         return [Source.model_validate(f) for f in data['facts']], path, True
     timings, notes = {}, []
-    facts = search.research_topic(episode.topic, episode.niche, episode.audience, cache, ledger=ledger, focus=focus,
+    facts = search.research_topic(topic, episode.niche, episode.audience, cache, ledger=ledger, focus=focus,
                                   fresh=regenerate, timings=timings, notes=notes)
     LAST_RUN['research'] = dict(cached=False, timings=timings, notes=notes, cache=dict(cache.stats))
     if not facts:

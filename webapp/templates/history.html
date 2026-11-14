@@ -14,9 +14,10 @@
 <div class="card">
   <a class="ep-link" href="/episodes/{{ e.slug }}">
     <div class="spread">
-      <h3>{{ e.topic }}</h3>
+      <h3>{{ e.title or e.topic }}</h3>
       <span class="row">{% if e.auto %}<span class="badge">Auto</span>{% endif %}<span class="badge b-{{ e.state }}">{{ state_labels.get(e.state, e.state) }}</span></span>
     </div>
+    {% if e.title and e.title != e.topic %}<p class="muted small">Typed as: {{ e.topic }}</p>{% endif %}
     <p class="muted small">{{ e.created_at[:10] if e.created_at else '' }} · ${{ '%.4f'|format(e.cost_usd) }}</p>
   </a>
   {% if e.files %}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ ep.topic }} · Stick Figures{% endblock %}
+{% block title %}{{ ep.title or ep.topic }} · Stick Figures{% endblock %}
 {% block body_attrs %}data-slug="{{ ep.slug }}" data-state="{{ ep.state }}" data-auto-note="{{ 1 if ep.auto_note else 0 }}"{% endblock %}
 {% block content %}
 {% set job = ep.job %}
@@ -9,7 +9,20 @@
   <span class="row">{% if ep.auto %}<span class="badge">Auto</span>{% endif %}<span class="badge b-{{ ep.state }}">{{ ep.state_label }}</span></span>
   <span class="muted small">Spent <strong data-cost>${{ '%.4f'|format(ep.cost_usd) }}</strong></span>
 </div>
-<h1>{{ ep.topic }}</h1>
+<h1>{{ ep.title or ep.topic }}</h1>
+{% if ep.title and ep.title != ep.topic %}<p class="muted small">Typed as: “{{ ep.topic }}”</p>{% endif %}
+{% if ep.interpretation %}{% set interpretation = ep.interpretation %}
+<details class="card" open>
+  <summary><strong>What it understood</strong> <span class="muted small">(it never waits for you on this)</span></summary>
+  <p><strong>Question:</strong> {{ interpretation.question }}</p>
+  {% if interpretation.angle %}<p class="small"><strong>Angle:</strong> {{ interpretation.angle }}</p>{% endif %}
+  {% if interpretation.misconception %}<p class="small"><strong>Misconception to correct:</strong> {{ interpretation.misconception }}</p>{% endif %}
+  {% if interpretation.claims %}<ul class="list small">{% for c in interpretation.claims %}
+    <li><strong>{{ c.claim }}</strong> <span class="badge {{ 'good' if c.verdict == 'supported' else ('bad' if c.verdict == 'fringe/false' else '') }}">{{ c.verdict }}</span>{% if c.why %} <span class="muted">{{ c.why }}{% if c.fact_ids %} ({{ c.fact_ids|join(', ') }}){% endif %}</span>{% endif %}</li>
+  {% endfor %}</ul>{% else %}<p class="muted small">No claims inside the topic.</p>{% endif %}
+  {% if interpretation.note %}<p class="muted small">{{ interpretation.note }}</p>{% endif %}
+</details>
+{% endif %}
 {% if ep.niche or ep.audience %}<p class="muted small">{% if ep.niche %}Niche: {{ ep.niche }}{% endif %}{% if ep.niche and ep.audience %} · {% endif %}{% if ep.audience %}Audience: {{ ep.audience }}{% endif %}</p>{% endif %}
 
 {% if errors %}

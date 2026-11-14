@@ -339,7 +339,8 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
     notes = notes if notes is not None else []
     t0 = time.time()
     mark = lambda name: timings.__setitem__(name, round(time.time() - t0, 2))
-    queries = template_queries(topic) + [f'{topic.rstrip("?")} {x}' for x in find]
+    # a claim from topic understanding is a sentence of its own ("oil does not come from dinosaurs"): searched as is
+    queries = template_queries(topic) + [x if len(x.split()) > 3 else f'{topic.rstrip("?")} {x}' for x in find]
     engines, results_by_q, fetched, extracted = {}, {}, {}, {}
     page_rank, page_meta = {}, {}
     workers = config.ollama_parallel()

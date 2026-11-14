@@ -445,6 +445,11 @@ def from_wire(data: dict) -> tuple[dict, list]:
 STATIC_MAX_S = 2.5
 
 
+CLAIM_FRAMING = re.compile(r"\b(myth|myths|claim|claims|think|thinks|thought|believe|believes|imagine|imagines|assume|"
+                           r"some people|people say|many say|not|isn't|aren't|wasn't|doesn't|don't|never|wrong|false|"
+                           r"actually|supposedly|legend|rumou?r)\b", re.I)
+
+
 def static_gap(beat, words_per_second: float) -> tuple:
     """(seconds, word) of the longest stretch of a beat's narration with nothing changing on screen: the cut in, every
     word-anchored camera move, effect, split reveal, diagram item, text, counter and host/cast gesture, and the cut out.
@@ -781,7 +786,26 @@ class Episode(Strict):
         if not 0.75 * expected <= words <= 1.2 * expected:
             warn('beats', f'{words} narration words ~ {words / words_per_second:.0f}s; target {self.target_length}s '
                           f'is ~{expected:.0f} words at {words_per_second} w/s')
+        self._check_claims(err)
         return issues
+
+    def _check_claims(self, err):
+        """Topic understanding (pipeline/understand.py): a claim the research judged disputed or false may be shown
+        only as an idea. A beat whose narration or on-screen text says most of that claim without framing it (a myth,
+        "some people think", a "not") states it as fact: an error, so the writer fixes it before the gate."""
+        interp = (self.meta or {}).get('interpretation') or {}
+        bad = [v['claim'] for v in interp.get('verdicts') or [] if v.get('verdict') in ('mainstream-disputed', 'fringe/false')]
+        words = lambda t: {w for w in re.findall(r'[a-z]+', t.lower()) if len(w) >= 4}
+        for claim in bad:
+            core = words(claim) - {'does', 'come', 'comes', 'from', 'that', 'this', 'with'}
+            if len(core) < 2:
+                continue
+            for b in self.beats:
+                for text in (b.narration, b.on_screen_text):
+                    if text and len(core & words(text)) >= max(2, round(0.7 * len(core))) and not CLAIM_FRAMING.search(text):
+                        err(b.id, f'states "{claim}" as fact, but the research judged it '
+                                  f'{next(v["verdict"] for v in interp["verdicts"] if v["claim"] == claim)}: show it as an '
+                                  'idea ("some people think ...") or say what is true instead')
 
     def _check_host_format(self, err, warn):
         """Script v5 (user 2026-11-08): the lead hosts and tells the story; hook -> promise -> story -> payoff -> loop;

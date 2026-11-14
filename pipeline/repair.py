@@ -35,7 +35,8 @@ AWAY = {'left': 'right', 'right': 'left', 'centre': 'top'}
 CANT = {'freeze': 'part of the video froze', 'captions': 'a caption left the safe area',
         'fill': 'part of the frame was empty', 'host': 'the host was off or wrong on screen',
         'loudness': 'the sound level was off', 'characters': 'a character was drawn wrong',
-        'hook': 'the hook is not answered in the payoff', 'placeholders': 'a scene or prop is a placeholder'}
+        'hook': 'the hook is not answered in the payoff', 'placeholders': 'a scene or prop is a placeholder',
+        'story_match': 'a picture does not match its beat'}
 
 
 def path(slug: str) -> Path:
@@ -115,6 +116,12 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
                 if e.get('kind') == 'label' and e.get('detail') == tidy_label(text):
                     e['at'] = region
                     notes.append(f'{b.id}: label "{e["detail"]}" moved to {region}')
+        if h.get('insert_key') and shot.get('insert'):
+            shot['insert']['key'] = h['insert_key']
+            notes.append(f"{b.id}: scene repainted as {h['insert_key']}")
+        if h.get('myth_mark'):
+            notes.append(f'{b.id}: marked as the myth')
+            mark_myth(shot, spec)
         host = shot.get('host')
         if host and (h.get('host_side') or h.get('host_size')):
             host['side'] = h.get('host_side', host.get('side'))
@@ -131,7 +138,30 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
         if b.shot.host is not None and host:
             b.shot.host.side, b.shot.host.size = host['side'], host['size']
         b.on_screen_text = spec.get('on_screen_text', b.on_screen_text)
+        if h.get('myth_mark') and shot.get('motion') is not None:
+            from .models import Motion
+            b.shot.motion = [Motion.model_validate(m) for m in shot['motion']]
     return notes
+
+
+def mark_myth(shot: dict, spec: dict):
+    """Make a beat read as the myth on screen: a MYTH label on an insert, "Myth" on a split's first half, or "Myth:"
+    before a diagram's on-screen text (slammed)."""
+    vis = shot.get('visual')
+    if vis == 'insert' and shot.get('insert') is not None:
+        fx = shot['insert'].setdefault('effects', [])
+        if not any(e.get('kind') == 'label' and e.get('detail') == 'MYTH' for e in fx):
+            fx.insert(0, dict(kind='label', anchor='', at='top', detail='MYTH'))
+    elif vis == 'split' and shot.get('split'):
+        labels = list(shot['split'].get('labels') or ['', ''])
+        labels[0] = 'Myth'
+        shot['split']['labels'] = labels
+    else:
+        ost = (spec.get('on_screen_text') or '').strip()
+        spec['on_screen_text'] = 'MYTH' if not ost else (ost if ost.lower().startswith('myth') else f'Myth: {ost}')
+        motion = shot.setdefault('motion', [])
+        if not any(m.get('recipe') == 'text_slam' for m in motion):
+            motion.append(dict(recipe='text_slam', anchor='', detail=''))
 
 
 def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
@@ -147,7 +177,12 @@ def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
             shot['insert'] = dict(key=sp['key'], scene=sp.get('scene', ''), effects=list(ins.get('effects') or []))
         for box, k in list(_texts(shot)):
             box[k] = tidy_label(box[k])
-        drop = {tidy_label(x) for x in (beats.get(b.get('id')) or {}).get('drop') or []}
+        h = beats.get(b.get('id')) or {}
+        if h.get('insert_key') and shot.get('insert'):
+            shot['insert']['key'] = h['insert_key']
+        if h.get('myth_mark'):
+            mark_myth(shot, b)
+        drop = {tidy_label(x) for x in h.get('drop') or []}
         if drop:
             ins = shot.get('insert') or {}
             ins['effects'] = [e for e in ins.get('effects') or [] if not (e.get('kind') == 'label' and e.get('detail') in drop)]
@@ -234,6 +269,27 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     for item in text.get('missing_text') or []:
         actions.append(dict(check='text', beat=item.get('beat'), cause=f'the promised text "{item.get("text")}" never showed',
                             fix=None, hint=None))
+    sm = report.get('story_match') or {}
+    for x in sm.get('unmarked_myth') or []:
+        h = beats_h.get(x['beat']) or {}
+        if not h.get('myth_mark'):
+            actions.append(dict(check='story_match', beat=x['beat'], cause=f"the picture shows the myth ({', '.join(x['shows'])}) "
+                                'but nothing on screen says it is the myth', fix='mark it: a MYTH label on the picture',
+                                hint=dict(myth_mark=True)))
+        else:
+            actions.append(dict(check='story_match', beat=x['beat'], cause='the myth is still not marked on screen', fix=None, hint=None))
+    for x in sm.get('off_subject') or []:
+        h = beats_h.get(x['beat']) or {}
+        spec = next((b for b in ep_data.get('beats', []) if b.get('id') == x['beat']), {})
+        scene = ' '.join(str(spec.get('visual_intent') or spec.get('narration') or '').split())
+        if not h.get('insert_key') and scene:
+            new_key = re.sub(r'[^a-z0-9]+', '-', f"{x['key']}-{x['beat']}".lower()).strip('-')[:60]
+            actions.append(dict(check='story_match', beat=x['beat'], cause=f"the scene \"{x['key']}\" does not show what the beat says",
+                                fix=f'paint a new scene from the beat: "{scene[:80]}"',
+                                hint=dict(repaint=dict(key=new_key, scene=scene + ' No people, no characters, no text.'))))
+        else:
+            actions.append(dict(check='story_match', beat=x['beat'], cause=f"the scene \"{x['key']}\" still does not match its beat",
+                                fix=None, hint=None))
     dur = report.get('duration') or {}
     if dur and not dur.get('pass_'):
         sec, target = float(dur.get('seconds', 0)), float(dur.get('target', 45))
@@ -330,7 +386,12 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     return added
 
 
-def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: float = 2.45, write=None) -> list:
+def _paint(want: dict, slug: str) -> dict:
+    from . import inserts
+    return inserts.paint(want, slug)
+
+
+def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: float = 2.45, write=None, paint=None) -> list:
     """Diagnose the report, apply every automatic fix and log it. Returns the applied log entries (empty: nothing
     left to try)."""
     from . import store
@@ -359,6 +420,17 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             entry['beat'] = ', '.join(i for i, _ in added)
             entry['fix'] = 'added: ' + ' | '.join(f'{i}: "{s}"' for i, s in added)
+        elif 'repaint' in a['hint']:
+            want = a['hint']['repaint']
+            try:
+                res = (paint or _paint)({want['key']: dict(scene=want['scene'], beats=[a['beat']], base=None)}, slug)
+            except Exception as e:                  # FLUX unavailable: report it, never crash the render
+                entry['fix'] = f'could not repaint ({type(e).__name__}: {str(e)[:120]})'
+                repairs.setdefault('log', []).append(entry)
+                continue
+            if want['key'] in (res.get('placeholders') or {}):
+                entry['fix'] += ' (it would not paint: a placeholder is shown)'
+            merge(repairs, a['beat'], dict(insert_key=want['key']))
         else:
             merge(repairs, a['beat'], a['hint'])
         repairs.setdefault('log', []).append(entry)

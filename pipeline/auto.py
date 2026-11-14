@@ -23,6 +23,12 @@ def first_storyline(episode) -> tuple[int | None, str]:
     if not episode.storylines:
         return None, 'there are no storylines'
     last, last_slug = last_picked_format(episode.slug)
+    from . import understand
+    interp = (episode.meta or {}).get('interpretation') or {}
+    if understand.has_myth(interp):               # a myth to correct: myth_vs_fact, mystery or revelation first
+        for n, s in enumerate(episode.storylines, 1):
+            if s.format in understand.PREFERRED and s.format != last:
+                return n, f'storyline {n} [{s.format}]: the topic corrects a myth ({interp.get("misconception") or "a claim"})'
     for n, s in enumerate(episode.storylines, 1):
         if s.format != last:
             return n, (f'storyline {n} [{s.format}]' + (f' (storyline 1 is a {last}, the format of {last_slug})'

@@ -11,6 +11,7 @@ most `max_attempts` times.
 """
 from __future__ import annotations
 
+import logging
 import contextlib
 import datetime as dt
 import io
@@ -62,8 +63,17 @@ class GateError(Exception):
         super().__init__('; '.join(self.errors))
 
 
+log = logging.getLogger('webapp.core')
+
 class NotFound(Exception):
     pass
+
+
+class Moved(Exception):
+    """The episode was renamed by topic understanding: `new` is its slug now (old links redirect)."""
+    def __init__(self, old, new):
+        super().__init__(f'{old} is now {new}')
+        self.old, self.new = old, new
 
 
 def safe_name(name: str) -> bool:
@@ -95,8 +105,42 @@ class Service:
     def _episode_row(self, conn, slug):
         row = conn.execute(select(E).where(E.c.slug == slug)).mappings().first()
         if not row:
+            moved = conn.execute(select(E.c.slug).where(E.c.renamed_from == slug)).first()
+            if moved:
+                raise Moved(slug, moved[0])
             raise NotFound(slug)
         return dict(row)
+
+    def rename_after_pitch(self, conn, slug, episode) -> str:
+        """Topic understanding (pipeline/understand.py) gave the episode a clean slug: move the row, its jobs, files and
+        spend approvals, and its folders, to it. The typed slug stays as an alias (old links redirect). Returns the
+        slug the episode has now."""
+        import re
+        import shutil
+        from pipeline import config, store
+        new = str(((episode.meta or {}).get('interpretation') or {}).get('slug') or '')
+        if not new or new == slug or not re.fullmatch(r'[a-z0-9][a-z0-9-]{2,47}', new):
+            return slug
+        taken = lambda s: conn.execute(select(E.c.slug).where((E.c.slug == s) | (E.c.renamed_from == s))).first() \
+            or (config.EPISODES_DIR / s).exists()
+        base, n = new[:44], 2
+        while taken(new):
+            new, n = f'{base}-{n}', n + 1
+        row = self._episode_row(conn, slug)
+        conn.execute(E.insert().values(**dict(row, slug=new, renamed_from=slug, updated_at=db.now())))
+        for T in (J, db.files, db.spend_approvals):
+            conn.execute(update(T).where(T.c.slug == slug).values(slug=new))
+        conn.execute(E.delete().where(E.c.slug == slug))
+        old_dir, new_dir = config.EPISODES_DIR / slug, config.EPISODES_DIR / new
+        if old_dir.exists():
+            shutil.move(str(old_dir), str(new_dir))
+        out_old, out_new = self.settings.outputs_dir / slug, self.settings.outputs_dir / new
+        if out_old.exists():
+            shutil.move(str(out_old), str(out_new))
+        renamed = episode.model_copy(update=dict(slug=new))
+        store.save(renamed, store.folder(new))
+        log.info('topic understanding renamed %s -> %s', slug, new)
+        return new
 
     def episode_row(self, slug):
         with self.engine.connect() as conn:
@@ -178,7 +222,7 @@ class Service:
             names = {}
             for f in conn.execute(select(F.c.slug, F.c.name, F.c.kind)).mappings():
                 names.setdefault(f['slug'], {})[f['kind']] = f['name']
-        return [dict(slug=r['slug'], topic=r['topic'], state=r['state'], cost_usd=round(r['cost_usd'] or 0, 4),
+        return [dict(slug=r['slug'], topic=r['topic'], title=r.get('title') or '', state=r['state'], cost_usd=round(r['cost_usd'] or 0, 4),
                      created_at=db.iso(r['created_at']), files=names.get(r['slug'], {}), auto=bool(r.get('auto')))
                 for r in rows]
 
@@ -291,7 +335,7 @@ class Service:
             j = self._running_mac_job(conn, job_id)
             slug = j['slug']
             if j['kind'] in LLM_KINDS:
-                self._llm_done(conn, j, result)
+                slug = self._llm_done(conn, j, result) or slug
             else:
                 self._mac_done(conn, j, result, t)
         self.after_step(slug)
@@ -365,6 +409,12 @@ class Service:
         conn.execute(update(W).where(W.c.busy_job_id == j['id']).values(busy_job_id=None))
         conn.execute(update(E).where(E.c.slug == slug).values(
             state=STORYLINES if kind == 'pitch' else SCRIPT, error=None, waiting=None, cost_usd=cost, updated_at=t))
+        title = episode.title or ((episode.meta or {}).get('interpretation') or {}).get('title')
+        if title:
+            conn.execute(update(E).where(E.c.slug == slug).values(title=title[:200]))
+        if kind == 'pitch':
+            return self.rename_after_pitch(conn, slug, episode)
+        return slug
 
     def cache_dir(self, slug) -> Path:
         from pipeline import config
@@ -802,7 +852,7 @@ class Service:
         row = self.episode_row(slug)
         state = row['state']
         job = self.current_job(slug)
-        return dict(slug=slug, topic=row['topic'], niche=row['niche'], audience=row['audience'], state=state,
+        return dict(slug=slug, topic=row['topic'], title=row.get('title') or '', niche=row['niche'], audience=row['audience'], state=state,
                     state_label=STATE_LABELS.get(state, state), cost_usd=round(row['cost_usd'] or 0, 4),
                     error=row['error'], created_at=db.iso(row['created_at']), updated_at=db.iso(row['updated_at']),
                     job=job, worker=self.worker_status(),
@@ -830,6 +880,10 @@ class Service:
         except ValueError as exc:
             out['episode_error'] = str(exc)
             return out
+        interp = (episode.meta or {}).get('interpretation')
+        if interp:                                     # what topic understanding read from the typed topic
+            from pipeline import understand
+            out['interpretation'] = understand.view(interp)
         if episode.storylines:
             out['storylines'] = self.storylines_view(episode)
         if episode.beats:

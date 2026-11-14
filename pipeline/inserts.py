@@ -210,9 +210,17 @@ def run(episode, generate: bool = False, lib: dict | None = None) -> dict:
     retried on a new seed, then from a simplified prompt, then becomes a placeholder (`result['placeholders']`)."""
     lib = library() if lib is None else lib
     want = needed(episode, lib)
-    result = dict(needed=want, made={}, failed={}, placeholders={}, retried={}, sheet=None)
     if not generate or not want:
-        return result
+        return dict(needed=want, made={}, failed={}, placeholders={}, retried={}, sheet=None)
+    return paint(want, episode.slug, lib)
+
+
+def paint(want: dict, slug: str, lib: dict | None = None) -> dict:
+    """Paint these scenes (key -> dict(scene, beats, base)) with the fallback chain and enter them in the library.
+    `run` paints what an episode needs; the self-repair loop paints a scene again from its beat (pipeline/repair.py)."""
+    lib = library() if lib is None else lib
+    episode = type('E', (), dict(slug=slug))
+    result = dict(needed=want, made={}, failed={}, placeholders={}, retried={}, sheet=None)
     DIR.mkdir(parents=True, exist_ok=True)
     from PIL import Image
     for stage in ('scenes', 'variants'):             # variants are edits of scenes, so scenes go first

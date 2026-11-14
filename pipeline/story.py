@@ -102,7 +102,8 @@ def allowed_formats(slug: str) -> tuple[list, list]:
 def story_request(episode: Episode, facts, allowed):
     from anthropic import transform_schema
     fact_lines = '\n'.join(f'{f.id}: {f.claim} (source: {f.title or f.url})' for f in facts)
-    user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+    from .understand import topic_text
+    user = (f'{topic_text(episode)}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} seconds.\n'
             f'Allowed formats (pick 3 different ones that fit this topic best): {", ".join(allowed)}\n\n'
@@ -160,7 +161,8 @@ def _pitch_free(episode, facts, allowed, base, ledger, regenerate):
     cache = for_episode(base)
     system = STORY_SYSTEM + format_guide(allowed)
     fact_lines = '\n'.join(f'{f.id}: {f.claim} <{f.url}>' for f in facts)
-    user = (f'Topic: {episode.topic}\nNiche: {episode.niche or "general"}\n'
+    from .understand import topic_text
+    user = (f'{topic_text(episode)}\nNiche: {episode.niche or "general"}\n'
             f'Audience: {episode.audience or "general English-speaking audience"}\n'
             f'Length: {episode.target_length} seconds.\n'
             f'Allowed formats (pick 3 different ones that fit this topic best): {", ".join(allowed)}\n\n'
@@ -226,8 +228,23 @@ def _pitch(episode, base, ledger, client, regenerate, prov):
     from .script import (ScriptError, _cache, _send, _write_json, count_input_tokens, free_notes, keep_reputable,
                          make_client, research)
     client = (client or make_client()) if prov == 'anthropic' else None
+    from . import understand
+    from .cache import for_episode
+    interp = (episode.meta or {}).get('interpretation')
+    if not interp or interp.get('topic') != episode.topic or interp.get('version') != understand.UNDERSTAND_VERSION:
+        # topic understanding (user 2026-11-14): the typed topic as a real question, its claims, the angle
+        interp = understand.interpret(episode.topic, cache=for_episode(base), ledger=ledger)
+        episode.meta['interpretation'] = interp
+        if interp.get('claims'):                  # every claim inside the topic is searched as well
+            focus = dict(episode.meta.get('research_focus') or {})
+            focus['find'] = list(dict.fromkeys(list(focus.get('find') or []) + interp['claims']))[:4]
+            episode.meta['research_focus'] = focus
+    if interp.get('source') == 'model' and interp.get('title'):
+        episode.title = interp['title']
     facts, rpath, rcached = research(episode, base, ledger, client)
-    notes = [f'research: {len(facts)} cited facts ({"cache" if rcached else "new"}: {rpath.name})']
+    notes = [f'understood: {interp.get("question")} (title "{interp.get("title")}"; {len(interp.get("claims") or [])} '
+             f'claim(s){"; " + interp["note"] if interp.get("note") else ""})']
+    notes.append(f'research: {len(facts)} cited facts ({"cache" if rcached else "new"}: {rpath.name})')
     if prov == 'ollama':
         notes += free_notes('research')
     facts, dropped = keep_reputable(facts)            # storylines stand only on facts the script may use
@@ -235,7 +252,11 @@ def _pitch(episode, base, ledger, client, regenerate, prov):
     if not facts:
         raise ScriptError('No fact came from a government, university or peer-reviewed source, so no storylines were '
                           'pitched.')
+    interp['verdicts'] = understand.verify(interp, facts, cache=for_episode(base), ledger=ledger)
+    episode.meta['interpretation'] = interp
+    notes += [f'  claim "{v["claim"]}": {v["verdict"]}' for v in interp['verdicts']]
     allowed, why = allowed_formats(episode.slug)
+    allowed = understand.preferred_formats(interp, allowed)   # a myth to correct: myth_vs_fact, mystery, revelation first
     notes += [f'formats: {", ".join(allowed)}'] + [f'  ({w})' for w in why]
     if prov == 'ollama':
         data, path, cached = _pitch_free(episode, facts, allowed, base, ledger, regenerate)

@@ -32,6 +32,8 @@ episodes = Table(
     Column('waiting', JSON),                    # spend stop: {kind, job_id, step, estimate_usd, spent_usd, need_usd, message}
     Column('auto', Boolean, nullable=False, default=False),   # Auto mode: every gate decided by pipeline/auto.py rules
     Column('auto_note', Text),                  # Auto mode: why it stopped at a gate (null while it runs)
+    Column('renamed_from', Text),
+    Column('title', Text),                      # the clean title from topic understanding (the typed topic stays in topic)               # the slug made from the typed topic, before topic understanding renamed it
 )
 
 jobs = Table(
@@ -92,7 +94,7 @@ push_subscriptions = Table(
 )
 
 # Columns added to existing tables after their first release: name -> SQL type and default, per dialect.
-ADDED_COLUMNS = {'episodes': {'auto': ('BOOLEAN', 'FALSE'), 'auto_note': ('TEXT', None)}}
+ADDED_COLUMNS = {'episodes': {'auto': ('BOOLEAN', 'FALSE'), 'auto_note': ('TEXT', None), 'renamed_from': ('TEXT', None), 'title': ('TEXT', None)}}
 
 
 def now() -> dt.datetime:

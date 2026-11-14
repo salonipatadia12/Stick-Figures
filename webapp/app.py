@@ -88,6 +88,12 @@ def create_app(settings: Settings | None = None, service: core.Service | None = 
     async def _not_found(request: Request, exc):
         return JSONResponse({'ok': False, 'error': f'not found: {exc}'}, status_code=404)
 
+    @app.exception_handler(core.Moved)
+    async def _moved(request: Request, exc: core.Moved):
+        # topic understanding renamed the episode after the typed slug was made: old links follow it
+        url = str(request.url).replace(f'/{exc.old}', f'/{exc.new}', 1)
+        return RedirectResponse(url, status_code=307)
+
     @app.exception_handler(core.GateError)
     async def _gate_error(request: Request, exc: core.GateError):
         return JSONResponse({'ok': False, 'errors': exc.errors}, status_code=exc.status)

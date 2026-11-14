@@ -364,7 +364,7 @@ class Runner:
             shown = repair.repaired_episode_dict(ep_data, repair.load(self.slug))     # tidy and dropped labels as drawn
             report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes,
                             ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary(),
-                            promised=qa.promised_texts(shown), episode=ep_data)
+                            promised=qa.promised_texts(shown), episode=shown)
             print(json.dumps(report['summary'], indent=1))
             for w in report['continuity']['warnings']:
                 print('  continuity (warning):', w)

@@ -371,6 +371,57 @@ def beat_place(beat: dict) -> str:
     return 'setting:' + st['setting'] + (f" ({st['setting_detail']})" if st.get('setting_detail') else '')
 
 
+CONTENT_STOP = set('that this with from into over under about their there they them then than what when where which '
+                   'while have has had been were will would could should also just very more most some such only even '
+                   'much many each every other another your yours those these here like make made does done doing '
+                   'being because before after again once same both onto upon scene painted painting view seen shows '
+                   'showing picture'.split())
+MYTH_MARK = re.compile(r"\b(myth|myths|false|wrong|not|isn't|fake|untrue|busted|mistake|wrongly)\b|[\u2717\u2718\u274c]", re.I)
+
+
+def _stem(w: str) -> str:
+    for suf in ('ing', 'ies', 'es', 's', 'ed'):
+        if w.endswith(suf) and len(w) - len(suf) >= 4:
+            return w[:-len(suf)] + ('y' if suf == 'ies' else '')
+    return w
+
+
+def content_words(text: str) -> set:
+    return {_stem(w) for w in re.findall(r'[a-z]+', str(text or '').lower().replace('-', ' '))
+            if len(w) >= 4 and w not in CONTENT_STOP}
+
+
+def story_match_report(episode: dict) -> dict:
+    """Pictures match the story (user 2026-11-14): each painted scene shows what its beat says (its key or scene
+    shares a content word with the narration, the visual intent or the on-screen text), and a picture that shows the
+    myth (pipeline/understand.py `myth_subjects`, e.g. a dinosaur for "oil comes from dinosaurs") is marked as the
+    myth on screen: a MYTH/false/not label or split label, or an on-screen text that says so."""
+    interp = (episode.get('meta') or {}).get('interpretation') or {}
+    subjects = {_stem(w) for s in interp.get('myth_subjects') or [] for w in content_words(s)}
+    off, unmarked = [], []
+    for b in episode.get('beats', []):
+        sh = b.get('shot') or {}
+        vis = sh.get('visual')
+        if vis not in ('insert', 'split', 'graphic'):
+            continue
+        ins, sp, g = sh.get('insert') or {}, sh.get('split') or {}, sh.get('graphic') or {}
+        said = content_words(' '.join([b.get('narration', ''), b.get('visual_intent', ''), b.get('on_screen_text', '')]))
+        if vis in ('insert', 'split') and ins.get('key'):
+            pic = content_words(ins.get('key', '') + ' ' + ins.get('scene', ''))
+            if pic and not pic & said:
+                off.append(dict(beat=b.get('id'), key=ins.get('key'), narration=b.get('narration', '')))
+        shown = content_words(' '.join([ins.get('key', ''), ins.get('scene', ''), sp.get('key', ''), sp.get('scene', ''),
+                                        ' '.join(g.get('items') or []), g.get('detail', '')]))
+        if subjects and shown & subjects:
+            marks = ' '.join([e.get('detail', '') for e in ins.get('effects') or [] if e.get('kind') == 'label']
+                             + list(sp.get('labels') or []) + list(g.get('items') or []) + [b.get('on_screen_text', '')])
+            if not MYTH_MARK.search(marks):
+                unmarked.append(dict(beat=b.get('id'), shows=sorted(shown & subjects), visual=vis))
+    notes = [f"{x['beat']}: the scene \"{x['key']}\" does not show what the beat says (\"{x['narration'][:60]}\")" for x in off]
+    notes += [f"{x['beat']}: shows the myth ({', '.join(x['shows'])}) without marking it as the myth" for x in unmarked]
+    return dict(off_subject=off, unmarked_myth=unmarked, notes=notes, pass_=not off and not unmarked)
+
+
 def placeholder_report(episode: dict, scenes: dict | None = None, props: dict | None = None) -> dict:
     """Beats that show a placeholder instead of a painting (pipeline/paintsafe.py, 2026-11-14): a scene or prop that
     would not paint after two seeds and two retries. Fails, so the phone shows it before the video is posted; the
@@ -675,6 +726,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         layout=layout_report(library, out_dir.name),
         continuity=continuity_report(episode or {}),     # warnings only: no pass_, so not in the summary
         placeholders=placeholder_report(episode or {}),
+        story_match=story_match_report(episode or {}),
     )
     report['summary'] = {k: v['pass_'] for k, v in report.items() if isinstance(v, dict) and 'pass_' in v}
     report['summary']['all'] = all(report['summary'].values())
