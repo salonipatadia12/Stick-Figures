@@ -71,6 +71,23 @@ class Text(unittest.TestCase):
         r['beats']['b02']['drop'] = ['The Myth']
         self.assertIsNone(repair.diagnose(rep, TL, EP, r)[0]['hint'])
 
+    def test_an_overlap_names_each_of_its_texts(self):
+        # 2026-11-14 crude oil: "MYTH / Myth: Big Vertebrates" was read as the label "M"
+        rep = failing(text=dict(overlapping_text=[dict(texts='The Myth / Other', t=3.0)], pass_=False))
+        labels = [a['cause'] for a in repair.diagnose(rep, TL, EP, {})]
+        self.assertTrue(any('"The Myth"' in c for c in labels) and any('"Other"' in c for c in labels), labels)
+
+    def test_a_dropped_split_label_is_gone(self):
+        ep = dict(beats=[dict(id='b07', narration='x', shot=dict(visual='split', insert=dict(key='a', scene='', effects=[]),
+                                                                 split=dict(key='b', scene='', labels=['Fact: Tiny', 'Myth'], anchors=['', ''])))])
+        shown = repair.repaired_episode_dict(ep, {'beats': {'b07': {'drop': ['Fact: Tiny']}}})
+        self.assertEqual(shown['beats'][0]['shot']['split']['labels'], ['', 'Myth'])
+        self.assertEqual([p['text'] for p in qa.promised_texts(shown)], ['Myth'])
+
+    def test_a_split_compare_note_is_not_a_promised_text(self):
+        ep = dict(beats=[dict(id='b01', narration='x', shot=dict(motion=[dict(recipe='split_compare', anchor='', detail="reveal both sides on 'make'")]))])
+        self.assertEqual(qa.promised_texts(ep), [])
+
     def test_a_diagram_label_on_the_host_moves_the_host(self):
         rep = failing(text=dict(text_on_character=[dict(text='dinosaur_fossils_65million_years_old', t=8.3)], pass_=False))
         a = repair.diagnose(rep, TL, EP, {})[0]

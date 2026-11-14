@@ -110,6 +110,9 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
             g = shot.get('graphic') or {}
             if g.get('items'):
                 g['items'] = ['' if x in drop else x for x in g['items']]    # the layer stays, its text goes
+            sp = shot.get('split') or {}
+            if sp.get('labels'):
+                sp['labels'] = ['' if x in drop else x for x in sp['labels']]
             if spec.get('on_screen_text') in drop:
                 spec['on_screen_text'] = ''
             notes.append(f'{b.id}: dropped {sorted(drop)}')
@@ -186,6 +189,9 @@ def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
             g = shot.get('graphic') or {}
             if g.get('items'):
                 g['items'] = ['' if x in drop else x for x in g['items']]
+            sp = shot.get('split') or {}
+            if sp.get('labels'):
+                sp['labels'] = ['' if x in drop else x for x in sp['labels']]
             if b.get('on_screen_text') in drop:
                 b['on_screen_text'] = ''
     return ep
@@ -233,8 +239,16 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     seen = set()
     problems = [(x, 'on the host') for x in text.get('text_on_character') or []] + \
                [(x, 'on another text') for x in text.get('overlapping_text') or []]
-    for item, where in problems:
-        label = item.get('text') or item.get('label') or (item.get('texts') or [''])[0]
+    expanded = []
+    for item, where in problems:                     # an overlap names its texts as "A / B" (or a list): one action each
+        texts = item.get('texts')
+        if texts and not item.get('text'):
+            parts = texts if isinstance(texts, list) else [x.strip() for x in str(texts).split(' / ')]
+            expanded += [(dict(item, text=x), where) for x in parts if x]
+        else:
+            expanded.append((item, where))
+    for item, where in expanded:
+        label = item.get('text') or item.get('label') or ''
         beat = beat_at(tl, float(item.get('t', 0)))
         if not beat or (beat, label) in seen:
             continue

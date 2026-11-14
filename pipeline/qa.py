@@ -517,6 +517,8 @@ def promised_texts(episode: dict) -> list:
         for m in sh.get('motion', []):
             if m['recipe'] == 'split_compare' and split_labels:
                 continue                     # the composer shows the split's own labels instead of a second pair
+            if m['recipe'] == 'split_compare' and '|' not in (m.get('detail') or ''):
+                continue                     # the composer draws a split only from "left | right" (2026-11-14)
             if m['recipe'] in ('split_compare', 'checklist_tick') and m.get('detail'):
                 out += [dict(beat=b['id'], text=x.strip()) for x in m['detail'].split('|') if x.strip()]
         g = sh.get('graphic') or {}

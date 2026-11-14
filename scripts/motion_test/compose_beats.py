@@ -1522,7 +1522,7 @@ class SplitShot(VisualShot):
             if self.friend is not None:
                 self.friend.draw(frame, t)
         for k, (label, at) in enumerate(zip(self.labels, self.label_at)):
-            if t < at or (k == 1 and q <= 0):
+            if t < at or (k == 1 and q <= 0) or not label:      # a label the self-repair dropped is not drawn
                 continue
             g = back_out(min(1.0, (t - at) / 0.32), 1.6)
             im = O.tag_label(label, 64)
