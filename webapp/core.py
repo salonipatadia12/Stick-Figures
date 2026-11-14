@@ -759,7 +759,7 @@ class Service:
                 return self._auto_stop(slug, f'Auto mode stopped at the storylines: {why}. Pick one yourself.')
             self.pick_storyline(slug, n, by=AUTO_BY)
         elif state == SCRIPT and not episode.is_approved('script'):
-            notes = auto.resolve_bases(episode)
+            notes = auto.fix_script(episode) + auto.resolve_bases(episode)
             for n in notes:
                 auto.note(episode, 'bases', n, by=AUTO_BY)
             if notes:

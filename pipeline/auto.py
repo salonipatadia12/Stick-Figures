@@ -65,6 +65,45 @@ def resolve_bases(episode, lib=None) -> list:
     return notes
 
 
+def fix_script(episode) -> list:
+    """Known mechanical slips of the local writer, fixed in place before Auto judges the script, so a typo-level
+    error never stops an episode (user 2026-11-14: "it never stops to ask me"). Returns notes for the auto log.
+
+    * a split with no top scene (empty insert key): shown as its bottom scene alone, the split labels as labels on it
+      (the composer's own fallback, compose_beats.split_fallback);
+    * a recipe or effect that needs an anchor word but has none, or one the narration does not say: anchored on the
+      beat's last word of four or more letters."""
+    from .models import ANCHORED_RECIPES, EffectCue, InsertCue
+    notes = []
+    for b in episode.beats:
+        sh = b.shot
+        if sh.visual == 'split' and sh.split and (sh.split.key or '').strip() and \
+                (sh.insert is None or not (sh.insert.key or '').strip()):
+            effects = list(sh.insert.effects) if sh.insert else []
+            for k, label in enumerate(sh.split.labels or []):
+                if label and len(effects) < 4 and not any(e.kind == 'label' and e.detail == label for e in effects):
+                    anchor = (sh.split.anchors or ['', ''])[k] if k < len(sh.split.anchors or []) else ''
+                    effects.append(EffectCue(kind='label', anchor=anchor, at='top' if k == 0 else 'ground', detail=label))
+            sh.insert = InsertCue(key=sh.split.key, scene=sh.split.scene, effects=effects)
+            sh.visual, sh.split = 'insert', None
+            notes.append(f'{b.id}: the split had no top scene; shown as its bottom scene "{sh.insert.key}" with its labels')
+        spoken = b.narration.casefold()
+        words = [w for w in re.findall(r"[A-Za-z][A-Za-z'-]+", b.narration) if len(w) >= 4]
+        fallback = words[-1] if words else ''
+        for m in sh.motion:
+            if m.recipe in ANCHORED_RECIPES and (not m.anchor or m.anchor.casefold() not in spoken) and fallback:
+                notes.append(f'{b.id}: {m.recipe} had no anchor in the narration; anchored on "{fallback}"')
+                m.anchor = fallback
+            elif m.recipe not in ANCHORED_RECIPES and m.anchor and m.anchor.casefold() not in spoken:
+                notes.append(f'{b.id}: {m.recipe} anchor "{m.anchor}" is not said; it now runs the whole beat')
+                m.anchor = ''
+        for e in (sh.insert.effects if sh.insert and sh.visual == 'insert' else []):
+            if e.anchor and e.anchor.casefold() not in spoken:
+                notes.append(f'{b.id}: the {e.kind} effect anchor "{e.anchor}" is not said; it now spans the beat')
+                e.anchor = ''
+    return notes
+
+
 def script_problems(episode, hook: int | None, style) -> list:
     """The errors that would block the script gate with this hook: Episode.check errors and missing bases."""
     from . import bases

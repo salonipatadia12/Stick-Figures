@@ -207,7 +207,7 @@ def cmd_make(args):
     if not episode.is_approved('script'):
         if args.auto:
             from . import auto
-            for line in auto.resolve_bases(episode):
+            for line in auto.fix_script(episode) + auto.resolve_bases(episode):
                 print('--auto: ' + line)
             store.save(episode, base)
             hook, problems = auto.pick_hook(episode, style)

@@ -69,6 +69,26 @@ class HookRule(unittest.TestCase):
             self.assertEqual(auto.pick_hook(ep, style), (None, ['b05: cites unknown sources']))
 
 
+class ScriptSlips(unittest.TestCase):
+    def test_auto_fixes_an_empty_split_top_and_a_missing_anchor(self):
+        # 2026-11-14 crude oil: auto stopped at the script for exactly these two writer slips
+        from pipeline.models import Motion, SplitCue
+        ep = host_episode()
+        b, c = ep.beats[1], ep.beats[2]
+        b.shot.visual = 'split'
+        b.shot.insert.key = ''
+        b.shot.split = SplitCue(key='dino-myth', scene='a dinosaur skeleton', labels=['Myth', 'Fact'], anchors=['', ''])
+        c.shot.motion = [Motion(recipe='punch_in', anchor='', detail='')]
+        notes = auto.fix_script(ep)
+        self.assertEqual(len(notes), 2, notes)
+        self.assertEqual((b.shot.visual, b.shot.insert.key), ('insert', 'dino-myth'))
+        self.assertIn('Myth', [e.detail for e in b.shot.insert.effects])
+        self.assertIn(c.shot.motion[0].anchor.casefold(), c.narration.casefold())
+        errs = [i for i in ep.check() if i.severity == 'error' and i.where in (b.id, c.id)
+                and ('split' in i.message or 'anchor' in i.message)]
+        self.assertEqual(errs, [])
+
+
 class AutoRender(unittest.TestCase):
     def test_paints_then_renders_and_stops_when_a_scene_fails(self):
         calls = []
