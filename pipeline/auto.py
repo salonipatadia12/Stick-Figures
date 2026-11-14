@@ -97,10 +97,28 @@ def fix_script(episode) -> list:
             elif m.recipe not in ANCHORED_RECIPES and m.anchor and m.anchor.casefold() not in spoken:
                 notes.append(f'{b.id}: {m.recipe} anchor "{m.anchor}" is not said; it now runs the whole beat')
                 m.anchor = ''
-        for e in (sh.insert.effects if sh.insert and sh.visual == 'insert' else []):
+        for e in (sh.insert.effects if sh.insert else []):
             if e.anchor and e.anchor.casefold() not in spoken:
                 notes.append(f'{b.id}: the {e.kind} effect anchor "{e.anchor}" is not said; it now spans the beat')
                 e.anchor = ''
+        # 2026-11-14: the fact check rewrote lines under host actions and split/graphic anchors that named old words
+        acts = [a for a in (sh.staging.actions if sh.staging else []) if not a.anchor or a.anchor.casefold() not in spoken]
+        for k, a in enumerate(acts):
+            if words:                                 # an action needs a word: spread them over the line in order
+                new = words[min(len(words) - 1, (k * len(words)) // max(1, len(acts)))]
+                notes.append(f'{b.id}: the host\'s {a.verb} was on "{a.anchor}", which is not said; now on "{new}"')
+                a.anchor = new
+        for box, name in ((sh.split, 'split'), (sh.graphic, 'graphic')):
+            if box is not None and any(x and x.casefold() not in spoken for x in box.anchors):
+                notes.append(f'{b.id}: {name} anchors that are not said now show at the start of the beat')
+                box.anchors = [x if not x or x.casefold() in spoken else '' for x in box.anchors]
+        for x in b.sfx:
+            if x.anchor and x.anchor.casefold() not in spoken and words:
+                notes.append(f'{b.id}: sound {x.name} was on "{x.anchor}", which is not said; now on "{words[0]}"')
+                x.anchor = words[0]
+        if sh.reaction_anchor and sh.reaction_anchor.casefold() not in spoken:
+            notes.append(f'{b.id}: the reaction was on "{sh.reaction_anchor}", which is not said; no reaction cut')
+            sh.reaction_anchor = ''
     return notes
 
 

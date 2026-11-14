@@ -167,6 +167,21 @@ class Entailment(unittest.TestCase):
         self.assertIn(ep.beats[1].shot.motion[0].anchor.casefold(), PLAIN.casefold())
 
 
+class ReAnchor(unittest.TestCase):
+    def test_host_actions_and_split_anchors_follow_the_new_line(self):
+        # 2026-11-14 crude oil after the fact check: point on "These", shiver on "tiny", split anchors "big"/"tiny"
+        from pipeline import auto
+        from pipeline.models import ActionCue
+        ep = host_episode()
+        b = next(x for x in ep.beats if x.shot.staging and x.shot.cast)
+        b.shot.staging.actions = [ActionCue(who=b.shot.cast[0], verb='point', anchor='These', target=''),
+                                  ActionCue(who=b.shot.cast[0], verb='shiver', anchor='tiny', target='')]
+        b.narration = 'Crude oil forms from organic matter derived from living organisms.'
+        auto.fix_script(ep)
+        self.assertEqual([a.anchor for a in b.shot.staging.actions], ['Crude', 'matter'])     # spread over the line
+        self.assertFalse([i for i in ep.check() if i.where == b.id and 'is not in the narration' in i.message])
+
+
 class ClaimFollowUp(unittest.TestCase):
     CLAIM = 'Crude oil does not come from dinosaurs.'
 
