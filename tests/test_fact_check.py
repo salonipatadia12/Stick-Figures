@@ -326,6 +326,14 @@ class SwapWord(unittest.TestCase):
         self.assertEqual(now, 'become')
         self.assertEqual(self.ep.beats[1].narration, 'Many thought giant sea creatures sank to become fuel.')
 
+    def test_a_good_line_with_an_odd_replacement_field_is_used(self):
+        # 2026-11-14 crude oil b08: the line was fine, the replacement field said "make ... become"
+        self.ep.beats[1].narration = 'Heat and pressure turn this biomass into energy-dense hydrocarbons.'
+        now = repair.swap_word(self.ep.slug, self.ep, self.beat, 'turn', write=lambda *a: dict(
+            replacement='make ... become', line='Heat and pressure make this biomass become energy-dense hydrocarbons.'))
+        self.assertEqual(now, 'make become')
+        self.assertEqual(self.ep.beats[1].narration, 'Heat and pressure make this biomass become energy-dense hydrocarbons.')
+
     def test_a_useless_answer_changes_nothing(self):
         for answer in ('imagines', 'imagine', 'pictures in the mind', '42', ''):
             self.assertEqual(repair.swap_word(self.ep.slug, self.ep, self.beat, 'imagines',

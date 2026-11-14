@@ -444,6 +444,14 @@ SWAP_SCHEMA = dict(type='object', required=['line', 'replacement'],
 WORD = re.compile(r"[A-Za-z0-9']+")
 
 
+def added(old: str, new_line: str) -> str:
+    """The words the new line has in place of the old line's changed words ("make ... become" -> "make become")."""
+    import difflib
+    a, b = WORD.findall(old), WORD.findall(new_line)
+    ops = difflib.SequenceMatcher(None, [w.lower() for w in a], [w.lower() for w in b]).get_opcodes()
+    return ' '.join(w for tag, i1, i2, j1, j2 in ops if tag in ('replace', 'insert') for w in b[j1:j2])
+
+
 def swapped_line(old: str, word: str, new_line: str, new: str) -> bool:
     """The model's line is usable: the misheard word is gone, the replacement is in it, at most three words changed
     (2026-11-14: a one-word swap gave "sank to become into fuel"), and no new number."""
@@ -479,7 +487,9 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None) -> str:
     answer = write(SWAP_SYSTEM, json.dumps(dict(line=b.narration, word=word), ensure_ascii=False), SWAP_SCHEMA) or {}
     new = ' '.join(str(answer.get('replacement') or '').split()).strip('"\'.,!? ')
     line = ' '.join(str(answer.get('line') or '').split()).strip('"\' ')
-    if (not new or len(new.split()) > 2 or not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new)
+    if line and not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new or '-'):
+        new = added(b.narration, line)                # 2026-11-14: "make ... become" for a good line: the new words
+    if (not new or len(new.split()) > 3 or not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new)
             or new.lower() == word.lower() or new.lower()[:5] == word.lower()[:5]):
         return ''
     if not line:                                      # no line given: the word alone is swapped
