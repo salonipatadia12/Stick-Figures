@@ -128,13 +128,31 @@ def us_spelling(w: str) -> str:
     return re.sub(r'is(e|ed|es|ing|ation)$', r'iz\1', w)
 
 
+def heard_tokens(heard: list) -> list:
+    """The transcript as normalised tokens. Whisper writes "twenty percent" as "20%" or "20 %": the sign becomes the
+    word "percent" (2026-11-13: "percent" was reported missing although it was spoken). Bare punctuation drops out."""
+    out = []
+    for x in heard:
+        raw = str(x['w']).strip()
+        if '%' in raw:
+            out += [t for t in (norm(raw.replace('%', ' ')), 'percent') if t]
+        elif norm(raw):
+            out.append(norm(raw))
+    return out
+
+
+SIBILANT = re.compile(r"^(s|z|sh|c[eiy])", re.I)
+
+
 def words_check(script_words: list, heard: list) -> dict:
     """Every script word must be heard, in order. Whisper writes numbers as digits and may split them
-    ('$1' ',500'), so a word also matches two or three heard tokens joined, or its number."""
-    h = [norm(x['w']) for x in heard]
+    ('$1' ',500'), so a word also matches two or three heard tokens joined, or its number. A plural whose final s runs
+    into a following s sound ("infants securely") may be heard as the singular: the two are the same sound."""
+    h = heard_tokens(heard)
     missing, j = [], 0
-    for w in script_words:
+    for n_w, w in enumerate(script_words):
         k = norm(w)
+        nxt = norm(script_words[n_w + 1]) if n_w + 1 < len(script_words) else ''
         alts = {k, NUMBER_WORDS.get(k, k), DIGIT_WORDS.get(k, k), SPELLINGS.get(k, k), us_spelling(k),
                 k.replace("'", '')}   # control's ~ controls; a script 3 heard as three
         found = None
@@ -144,6 +162,9 @@ def words_check(script_words: list, heard: list) -> dict:
                 joined = ''.join(h[i:i + n])
                 if joined in alts or (k.endswith("'s") and h[i] == k[:-2]):
                     found = i + n - 1
+                    break
+                if n == 1 and len(k) > 3 and k.endswith('s') and h[i] == k[:-1] and SIBILANT.match(nxt):
+                    found = i                     # "infants securely" heard as "infant securely"
                     break
                 # a proper name the recogniser spells its own way ("Tambora" heard as "Tambura"): close enough
                 if n == 1 and len(k) >= 6 and w[:1].isupper() and SequenceMatcher(None, k, joined).ratio() >= 0.75:

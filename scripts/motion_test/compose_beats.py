@@ -1471,6 +1471,9 @@ class GraphicShot(VisualShot):
         return self.graphic.frame(t)
 
 
+TOP_TEXT_BAND = int(H * 0.23)    # the on-screen text (slams) sits above this line; split labels stay below it
+
+
 class SplitShot(VisualShot):
     """Two painted scenes stacked (myth vs fact, then vs now): the top scene fills the frame, then on the bottom
     label's word the frame splits and the bottom scene wipes up into the lower half. Labels sit at the seam."""
@@ -1527,11 +1530,50 @@ class SplitShot(VisualShot):
                 im = im.resize((max(1, int(im.width * g)), max(1, int(im.height * g))), Image.BICUBIC)
             y = (seam - 40 - im.height if k == 0 else seam + 40) if q > 0 else 0.55 * H
             y = min(y, int(H * 0.75) - im.height)            # above the safe bottom while the seam wipes up
-            xy = (int(W - 150 - im.width), int(y))          # inside the safe area (the app's buttons sit on the right)
+            xy = self.label_spot(k, im, int(y))              # off the host (2026-11-13: a label sat on the host's head)
             frame.alpha_composite(im, xy)
             if g > 0.9:
                 O.note_text(label, 64, (xy[0], xy[1], xy[0] + im.width, xy[1] + im.height))
         return frame
+
+    def label_spot(self, k, im, y):
+        """Where split label k goes: the right edge inside the safe area (the app's buttons sit further right) by
+        default, else the left edge, else stepped away from the seam, whichever covers no host or friend pixels. The last
+        clear spot is kept while it stays clear, so a label does not jump with every gesture."""
+        import numpy as np
+        from pipeline import captions as C
+        full = O.tag_label(self.labels[k], 64)
+        w, h = full.width, full.height
+
+        bodies = []                                      # each character's whole box (arms included), as QA reads it
+        for p in (self.host, self.friend):
+            if p is not None and getattr(p, 'last', None) is not None:
+                px, py, a = p.last
+                rows, cols = np.flatnonzero(a.any(1)), np.flatnonzero(a.any(0))
+                if rows.size:
+                    bodies.append((px + cols[0], py + rows[0], px + cols[-1], py + rows[-1]))
+
+        def hits(x, yy):
+            box = (x - 12, yy - 12, x + w + 12, yy + h + 12)
+            inside = sum(max(0, min(box[2], b[2]) - max(box[0], b[0])) * max(0, min(box[3], b[3]) - max(box[1], b[1]))
+                         for b in bodies)
+            return inside + sum(p.hit(box) for p in (self.host, self.friend) if p is not None)
+        lo, hi = C.SAFE['left'], C.SAFE['right']
+        step = -1 if k == 0 else 1                       # the top label moves up, the bottom one down
+
+        def at(choice):                                  # (side, dy) -> (x, y), following the seam as it wipes
+            side, dy = choice
+            yy = int(min(max(y + step * dy, TOP_TEXT_BAND), int(H * 0.75) - h))   # below the on-screen text
+            return (int(hi - w) if side == 'right' else int(lo)), yy
+        spots = getattr(self, '_spots', None) or {}
+        self._spots = spots
+        keep = spots.get(k)
+        if keep and hits(*at(keep)) == 0:
+            return at(keep)
+        options = [(side, dy) for dy in range(0, 991, 90) for side in ('right', 'left')]   # as far as above the head
+        best = min(options, key=lambda o: (hits(*at(o)), options.index(o)))
+        spots[k] = best
+        return at(best)
 
 
 def make_visual_class(spec: dict):
@@ -1747,11 +1789,14 @@ def host_episode(episode, specs: dict, lib: dict, slug: str):
         first, payoff = episode.beats[0], next((b for b in episode.beats if b.role == 'payoff'), None)
         pick = episode.hook_options[(episode.hook_pick or 1) - 1] if episode.hook_options else None
         words = len(re.findall(r"[\w'’]+", first.narration))
-        shared = sorted(_keywords(pick.answer) & _keywords(payoff.narration)) if pick and payoff else []
+        # the same rule as the story check at the script gate (Episode.story_report): the hook's answer and the picked
+        # storyline's payoff (2026-11-13: QA failed a payoff that says the storyline's payoff word for word)
+        answer = ((pick.answer if pick else '') + ' ' + (episode.storyline.payoff if episode.storyline else '')).strip()
+        shared = sorted(_keywords(answer) & _keywords(payoff.narration)) if answer and payoff else []
         out['layout'] = [layout_token(specs[b.id]) for b in episode.beats]
         out['format'] = episode.story_format or 'explainer'
         out['hook'] = dict(line=first.narration, words=words, max_words=8, host_in_frame_one=flags[first.id][1],
-                           answer=pick.answer if pick else '', payoff=payoff.narration if payoff else '', shared_words=shared,
+                           answer=answer, payoff=payoff.narration if payoff else '', shared_words=shared,
                            answered_in_payoff=len(shared) >= 2,
                            pass_=words <= 8 and flags[first.id][1] and len(shared) >= 2)
         return out

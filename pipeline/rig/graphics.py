@@ -98,10 +98,11 @@ def colour_for(label: str, k: int):
     return (TEAL, RUST, GOLD, BLUE)[k % 4]
 
 
-def text(frame, label, xy, size=LABEL, anchor='mm', fill=INK, q=1.0):
-    """Draw a label at xy (anchor as PIL's), scaled by the pop q, and log it."""
+def text(frame, label, xy, size=LABEL, anchor='mm', fill=INK, q=1.0, log=True):
+    """Draw a label at xy (anchor as PIL's), scaled by the pop q, and log it (log=False: the caller logs a label it
+    draws in several lines once, as one text). Returns the drawn box."""
     if q <= 0.02 or not label:
-        return
+        return None
     from .. import captions as C
     d = ImageDraw.Draw(frame, 'RGBA')
     lo, hi = C.SAFE['left'], C.SAFE['right']
@@ -117,8 +118,31 @@ def text(frame, label, xy, size=LABEL, anchor='mm', fill=INK, q=1.0):
             box = d.textbbox(xy, label, font=f, anchor=anchor)
         break
     d.text(xy, label, font=f, fill=fill, anchor=anchor)
-    if q > 0.9:
+    if q > 0.9 and log:
         O.note_text(label, size, box)
+    return box
+
+
+def fit_column(d, label, width, start=LABEL, floor=40):
+    """(lines, size) for a label that must fit `width` px: shrink to `floor` (QA's smallest readable size), then
+    break into two lines, after a colon when there is one."""
+    def wide(lines, size):
+        f = O.font(O.FONT, size)
+        return max(d.textlength(x, font=f) for x in lines)
+    size = start
+    while size > floor and wide([label], size) > width:
+        size -= 2
+    if wide([label], size) <= width or ' ' not in label:
+        return [label], size
+    words = label.split()
+    cut = next((i + 1 for i, w in enumerate(words[:-1]) if w.endswith(':')), None)
+    if cut is None:
+        cut = min(range(1, len(words)), key=lambda i: abs(len(' '.join(words[:i])) - len(' '.join(words[i:]))))
+    lines = [' '.join(words[:cut]), ' '.join(words[cut:])]
+    size = start
+    while size > floor and wide(lines, size) > width:
+        size -= 2
+    return lines, size
 
 
 def pop(t, at, dur=0.32):
@@ -360,7 +384,14 @@ class Graphic:
             h = max_h * v / top * g
             if g > 0:
                 d.rounded_rectangle((x0, base_y - h, x0 + bw, base_y), radius=18, fill=colour_for(item, k), outline=INK, width=6)
-            text(frame, item, (x0 + bw / 2, base_y - h - 46), size=LABEL if len(item) <= 12 else 46, q=pop(t, self.at(k)))
+            lines, size = fit_column(d, item, bw + gap - 28)      # never wider than its column (2026-11-13: two labels
+            q = pop(t, self.at(k))                                # ran into each other)
+            boxes = [text(frame, line, (x0 + bw / 2, base_y - h - 46 - n * size * 1.12), size=size, q=q, log=False)
+                     for n, line in enumerate(reversed(lines))]
+            boxes = [b for b in boxes if b]
+            if boxes and q > 0.9:                             # one label, logged once (QA's promised-text check)
+                O.note_text(item, size, (min(b[0] for b in boxes), min(b[1] for b in boxes),
+                                         max(b[2] for b in boxes), max(b[3] for b in boxes)))
 
     def _thermometer(self, frame, t):
         d = ImageDraw.Draw(frame, 'RGBA')
