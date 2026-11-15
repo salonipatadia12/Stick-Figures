@@ -660,7 +660,7 @@ def write(episode, style, facts, base, ledger, client, regenerate=False):
 # most: outline-level errors (story shape, hook, unsourced numbers) to the outline call, beat-level errors to that
 # beat's call only. No rule is loosened: what still fails after the last round is shown at the script gate.
 
-FREE_RESEARCH_VERSION = 'research-free-v1'
+FREE_RESEARCH_VERSION = 'research-free-v2'   # v2: sub-questions, 3 facts a page, up to 14 (user 2026-11-15)
 FREE_SCRIPT_VERSION = 'script-free-v3'   # v3: fact-first plan; v2: longer beats ask for word-anchored actions and effects
 FREE_REPAIR_ROUNDS = 3          # rounds of "here are the checker's errors, fix them" after the first draft
 OUTLINE_REPAIRS = 2             # repairs of the outline before any beat is staged
@@ -1152,7 +1152,17 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     plan = None
     if facts:                                     # fact-first (pipeline/grounding.py): facts and claims before words
         from . import grounding
-        plan = grounding.make_plan(episode, facts, pacing_aim(episode.target_length), cache=cache, ledger=ledger)
+        from .pacing import writer_rate
+        # length follows facts (user 2026-11-15): the plan sizes the video from its usable facts, never past the
+        # brief's length; the episode's length becomes the plan's, so the outline, the word budget, the gate and the
+        # duration QA all use it (the brief's own length stays in meta.length_plan)
+        brief = int(((episode.meta or {}).get('length_plan') or {}).get('brief_seconds') or episode.target_length)
+        plan = grounding.make_plan(episode, facts, pacing_aim(brief), cache=cache, ledger=ledger,
+                                   length=(brief, writer_rate(style)))
+        if plan.get('seconds'):
+            episode.meta['length_plan'] = dict(brief_seconds=brief, seconds=plan['seconds'], beats=len(plan['beats']),
+                                               fact_beats=plan.get('fact_beats'), usable_facts=plan.get('usable_facts'))
+            episode.target_length = plan['seconds']
     ctx = _free_context(episode, style, facts, plan)
     model = config.ollama_model()
     from .entail import ENTAIL_VERSION
@@ -1269,12 +1279,14 @@ def research_free(episode, base, ledger, regenerate=False):
     from .understand import question
     topic = question(episode)                     # the interpreted question (pipeline/understand.py), else the topic
     key = digest([FREE_RESEARCH_VERSION, config.ollama_model(), topic, episode.niche, episode.audience, focus,
-                  search.QUERY_TEMPLATES, search.FACT_SYSTEM])
+                  search.QUERY_TEMPLATES, search.FACT_SYSTEM, search.SUBQ_SYSTEM, search.MAX_FACTS, search.FACTS_PER_PAGE])
     path = _cache(base, 'research', key)
     if path.exists() and not regenerate:
         data = json.loads(path.read_text())
         LAST_RUN['research'] = dict(cached=True, timings=data.get('timings', {}), notes=data.get('notes', []))
-        return [Source.model_validate(f) for f in data['facts']], path, True
+        facts = [Source.model_validate(f) for f in data['facts']]
+        _count_research(episode, facts, data.get('timings', {}))
+        return facts, path, True
     timings, notes = {}, []
     facts = search.research_topic(topic, episode.niche, episode.audience, cache, ledger=ledger, focus=focus,
                                   fresh=regenerate, timings=timings, notes=notes)
@@ -1286,7 +1298,16 @@ def research_free(episode, base, ledger, regenerate=False):
     _write_json(path, dict(facts=[f.model_dump() for f in facts], created=time.strftime('%Y-%m-%dT%H:%M:%S'),
                            model=config.ollama_model(), provider='ollama', version=FREE_RESEARCH_VERSION,
                            timings=timings, notes=notes, cache=dict(cache.stats)))
+    _count_research(episode, facts, timings)
     return facts, path, False
+
+
+def _count_research(episode, facts, timings):
+    """The research counts on the episode (meta.research: facts, by sub-question, the sub-questions), logged per
+    episode (user 2026-11-15: "target 8-12 verified facts per topic; log the count per episode")."""
+    episode.meta['research'] = dict(version=FREE_RESEARCH_VERSION, facts=len(facts),
+                                    by_aspect=timings.get('facts_by_aspect') or {},
+                                    subquestions=timings.get('subquestions') or [])
 
 
 def free_notes(kind: str) -> list:

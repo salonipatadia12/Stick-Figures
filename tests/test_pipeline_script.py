@@ -260,6 +260,10 @@ class OllamaScript(unittest.TestCase):
         rate = mock.patch('pipeline.pacing.writer_rate', return_value=2.7)
         rate.start()
         self.addCleanup(rate.stop)
+        # the fixture is an 8-beat script; the plan's sizing from the facts (2026-11-15) is tested on its own
+        size = mock.patch('pipeline.grounding.beats_for', return_value=8)
+        size.start()
+        self.addCleanup(size.stop)
         self.base = Path(self.dir.name)
         self.style = styles.load('cozy')
         self.episode = Episode(slug='salary', topic='Why your salary disappears by the 20th', niche='personal finance',
@@ -309,6 +313,10 @@ class OllamaScript(unittest.TestCase):
             return dict(says_it_is_true=False, why='the fixture')
         if system == grounding.LABEL_SYSTEM:
             return dict(texts=[])
+        if system == grounding.SURPRISE_SYSTEM:
+            return dict(order=['s1', 's2'])
+        if system == grounding.POINTS_SYSTEM:
+            return dict(points=True, why='the fixture')
         i = int(user.split('STAGE b')[1][:2]) - 1
         ob = OUTLINE_BEATS[i]
         bad = i in self.bad_label and 'THE CHECKER FOUND' not in user

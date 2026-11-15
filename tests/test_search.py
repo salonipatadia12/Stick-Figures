@@ -130,7 +130,7 @@ class ResearchTopic(unittest.TestCase):
         self.assertNotIn('volcanic', claims)                  # a quote the page does not contain: dropped
         self.assertNotIn('someblog.com', self.http.urls)      # never fetched: not reputable
         self.assertNotIn('https://en.wikipedia.org/wiki/Sunset', self.http.urls)
-        self.assertEqual(len([q for q, _ in FakeDDGS.calls]), 6)  # 4 templates + 2 from the model
+        self.assertEqual(len([q for q, _ in FakeDDGS.calls]), 8)  # 6 sub-questions + 2 templates (user 2026-11-15)
         entries = {(e['step'], e['provider']) for e in ledger.entries}
         self.assertEqual(entries, {('research', 'ollama'), ('research', 'duckduckgo')})
         self.assertEqual(ledger.spent(), 0)

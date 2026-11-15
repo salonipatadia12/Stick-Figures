@@ -29,6 +29,11 @@ CHARS_PER_TOKEN = 3.8           # measured ~4.3 for these prompts on qwen2.5; a 
 BIG_CTX = 8192
 REQUEST_TIMEOUT_S = 900
 _ledger_lock = threading.Lock()
+# 2026-11-15 bench: another app on this Mac (a separate project's worker) called ibm/granite3.3-guardian on the same
+# Ollama; the two models evicted each other every few seconds for 25 minutes and one 30-token judge call took 863 s.
+# Before each call, a model of another app that is loaded is waited out (at most FOREIGN_WAIT_S), and the wait logged.
+FOREIGN_WAIT_S, FOREIGN_POLL_S = 600, 15
+CONTENTION = []                 # [{at, waited_s, others, model}] this process waited for another app's model
 
 
 class LLMError(RuntimeError):
@@ -52,6 +57,38 @@ def is_available(timeout: float = 2.0, host: str | None = None, model: str | Non
     except Exception:
         return False
     return model in names or f'{model}:latest' in names
+
+
+def foreign_models(host: str, ours: set, timeout: float = 2.0) -> list:
+    """The models loaded on the Ollama server that this pipeline did not ask for ([] when none, or on any error)."""
+    try:
+        r = _requests().get(f'{host}/api/ps', timeout=timeout)
+        names = [m.get('name') or m.get('model') or '' for m in (r.json().get('models') or [])]
+    except Exception:
+        return []
+    norm = lambda n: n if ':' in n else f'{n}:latest'
+    mine = {norm(x) for x in ours if x}
+    return [n for n in names if n and norm(n) not in mine]
+
+
+def yield_to_others(model: str, sleep=time.sleep, clock=time.time) -> float:
+    """Wait while another app's model is loaded on our Ollama (OLLAMA_YIELD=0 turns it off), at most FOREIGN_WAIT_S.
+    Returns the seconds waited (logged in CONTENTION)."""
+    if not config.ollama_yield():
+        return 0.0
+    host = config.ollama_host()
+    ours = {model, config.ollama_model(), config.ollama_writer_model()}
+    others = foreign_models(host, ours)
+    if not others:
+        return 0.0
+    t0, seen = clock(), set(others)
+    while others and clock() - t0 < FOREIGN_WAIT_S:
+        sleep(FOREIGN_POLL_S)
+        others = foreign_models(host, ours) or []
+    waited = round(clock() - t0, 1)
+    CONTENTION.append(dict(at=time.strftime('%Y-%m-%dT%H:%M:%S'), waited_s=waited, model=model, others=sorted(seen),
+                           still_loaded=bool(others)))
+    return waited
 
 
 def context_for(system: str, user: str, max_tokens: int, base: int | None = None) -> int:
@@ -90,7 +127,8 @@ def generate(system: str, user: str, json_schema: dict | None = None, max_tokens
                 messages=[{'role': 'system', 'content': system}, {'role': 'user', 'content': user}])
     if json_schema is not None:
         body['format'] = json_schema
-    body['think'] = config.ollama_think()          # thinking models (qwen3.5) answer directly unless OLLAMA_THINK=1
+    body['think'] = config.ollama_think()
+    yield_to_others(model)          # thinking models (qwen3.5) answer directly unless OLLAMA_THINK=1
     host = config.ollama_host()
     t0 = time.time()
     try:

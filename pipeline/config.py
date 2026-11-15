@@ -60,6 +60,11 @@ def ollama_model() -> str:
     return os.getenv('OLLAMA_MODEL', '').strip() or DEFAULT_OLLAMA_MODEL
 
 
+def ollama_yield() -> bool:
+    """Wait for another app's model to leave our Ollama before each call (OLLAMA_YIELD=0 turns it off)."""
+    return os.getenv('OLLAMA_YIELD', '1').strip().lower() not in ('0', 'false', 'no', 'off')
+
+
 def ollama_writer_model() -> str:
     """The model that writes (the fact plan's claims, the outline, the best-of-N lines and hooks); the judge and every
     small call stay on OLLAMA_MODEL. OLLAMA_WRITER_MODEL, else OLLAMA_MODEL (user 2026-11-15: a bigger writer is tried

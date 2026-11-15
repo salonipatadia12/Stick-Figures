@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v9'   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v10'   # v10: the hook from the most surprising fact, no answer word, points to its subject   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
 # v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
@@ -197,6 +197,10 @@ def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_ro
     if kind == 'hook' and beat.get('answer'):
         lines.append(f'The answer the video reveals later (NEVER say it, not even in part; make the viewer need it): '
                      f'{beat["answer"]}')
+    if kind == 'hook' and beat.get('hook_fact_claim'):
+        lines.append(f'Build the hook from this surprising fact (tease it, name the subject): {beat["hook_fact_claim"]}')
+    if kind == 'hook' and beat.get('answer_words'):
+        lines.append('Never use these words (they give the answer away): ' + ', '.join(beat['answer_words'][:30]))
     if shape_rows:
         lines.append('Write ONE line per shape, in this order:\n' + '\n'.join(
             f'{k}. {r["shape"]}: {r["how"]} (shape only, e.g. on another topic: "{r["example"]}")'
@@ -244,6 +248,8 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     twist = (interp.get('twist') or {}).get('id') or (episode.meta.get('fact_plan') or {}).get('twist', '')
     kind = 'hook' if k == 0 else 'loop' if k == len(plan_beats) - 1 else 'beat'
     ids = list(pb['fact_ids']) or ([twist] if kind in ('hook', 'loop') and twist else [])
+    if kind == 'hook' and pb.get('hook_fact'):        # user 2026-11-15: the hook is built from the most surprising fact
+        ids = [pb['hook_fact']]
     by = {f.id: f for f in facts}
     research = entail.research_text(ids, facts)
     allowed = entail.allowed_groups(episode, ids)
@@ -258,7 +264,7 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     twist_claim = next((b.get('claim') for b in plan_beats if b['role'] == 'twist' and b.get('claim')), '') \
         or (by[twist].claim if twist in by else '')
     if kind == 'hook':
-        pb = dict(pb, answer=twist_claim)
+        pb = dict(pb, answer=twist_claim, hook_fact_claim=by[ids[0]].claim if ids and ids[0] in by else '')
     cands = candidates(kind, pb, research, prev, nxt, lo, hi, n, write or ask, interp, rows, avoid, caution, retried)
     ignore = grounding.topic_words(episode)
     others = [(f'b{j + 1:02d}', j, line) for j, line in enumerate(chosen)] + \
@@ -299,6 +305,11 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = f'opens like an earlier line ("{opener(c)}")'
         elif set(entail.NUMBER.findall(c)) - set(entail.NUMBER.findall(research)):
             why_not[c] = 'a number the research does not have'
+        elif kind == 'hook' and grounding.names_answer(c, pb.get('answer_words') or ()):
+            why_not[c] = f'names the answer ({grounding.names_answer(c, pb.get("answer_words") or ())})'
+        elif kind == 'hook' and not grounding.points_to_subject(c, episode, by.get(ids[0]) if ids else None,
+                                                                 pb.get('answer_words') or (), ask):
+            why_not[c] = 'says nothing about the topic (it could open any video)'
         elif kind == 'hook' and grounding.gives_away(c, f'{by[twist].claim} {by[twist].quote}' if twist in by else '',
                                                      twist_claim, interp, facts, episode.topic):
             why_not[c] = 'gives the twist away: ' + grounding.gives_away(
@@ -417,6 +428,8 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -
     # the payoff answers the hook (the gate checks it) and may restate the twist, so it may cite the twist fact too
     pbs = [dict(pb, answer_to=promise, fact_ids=list(dict.fromkeys(list(pb['fact_ids']) + ([twist] if twist else []))))
            if pb['role'] == 'payoff' and promise else pb for pb in plan['beats']]
+    if pbs and plan.get('hook_fact'):
+        pbs[0] = dict(pbs[0], hook_fact=plan['hook_fact'], answer_words=list(plan.get('answer_words') or []))
     base = per_beat_words(words_total, len(pbs))
     chosen = []
     for k, ob in enumerate(beats[:len(pbs)]):

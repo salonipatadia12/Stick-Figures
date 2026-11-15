@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v5'   # v2: ranges kept whole in the claims; v3: facts judged on topic
+GROUNDING_VERSION = 'ground-v6'   # v6: beats and length follow the usable facts   # v2: ranges kept whole in the claims; v3: facts judged on topic
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -463,21 +463,75 @@ def _fallback(plan, sources, claims, notes):
         b['claim'], b['from_research'] = own.claim, True
 
 
-def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate=None) -> dict:
+# user 2026-11-15 "length follows facts": one fact beat per usable fact, plus hook, setup, problem and loop, at most
+# MAX_NON_FACT beats that state no fact besides the hook, setup and loop; thin facts make a shorter video (down to
+# MIN_SECONDS) instead of padding. The word estimates turn the plan into its length.
+FACT_WORDS, NO_FACT_WORDS, HOOK_WORDS, LOOP_WORDS, SETUP_WORDS = 13, 5, 6, 7, 8
+MAX_NON_FACT, MIN_SECONDS, MIN_BEATS, MAX_BEATS = 3, 30, 7, 14
+PROTECTED = ('hook', 'setup', 'problem', 'twist', 'payoff', 'loop')
+
+
+def usable(sources, relevant) -> list:
+    """The facts a plan may tell: on topic, and not a near-duplicate of one kept before (the better source kept)."""
+    out = []
+    for s in sorted(sources, key=lambda s: -quality(s)):
+        if (relevant is None or s.id in relevant) and not any(_same(s, o) for o in out):
+            out.append(s)
+    return out
+
+
+def beats_for(n_facts: int, brief: int, rate: float) -> int:
+    """The number of beats: the facts (as many as the brief's length holds) plus hook, setup, problem, one more no-fact
+    beat and the loop; 7-14 (the gate's band for 30-60 s)."""
+    room = int((brief * rate - HOOK_WORDS - LOOP_WORDS - SETUP_WORDS - 2 * NO_FACT_WORDS) / FACT_WORDS)
+    return max(MIN_BEATS, min(MAX_BEATS, max(2, min(n_facts, room)) + 5))
+
+
+def trim(roles: list, facts: dict) -> tuple:
+    """(roles, facts) with middle beats that got no fact dropped until at most MAX_NON_FACT remain (never the
+    problem, twist or payoff, never the last rising beat, never below MIN_BEATS)."""
+    roles, facts = list(roles), dict(facts)
+    rising = ('stakes', 'clue', 'reason')
+    while len(roles) > MIN_BEATS:
+        empty = [k for k, r in enumerate(roles) if k not in facts and r not in ('hook', 'setup', 'loop')]
+        if len(empty) <= MAX_NON_FACT:
+            break
+        drop = next((k for k in reversed(empty) if roles[k] not in PROTECTED
+                     and (roles[k] not in rising or sum(1 for r in roles if r in rising) > 1)), None)
+        if drop is None:
+            break
+        roles.pop(drop)
+        facts = {(k if k < drop else k - 1): v for k, v in facts.items() if k != drop}
+    return roles, facts
+
+
+def planned_seconds(roles, facts, brief, rate) -> int:
+    words = sum(HOOK_WORDS if r == 'hook' else LOOP_WORDS if r == 'loop' else SETUP_WORDS if r == 'setup'
+                else FACT_WORDS if k in facts else NO_FACT_WORDS for k, r in enumerate(roles))
+    return int(max(MIN_SECONDS, min(brief, round(words / rate))))
+
+
+def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate=None, length=None) -> dict:
     """The fact-first plan: {version, twist, beats: [{role, kind, fact_ids, claim}], attempts, notes, remaining}.
     Roles and facts are chosen in code; the local model writes each fact beat's claim in plain words and picks the
-    kind of the others. `generate(system, user, schema, attempt)` is the model (a stand-in in tests); `ask` the judge."""
+    kind of the others. `generate(system, user, schema, attempt)` is the model (a stand-in in tests); `ask` the judge.
+    length=(brief seconds, words per second): the beats and the length follow the usable facts (user 2026-11-15), and
+    the plan says its length ('seconds'); without it the beats follow `aim` as before."""
     from . import entail
     from .script import ScriptError, shape
     interp = (episode.meta or {}).get('interpretation') or {}
     twist = (interp.get('twist') or {}).get('id') or twist_fact(interp, sources)
     myth = myth_groups(interp, sources)
     ask = ask if ask is not None else entail.default_ask(cache, ledger)
-    roles = skeleton(episode.story_format, (aim[0] + aim[1] + 1) // 2)
     relevant = on_topic(sources, episode, ask)
     if relevant is not None and twist:
         relevant.add(twist)
+    n_usable = len(usable(sources, relevant))
+    n = beats_for(n_usable, length[0], length[1]) if length else (aim[0] + aim[1] + 1) // 2
+    roles = skeleton(episode.story_format, n)
     facts = assign_facts(roles, sources, twist, interp, episode.storyline, relevant)
+    if length:
+        roles, facts = trim(roles, facts)
     schema = plan_schema(len(roles))
     if generate is None:
         from . import llm
@@ -518,9 +572,19 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
     if msgs:
         _fallback(plan, sources, claims, notes)
     left = plan_issues(plan, sources, myth, None)[0]
-    return dict(version=GROUNDING_VERSION, twist=twist, beats=plan['beats'], attempts=attempts, notes=notes,
-                off_topic=sorted(x.id for x in sources if relevant is not None and x.id not in relevant),
-                remaining=left)
+    out = dict(version=GROUNDING_VERSION, twist=twist, beats=plan['beats'], attempts=attempts, notes=notes,
+               off_topic=sorted(x.id for x in sources if relevant is not None and x.id not in relevant),
+               usable_facts=n_usable, remaining=left)
+    pool = usable(sources, relevant)
+    order = surprise_order(pool, episode, ask)            # the hook is written from the most surprising fact
+    by = {x.id: x for x in sources}
+    out.update(surprise=order, hook_fact=order[0] if order else twist,
+               answer_words=answer_words(by.get(twist), episode))
+    if length:
+        told = {k for k, b in enumerate(plan['beats']) if b['kind'] == 'fact'}
+        out.update(seconds=planned_seconds(roles, told, length[0], length[1]), brief_seconds=length[0],
+                   fact_beats=len(told))
+    return out
 
 
 def plan_view(plan: dict) -> list:
@@ -710,3 +774,70 @@ def ground_labels(episode, ask=None, cache=None, ledger=None) -> dict:
                 out['dropped'] += 1
                 out['changed'].append(dict(beat=b.id, field=field, was=text, now=''))
     return out
+
+
+# ------------------------------------------------------------------ the hook from the most surprising fact (user 2026-11-15)
+
+SURPRISE_SYSTEM = """Rank facts for a short explainer video by how surprising each is to a curious viewer who knows only
+the common idea of the topic: most surprising first. Answer with the fact ids in order."""
+SURPRISE_SCHEMA = dict(type='object', required=['order'], properties=dict(order=dict(type='array', items=dict(type='string'))))
+POINTS_SYSTEM = """A hook line of a short explainer video must point to the video's subject: name it, or a vivid,
+clear image of it ("dark gold" for oil). A line that could open a video on any subject ("Believing this hides a
+secret.") does not. Answer whether this line points to the subject given."""
+POINTS_SCHEMA = dict(type='object', required=['points', 'why'], properties=dict(points=dict(type='boolean'),
+                                                                                why=dict(type='string')))
+GENERIC_ANSWER = set('year years million millions billion thousand time long ago ancient before after during over '
+                     'today every many most some first known called found shows show based form forms formed'.split())
+
+
+def surprise_order(sources, episode, ask) -> list:
+    """The usable facts' ids, most surprising first (one call); their order as given when the model does not answer."""
+    ids = [s.id for s in sources]
+    if ask is None or len(ids) < 2:
+        return ids
+    interp = (episode.meta or {}).get('interpretation') or {}
+    user = (f'Topic: {episode.topic}\nThe common idea: {interp.get("misconception") or interp.get("question") or episode.topic}\n'
+            'Facts:\n' + '\n'.join(f'{s.id}: {s.claim}' for s in sources))
+    try:
+        got = [str(x).strip() for x in (ask(SURPRISE_SYSTEM, user, SURPRISE_SCHEMA) or {}).get('order') or []]
+    except Exception:
+        got = []
+    order = [i for i in dict.fromkeys(got) if i in ids]
+    return order + [i for i in ids if i not in order]
+
+
+def answer_words(twist, episode) -> list:
+    """The words that would give the twist away (user 2026-11-15: "the twist fact's key noun/entity can't appear in the
+    hook"): the content words of the twist fact's claim and quote ("strangers" in "from strangers to kin"), but not the
+    topic's, the question's or the myth's own words, nor words of time and scale."""
+    from .qa import content_words
+    if twist is None:
+        return []
+    interp = (episode.meta or {}).get('interpretation') or {}
+    known = content_words(' '.join([episode.topic, interp.get('question', ''), interp.get('topic', ''),
+                                    interp.get('misconception', '')] + list(interp.get('myth_subjects') or [])))
+    return sorted(content_words(f'{twist.claim} {twist.quote}') - known - {w for w in GENERIC_ANSWER})
+
+
+def names_answer(hook: str, words) -> str:
+    """'' or the answer words the hook says."""
+    from .qa import content_words
+    return ', '.join(sorted(content_words(hook) & set(words)))
+
+
+def points_to_subject(hook: str, episode, hook_fact=None, answer=(), ask=None) -> bool:
+    """True when the hook names the topic or a word of its surprising fact (in code), else when the judge says it points
+    to the subject (one short call); False for a line that could open any video."""
+    from .qa import content_words
+    interp = (episode.meta or {}).get('interpretation') or {}
+    anchors = content_words(' '.join([episode.topic, interp.get('question', '')] + list(interp.get('myth_subjects') or [])
+                                     + ([hook_fact.claim] if hook_fact is not None else []))) - set(answer)
+    if content_words(hook) & anchors:
+        return True
+    if ask is None:
+        return False
+    try:
+        a = ask(POINTS_SYSTEM, f'Subject: {episode.topic}\nLine: {hook}', POINTS_SCHEMA) or {}
+    except Exception:
+        return True
+    return a.get('points') is not False

@@ -40,7 +40,14 @@ QUERY_TEMPLATES = [
 MAX_RESULTS_PER_QUERY = 8
 PAGES_PER_QUERY = 3            # reputable pages taken from each query, in rank order (deterministic set)
 OPEN_INDEX_PAGES_PER_QUERY = 4
-MAX_FACTS, FACTS_PER_PAGE = 8, 2
+MAX_FACTS, FACTS_PER_PAGE = 14, 3   # user 2026-11-15: 8-12 verified facts per topic, up to 3 per page
+# user 2026-11-15 ("research depth is the bottleneck"): the topic is split into these sub-questions, each searched on
+# its own (web, Wikipedia references, OpenAlex), and the facts are taken from them in turn
+ASPECTS = ('what it is', 'how it works', 'why it happens', 'a surprising detail', 'a number or scale',
+           'history or discovery')
+ASPECT_TEMPLATES = ('what is {t}', 'how does {t} work', 'why {t}', '{t} surprising fact', '{t} how much scale numbers',
+                    '{t} history discovery')
+SUB_PAGES = 2                  # reputable web pages read per sub-question, and open-index results per sub-question
 MIN_PAGE_CHARS = 300
 MIN_FACTS = 4                  # fewer than this from web search: the open indexes are tried too
 PASSAGE_CHARS = 2400           # page text the fact reader sees (the best-matching paragraphs)
@@ -54,8 +61,9 @@ QUERY_SCHEMA = {'type': 'object', 'properties': {'queries': {'type': 'array', 'i
                                                              'minItems': 2, 'maxItems': 2}}, 'required': ['queries']}
 
 FACT_SYSTEM = """You read ONE web page and pick facts for a 30-60 second explainer video.
-Return 0-2 facts that the page states directly and that help explain the topic. Prefer the mechanism (how or why it
-happens); at most one statistic. For each fact:
+Return 0-3 facts that the page states directly and that help explain the topic, each a different point. Prefer facts
+that answer the sub-question given (when there is one), then the mechanism (how or why it happens); at most one
+statistic. For each fact:
 - claim: one plain sentence (at most 30 words) saying only what the page says. Name the country or period if the page
   limits it. No advice, no opinions, nothing the page does not say.
 - quote: the sentence (or two) from the page text that supports the claim, copied exactly, word for word.
@@ -346,6 +354,31 @@ def page_facts(topic: str, url: str, title: str, text: str, *, cache=None, ledge
     return out
 
 
+SUBQ_SYSTEM = (f'You plan the research for a short explainer video. Split its topic into exactly {len(ASPECTS)} '
+               'sub-questions, in this order: ' + '; '.join(f'({k}) {a}' for k, a in enumerate(ASPECTS, 1)) +
+               '. Each is a plain web search of 4-10 words that names the topic\'s own subject (no quotes, no site:).')
+SUBQ_SCHEMA = {'type': 'object', 'properties': {'subquestions': {'type': 'array', 'items': {'type': 'string'},
+                                                                 'minItems': len(ASPECTS), 'maxItems': len(ASPECTS)}},
+               'required': ['subquestions']}
+
+
+def subquestions(topic: str, niche: str = '', cache=None, ledger=None, fresh=False) -> list:
+    """The topic's sub-questions, one per aspect (ASPECTS), from one short model call; the template ones where the
+    model gives none."""
+    t = topic.strip().rstrip('?.!')
+    out = [tpl.format(t=t) for tpl in ASPECT_TEMPLATES]
+    try:
+        data = llm.generate_json(SUBQ_SYSTEM, f'Topic: {topic}\nNiche: {niche or "general"}', SUBQ_SCHEMA, 300,
+                                 cache=cache, refresh=fresh, ledger=ledger, step='research', detail='sub-questions', seed=5)
+        got = [' '.join(str(q).replace('"', '').split()) for q in data.get('subquestions') or []]
+    except llm.LLMError:
+        got = []
+    for k, q in enumerate(got[:len(out)]):
+        if 3 <= len(q.split()) <= 14:
+            out[k] = q.rstrip('?')
+    return out
+
+
 def generated_queries(topic: str, niche: str = '', cache=None, ledger=None, fresh=False) -> list:
     """Two topic-specific queries from the model (about 50 output tokens)."""
     user = f'Topic: {topic}\nNiche: {niche or "general"}\nWrite 2 search queries.'
@@ -377,9 +410,12 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
     t0 = time.time()
     mark = lambda name: timings.__setitem__(name, round(time.time() - t0, 2))
     # a claim from topic understanding is a sentence of its own ("oil does not come from dinosaurs"): searched as is
-    queries = template_queries(topic) + [x if len(x.split()) > 3 else f'{topic.rstrip("?")} {x}' for x in find]
+    subs = subquestions(topic, niche, cache, ledger, fresh)
+    mark('subquestions_s')
+    queries = subs + template_queries(topic)[:2] + [x if len(x.split()) > 3 else f'{topic.rstrip("?")} {x}' for x in find]
+    aspect_of = {qi: qi for qi in range(len(subs))}            # query index -> aspect index (others: none)
     engines, results_by_q, fetched, extracted = {}, {}, {}, {}
-    page_rank, page_meta = {}, {}
+    page_rank, page_meta, page_aspect = {}, {}, {}
     workers = config.ollama_parallel()
     tried_open = False
     with cf.ThreadPoolExecutor(max_workers=6) as net, cf.ThreadPoolExecutor(max_workers=workers) as model:
@@ -390,7 +426,6 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
 
         for qi, q in enumerate(queries):
             submit_search(qi, q)
-        pending[model.submit(generated_queries, topic, niche, cache, ledger, fresh)] = ('queries', None, None)
 
         def open_lookup(q):
             qkey = f'open-index: {q}'
@@ -406,9 +441,14 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
         first = [topic.rstrip('?')] + find[:2]
         for k, q in enumerate(first):
             pending[net.submit(open_lookup, q)] = ('open', 1000 + k, q)
+        for k, q in enumerate(subs):                   # and for each sub-question (user 2026-11-15)
+            aspect_of[2000 + k] = k
+            pending[net.submit(open_lookup, q)] = ('open', 2000 + k, q)
 
         def take(qi, results, per_query=PAGES_PER_QUERY):
             n = 0
+            if qi in aspect_of:
+                per_query = SUB_PAGES
             for rank, r in enumerate(results):
                 url = doi_link(r['href'])
                 if n >= per_query:
@@ -418,6 +458,8 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
                 n += 1
                 page_rank[url] = min(page_rank.get(url, (99, 99)), (qi, rank))
                 page_meta.setdefault(url, r)
+                if qi in aspect_of:
+                    page_aspect.setdefault(url, aspect_of[qi])
                 if url not in fetched:
                     fetched[url] = None
                     if r.get('text'):                      # an open-index abstract: no page to fetch
@@ -454,8 +496,9 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
                     fetched[arg] = (text, title or page_meta.get(arg, {}).get('title', ''))
                     mark('fetch_s')
                     if len(text) >= MIN_PAGE_CHARS:
+                        sub = [subs[page_aspect[arg]]] if arg in page_aspect else []
                         pending[model.submit(page_facts, topic, arg, fetched[arg][1], text, cache=cache, ledger=ledger,
-                                             fresh=fresh, focus=find)] = ('facts', None, arg)
+                                             fresh=fresh, focus=sub + find)] = ('facts', None, arg)
                 elif kind == 'facts':
                     extracted[arg] = fut.result()
                     mark('facts_s')
@@ -467,7 +510,7 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
                 notes.append('search: too few reputable pages or facts; also trying the open indexes (Wikipedia '
                              'references, OpenAlex) with the generated queries')
                 base_qi = len(queries)
-                for k, q in enumerate(queries[len(QUERY_TEMPLATES) + len(find):]):   # the topic itself went first
+                for k, q in enumerate(template_queries(topic)[2:]):  # sub-questions went to the open indexes already
                     qkey = f'open-index: {q}'
                     hit = open_lookup(q)
                     if hit:
@@ -481,19 +524,29 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
     if ledger is not None:
         ledger.record_free('research', 'duckduckgo', 'ddgs', f'{len(queries)} searches ({", ".join(served) or "none"}), '
                            f'{len(fetched)} reputable pages, {n_pages} with text')
-    facts, seen = [], []
+    # the facts of each sub-question in rank order, then taken in turn (one per sub-question per round), so every
+    # aspect is told before any gets a second fact; facts of no sub-question come last
+    queues = {}
     for url in sorted(extracted, key=lambda u: page_rank.get(u, (99, 99))):
-        for f in extracted[url]:
-            if any(difflib.SequenceMatcher(None, f['claim'].lower(), s).ratio() > 0.8 for s in seen):
-                continue
-            seen.append(f['claim'].lower())
-            facts.append(Source(id=f's{len(facts) + 1}', claim=f['claim'], url=url, title=f['title'] or '',
-                                quote=f['quote']))
+        queues.setdefault(page_aspect.get(url, len(ASPECTS)), []).extend((url, f) for f in extracted[url])
+    facts, seen, by_aspect = [], [], {}
+    while len(facts) < MAX_FACTS and any(queues.values()):
+        for a in sorted(queues):
+            while queues[a]:
+                url, f = queues[a].pop(0)
+                if any(difflib.SequenceMatcher(None, f['claim'].lower(), s).ratio() > 0.8 for s in seen):
+                    continue
+                seen.append(f['claim'].lower())
+                facts.append(Source(id=f's{len(facts) + 1}', claim=f['claim'], url=url, title=f['title'] or '',
+                                    quote=f['quote']))
+                name = ASPECTS[a] if a < len(ASPECTS) else 'other'
+                by_aspect[name] = by_aspect.get(name, 0) + 1
+                break
             if len(facts) >= MAX_FACTS:
                 break
-        if len(facts) >= MAX_FACTS:
-            break
-    timings['facts'] = len(facts)
+    timings.update(facts=len(facts), facts_by_aspect=by_aspect, subquestions=subs)
+    notes.append(f'research: {len(facts)} facts from {len(subs)} sub-questions ('
+                 + ', '.join(f'{k} {v}' for k, v in by_aspect.items()) + ')')
     return facts
 
 

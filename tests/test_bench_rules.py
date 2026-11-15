@@ -345,6 +345,145 @@ class GenericBase(unittest.TestCase):
         self.assertTrue(any('generic "living-room"' in n for n in notes))
 
 
+class ForeignModels(unittest.TestCase):
+    """2026-11-15 bench: another app's ibm/granite3.3-guardian on the same Ollama made a judge call take 863 s."""
+
+    def fake(self, loaded):
+        from types import SimpleNamespace as NS
+        it = iter(loaded)
+        state = {'now': next(it)}
+
+        def get(url, timeout=None):
+            names = state['now']
+            state['now'] = next(it, names)
+            return NS(json=lambda: dict(models=[dict(name=n) for n in names]))
+        return lambda: NS(get=get)
+
+    def test_another_apps_model_is_waited_out_and_logged(self):
+        from pipeline import llm
+        t = [0.0]
+        sleep = lambda s: t.__setitem__(0, t[0] + s)
+        env = {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': '', 'OLLAMA_YIELD': '1'}
+        with mock.patch.dict(os.environ, env), mock.patch.object(
+                llm, '_requests', self.fake([['ibm/granite3.3-guardian:8b'], ['ibm/granite3.3-guardian:8b'], ['qwen3.5:9b']])):
+            n = len(llm.CONTENTION)
+            waited = llm.yield_to_others('qwen3.5:9b', sleep=sleep, clock=lambda: t[0])
+        self.assertEqual(waited, 2 * llm.FOREIGN_POLL_S)
+        self.assertEqual(llm.CONTENTION[n]['others'], ['ibm/granite3.3-guardian:8b'])
+
+    def test_our_own_models_and_a_switch_off_never_wait(self):
+        from pipeline import llm
+        never = lambda s: self.fail('nothing to wait for')
+        with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': 'qwen3:14b'}), \
+                mock.patch.object(llm, '_requests', self.fake([['qwen3.5:9b', 'qwen3:14b']])):
+            self.assertEqual(llm.yield_to_others('qwen3.5:9b', sleep=never), 0.0)
+        with mock.patch.dict(os.environ, {'OLLAMA_YIELD': '0'}), \
+                mock.patch.object(llm, '_requests', self.fake([['other:1b']])):
+            self.assertEqual(llm.yield_to_others('qwen3.5:9b', sleep=never), 0.0)
+
+    def test_the_wait_is_capped(self):
+        from pipeline import llm
+        t = [0.0]
+        with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_YIELD': '1'}), \
+                mock.patch.object(llm, '_requests', self.fake([['other:1b']])):
+            waited = llm.yield_to_others('qwen3.5:9b', sleep=lambda s: t.__setitem__(0, t[0] + s), clock=lambda: t[0])
+        self.assertGreaterEqual(waited, llm.FOREIGN_WAIT_S)
+        self.assertLess(waited, llm.FOREIGN_WAIT_S + llm.FOREIGN_POLL_S + 1)
+
+
+class LengthFollowsFacts(unittest.TestCase):
+    """User 2026-11-15: one fact beat per usable fact, at most 3 no-fact beats besides hook, setup and loop, and a
+    shorter video (down to 30 s) when facts are thin."""
+
+    def test_thin_facts_make_a_short_video_and_many_facts_a_full_one(self):
+        self.assertEqual(grounding.beats_for(2, 45, 2.46), 7)
+        self.assertEqual(grounding.beats_for(6, 45, 2.46), 11)
+        self.assertEqual(grounding.beats_for(12, 45, 2.46), 11)          # never more than the brief's length holds
+        roles = grounding.skeleton('myth_vs_fact', 7)
+        facts = {k: f's{k}' for k, r in enumerate(roles) if r in ('twist', 'payoff')}
+        self.assertEqual(grounding.planned_seconds(roles, facts, 45, 2.46), 30)
+        roles = grounding.skeleton('myth_vs_fact', 11)
+        facts = {k: f's{k}' for k, r in enumerate(roles) if r not in ('hook', 'setup', 'problem', 'loop')}
+        self.assertGreater(grounding.planned_seconds(roles, facts, 45, 2.46), 38)
+
+    def test_middle_beats_with_no_fact_are_cut_to_three(self):
+        roles = grounding.skeleton('myth_vs_fact', 12)
+        facts = {k: 's1' for k, r in enumerate(roles) if r in ('twist', 'payoff', 'reveal')}
+        new_roles, new_facts = grounding.trim(roles, facts)
+        empty = [k for k, r in enumerate(new_roles) if k not in new_facts and r not in ('hook', 'setup', 'loop')]
+        self.assertLessEqual(len(empty), grounding.MAX_NON_FACT)
+        self.assertEqual([new_roles[k] for k in new_facts], [r for r in new_roles if r in ('twist', 'reveal', 'payoff')])
+        for need in ('hook', 'problem', 'twist', 'payoff', 'loop'):
+            self.assertIn(need, new_roles)
+        self.assertTrue(any(r in ('stakes', 'clue', 'reason') for r in new_roles))   # the gate's rising beat stays
+
+
+class HookFromSurprise(unittest.TestCase):
+    """User 2026-11-15: "Your yawn came from a stranger" gives it away; "Believing this hides a secret" says nothing."""
+
+    def yawn(self):
+        from pipeline.models import Episode
+        twist = Source(id='s6', claim='Yawn contagion in humans is predicted only by social bonding.', url='https://doi.org/z',
+                       quote='Contagion was greatest in response to kin, then friends, then acquaintances, and lastly strangers.')
+        ep = Episode(slug='yawn', topic='Why do we yawn?', meta=dict(interpretation=dict(
+            question='Why do we yawn?', misconception='We yawn because we are bored.', myth_subjects=['boredom'])))
+        return ep, twist
+
+    def test_a_hook_naming_the_answer_or_saying_nothing_fails(self):
+        ep, twist = self.yawn()
+        words = grounding.answer_words(twist, ep)
+        self.assertIn('stranger', words)
+        self.assertNotIn('yawn', words)                               # the topic's own word may be said
+        self.assertIn('stranger', grounding.names_answer('Your yawn came from a stranger.', words))
+        self.assertEqual(grounding.names_answer('Why does one yawn set off a whole room?', words), '')
+        judge = lambda s, u, sc: dict(points='secret' not in u, why='')
+        self.assertFalse(grounding.points_to_subject('Believing this hides a secret.', ep, None, words, judge))
+        self.assertTrue(grounding.points_to_subject('Why does one yawn set off a room?', ep, None, words, judge))
+        oil = ep.model_copy(update=dict(topic='The real origin of crude oil'))
+        asked = []
+        self.assertTrue(grounding.points_to_subject('From dust to dark gold.', oil, None, (),
+                                                    lambda *a: asked.append(a) or dict(points=True)))
+        self.assertEqual(len(asked), 1)                               # no topic word: the judge decided
+
+    def test_facts_are_ranked_by_surprise_and_the_hook_is_built_from_the_top_one(self):
+        from pipeline import bestof
+        ep, twist = self.yawn()
+        facts = [Source(id='s1', claim='Dopamine regulates yawning.', url='https://doi.org/a'), twist,
+                 Source(id='s3', claim='Even dogs catch human yawns.', url='https://doi.org/b')]
+        order = grounding.surprise_order(facts, ep, lambda *a: dict(order=['s3', 'nope', 's1']))
+        self.assertEqual(order, ['s3', 's1', 's6'])
+        self.assertEqual(grounding.surprise_order(facts, ep, None), ['s1', 's6', 's3'])
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim='', hook_fact='s3',
+                     answer_words=grounding.answer_words(twist, ep)),
+                dict(role='twist', kind='fact', fact_ids=['s6'], claim='Only social bonds make yawns spread.'),
+                dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        ep.meta['interpretation']['twist'] = dict(id='s6')
+        base = BestOfN.ask(type('T', (), {})(), ['Your yawn came from a stranger.', 'Can your dog catch your yawn?'])
+        ask = lambda s, u, sc: dict(points=True, why='') if s == grounding.POINTS_SYSTEM else base(s, u, sc)
+        prompts = []
+        write = lambda s, u, sc: prompts.append(u) or dict(lines=['Your yawn came from a stranger.', 'Can your dog catch your yawn?'])
+        e = bestof.write_beat(ep, facts, plan, 0, [], 'twist', (3, 8), ask, write=write)
+        self.assertIn('names the answer', e['rejected']['Your yawn came from a stranger.'])
+        self.assertEqual(e['line'], 'Can your dog catch your yawn?')
+        self.assertIn('Even dogs catch human yawns.', prompts[0])     # built from the most surprising fact
+        self.assertIn('Never use these words', prompts[0])
+
+
+class DeeperResearch(unittest.TestCase):
+    def test_sub_questions_come_from_the_model_or_the_templates(self):
+        from pipeline import llm, search
+        with mock.patch.object(llm, 'generate_json', side_effect=llm.LLMError('down')):
+            subs = search.subquestions('Why the sky is blue')
+        self.assertEqual(len(subs), len(search.ASPECTS))
+        self.assertEqual(subs[0], 'what is Why the sky is blue')
+        six = [f'sky blue question number {k}' for k in range(6)]
+        with mock.patch.object(llm, 'generate_json', return_value=dict(subquestions=six[:5] + ['x'])):
+            subs = search.subquestions('Why the sky is blue')
+        self.assertEqual(subs[:5], six[:5])
+        self.assertEqual(subs[5], 'Why the sky is blue history discovery')   # a one-word answer: the template one
+        self.assertEqual(search.FACTS_PER_PAGE, 3)
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):
@@ -452,12 +591,14 @@ class Bench(unittest.TestCase):
         self.assertGreaterEqual(len(rows), 5)
         self.assertTrue(any('crude oil' in r['topic'].lower() for r in rows))
         t = dict(topic='X', clean=True, seconds=100.0, overall=0.8,
-                 scores=dict(hook=4, flow=3, accuracy=1.0, rewrite=0.1))
+                 scores=dict(hook=4, flow=3, accuracy=1.0, rewrite=0.1, facts=11, usable_facts=9, filler=2))
         a = dict(label='a', topics=[t]); a['summary'] = score.summary(a)
         b = dict(label='b', topics=[dict(t, clean=False, overall=0.6)]); b['summary'] = score.summary(b)
         table = score.compare(a, b)
         self.assertIn('| clean | 1.0 | 0.0 | -1 |', table)
-        self.assertIn('| X | 4/3/1.0/0.1/yes/100 | 4/3/1.0/0.1/NO/100 |', table)
+        self.assertIn('| X | 4/3/1.0/0.1/yes/100/11(9)/2 | 4/3/1.0/0.1/NO/100/11(9)/2 |', table)
+        self.assertIn('| facts | 11.0 | 11.0 | +0 |', table)
+        self.assertIn('| filler | 2.0 | 2.0 | +0 |', table)
         self.assertEqual(score.overall(t['scores'], True), round((0.8 + 0.6 + 1 + 0.9 + 1) / 5, 3))
 
 

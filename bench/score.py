@@ -23,6 +23,9 @@ Scores per script:
   clean     0/1  auto mode reached an approved script with no manual step (no error, auto.pick_hook found a hook)
   seconds        the script stage's wall time
   overall   0-1  mean of hook/5, flow/5, accuracy, 1 - rewrite, clean
+  facts          facts the research found (after the reputable-source filter) / usable (on topic, no duplicates)
+  filler         beats that state no fact, besides the hook, the setup and the loop (user 2026-11-15: at most 3)
+  waited         seconds the run waited for another app's model on the same Ollama (not the writer's time)
 
 The judge is the local judge model (OLLAMA_MODEL, qwen3.5:9b) at temperature 0 with fixed prompts. Results go to
 bench/results/<date>.json (one file per day, a list of runs) and are printed next to the previous run.
@@ -43,8 +46,18 @@ ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / 'bench'
 WORK = BENCH / 'work'
 RESULTS = BENCH / 'results'
-UPSTREAM = WORK / 'upstream'
-SCORE_VERSION = 'bench-v1'
+SCORE_VERSION = 'bench-v2'     # v2: facts per topic, filler beats, planned length, waits for another app's model
+
+
+def _research_version() -> str:
+    """The research version, read from the source (pipeline is imported only after STICK_EPISODES_DIR is set)."""
+    import re
+    m = re.search(r"FREE_RESEARCH_VERSION = '([^']+)'", (ROOT / 'pipeline' / 'script.py').read_text())
+    return m.group(1) if m else 'unknown'
+
+
+# research and the storyline pick are made once per topic and research version (a research change researches again)
+UPSTREAM = WORK / f'upstream-{_research_version()}'
 
 HOOK_RUBRIC = """You grade the HOOK (the first line) of a narrated 45-second explainer Short with a fixed rubric.
 gap (1-5): 5 = the viewer must keep watching to learn something specific the line makes them want; 4 = clear pull;
@@ -214,6 +227,13 @@ def score(base: Path) -> dict:
             ok, why = entail.verdict(text, research or entail.NO_RESEARCH, allowed, ask, entail.TEXT_SYSTEM)
             if ok is False:
                 fails.append(f'{b.id} {field} "{text}": {why}')
+    kinds = [b.get('kind') for b in plan] if len(plan) == len(ep.beats) else \
+        ['fact' if b.source_ids else 'transition' for b in ep.beats]
+    roles = [b.role for b in ep.beats]
+    filler = [ep.beats[k].id for k, (kd, r) in enumerate(zip(kinds, roles))
+              if kd != 'fact' and r not in ('hook', 'setup', 'loop') and 0 < k < len(ep.beats) - 1]
+    fplan = (ep.meta or {}).get('fact_plan') or {}
+    research = (ep.meta or {}).get('research') or {}
     fc = (ep.meta or {}).get('fact_check') or {}
     lab = (ep.meta or {}).get('label_grounding') or {}
     runs = sorted((base / 'cache').glob('script-*.json'), key=lambda p: p.stat().st_mtime)   # the writer's own log
@@ -227,7 +247,10 @@ def score(base: Path) -> dict:
                 accuracy=round(1 - len(fails) / max(1, checked), 3), accuracy_fails=fails,
                 rewrite=round(float(fc.get('rate') or 0), 3), narration_rate=fc.get('narration_rate'),
                 text_rate=fc.get('text_rate'), labels_rewritten=lab.get('rewritten', 0), labels_dropped=lab.get('dropped', 0),
-                fallback_beats=fallbacks,
+                fallback_beats=fallbacks, facts=len(ep.sources), usable_facts=fplan.get('usable_facts'),
+                facts_by_aspect=research.get('by_aspect') or {}, filler_beats=filler, filler=len(filler),
+                beats=len(ep.beats), planned_seconds=ep.target_length,
+                words=sum(len(b.narration.split()) for b in ep.beats),
                 lines=[dict(beat=b.id, role=b.role, say=b.narration,
                             texts=[t for _, t, *_ in entail.texts(b)]) for b in ep.beats])
 
@@ -257,7 +280,7 @@ def save_run(run: dict):
     return p
 
 
-METRICS = ('overall', 'hook', 'flow', 'accuracy', 'rewrite', 'clean', 'seconds')
+METRICS = ('overall', 'hook', 'flow', 'accuracy', 'rewrite', 'clean', 'seconds', 'facts', 'usable', 'filler', 'waited')
 
 
 def summary(run: dict) -> dict:
@@ -268,7 +291,11 @@ def summary(run: dict) -> dict:
     return dict(overall=avg(lambda t: t['overall']), hook=avg(lambda t: t['scores']['hook']),
                 flow=avg(lambda t: t['scores']['flow']), accuracy=avg(lambda t: t['scores']['accuracy']),
                 rewrite=avg(lambda t: t['scores']['rewrite']), clean=avg(lambda t: 1 if t['clean'] else 0),
-                seconds=avg(lambda t: t['seconds']), topics=len(rows))
+                seconds=avg(lambda t: t['seconds']), topics=len(rows),
+                facts=avg(lambda t: t['scores'].get('facts') or 0),
+                usable=avg(lambda t: t['scores'].get('usable_facts') or 0),
+                filler=avg(lambda t: t['scores'].get('filler') or 0),
+                waited=avg(lambda t: t.get('waited') or 0))
 
 
 def compare(a: dict | None, b: dict) -> str:
@@ -280,10 +307,12 @@ def compare(a: dict | None, b: dict) -> str:
         x, y = sa.get(m), sb.get(m)
         d = '' if x is None or y is None else f'{y - x:+.3g}'
         out.append(f'| {m} | {"" if x is None else x} | {"" if y is None else y} | {d} |')
-    out += ['', '| topic | ' + ' | '.join(f'{r["label"]} hook/flow/acc/rw/clean/s' for r in (a, b) if r) + ' |',
+    out += ['', '| topic | ' + ' | '.join(f'{r["label"]} hook/flow/acc/rw/clean/s/facts/filler' for r in (a, b) if r) + ' |',
             '|---|' + '---|' * len([r for r in (a, b) if r])]
     cell = lambda t: (f'{t["scores"]["hook"]}/{t["scores"]["flow"]}/{t["scores"]["accuracy"]}/{t["scores"]["rewrite"]}/'
-                      f'{"yes" if t["clean"] else "NO"}/{t["seconds"]:.0f}') if t and 'scores' in t else \
+                      f'{"yes" if t["clean"] else "NO"}/{t["seconds"]:.0f}/'
+                      f'{t["scores"].get("facts", "?")}({t["scores"].get("usable_facts") or "?"})/'
+                      f'{t["scores"].get("filler", "?")}') if t and 'scores' in t else \
         ('failed: ' + (t.get('error') or '')[:60] if t else '')
     names = list(dict.fromkeys([t['topic'] for r in (a, b) if r for t in r['topics']]))
     for name in names:
@@ -323,6 +352,8 @@ def main(argv=None):
     for t in picked:
         print(f'\n=== {t["topic"]} (writer {writer}, judge {judge})', flush=True)
         row = dict(topic=t['topic'])
+        from pipeline import llm
+        waits = len(llm.CONTENTION)
         try:
             src, up_s, err = upstream(t)
         except Exception as exc:
@@ -337,13 +368,16 @@ def main(argv=None):
             if not res['error']:
                 row['scores'] = score(Path(res['base']))
                 row['overall'] = overall(row['scores'], row['clean'])
+        row['waited'] = round(sum(w['waited_s'] for w in llm.CONTENTION[waits:]), 1)
+        row['waits'] = llm.CONTENTION[waits:]
         run['topics'].append(row)
         run['summary'] = summary(run)
         run['finished'] = time.strftime('%Y-%m-%dT%H:%M:%S')
         save_run(run)                                 # after every topic: a stopped run keeps what it scored
         s = row.get('scores') or {}
-        print(f'  clean={row["clean"]} seconds={row["seconds"]} ' + (
-            f'hook={s["hook"]} flow={s["flow"]} accuracy={s["accuracy"]} rewrite={s["rewrite"]} overall={row["overall"]}'
+        print(f'  clean={row["clean"]} seconds={row["seconds"]} waited={row["waited"]} ' + (
+            f'hook={s["hook"]} flow={s["flow"]} accuracy={s["accuracy"]} rewrite={s["rewrite"]} overall={row["overall"]} '
+            f'facts={s["facts"]}({s["usable_facts"]}) filler={s["filler"]} planned={s["planned_seconds"]}s words={s["words"]}'
             if s else f'error: {row.get("error")}'), flush=True)
         for line in s.get('lines', []):
             print(f'    {line["beat"]} {line["role"]}: {line["say"]}')
