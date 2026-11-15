@@ -227,7 +227,29 @@ confirms instead of rewrites.
    simplified (pages for kids or students, course reports). Of two facts that say the same thing, the better
    source is told. A fact only a simplified page states is still used, with a note to phrase it with caution ("much
    of it", "most").
-8. **Research degrades, not fails.** Each query starts at a different keyless engine (DuckDuckGo, Google, Bing,
+8. **Deeper research** (user 2026-11-15: "research depth is the bottleneck"). One short call splits the topic
+   into 6 sub-questions: what it is, how it works, why it happens, a surprising detail, a number or scale, and its
+   history or discovery (template ones when the model gives none). Each is searched on its own: the web, plus
+   Wikipedia's reference links and OpenAlex abstracts. Up to 2 reputable pages per sub-question are read, each for up
+   to 3 facts with that sub-question in mind. The facts are then taken in turn, one sub-question at a time, up to 14,
+   so every angle is told before any gets a second fact. The counts are in `meta.research` (facts, per sub-question,
+   the sub-questions) and the research notes. The target is 8-12 verified facts per topic.
+9. **Length follows facts.** The plan counts the usable facts (on topic, near-duplicates dropped) and gives one
+   fact beat to each, as many as the brief's length holds, plus the hook, setup, problem and loop. At most 3 beats
+   besides the hook, setup and loop state no fact; extra empty middle beats are cut (`grounding.trim`). Thin facts
+   make a shorter video, down to 30 s, never padding. The planned length (`plan.seconds`, from word estimates per
+   beat) becomes the episode's length, so the outline, the word budget, the gate and the duration QA all use it. The
+   brief's own length stays in `meta.length_plan`.
+10. **The hook from the most surprising fact.** One call ranks the usable facts by surprise, and the hook is written
+   from the top one. A hook is refused when it says a word of the twist fact's claim or quote that the topic,
+   question and myth do not already say (`grounding.answer_words`: "stranger" in "from strangers to kin" gives
+   "Your yawn came from a stranger" away). It is also refused when it points to no subject: no topic word or word of
+   its fact, and the judge says it could open any video ("Believing this hides a secret.").
+11. **Another app on the same Ollama.** Before each call, a model this pipeline did not ask for that is loaded on
+   Ollama is waited out (at most 10 minutes, `OLLAMA_YIELD=0` turns it off). The wait is logged
+   (`llm.CONTENTION`, and as "waited" in the benchmark). On 2026-11-15 another project's worker on this Mac used
+   `ibm/granite3.3-guardian:8b`; the two models evicted each other for 25 minutes and one judge call took 863 s.
+12. **Research degrades, not fails.** Each query starts at a different keyless engine (DuckDuckGo, Google, Bing,
    Yandex, Brave, Mojeek, Yahoo, Startpage). An engine that refuses goes to the back for five minutes, with backoff
    and jitter between tries. A `site:` query is retried without the operator. When every engine refuses, the same
    query from any episode of the last 30 days is used (the shared search cache). Wikipedia's API and OpenAlex's API
@@ -395,7 +417,9 @@ its own copy (`bench/work/runs/<label>/`).
 | accuracy (0-1) | share of the final lines and on-screen texts that pass the claims check |
 | rewrite (0-1) | the fact check's rewrite rate |
 | clean (0/1) | auto reached an approved script with no manual step |
-| seconds | the script stage's wall time |
+| seconds | the script stage's wall time (waits for another app's model included; "waited" says how long) |
+| facts | facts the research found, and (in brackets) the usable ones the plan could tell |
+| filler | beats that state no fact besides the hook, setup and loop (at most 3) |
 | overall (0-1) | mean of hook/5, flow/5, accuracy, 1 - rewrite, clean |
 
 The judge is `OLLAMA_MODEL` (qwen3.5:9b) at temperature 0 with fixed prompts. Results are saved to
