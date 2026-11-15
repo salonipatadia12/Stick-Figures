@@ -189,12 +189,21 @@ confirms instead of rewrites.
    - **no two beats make the same claim**: each candidate's split claims are compared with every other beat's
      (`grounding.same_claim`: the shorter claim's content words, topic words aside, are almost all in the other).
      Only the payoff may restate the twist;
+   - **facts judged on topic** (bench run 1): each fact gets one yes/no call, "does it help answer the question?".
+     Only those facts are told, and every one of them may be, whatever words it shares with the question. The ids
+     of the rest are in `meta.fact_plan.off_topic`;
+   - **no myth said as a fact**: a hook or loop that names the myth's words with no doubt in it ("It was boredom.")
+     is refused when the judge says it states the misconception as true;
+   - **beliefs only in the myth beat** (and the hook); a no-fact line counts as a claim for repeats; no two lines
+     open with the same three words; no line starts mid-sentence or holds markdown; any line's numbers must be in
+     its research;
    - **ranges stay as wide as the fact**: "thousands to millions of years" never becomes "thousands" or
      "millions", and a magnitude word or number the research does not have fails (`grounding.narrowed`). This runs
      in the claims check itself, so plan claims, best-of-N lines, rewrites, swaps and on-screen texts all get it.
 4. **Labels from the claim** (user 2026-11-15). After staging, every on-screen text, split label, diagram label and
    label on a picture must use only words of its beat's narration or planned claim (plus "MYTH", "FACT" and other
-   structure words), with no number the narration does not say (`grounding.ground_labels`). A text that does not
+   structure words), with no number the narration does not say, and at least one real word
+   (`grounding.ground_labels`). A beat that states no fact shows only a phrase its narration says as it is. A text that does not
    is written again from them in one short call per beat, else dropped. So staging no longer invents labels for
    the fact check to remove. The counts are in `meta.label_grounding`.
 5. **The writer model.** The fact plan's claims, the outline and the best-of-N candidate lines (hooks and loops
