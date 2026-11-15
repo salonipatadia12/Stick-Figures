@@ -71,6 +71,7 @@ def fix_script(episode) -> list:
     """Known mechanical slips of the local writer, fixed in place before Auto judges the script, so a typo-level
     error never stops an episode (user 2026-11-14: "it never stops to ask me"). Returns notes for the auto log.
 
+    * a picture (insert) with no kebab-case key: named from its scene, else from the place staged, else the narration;
     * a split with no top scene (empty insert key): shown as its bottom scene alone, the split labels as labels on it
       (the composer's own fallback, compose_beats.split_fallback);
     * a recipe or effect that needs an anchor word but has none, or one the narration does not say: anchored on the
@@ -79,6 +80,14 @@ def fix_script(episode) -> list:
     notes = []
     for b in episode.beats:
         sh = b.shot
+        if sh.visual == 'insert' and sh.insert is not None and not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.insert.key or ''):
+            # 2026-11-15 bench (14B writer): an insert with no key and no scene stopped Auto at the gate
+            place = sh.insert.scene.strip() or (sh.staging.setting_detail if sh.staging else '') or b.narration
+            key = _kebab(sh.insert.key) or _kebab(place)
+            if key:
+                sh.insert.scene = sh.insert.scene.strip() or f'{place}, no people, warm natural light'
+                notes.append(f'{b.id}: the picture had no kebab-case key; named "{key}" from its scene')
+                sh.insert.key = key
         if sh.visual == 'split' and sh.split and (sh.split.key or '').strip() and \
                 (sh.insert is None or not (sh.insert.key or '').strip()):
             effects = list(sh.insert.effects) if sh.insert else []

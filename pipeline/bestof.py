@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v5'   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v6'   # v6: no two lines open with the same three words   # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
 # v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
@@ -140,6 +140,12 @@ says the misconception is TRUE (as a plain statement, not a question, a doubt or
 dinosaurs." for "oil comes from dinosaurs" does not: it names dinosaurs but says something else."""
 ASSERTS_SCHEMA = dict(type='object', required=['says_it_is_true', 'why'], properties=dict(
     says_it_is_true=dict(type='boolean'), why=dict(type='string')))
+
+
+def opener(line: str) -> str:
+    """A line's first three words, lowercased ('' for a shorter line): two lines may not open the same way."""
+    w = re.findall(r"[a-z']+", (line or '').lower())
+    return ' '.join(w[:3]) if len(w) >= 3 else ''
 
 
 def asserts_myth(line: str, interp: dict, ask=None) -> str:
@@ -288,6 +294,8 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = 'copies its research line'
         elif entail.repeats(c, compare):
             why_not[c] = 'repeats an earlier line'
+        elif opener(c) and opener(c) in {opener(x) for x in compare}:   # 2026-11-15 bench (14B): "But there's a twist" x3
+            why_not[c] = f'opens like an earlier line ("{opener(c)}")'
         elif set(entail.NUMBER.findall(c)) - set(entail.NUMBER.findall(research)):
             why_not[c] = 'a number the research does not have'
         elif kind == 'hook' and grounding.gives_away(c, f'{by[twist].claim} {by[twist].quote}' if twist in by else '',

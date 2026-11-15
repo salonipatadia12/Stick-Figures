@@ -232,6 +232,33 @@ class BenchRunOne(unittest.TestCase):
         self.assertFalse(grounding.from_claim('NO', b, dict(kind='fact'), 3))     # no real word
 
 
+class BenchRunTwo(unittest.TestCase):
+    """2026-11-15 bench run 2 (14B writer): "But there's a twist" opened three lines; an insert with no key stopped Auto."""
+    ask, episode, plan = BestOfN.ask, BestOfN.episode, BestOfN.plan
+
+    def test_two_lines_never_open_the_same_way(self):
+        from pipeline import bestof
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='clue', kind='transition', fact_ids=[], claim=''),
+                dict(role='clue', kind='transition', fact_ids=[], claim=''), dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        e = bestof.write_beat(self.episode(), OIL, plan, 2, ['Hook?', "But there's a twist?"], 'loop', (2, 12),
+                              self.ask(["But there's a twist you won't see coming?", 'Is that the whole story?']))
+        self.assertIn('opens like an earlier line', e['rejected']["But there's a twist you won't see coming?"])
+        self.assertEqual(e['line'], 'Is that the whole story?')
+
+    def test_an_insert_with_no_key_is_named_from_its_place(self):
+        from pipeline import auto
+        ep = host_episode()
+        b = next(x for x in ep.beats if x.shot.visual == 'insert' and x.shot.insert)
+        b.shot.insert.key, b.shot.insert.scene = '', ''
+        if b.shot.staging:
+            b.shot.staging.setting_detail = 'a white studio wall'
+        notes = auto.fix_script(ep)
+        self.assertRegex(b.shot.insert.key, r'^[a-z0-9]+(-[a-z0-9]+)*$')
+        self.assertTrue(b.shot.insert.scene)
+        self.assertTrue(any('no kebab-case key' in n for n in notes))
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):
