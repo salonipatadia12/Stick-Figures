@@ -188,8 +188,11 @@ confirms instead of rewrites.
      with "never say it", and the bank's shapes tease the answer instead of naming it;
    - **no two beats make the same claim**: each candidate's split claims are compared with every other beat's
      (`grounding.same_claim`: the shorter claim's content words, topic words aside, are almost all in the other).
-     Only the payoff may restate the twist;
-   - **facts judged on topic** (bench run 1): each fact gets one yes/no call, "does it help answer the question?".
+     Only the payoff may restate the twist; the loop may echo the hook;
+   - **the length is kept while writing**: no-fact lines may be short ("But there's a catch."), and the words they
+     leave go to the fact beats still to come (`bestof.budget`), so the script reaches its length without padding;
+   - **facts judged on topic** (bench run 1): a fact that shares a content word with the question is on topic; each
+     other fact gets one yes/no call, "does it help answer the question?".
      Only those facts are told, and every one of them may be, whatever words it shares with the question. The ids
      of the rest are in `meta.fact_plan.off_topic`;
    - **no myth said as a fact**: a hook or loop that names the myth's words with no doubt in it ("It was boredom.")
@@ -198,7 +201,8 @@ confirms instead of rewrites.
      open with the same three words; no line starts mid-sentence or holds markdown; any line's numbers must be in
      its research;
    - **ranges stay as wide as the fact**: "thousands to millions of years" never becomes "thousands" or
-     "millions", and a magnitude word or number the research does not have fails (`grounding.narrowed`). This runs
+     "millions", even when another cited fact says "millions" on its own, and a magnitude word or number the
+     research does not have fails (`grounding.narrowed`). This runs
      in the claims check itself, so plan claims, best-of-N lines, rewrites, swaps and on-screen texts all get it.
 4. **Labels from the claim** (user 2026-11-15). After staging, every on-screen text, split label, diagram label and
    label on a picture must use only words of its beat's narration or planned claim (plus "MYTH", "FACT" and other
@@ -268,7 +272,7 @@ back to the server.
 
 | check | fix |
 |---|---|
-| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again. The swapped line must pass the fact check and the word rule; slang ("rock goo") and split replacements ("make ... become") are refused, and then the whole line is written again by best-of-N without the word. A filler that opens a sentence ("Hmm", "Oh", "Well") is never swapped: when Whisper does not hear it, it is dropped at once ("Hmm. Is that right?" -> "Is that right?") and the beat voiced again |
+| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again. The swapped line must pass the fact check and the word rule; slang ("rock goo") and split replacements ("make ... become") are refused, and then the whole line is written again by best-of-N without the word. A video under its length gets one short sentence added only to beats that cite facts, checked against those facts, for ranges and for repeating another beat (never to a question or a transition). A filler that opens a sentence ("Hmm", "Oh", "Well") is never swapped: when Whisper does not hear it, it is dropped at once ("Hmm. Is that right?" -> "Is that right?") and the beat voiced again |
 | text | a label on the host: round 1 moves it (host to the other side and smaller, or an insert label away from the host), round 2 drops it; two texts on each other: only the less important one is dropped (a myth mark, then the beat's key term: its on-screen text or a label naming what the narration says) |
 | duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
 | story_match | a MYTH mark on a picture of the myth (a scene that may not show its beat is a warning to look at: a word test cannot judge a painting well enough to repaint it) |
