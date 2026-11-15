@@ -891,6 +891,8 @@ class Service:
             out['fact_check'] = dict(checked=fc.get('checked', 0), texts=fc.get('text_checked', 0),
                                      changed=fc.get('changed') or [], rate=round(100 * (fc.get('rate') or 0)),
                                      plan_failed=bool(fc.get('plan_failed')), has_rate='rate' in fc,
+                                     narration_rate=round(100 * (fc.get('narration_rate') or 0)),
+                                     text_rate=round(100 * (fc.get('text_rate') or 0)),
                                      plan=grounding.plan_view(plan), twist=plan.get('twist', ''))
         if episode.storylines:
             out['storylines'] = self.storylines_view(episode)

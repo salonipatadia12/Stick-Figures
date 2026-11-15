@@ -402,11 +402,16 @@ def check_texts(b, episode, ask, out):
     allowed = allowed_groups(episode, b.source_ids)
     for field, text, most, put, drop in texts(b):
         out['text_checked'] += 1
-        if marks_myth(text, episode):
+        said = b.narration + ('' if field == 'on-screen text' else ' ' + b.on_screen_text)   # the gate's own rule
+        stray = {n.strip('.,') for n in NUMBER.findall(text)} - {n.strip('.,') for n in NUMBER.findall(said)}
+        if stray:                                     # 2026-11-15: "DINOSAURS (65 MYA)" on a beat that says no number
+            ok, why = False, f'a number the beat never says ({", ".join(sorted(stray))})'
+        elif marks_myth(text, episode):
             continue                                  # "MYTH", "Myth: Dinosaurs": marks the myth, states no fact
-        if echoes(text, b.narration, allowed):
+        elif echoes(text, b.narration, allowed):
             continue                                  # says only words the (checked) narration says
-        ok, why = verdict(text, research or NO_RESEARCH, allowed, ask, TEXT_SYSTEM)
+        else:
+            ok, why = verdict(text, research or NO_RESEARCH, allowed, ask, TEXT_SYSTEM)
         if ok is None:
             out['notes'].append(f'{b.id}: {field} "{text}": {why}')
         if ok is not False:
@@ -533,8 +538,12 @@ def check(episode, cache=None, ledger=None, ask=None) -> dict:
     total = out['checked'] + out['text_checked']
     out['rate'] = round(len(rewritten) / total, 3) if total else 0.0
     out['plan_failed'] = out['rate'] > RATE_LIMIT
+    said = [c for c in rewritten if c.get('field', 'narration') == 'narration']
+    out['narration_rate'] = round(len(said) / out['checked'], 3) if out['checked'] else 0.0
+    out['text_rate'] = round((len(rewritten) - len(said)) / out['text_checked'], 3) if out['text_checked'] else 0.0
     out['notes'].append(f'rewrite rate {round(100 * out["rate"])} % ({len(rewritten)} of {total} lines: '
-                        f'{out["checked"]} sentences, {out["text_checked"]} texts)'
+                        f'narration {len(said)} of {out["checked"]}, texts {len(rewritten) - len(said)} of '
+                        f'{out["text_checked"]})'
                         + (f'; above {round(100 * RATE_LIMIT)} %: the fact-first plan failed' if out['plan_failed'] else ''))
     if out['changed']:
         from . import auto                            # an anchor word that is no longer said: re-anchored

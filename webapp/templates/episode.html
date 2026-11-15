@@ -25,7 +25,7 @@
 {% endif %}
 {% if ep.fact_check and (ep.fact_check.changed or ep.fact_check.plan) %}
 <details class="card">
-  <summary><strong>Fact check</strong> <span class="muted small">({% if ep.fact_check.has_rate %}rewrite rate {{ ep.fact_check.rate }} %: {{ ep.fact_check.changed|length }} change(s) over {{ ep.fact_check.checked }} sentences and {{ ep.fact_check.texts }} texts{% else %}{{ ep.fact_check.changed|length }} of {{ ep.fact_check.checked }} cited sentences fixed to say only what their fact says{% endif %})</span>
+  <summary><strong>Fact check</strong> <span class="muted small">({% if ep.fact_check.has_rate %}rewrite rate {{ ep.fact_check.rate }} % (narration {{ ep.fact_check.narration_rate }} %, texts {{ ep.fact_check.text_rate }} %): {{ ep.fact_check.changed|length }} change(s) over {{ ep.fact_check.checked }} sentences and {{ ep.fact_check.texts }} texts{% else %}{{ ep.fact_check.changed|length }} of {{ ep.fact_check.checked }} cited sentences fixed to say only what their fact says{% endif %})</span>
     {% if ep.fact_check.plan_failed %}<span class="badge">above 20 %: the fact plan failed</span>{% endif %}</summary>
   {% if ep.fact_check.plan %}<p class="small"><strong>Fact plan</strong> (facts chosen before any narration{% if ep.fact_check.twist %}; twist fact {{ ep.fact_check.twist }}{% endif %}):</p>
   <ul class="list small">{% for line in ep.fact_check.plan %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}

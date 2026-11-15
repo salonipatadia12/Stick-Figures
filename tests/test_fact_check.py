@@ -551,6 +551,17 @@ class UncitedAndTexts(unittest.TestCase):
         self.assertEqual((c['was'], c['action']), ('Fact: Microbes', 'text rewritten'))
         self.assertIn("'microbes'", c['why'])
 
+    def test_a_number_the_beat_never_says_is_taken_off_the_screen(self):
+        from pipeline.models import GraphicCue
+        ep = episode_with({})
+        ep.beats[2].narration = 'Whoa, pause there!'
+        ep.beats[2].shot.graphic = GraphicCue(kind='cards', items=['DINOSAURS (65 MYA)', 'OIL FORMS'], anchors=[], detail='')
+        out = entail.check(ep, ask=Judge(rewrites=['DINOSAURS 65']))
+        self.assertEqual(ep.beats[2].shot.graphic.items, ['OIL FORMS'])
+        c = [x for x in out['changed'] if x['was'] == 'DINOSAURS (65 MYA)'][0]
+        self.assertIn('never says (65)', c['why'])
+        self.assertIn('text_rate', out)
+
     def test_a_text_that_cannot_be_fixed_is_removed_and_the_rate_is_logged(self):
         ep = episode_with({1: 'Oil starts with living organisms.'})
         ep.beats[1].on_screen_text = 'It Was The Bugs!'
