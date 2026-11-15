@@ -124,14 +124,71 @@ def supported(sentence: str, research: str, ask, system: str = CHECK_SYSTEM) -> 
     return False, f'adds {", ".join(repr(x) for x in real)}: {why}'
 
 
+SPLIT_SYSTEM = """You split ONE line of a narrated science video into its atomic claims: the separate things it
+asserts about the world, each a short sentence in the line's OWN words (do not explain, describe or add words). Mark
+each claim "fact" (it says something is or was so, including what scientists or research found) or "belief" (it
+only reports what people believe or used to think: "many think oil comes from dinosaurs"; the whole belief is one
+belief claim). Metaphor, tone, rhythm and vivid wording assert nothing beyond their plain meaning: "black liquid
+gold" asserts only that it is oil; "millions of years in the dark" asserts only that it took millions of years;
+questions, jokes, reactions and transitions assert nothing. A line that asserts nothing has no claims. Then list in
+"nonsense" every claim that mixes up categories or contradicts basic common knowledge, such as "dinosaurs were sea
+creatures" or "sea creatures like dinosaurs". A belief being false is NOT nonsense (that is what a myth is); [] when
+none."""
+SPLIT_SCHEMA = dict(type='object', required=['claims', 'nonsense'], properties=dict(
+    claims=dict(type='array', maxItems=5, items=dict(type='object', required=['text', 'kind'], properties=dict(
+        text=dict(type='string'), kind=dict(type='string', enum=['fact', 'belief'])))),
+    nonsense=dict(type='array', maxItems=3, items=dict(type='string'))))
+
+
+def split_claims(line: str, ask):
+    """([{text, kind}], [nonsense]) of a line, or (None, None) when the model gave no usable answer."""
+    try:
+        a = ask(SPLIT_SYSTEM, f'Line: {line}', SPLIT_SCHEMA) or {}
+    except Exception:
+        return None, None
+    if not isinstance(a, dict) or not isinstance(a.get('claims'), list):
+        return None, None
+    claims = [dict(text=' '.join(str(c.get('text') or '').split()), kind=c.get('kind') if c.get('kind') in ('fact', 'belief')
+                   else 'fact') for c in a['claims'] if isinstance(c, dict) and str(c.get('text') or '').strip()]
+    nonsense = [' '.join(str(x).split()) for x in a.get('nonsense') or [] if str(x).strip()]
+    return claims, nonsense
+
+
 def verdict(line: str, research: str, allowed: set, ask, system: str = CHECK_SYSTEM) -> tuple[bool | None, str]:
-    """Word precision in code (a group of living things its facts do not name fails with no model call), then the
-    judge (`supported`)."""
+    """Claims, not colour (user 2026-11-15): the line is split into its atomic claims (one short call) and only those
+    are checked; metaphor and tone that assert nothing pass. A claim that makes no sense ("dinosaurs were sea
+    creatures") fails; word precision runs in code on the claims; each fact claim gets the yes/no judge against the
+    research (a beat citing nothing may hold no fact claim at all). On-screen texts keep the whole-text check, and a
+    line the splitter cannot read falls back to it too."""
     from .grounding import imprecise, precision_why
-    bad = imprecise(line, allowed)
+    if system == TEXT_SYSTEM:
+        bad = imprecise(line, allowed)
+        if bad:
+            return False, precision_why(bad, allowed)
+        return supported(line, research, ask, system)
+    claims, nonsense = split_claims(line, ask)
+    if claims is None:
+        bad = imprecise(line, allowed)
+        if bad:
+            return False, precision_why(bad, allowed)
+        return supported(line, research, ask, system)
+    if nonsense:
+        return False, f'does not make sense: {"; ".join(nonsense)}'
+    said = set(re.findall(r'[a-z]+', ' '.join(c['text'] for c in claims).lower()))
+    bad = [w for w in imprecise(line, allowed) if w in said]   # the line's own group words that it asserts
     if bad:
         return False, precision_why(bad, allowed)
-    return supported(line, research, ask, system)
+    facts = [c['text'] for c in claims if c['kind'] == 'fact']
+    if system == NONFACT_SYSTEM:
+        return (True, 'states no fact') if not facts else (
+            False, 'states a fact but the beat cites none (' + '; '.join(repr(x) for x in facts) + ')')
+    for c in facts:
+        ok, why = supported(c, research, ask)
+        if ok is False:
+            return False, f'the claim "{c}" {why}'
+        if ok is None:
+            return None, why
+    return True, f'{len(facts)} claim(s) supported' if facts else 'asserts no fact'
 
 
 def allowed_groups(episode, ids) -> set:

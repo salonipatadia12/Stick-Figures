@@ -270,6 +270,7 @@ class OllamaScript(unittest.TestCase):
                       Source(id='s2', claim='Paying yourself first means moving savings out before spending.',
                              url='https://www.example.gov/y', quote='Pay yourself first.')]
         self.outlines = [free_outline()]
+        self.hooks = []                 # extra hook candidates offered before the fixture's own hook
         self.bad_label = {2}            # b03's first staging draws "38" on screen, which b03 never says
         self.fake = FakeOllama(self.route)
         for p in (mock.patch.dict(os.environ, {'SCRIPT_PROVIDER': 'ollama', 'ANTHROPIC_API_KEY': '', 'STICK_CACHE_DIR': str(self.base / 'shared')}),
@@ -293,6 +294,15 @@ class OllamaScript(unittest.TestCase):
             return dict(states_a_fact=True, adds=[], supported=True, why='the fact says it')
         if system == entail.NONFACT_SYSTEM:            # and every uncited line states no fact
             return dict(states_a_fact=False, adds=[], supported=True, why='a transition')
+        from pipeline import bestof
+        if system == bestof.WRITE_SYSTEM:              # best-of-N: the fixture's own line for that beat's role
+            role = user.split('BEAT: ', 1)[1].split()[0]
+            lines = [n for r, n, _, _ in OUTLINE_BEATS if r == role]
+            return dict(lines=list(self.hooks) + lines if role == 'hook' else lines)
+        if system == bestof.RANK_SYSTEM:
+            return dict(best=1, why='the fixture')
+        if system == entail.SPLIT_SYSTEM:              # the fixture's lines assert nothing the fake must judge
+            return dict(claims=[], nonsense=[])
         i = int(user.split('STAGE b')[1][:2]) - 1
         ob = OUTLINE_BEATS[i]
         bad = i in self.bad_label and 'THE CHECKER FOUND' not in user
@@ -352,16 +362,16 @@ class OllamaScript(unittest.TestCase):
         self.assertIn('Next beat (continuity hands over to it): b02', beat_calls[0]['messages'][1]['content'])
         self.assertEqual(episode.meta['script']['prompt_version'], 'script-v7')
 
-    def test_an_outline_error_goes_back_to_the_outline_call(self):
-        self.outlines = [free_outline(hook_line='So here is the long story of why your salary keeps on leaking away'),
-                         free_outline()]
+    def test_a_hook_that_runs_long_is_never_chosen(self):
+        # fact-first: the narration is chosen by best-of-N (pipeline/bestof.py), not repaired through the outline
+        self.hooks = ['So here is the long story of why your salary keeps on leaking away']
         self.bad_label = set()
         episode, notes = self.run_generate()
         outline_calls = [b for b in self.fake.chats if b['messages'][0]['content'] == script.SCRIPT_RULES_FACT_FIRST_OUTLINE]
-        self.assertEqual(len(outline_calls), 2)
-        self.assertIn('at most 8', outline_calls[1]['messages'][1]['content'])
+        self.assertEqual(len(outline_calls), 1)
         self.assertEqual(episode.beats[0].narration, "Your salary didn't shrink. It leaked.")
-        self.assertTrue(any('outline repair 1' in n for n in notes))
+        self.assertEqual(episode.hook_options[0].line, episode.beats[0].narration)
+        self.assertTrue(any('best-of-N narration' in n for n in notes))
 
     def test_outline_helpers(self):
         o = free_outline()

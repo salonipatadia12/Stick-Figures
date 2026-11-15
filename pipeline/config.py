@@ -98,6 +98,7 @@ def shared_cache_dir() -> Path:
 
 
 def search_backends() -> list:
-    """ddgs backends tried in order: DuckDuckGo first, then ddgs's other keyless engines ('auto')."""
-    raw = os.getenv('SEARCH_BACKENDS', '').strip() or 'duckduckgo,auto'
+    """The keyless ddgs engines a search rotates over (pipeline/search.py engine_order)."""
+    # 2026-11-15: after many runs most engines refused this machine while google, bing and yandex still answered
+    raw = os.getenv('SEARCH_BACKENDS', '').strip() or 'duckduckgo,google,bing,yandex,brave,mojeek,yahoo,startpage'
     return [b.strip() for b in raw.split(',') if b.strip()]

@@ -33,6 +33,10 @@ class Judge:
 
     def __call__(self, system, user, schema):
         self.calls.append((system, user))
+        if system == entail.SPLIT_SYSTEM:              # each line is one claim; uncited lines that state none, none
+            line = user.removeprefix('Line: ')
+            facty = line in self.uncited_facts or (line not in NO_CLAIM_LINES and not line.endswith('?'))
+            return dict(claims=[dict(text=line, kind='fact')] if facty else [], nonsense=[])
         if system in (entail.NONFACT_SYSTEM, entail.TEXT_SYSTEM):
             line = user.split('\n', 1)[0].split(': ', 1)[1]
             facty = line in self.uncited_facts
@@ -44,11 +48,16 @@ class Judge:
         return dict(sentences=[self.rewrites.pop(0) if self.rewrites else ''])
 
 
+NO_CLAIM_LINES = set()                                 # the fixture's uncited lines: they assert nothing
+NO_CLAIMS = dict(claims=[], nonsense=[])
+
+
 def episode_with(narrations):
     ep = host_episode()
     ep.sources = [S3]
     for b in ep.beats:
         b.source_ids = []
+        NO_CLAIM_LINES.update(entail.sentences(b.narration))
     for (i, text) in narrations.items():
         ep.beats[i].narration = text
         ep.beats[i].source_ids = ['s3']
@@ -355,17 +364,6 @@ class WriterGuards(unittest.TestCase):
 class OutlineStage(unittest.TestCase):
     """The judge runs on the outline before staging, so the writer fixes its own lines (2026-11-14 scratch run: 33 %)."""
 
-    def test_lines_that_say_more_go_back_to_the_outline_with_the_claim(self):
-        from pipeline import script
-        o = dict(_plan=[dict(role='reveal', kind='fact', fact_ids=['s8'], claim='Heat and pressure turned the remains into oil.'),
-                        dict(role='clue', kind='transition', fact_ids=[], claim='')],
-                 beats=[dict(narration='Heat and pressure cooked them into black liquid gold.', source_ids=['s8']),
-                        dict(narration='This mix gets buried very quickly.', source_ids=[])])
-        judge = Judge(uncited_facts={'This mix gets buried very quickly.'})
-        got = script.narration_issues(plan_episode(), OIL, o, judge)
-        self.assertIn('say only what the claim says, in story voice: "Heat and pressure turned the remains into oil."', got[0])
-        self.assertIn('b02 has none (it is a transition)', got[1])
-
     def test_a_fact_beat_falls_back_to_its_planned_claim_not_a_question(self):
         ep = episode_with({1: 'So oil came from the skeletons of giants!'})
         ep.beats[1].role = 'payoff'
@@ -399,31 +397,110 @@ class SwapIsFactChecked(unittest.TestCase):
         self.assertIn('kerogen', ep.beats[1].narration)
 
 
-class StoryVoice(unittest.TestCase):
-    """A fact beat still copied from its fact after the outline repairs is said in story voice (2026-11-14 live run)."""
+class BestOfN(unittest.TestCase):
+    """Best-of-N writing (pipeline/bestof.py, user 2026-11-15): candidates, claims checked, the survivors ranked."""
 
-    def test_a_copied_line_is_said_again_and_checked(self):
-        from pipeline import script
-        o = dict(_plan=[dict(role='twist', kind='fact', fact_ids=['s7'], claim=S7.claim)],
-                 beats=[dict(narration=S7.claim, source_ids=['s7'])])
-        voiced = 'Before the dinosaurs, tiny sea plants and animals became our oil.'
+    def ask(self, lines, best=1, bad_claims=(), nonsense=()):
+        from pipeline import bestof
 
         def ask(system, user, schema):
-            if system == script.VOICE_SYSTEM:
-                return dict(sentences=[S7.claim, 'Giant bugs made it.', voiced])     # a copy, a wrong group, a good one
-            return dict(states_a_fact=True, adds=[], supported=True, why='')
-        got = script.voice_lines(plan_episode(), OIL, o, ask)
-        self.assertEqual(o['beats'][0]['narration'], voiced)
-        self.assertEqual(got, [dict(beat='b01', was=S7.claim, now=voiced)])
+            if system == bestof.WRITE_SYSTEM:
+                self.prompts.append(user)
+                return dict(lines=list(lines))
+            if system == bestof.RANK_SYSTEM:
+                self.ranked.append(user)
+                return dict(best=best, why='more vivid')
+            if system == entail.SPLIT_SYSTEM:
+                line = user.removeprefix('Line: ')
+                return dict(claims=[dict(text=line, kind='fact')] if not line.endswith('?') else [],
+                            nonsense=[line] if line in nonsense else [])
+            sentence = user.split('\n', 1)[0].split(': ', 1)[1]
+            bad = sentence in bad_claims
+            return dict(states_a_fact=True, adds=[sentence] if bad else [], supported=not bad, why='')
+        self.prompts, self.ranked = [], []
+        return ask
 
-    def test_a_line_that_fails_the_judge_stays(self):
-        from pipeline import script
-        o = dict(_plan=[], beats=[dict(narration=S7.claim, source_ids=['s7'])])
-        ask = lambda system, user, schema: (dict(sentences=['Ancient giants walked the earth and became oil.'])
-                                            if system == script.VOICE_SYSTEM else
-                                            dict(states_a_fact=True, adds=['walked the earth'], supported=False, why=''))
-        self.assertEqual(script.voice_lines(plan_episode(), OIL, o, ask), [])
-        self.assertEqual(o['beats'][0]['narration'], S7.claim)
+    def episode(self):
+        ep = plan_episode()
+        ep.meta['interpretation']['twist'] = dict(id='s7', claim=S7.claim)
+        return ep
+
+    def plan(self):
+        return [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='twist', kind='fact', fact_ids=['s7'], claim='Oil came from tiny sea plants and animals.'),
+                dict(role='loop', kind='callback', fact_ids=[], claim='')]
+
+    def test_failing_claims_are_dropped_and_the_survivors_ranked(self):
+        from pipeline import bestof
+        lines = ['Bugs made it, every drop of it, long ago.', 'Crude oil formed from animal and plant remains that lived.',
+                 'Many sea creatures like dinosaurs sank down there.', 'Tiny plants and animals in the sea made your oil.']
+        S = 'Crude oil formed from animal and plant remains that lived.'
+        ask = self.ask(lines, best=2, nonsense={'Many sea creatures like dinosaurs sank down there.'})
+        e = bestof.write_beat(plan_episode(), OIL, self.plan(), 1, ['What is in your tank?'], 'loop', (5, 12), ask)
+        self.assertEqual(e['line'], 'Tiny plants and animals in the sea made your oil.')    # ranked 2nd of 2 survivors
+        self.assertEqual(e['kept'][0], S)
+        self.assertIn("'bugs'", e['rejected']['Bugs made it, every drop of it, long ago.'])  # the word rule
+        self.assertEqual(bestof.write_beat(plan_episode(), OIL, self.plan(), 1, [], '', (5, 30), self.ask([S7.claim]))
+                         ['rejected'][S7.claim], 'copies its research line')
+        self.assertIn('does not make sense', e['rejected']['Many sea creatures like dinosaurs sank down there.'])
+        self.assertIn('Its research', self.prompts[0])
+
+    def test_a_hook_that_argues_against_nobody_is_refused(self):
+        from pipeline import bestof
+        interp = plan_episode().meta['interpretation']
+        self.assertTrue(bestof.strawman('Stop calling it dinosaur poop.', interp))
+        self.assertEqual(bestof.strawman('Oil comes from dinosaurs? Not quite.', interp), '')
+        self.assertEqual(bestof.strawman('Your gas is older than the dinosaurs.', interp), '')   # argues nothing
+        ask = self.ask(['Stop calling it dinosaur poop.', 'Your gas is older than the dinosaurs.'])
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 0, [], 'twist', (5, 12), ask)
+        self.assertEqual(e['line'], 'Your gas is older than the dinosaurs.')
+        self.assertIn('nobody claims', e['rejected']['Stop calling it dinosaur poop.'])
+        self.assertEqual(len(bestof.shapes('hook', 'oil')), bestof.N_HOOK)
+        self.assertIn('Write ONE line per shape', self.prompts[0])
+
+    def test_a_myth_line_must_be_the_belief_people_hold(self):
+        from pipeline import bestof
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='setup', kind='myth', fact_ids=[], claim=''), dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        base = self.ask(["Many think oil's dinosaur poop sinking deep.", 'Many think oil comes from dead dinosaurs.'])
+
+        def ask(system, user, schema):
+            if system == bestof.BELIEF_SYSTEM:
+                return dict(real_belief='poop' not in user, why='a strawman' if 'poop' in user else '')
+            if system == entail.SPLIT_SYSTEM:
+                return dict(claims=[dict(text=user.removeprefix('Line: '), kind='belief')], nonsense=[])
+            return base(system, user, schema)
+        e = bestof.write_beat(self.episode(), OIL, plan, 1, ['What is in your tank?'], '', (4, 12), ask)
+        self.assertEqual(e['line'], 'Many think oil comes from dead dinosaurs.')
+        self.assertIn('not the belief', e['rejected']["Many think oil's dinosaur poop sinking deep."])
+
+    def test_the_loop_repeats_a_word_of_the_hook(self):
+        from pipeline import bestof
+        ask = self.ask(['So that is the whole story.', 'Next time you fill your tank, thank tiny sea plants.'])
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 2, ['What is in your tank?', 'x'], '', (5, 12), ask)
+        self.assertEqual(e['line'], 'Next time you fill your tank, thank tiny sea plants.')
+        self.assertEqual(e['rejected']['So that is the whole story.'], 'does not repeat a word of the hook')
+
+    def test_no_survivor_keeps_the_planned_claim(self):
+        from pipeline import bestof
+        ask = self.ask(['Bugs did it all.'])
+        e = bestof.write_beat(plan_episode(), OIL, self.plan(), 1, ['What is in your tank?'], '', (3, 12), ask)
+        self.assertEqual(e['line'], 'Oil came from tiny sea plants and animals.')
+
+    def test_word_rule_skips_time_phrases(self):
+        from pipeline import grounding
+        self.assertEqual(grounding.imprecise('Oil formed long before the age of reptiles.', {'plants'}), [])
+        self.assertEqual(grounding.imprecise('Oil came from reptiles.', {'plants'}), ['reptiles'])
+
+    def test_a_kids_page_gives_way_to_a_scientific_duplicate_and_asks_for_caution(self):
+        from pipeline import grounding
+        kids = Source(id='s9', claim='Crude oil formed from the remains of tiny sea plants and animals.',
+                      url='https://www.eia.gov/kids/energy-sources/oil/', quote='remains of tiny sea plants and animals')
+        sci = Source(id='s10', claim='Crude oil formed from the remains of tiny sea plants and animals.',
+                     url='https://pubs.usgs.gov/of/2020/x', quote='remains of tiny sea plants and animals')
+        self.assertEqual(grounding.twist_fact({}, [kids, sci]), 's10')
+        self.assertIn('caution', grounding.caution(kids))
+        self.assertEqual(grounding.caution(sci), '')
 
     def test_a_long_setting_still_gives_a_kebab_case_key(self):
         from pipeline import auto
@@ -591,8 +668,9 @@ class SwapWord(unittest.TestCase):
     def test_a_word_still_unheard_after_a_slower_take_is_swapped(self):
         repair.save(self.ep.slug, {'beats': {self.beat: {'voice_speed': repair.SLOWER}}})
         asked = []
-        write = lambda s, u, sc: asked.append(json.loads(u)) or dict(replacement='thinks',
-                                                                    line='Everyone thinks oil comes from dinosaurs.')
+        write = lambda s, u, sc: (asked.append(json.loads(u)) or dict(replacement='thinks',
+                                                                     line='Everyone thinks oil comes from dinosaurs.')
+                                  if s == repair.SWAP_SYSTEM else NO_CLAIMS)
         applied = repair.run_round(self.ep.slug, self.report('imagines'), self.tl, 1, write=write)
         self.assertEqual(asked[0]['word'], 'imagines')
         self.assertIn('said "thinks" instead of "imagines"', applied[0]['fix'])
@@ -615,17 +693,31 @@ class SwapWord(unittest.TestCase):
         self.assertFalse(repair.swapped_line(old, 'turn', 'People long believed that huge animals became our fuel.', 'became'))
         self.ep.beats[1].narration = old
         now = repair.swap_word(self.ep.slug, self.ep, self.beat, 'turn',
-                               write=lambda *a: dict(replacement='become', line='Many thought giant sea creatures sank to become fuel.'))
+                               write=lambda s, *a: dict(replacement='become', line='Many thought giant sea creatures sank to become fuel.')
+                               if s == repair.SWAP_SYSTEM else NO_CLAIMS)
         self.assertEqual(now, 'become')
         self.assertEqual(self.ep.beats[1].narration, 'Many thought giant sea creatures sank to become fuel.')
 
-    def test_a_good_line_with_an_odd_replacement_field_is_used(self):
-        # 2026-11-14 crude oil b08: the line was fine, the replacement field said "make ... become"
+    def test_a_split_or_slang_swap_rewrites_the_line_through_best_of_n(self):
+        # 2026-11-14 b08 "make ... become"; 2026-11-15 b09 "rock goo" for "kerogen" (user: no slang, no awkward swap)
+        from pipeline import bestof
+        good = 'Heat and pressure cook that biomass into energy-dense hydrocarbons.'
+
+        def write(s, u, sc):
+            if s == repair.SWAP_SYSTEM:
+                return dict(replacement='make ... become', line='Heat and pressure make this biomass become energy-dense hydrocarbons.')
+            if s == bestof.WRITE_SYSTEM:
+                self.assertIn('Do not use the word(s): turn', u)
+                return dict(lines=['Heat and pressure turn it all.', good])
+            return dict(best=1, why='') if s == bestof.RANK_SYSTEM else NO_CLAIMS
         self.ep.beats[1].narration = 'Heat and pressure turn this biomass into energy-dense hydrocarbons.'
-        now = repair.swap_word(self.ep.slug, self.ep, self.beat, 'turn', write=lambda *a: dict(
-            replacement='make ... become', line='Heat and pressure make this biomass become energy-dense hydrocarbons.'))
-        self.assertEqual(now, 'make become')
-        self.assertEqual(self.ep.beats[1].narration, 'Heat and pressure make this biomass become energy-dense hydrocarbons.')
+        self.assertEqual(repair.swap_word(self.ep.slug, self.ep, self.beat, 'turn', write=write), repair.REWRITTEN)
+        self.assertEqual(self.ep.beats[1].narration, good)
+        self.ep.beats[1].narration = 'Organic matter becomes kerogen first.'
+        slang = lambda s, u, sc: (dict(replacement='rock goo', line='Organic matter becomes rock goo first.')
+                                  if s == repair.SWAP_SYSTEM else dict(lines=[]) if s == bestof.WRITE_SYSTEM else NO_CLAIMS)
+        self.assertEqual(repair.swap_word(self.ep.slug, self.ep, self.beat, 'kerogen', write=slang), '')
+        self.assertEqual(self.ep.beats[1].narration, 'Organic matter becomes kerogen first.')
 
     def test_a_useless_answer_changes_nothing(self):
         for answer in ('imagines', 'imagine', 'pictures in the mind', '42', ''):

@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 
 SEARCH_TTL_HOURS = 24
+SHARED_SEARCH_TTL_DAYS = 30
 PAGE_TTL_DAYS = 7
 
 
@@ -82,7 +83,21 @@ class MultiCache:
 
     def put_search(self, query: str, results: list, engine: str = '') -> None:
         if results:
-            _atomic_write(self.search_path(query), dict(query=query, engine=engine, results=results, ts=self.now()))
+            data = dict(query=query, engine=engine, results=results, ts=self.now())
+            _atomic_write(self.search_path(query), data)
+            _atomic_write(self.shared_search_path(query), data)      # for other episodes when the engines refuse
+
+    def shared_search_path(self, query: str) -> Path:
+        return self.shared_cache / 'searches' / f'search-{self._key(normalise_query(query))}.json'
+
+    def get_shared_search(self, query: str, ttl_days: float = SHARED_SEARCH_TTL_DAYS):
+        """The same query's results from any episode, up to 30 days old: used only when every engine refuses
+        (user 2026-11-15: research degrades, not fails)."""
+        data = _read(self.shared_search_path(query))
+        if data and self.now() - data.get('ts', 0) < ttl_days * 86400:
+            self._count('search_hit')
+            return data['results']
+        return None
 
     # ---- layer 2: page text, shared across episodes
     def page_path(self, url: str) -> Path:

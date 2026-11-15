@@ -98,11 +98,32 @@ def myth_groups(interp: dict, sources) -> set:
     return subject | (groups(interp.get('misconception', '')) - truth)
 
 
+TIME_WORDS = {'age', 'era', 'eras', 'time', 'times', 'days', 'reign', 'dawn', 'rise', 'period', 'world'}
+BEFORE_WORDS = {'before', 'after', 'since', 'until', 'till', 'when', 'while', 'older', 'earlier', 'later'}
+FILLER = {'the', 'a', 'any', 'first', 'last', 'early', 'giant', 'big', 'great', 'mighty', 'ancient', 'even', 'very',
+          'all', 'those', 'these', 'of'}
+
+
+def time_phrase(words: list, i: int) -> bool:
+    """True when words[i] (a group word) only marks a time: "the age of reptiles", "before dinosaurs existed",
+    "older than the first dinosaur" (user 2026-11-15: the word rule fires only when a group names a source)."""
+    j = i - 1
+    while j >= 0 and words[j] in FILLER - {'of'}:
+        j -= 1
+    if j >= 1 and words[j] == 'of' and words[j - 1] in TIME_WORDS:
+        return True
+    if j >= 0 and (words[j] in BEFORE_WORDS or (words[j] == 'than' and j >= 1 and words[j - 1] in BEFORE_WORDS)):
+        return True
+    return False
+
+
 def imprecise(text: str, allowed: set) -> list:
-    """The words of `text` naming a group of living things that is not in `allowed`, in order."""
+    """The words of `text` naming a group of living things that is not in `allowed`, in order (a group word that
+    only marks a time is not counted)."""
     out = []
-    for w in WORD.findall(str(text or '').lower()):
-        if w in GROUP_OF and GROUP_OF[w] not in allowed and w not in out:
+    words = WORD.findall(str(text or '').lower())
+    for i, w in enumerate(words):
+        if w in GROUP_OF and GROUP_OF[w] not in allowed and w not in out and not time_phrase(words, i):
             out.append(w)
     return out
 
@@ -114,6 +135,20 @@ def precision_why(words, allowed) -> str:
 
 
 # ------------------------------------------------------------------ the twist fact
+
+def quality(s) -> int:
+    """+2 a scientific source, 0 a general government or university page, -3 a page simplified for kids or students
+    (user 2026-11-15: prefer the specific scientific source when both exist)."""
+    from .script import QUALITY_SCORE, source_quality
+    return QUALITY_SCORE[source_quality(s.url)]
+
+
+def caution(s) -> str:
+    """The phrasing note for a fact that stands only on a simplified page ('' otherwise)."""
+    from .script import source_quality
+    return ('from a page simplified for students: say it with matching caution ("much of it", "most", "scientists '
+            'think"), never more certain or more exact than the page') if source_quality(s.url) == 'simplified' else ''
+
 
 def twist_fact(interp: dict, sources) -> str:
     """The id of the strongest fact for the twist, picked in code: among the facts the topic's claims were judged on
@@ -133,7 +168,9 @@ def twist_fact(interp: dict, sources) -> str:
         text = f'{s.claim} {s.quote}'
         return (2 * len(groups(text) - myth) + len(content_words(text) & ask) + (1 if s.quote else 0)
                 + (2 if s.id in ids else 0), -int(s.id[1:]) if s.id[1:].isdigit() else 0)
-    return max(sources, key=score).id
+    top = max(sources, key=score)
+    # a near-duplicate from a better source says the same thing: that one is told (a kids page only when it is alone)
+    return max([s for s in sources if s is top or _same(s, top)], key=lambda s: (quality(s), score(s))).id
 
 
 # ------------------------------------------------------------------ the plan
@@ -228,7 +265,9 @@ def assign_facts(roles, sources, twist, interp, storyline=None) -> dict:
 
     def best(score, pool=None):
         cands = [s for s in (pool if pool is not None else sources) if free(s) and len(_words(s) & topic) >= RELEVANT]
-        return max(cands, key=lambda s: (score(s), -int(s.id[1:]) if s.id[1:].isdigit() else 0), default=None)
+        # of two near-duplicates the scientific source is told, the simplified page only when it is alone
+        cands = [s for s in cands if not any(_same(s, o) and quality(o) > quality(s) for o in cands if o is not s)]
+        return max(cands, key=lambda s: (score(s), quality(s), -int(s.id[1:]) if s.id[1:].isdigit() else 0), default=None)
     rel = lambda s: len(_words(s) & topic)
     t = next((k for k, r in enumerate(roles) if r == 'twist'), -1)
     if twist in by and t >= 0:
@@ -282,7 +321,8 @@ def plan_user(episode, sources, roles: list, facts: dict, misconception: str) ->
             q = ' '.join(str(s.quote or '').split())
             g = gloss(f'{s.claim} {s.quote}')
             beats.append(f'b{k + 1:02d} {r} ({ROLE_GUIDE[r]}): FACT BEAT on {s.id}: {s.claim}'
-                         + (f'\n    quote: "{q[:240]}"' if q else '') + (f'\n    {g}' if g else ''))
+                         + (f'\n    quote: "{q[:240]}"' if q else '') + (f'\n    {g}' if g else '')
+                         + (f'\n    NOTE: {caution(s)}' if caution(s) else ''))
         else:
             beats.append(f'b{k + 1:02d} {r} ({ROLE_GUIDE[r]}): no fact; pick its kind')
     lines = [topic_text(episode), f'Length: {episode.target_length} s.', '',

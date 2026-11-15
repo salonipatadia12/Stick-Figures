@@ -169,26 +169,42 @@ confirms instead of rewrites.
    transition, reaction, callback, myth). Those beats state no fact and cite nothing. Each claim gets the word check
    in code, then the yes/no judge against its fact's quote. After two repairs, a claim that still fails becomes the
    fact's own line from research. The plan is in `meta.fact_plan` and on the episode page.
-3. **The outline** gets the plan, not the facts at large. Each beat's narration is written from its claim in story
-   voice, with the roles and cited facts fixed. Before any beat is staged, the outline goes back to the writer (up to
-   3 repairs) with two kinds of finding:
-   - a line the judge finds says more than its claim;
-   - a line in a no-fact beat that states a fact.
+3. **The outline** gets the plan, not the facts at large, and gives the pictures, the on-screen text and the hook
+   options. The narration itself is chosen by **best-of-N** (`pipeline/bestof.py`, user 2026-11-15):
+   - for each beat in order, one call writes 4 candidate lines in story voice from its claim and research (or its
+     no-fact kind);
+   - code drops a candidate whose claims fail the fact check, or that copies its research line, repeats another
+     line, breaks the word rule or has the wrong length;
+   - one more call ranks the survivors for vividness, rhythm and fit with the previous line.
 
-   That way the writer fixes its own lines and the final check confirms. A fact beat that still copies its fact or
-   claim word for word (the 9B writer copied through three repair rounds) gets one small "say it in your own spoken
-   words" call with three versions. A version is used only if it copies nothing, keeps the word rule and passes the
-   judge. The staging prompt tells each beat what its
-   labels may say; split labels are cut to 1-3 words in code.
+   The hook and the loop get 6 candidates each, filled from shapes in `data/hooks.json` (25 hook shapes, 12 loop
+   shapes, rotated per episode) and checked against the twist fact. A hook that argues against something nobody
+   claims ("Stop calling it dinosaur poop") is refused. The loop must repeat a word of the hook. A beat with no
+   survivor keeps its checked claim.
 4. **Word precision.** When a fact names a group (diatoms, plankton, marine, organisms), a line uses that group's own
    words or a direct plain-English equivalent ("plankton", "tiny sea plants and animals", "microscopic"). It never
    uses a broader or different category ("bacteria", "microbes", "bugs"). This is a fixed table, checked in code on
-   claims, narration and every on-screen text. The equivalents also go to the judge with the research.
+   claims, narration and every on-screen text. The equivalents also go to the judge with the research. A group word
+   that only marks a time ("the age of reptiles", "before dinosaurs existed") does not count.
+5. **Source quality.** `script.source_quality` labels a page scientific (journals, science agencies), general, or
+   simplified (pages for kids or students, course reports). Of two facts that say the same thing, the better
+   source is told. A fact only a simplified page states is still used, with a note to phrase it with caution ("much
+   of it", "most").
+6. **Research degrades, not fails.** Each query starts at a different keyless engine (DuckDuckGo, Google, Bing,
+   Yandex, Brave, Mojeek, Yahoo, Startpage). An engine that refuses goes to the back for five minutes, with backoff
+   and jitter between tries. A `site:` query is retried without the operator. When every engine refuses, the same
+   query from any episode of the last 30 days is used (the shared search cache). Wikipedia's API and OpenAlex's API
+   are looked up from the start: Wikipedia only to find a topic's reference links, never cited itself; OpenAlex
+   papers are cited by DOI. Both are keyless; OpenAlex shares a small free daily budget per IP address.
 
 ## Fact check before the script gate (user 2026-11-14)
 
 At the end of the script step on the Mac (`pipeline/entail.py`), every narrated sentence and every text on screen is
-checked against the facts its beat cites: word precision in code, then one short local-model call per line (cached).
+checked against the facts its beat cites. **Claims, not colour** (user 2026-11-15): one short call splits a sentence
+into its atomic claims (fact or belief) and lists any that make no sense ("dinosaurs were sea creatures"). Only the
+claims are checked, so metaphor and tone that assert nothing pass ("black liquid gold"). Word precision runs in code
+on the line's own words that it asserts, then the yes/no judge checks each fact claim against the research. A beat
+that cites nothing may hold no fact claim.
 
 * **A sentence of a beat that cites facts** must say only what they say; leaving a detail out is fine. One that fails:
   1. is kept and re-cited when another fact says it (the candidates are picked in code by their words);
@@ -222,7 +238,7 @@ back to the server.
 
 | check | fix |
 |---|---|
-| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again |
+| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again. The swapped line must pass the fact check and the word rule; slang ("rock goo") and split replacements ("make ... become") are refused, and then the whole line is written again by best-of-N without the word |
 | text | a label on the host: round 1 moves it (host to the other side and smaller, or an insert label away from the host), round 2 drops it; two texts on each other: only the less important one is dropped (a myth mark, then the beat's key term: its on-screen text or a label naming what the narration says) |
 | duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
 | story_match | a MYTH mark on a picture of the myth (a scene that may not show its beat is a warning to look at: a word test cannot judge a painting well enough to repaint it) |

@@ -45,7 +45,7 @@ MIN_PAGE_CHARS = 300
 MIN_FACTS = 4                  # fewer than this from web search: the open indexes are tried too
 PASSAGE_CHARS = 2400           # page text the fact reader sees (the best-matching paragraphs)
 FETCH_TIMEOUT_S, FETCH_MAX_BYTES = 10, 4_000_000
-USER_AGENT = 'StickFiguresResearch/0.2 (+https://github.com/salonipatadia12/Stick-Figures; research for explainer videos)'
+USER_AGENT = 'StickFiguresResearch/0.3 (research for short explainer videos)'   # generic: no personal details
 
 QUERY_SYSTEM = ('You write web search queries that find explanations of a topic on university, government and journal '
                 'pages. Each query is 3-7 plain words naming the mechanism, process or key term behind the topic. No '
@@ -79,28 +79,61 @@ def _ddgs():
     return DDGS
 
 
-def web_search(query: str, max_results: int = MAX_RESULTS_PER_QUERY) -> tuple[list, str]:
-    """(results [{title, href, body}], engine). DuckDuckGo first, then ddgs's other keyless engines."""
+REFUSED: dict = {}                 # engine -> time it last refused; tried last for COOLDOWN_S
+COOLDOWN_S = 300
+BACKOFF_S = (0.6, 1.2, 2.4, 4.0)   # waits between engines after a refusal, plus up to 0.5 s of jitter
+MAX_ENGINE_TRIES = 6
+
+
+def engine_order(query: str, pool=None) -> list:
+    """The engines for one query (user 2026-11-15: rotate across engines per query): each query starts at a different
+    engine of the pool, and an engine that refused in the last five minutes goes to the back."""
+    import zlib
+    pool = list(pool or config.search_backends())
+    if not pool:
+        return []
+    k = zlib.crc32(query.encode()) % len(pool)
+    order = pool[k:] + pool[:k]
+    now = time.time()
+    return [e for e in order if now - REFUSED.get(e, 0) > COOLDOWN_S] + \
+           [e for e in order if now - REFUSED.get(e, 0) <= COOLDOWN_S]
+
+
+def web_search(query: str, max_results: int = MAX_RESULTS_PER_QUERY, sleep=time.sleep) -> tuple[list, str]:
+    """(results [{title, href, body}], engine). The keyless engines in a per-query rotation, with backoff and jitter
+    between them after a refusal; a query with "site:" that the engines refuse is tried once more without it (most
+    engines refuse the operator; the reputable-source filter still applies)."""
+    import random
     DDGS = _ddgs()
-    for backend in config.search_backends():
-        try:
-            raw = DDGS(timeout=FETCH_TIMEOUT_S).text(query, max_results=max_results, backend=backend)
-        except TypeError:                                 # duckduckgo_search < 7 has no backend argument
+    tries = 0
+    for q in [query] + ([re.sub(r'\s*site:\S+(\s+OR\s+site:\S+)*', '', query).strip()] if 'site:' in query else []):
+        for backend in engine_order(q):
+            if tries >= MAX_ENGINE_TRIES:
+                return [], ''
+            if tries:
+                sleep(BACKOFF_S[min(tries - 1, len(BACKOFF_S) - 1)] + random.uniform(0, 0.5))
+            tries += 1
             try:
-                raw = list(DDGS().text(query, max_results=max_results))
-            except Exception:
+                raw = DDGS(timeout=FETCH_TIMEOUT_S).text(q, max_results=max_results, backend=backend)
+            except TypeError:                             # duckduckgo_search < 7 has no backend argument
+                try:
+                    raw = list(DDGS().text(q, max_results=max_results))
+                except Exception:
+                    raw = []
+            except Exception:                             # rate limit, bot check, network: the next engine
                 raw = []
-        except Exception:                                 # rate limit, bot check, network: try the next engine
-            raw = []
-        results = [dict(title=r.get('title', ''), href=r.get('href') or r.get('url', ''), body=r.get('body', ''))
-                   for r in raw or [] if (r.get('href') or r.get('url', '')).startswith(('http://', 'https://'))]
-        if results:
-            return results, backend
+            results = [dict(title=r.get('title', ''), href=r.get('href') or r.get('url', ''), body=r.get('body', ''))
+                       for r in raw or [] if (r.get('href') or r.get('url', '')).startswith(('http://', 'https://'))]
+            if results:
+                REFUSED.pop(backend, None)
+                return results, backend
+            REFUSED[backend] = time.time()
     return [], ''
 
 
 def cached_search(query: str, cache=None, fresh: bool = False, max_results: int = MAX_RESULTS_PER_QUERY):
-    """(results, engine, from_cache)."""
+    """(results, engine, from_cache). When every engine refuses, the same query from any earlier episode (the shared
+    search cache, kept 30 days) is used: research degrades instead of failing."""
     if cache is not None and not fresh:
         hit = cache.get_search(query)
         if hit is not None:
@@ -108,6 +141,10 @@ def cached_search(query: str, cache=None, fresh: bool = False, max_results: int 
     results, engine = web_search(query, max_results)
     if cache is not None:
         cache.put_search(query, results, engine)
+        if not results and hasattr(cache, 'get_shared_search'):
+            old = cache.get_shared_search(query)
+            if old:
+                return old, 'shared cache', True
     return results, engine, False
 
 
@@ -355,6 +392,21 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
             submit_search(qi, q)
         pending[model.submit(generated_queries, topic, niche, cache, ledger, fresh)] = ('queries', None, None)
 
+        def open_lookup(q):
+            qkey = f'open-index: {q}'
+            hit = None if (fresh or cache is None) else cache.get_search(qkey)
+            if hit is None:
+                hit = open_index_search(q)
+                if cache is not None:
+                    cache.put_search(qkey, hit, 'open_index')
+            return hit
+
+        # user 2026-11-15: the keyless APIs (Wikipedia's references, OpenAlex) are a first-line source, not only the
+        # fallback: they do not block a machine that has searched a lot
+        first = [topic.rstrip('?')] + find[:2]
+        for k, q in enumerate(first):
+            pending[net.submit(open_lookup, q)] = ('open', 1000 + k, q)
+
         def take(qi, results, per_query=PAGES_PER_QUERY):
             n = 0
             for rank, r in enumerate(results):
@@ -391,6 +443,12 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
                     results_by_q[qi] = results
                     mark('search_s')
                     take(qi, results)
+                elif kind == 'open':
+                    hit = fut.result()
+                    if hit:
+                        engines[f'open-index: {arg}'] = 'open_index'
+                    results_by_q[qi] = hit
+                    take(qi, hit, OPEN_INDEX_PAGES_PER_QUERY)
                 elif kind == 'fetch':
                     text, title = fut.result()
                     fetched[arg] = (text, title or page_meta.get(arg, {}).get('title', ''))
@@ -406,16 +464,12 @@ def research_topic(topic: str, niche: str = '', audience: str = '', cache=None, 
                     or sum(len(v) for v in extracted.values()) < MIN_FACTS):
                 tried_open = True
                 # the search engines refused, or found too few reputable pages or facts: try the open indexes once
-                notes.append('search: too few reputable pages or facts from web search; also trying open indexes '
-                             '(Wikipedia references, OpenAlex)')
+                notes.append('search: too few reputable pages or facts; also trying the open indexes (Wikipedia '
+                             'references, OpenAlex) with the generated queries')
                 base_qi = len(queries)
-                for k, q in enumerate([topic.rstrip('?')] + queries[len(QUERY_TEMPLATES) + len(find):]):
+                for k, q in enumerate(queries[len(QUERY_TEMPLATES) + len(find):]):   # the topic itself went first
                     qkey = f'open-index: {q}'
-                    hit = None if (fresh or cache is None) else cache.get_search(qkey)
-                    if hit is None:
-                        hit = open_index_search(q)
-                        if cache is not None:
-                            cache.put_search(qkey, hit, 'open_index')
+                    hit = open_lookup(q)
                     if hit:
                         engines[qkey] = 'open_index'
                     results_by_q[base_qi + k] = hit

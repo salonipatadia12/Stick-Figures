@@ -472,6 +472,11 @@ def _swap_in(text: str, word: str, new: str) -> str:
     return re.sub(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", sub, text, flags=re.I)
 
 
+SLANG = set('goo gunk gloop glop muck stuff junk thingy thing poop dino dinos yucky gross ick icky gooey sludge '
+            'whatchamacallit doohickey critters'.split())
+REWRITTEN = '(the line said again)'
+
+
 def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=None) -> str:
     """A word Whisper still did not hear after a slower take: the local model picks a plainer synonym that keeps the
     meaning; the narration (so the captions too, which follow it), the on-screen text, labels and anchors that use the
@@ -492,20 +497,26 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=Non
     line = ' '.join(str(answer.get('line') or '').split()).strip('"\' ')
     if line and not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new or '-'):
         new = added(b.narration, line)                # 2026-11-14: "make ... become" for a good line: the new words
-    if (not new or len(new.split()) > 3 or not re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new)
-            or new.lower() == word.lower() or new.lower()[:5] == word.lower()[:5]):
-        return ''
-    if not line:                                      # no line given: the word alone is swapped
+    judge = write if check is None else check
+    clean = (new and len(new.split()) <= 3 and re.fullmatch(r"[A-Za-z][A-Za-z' -]*", new)
+             and new.lower() != word.lower() and new.lower()[:5] != word.lower()[:5]
+             and not set(new.lower().split()) & SLANG)    # 2026-11-15: "rock goo" for "kerogen"
+    if clean and not line:                            # no line given: the word alone is swapped
         line = _swap_in(b.narration, word, new)
-    if not swapped_line(b.narration, word, line, new):
-        return ''
-    if b.source_ids:                                  # 2026-11-15: "kerogen" became "rock goo": the new line is checked
-        from . import entail                          # against the beat's facts like any narration
-        judge = write if check is None else check
-        ok, _ = entail.verdict(line, entail.research_text(b.source_ids, episode.sources),
-                               entail.allowed_groups(episode, b.source_ids), judge)
-        if ok is False:
+    if clean and (not swapped_line(b.narration, word, line, new) or new.lower() not in line.lower()):
+        clean = False                                 # a split replacement ("make ... become") is no clean swap
+    if clean:
+        from . import entail                          # the new line passes the same checks as any narration
+        ids = list(b.source_ids)
+        ok, _ = entail.verdict(line, entail.research_text(ids, episode.sources), entail.allowed_groups(episode, ids),
+                               judge, entail.CHECK_SYSTEM if ids else entail.NONFACT_SYSTEM)
+        clean = ok is not False
+    if not clean:                                     # no clean swap: the whole line again, through best-of-N
+        from . import bestof
+        line = bestof.rewrite_beat(episode, beat_id, avoid=[word], ask=judge)
+        if not line:
             return ''
+        new = REWRITTEN
     if line[-1] not in '.!?' and b.narration.rstrip()[-1:] in '.!?':
         line += b.narration.rstrip()[-1]
     was = episode.is_approved('script')               # before the narration changes
@@ -524,6 +535,9 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=Non
     if sh.split:
         sh.split.labels = [_swap_in(x, word, new) for x in sh.split.labels]
         sh.split.anchors = [_swap_in(x, word, new) for x in sh.split.anchors]
+    if new == REWRITTEN:                              # words the rewritten line no longer says: re-anchored
+        from . import auto
+        auto.fix_script(episode)
     if was:
         episode.approvals['script'] = episode.script_digest()
         episode.meta.setdefault('approval_log', []).append(dict(
@@ -578,7 +592,10 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             merge(repairs, a['beat'], dict(swapped={**(repairs.get('beats', {}).get(a['beat'], {}).get('swapped') or {}),
                                                     word.lower(): now}))
-            entry['fix'] = f'said "{now}" instead of "{word}" and voiced {a["beat"]} again (captions follow)'
+            entry['fix'] = (f'no clean plainer word for "{word}": the line was written again by best-of-N '
+                            f'("{episode.beats[[x.id for x in episode.beats].index(a["beat"])].narration}") and '
+                            f'{a["beat"]} voiced again (captions follow)' if now == REWRITTEN else
+                            f'said "{now}" instead of "{word}" and voiced {a["beat"]} again (captions follow)')
         else:
             merge(repairs, a['beat'], a['hint'])
         repairs.setdefault('log', []).append(entry)

@@ -97,6 +97,13 @@ class ResearchTopic(unittest.TestCase):
         self.addCleanup(self.dir.cleanup)
         self.root = Path(self.dir.name)
         FakeDDGS.calls, FakeDDGS.fail_backends = [], set()
+        search.REFUSED.clear()                       # module state: engines that refused in an earlier test
+        p = mock.patch.object(search, 'BACKOFF_S', (0.0,))
+        p.start()
+        self.addCleanup(p.stop)
+        p = mock.patch('random.uniform', lambda a, b: 0.0)
+        p.start()
+        self.addCleanup(p.stop)
         self.http = FakeHTTP()
         self.fake = FakeOllama(model)
         for p in (mock.patch.dict(os.environ, {'SCRIPT_PROVIDER': 'ollama', 'SEARCH_BACKENDS': 'duckduckgo,auto'}),
@@ -127,7 +134,7 @@ class ResearchTopic(unittest.TestCase):
         entries = {(e['step'], e['provider']) for e in ledger.entries}
         self.assertEqual(entries, {('research', 'ollama'), ('research', 'duckduckgo')})
         self.assertEqual(ledger.spent(), 0)
-        self.assertEqual(timings['engines'], ['duckduckgo'])
+        self.assertLessEqual(set(timings['engines']), {'duckduckgo', 'auto'})      # rotated per query
 
     def test_order_is_stable_and_a_rerun_is_all_cache(self):
         first, *_ = self.run_research()
@@ -150,7 +157,7 @@ class ResearchTopic(unittest.TestCase):
         facts, _, _, timings = self.run_research()
         self.assertEqual(len(facts), 2)
         self.assertEqual(timings['engines'], ['auto'])
-        self.assertIn(('Why sunsets are red scientific explanation', 'duckduckgo'), FakeDDGS.calls)
+        self.assertTrue(any(b == 'duckduckgo' for _, b in FakeDDGS.calls))          # tried, refused, cooled down
 
     def test_open_indexes_when_web_search_finds_nothing(self):
         FakeDDGS.fail_backends = {'duckduckgo', 'auto'}
@@ -163,6 +170,31 @@ class ResearchTopic(unittest.TestCase):
             facts, _, _, timings = self.run_research()
         self.assertIn('open_index', timings['engines'])
         self.assertEqual({f.url for f in facts}, {'https://www.noaa.gov/sunset', 'https://doi.org/10.1/abc'})
+
+    def test_engines_rotate_per_query_with_backoff_and_site_retried_without_it(self):
+        waits = []
+        pool = ['duckduckgo', 'google', 'bing']
+        with mock.patch.dict(os.environ, {'SEARCH_BACKENDS': ','.join(pool)}):
+            starts = {search.engine_order(q)[0] for q in ('a b', 'c d', 'e f', 'g h', 'i j', 'k l')}
+            self.assertGreater(len(starts), 1)                                     # not every query starts at one engine
+            FakeDDGS.fail_backends = {'duckduckgo', 'google', 'bing'}
+            self.assertEqual(search.web_search('anything site:edu', sleep=waits.append), ([], ''))
+            self.assertEqual(len(waits), search.MAX_ENGINE_TRIES - 1)             # a wait between every two tries
+            self.assertIn(('anything', 'duckduckgo'), FakeDDGS.calls)              # "site:" dropped on the retry
+            self.assertEqual(search.engine_order('x')[-1:] != [], True)
+
+    def test_refused_searches_fall_back_to_the_shared_search_cache(self):
+        self.run_research('ep-one')
+        FakeDDGS.fail_backends = {'duckduckgo', 'auto'}
+        search.REFUSED.clear()
+        facts, cache, _, timings = self.run_research('ep-two')                      # every engine refuses now
+        self.assertEqual(len(facts), 2)
+
+    def test_open_indexes_are_a_first_line_source(self):
+        asked = []
+        with mock.patch.object(search, 'open_index_search', lambda q, n=8: asked.append(q) or []):
+            self.run_research()
+        self.assertIn('Why sunsets are red', asked)                                # looked up from the start
 
     def test_parallel_search_merges_and_deduplicates(self):
         merged = search.parallel_search(['scientific explanation', 'site:edu', 'scientific explanation again'])
