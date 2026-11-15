@@ -78,6 +78,26 @@ def fix_script(episode) -> list:
       beat's last word of four or more letters."""
     from .models import ANCHORED_RECIPES, EffectCue, InsertCue
     notes = []
+    # a generic base (living room, kitchen ...) in a video set mostly in one real place: that place as a painted scene
+    # with the host in it (2026-11-15 bench: the yawn loop's "living-room" base stopped Auto at the gate)
+    others = [x.shot.staging.setting_detail for x in episode.beats
+              if x.shot.staging and x.shot.staging.setting == 'other' and x.shot.staging.setting_detail]
+    if episode.host_format and len(others) > len(episode.beats) / 2:
+        from collections import Counter
+        place = Counter(others).most_common(1)[0][0]
+        for b in episode.beats:
+            sh = b.shot
+            if sh.visual == 'character' and sh.staging and sh.staging.setting != 'other':
+                was = sh.staging.setting
+                sh.visual = 'insert'
+                sh.insert = InsertCue(key=_kebab(f'{place} empty'), effects=[],
+                                      scene=f'{place}, seen as a place with room for a person to stand, no people, '
+                                            'warm natural light')
+                sh.staging.setting, sh.staging.setting_detail = 'other', place
+                if sh.host:
+                    sh.host.where = 'scene'
+                notes.append(f'{b.id}: a generic "{was}" base in a video set in "{place}"; shown as a painted scene of '
+                             'that place with the host in it')
     for b in episode.beats:
         sh = b.shot
         if sh.visual == 'insert' and sh.insert is not None and not re.fullmatch(r'[a-z0-9]+(-[a-z0-9]+)*', sh.insert.key or ''):

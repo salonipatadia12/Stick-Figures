@@ -324,6 +324,27 @@ class CrudeOilFive(unittest.TestCase):
         self.assertEqual(repair.lengthen(ep.slug, ep, 2.5, 4.0, write=never), [])
 
 
+class GenericBase(unittest.TestCase):
+    def test_a_generic_base_in_a_video_set_in_one_place_becomes_that_place(self):
+        # 2026-11-15 bench (yawn, 9B): the loop's "living-room" base stopped Auto at the script gate
+        from pipeline import auto, styles
+        ep = host_episode()
+        for b in ep.beats:
+            b.shot.staging.setting_detail = 'a sunny park'
+        target = ep.beats[-1]
+        target.shot.visual, target.shot.insert = 'character', None
+        target.shot.staging.setting, target.shot.staging.setting_detail = 'living-room', ''
+        target.shot.host.where = 'base'
+        st = styles.load(ep.style)
+        generic = lambda: [i for i in ep.check(st.cast_ids, st.words_per_second) if 'generic' in i.message]
+        self.assertTrue(generic())                                    # the gate's own error, before
+        notes = auto.fix_script(ep)
+        self.assertEqual(generic(), [])
+        self.assertEqual(target.shot.visual, 'insert')
+        self.assertEqual(target.shot.staging.setting_detail, 'a sunny park')
+        self.assertTrue(any('generic "living-room"' in n for n in notes))
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):
