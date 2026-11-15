@@ -102,7 +102,10 @@ stored as `episodes.auto`). With it on, the topic goes to a finished MP4 with no
 `by='auto (web)'`:
 - storyline: the first storyline the gate accepts (the rotation rule still applies);
 - script: approved only if every check passes, trying the hooks in order; a beat whose base is not in the library
-  becomes a painted scene of the same place (the paint step makes it);
+  becomes a painted scene of the same place (the paint step makes it). Before judging, auto fixes the local
+  writer's mechanical slips (`auto.fix_script`): anchors the narration does not say, a split with no top scene, a
+  picture with no kebab-case key (named from its scene or place), and a generic base (a living room) in a video set
+  mostly in one real place (shown as that place, painted, with the host in it);
 - scenes: accepted as painted.
 
 When a rule cannot decide (a script that fails its checks, a scene that failed QA, every storyline refused) the episode
