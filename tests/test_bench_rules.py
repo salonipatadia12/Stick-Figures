@@ -494,6 +494,31 @@ class MythNamesItsSubject(unittest.TestCase):
         self.assertTrue(bestof.names_myth('Anything at all.', {}))
 
 
+class RewriteKeepsTheAnswer(unittest.TestCase):
+    def test_a_self_repair_rewrite_of_the_payoff_still_answers_the_hook(self):
+        # 2026-11-15 crude oil -6: "turned" unheard -> the payoff rewritten -> "the hook is not answered in the payoff"
+        from pipeline import bestof
+        ep = plan_episode()
+        ep.sources = list(OIL)
+        ep.meta['fact_plan'] = dict(twist='s7', beats=[
+            dict(role='hook', kind='question', fact_ids=[], claim=''),
+            dict(role='twist', kind='fact', fact_ids=['s7'], claim='Oil came from tiny sea plants and animals.'),
+            dict(role='payoff', kind='fact', fact_ids=['s8'], claim='Heat and pressure turned the remains into oil.'),
+            dict(role='loop', kind='callback', fact_ids=[], claim='')])
+        from pipeline.models import Beat
+        ep.beats = [b for b in __import__('test_fact_check').host_episode().beats[:4]]
+        for b, n, ids in zip(ep.beats, ['What is in your tank?', 'Tiny sea plants and animals made the oil.',
+                                        'Heat and pressure turned the remains into oil.', 'Now you know.'],
+                             [[], ['s7'], ['s8'], []]):
+            b.narration, b.source_ids = n, ids
+        ep.beats[0].role, ep.beats[1].role, ep.beats[2].role, ep.beats[3].role = 'hook', 'twist', 'payoff', 'loop'
+        t = type('T', (), {})()
+        ask = BestOfN.ask(t, ['Heat and pressure changed old remains into oil.',
+                              'Heat and pressure cooked tiny sea plants and animals into oil.'])
+        line = bestof.rewrite_beat(ep, ep.beats[2].id, avoid=['turned'], ask=ask)
+        self.assertEqual(line, 'Heat and pressure cooked tiny sea plants and animals into oil.')
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):

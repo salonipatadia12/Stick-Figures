@@ -483,6 +483,17 @@ def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
                 for b in episode.beats]
     plan = [dict(p, fact_ids=list(b.source_ids) if p.get('kind') == 'fact' else p.get('fact_ids', []))
             for p, b in zip(plan, episode.beats)]
+    # the payoff still answers the hook (2026-11-15 crude oil -6: the self-repair rewrote it for an unheard "turned" and
+    # the hook was no longer answered)
+    twist_claim = next((p.get('claim') for p in plan if p.get('role') == 'twist' and p.get('claim')), '')
+    pick = (episode.hook_pick or 1) - 1
+    answer = twist_claim or (episode.hook_options[pick].answer if 0 <= pick < len(episode.hook_options) else '')
+    promise = ' '.join(x for x in [answer, episode.storyline.payoff if episode.storyline else ''] if x)
+    if plan[k].get('role') == 'payoff' and promise:
+        twist = ((episode.meta or {}).get('fact_plan') or {}).get('twist') or \
+            (((episode.meta or {}).get('interpretation') or {}).get('twist') or {}).get('id')
+        plan[k] = dict(plan[k], answer_to=promise,
+                       fact_ids=list(dict.fromkeys(list(plan[k]['fact_ids']) + ([twist] if twist else []))))
     nb = plan[k + 1] if k + 1 < len(plan) else None
     nxt = episode.beats[k + 1].narration if nb else ''
     e = write_beat(episode, episode.sources, plan, k, [b.narration for b in episode.beats[:k]], nxt,
