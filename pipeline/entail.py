@@ -359,7 +359,9 @@ def text_rewrites(text: str, research: str, narration: str, max_words: int, ask,
     out = []
     for x in (a.get('sentences') if isinstance(a.get('sentences'), list) else [])[:2]:
         new = ' '.join(str(x or '').split()).strip('"\' .')
-        if not new or len(new.split()) > max_words or new.casefold() == text.casefold() or imprecise(new, allowed):
+        from .bestof import SLANG
+        if not new or len(new.split()) > max_words or new.casefold() == text.casefold() or imprecise(new, allowed) \
+                or set(re.findall(r"[a-z']+", new.lower())) & SLANG:
             continue
         if set(NUMBER.findall(new)) - set(NUMBER.findall(research + ' ' + narration)):
             continue
@@ -404,8 +406,12 @@ def check_texts(b, episode, ask, out):
         out['text_checked'] += 1
         said = b.narration + ('' if field == 'on-screen text' else ' ' + b.on_screen_text)   # the gate's own rule
         stray = {n.strip('.,') for n in NUMBER.findall(text)} - {n.strip('.,') for n in NUMBER.findall(said)}
+        from .bestof import SLANG
+        slang = set(re.findall(r"[a-z']+", text.lower())) & SLANG
         if stray:                                     # 2026-11-15: "DINOSAURS (65 MYA)" on a beat that says no number
             ok, why = False, f'a number the beat never says ({", ".join(sorted(stray))})'
+        elif slang:                                   # 2026-11-15: "MYTH: Dinosaur Poop" on the hook
+            ok, why = False, f'slang ({", ".join(sorted(slang))})'
         elif marks_myth(text, episode):
             continue                                  # "MYTH", "Myth: Dinosaurs": marks the myth, states no fact
         elif echoes(text, b.narration, allowed):

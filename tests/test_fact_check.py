@@ -551,6 +551,12 @@ class UncitedAndTexts(unittest.TestCase):
         self.assertEqual((c['was'], c['action']), ('Fact: Microbes', 'text rewritten'))
         self.assertIn("'microbes'", c['why'])
 
+    def test_slang_on_screen_is_rewritten(self):
+        ep = episode_with({})
+        ep.beats[0].on_screen_text = 'MYTH: Black Goo'
+        entail.check(ep, ask=Judge(rewrites=['MYTH: Black Oil']))
+        self.assertEqual(ep.beats[0].on_screen_text, 'MYTH: Black Oil')
+
     def test_a_number_the_beat_never_says_is_taken_off_the_screen(self):
         from pipeline.models import GraphicCue
         ep = episode_with({})
