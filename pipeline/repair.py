@@ -386,8 +386,12 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     """Add one short sentence to the 1-2 thinnest middle beats, from the facts they cite, and re-stamp the script
     approval as the self-repair. `write(system, user, schema)` -> dict (the local model; a stand-in in tests).
     Returns [(beat id, sentence)] actually added."""
-    from . import llm, store
-    middle = [b for b in episode.beats[1:-1] if b.role not in ('hook', 'payoff', 'loop')] or episode.beats[1:-1]
+    from . import grounding, llm, store
+    # only beats that cite facts, each sentence checked against them (2026-11-15 crude oil -5: a question beat "Is that
+    # actually right?" got the answer added, and a transition before the twist got the twist)
+    middle = [b for b in episode.beats[1:-1] if b.role not in ('hook', 'loop') and b.source_ids]
+    if not middle:
+        return []
     need_words = max(4, math.ceil(seconds_short * words_per_second) + 2)
     count = 1 if need_words <= 10 else 2
     thin = sorted(middle, key=lambda b: (len(b.narration.split()), b.id))[:count]
@@ -395,7 +399,7 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
     facts = {s.id: s.claim for s in episode.sources}
     rows = []
     for b in thin:
-        cited = [f'{i}: {facts[i]}' for i in b.source_ids if i in facts] or [f'{i}: {c}' for i, c in list(facts.items())[:4]]
+        cited = [f'{i}: {facts[i]}' for i in b.source_ids if i in facts]
         rows.append(dict(id=b.id, narration=b.narration, facts=cited))
     system = ('You lengthen a narrated explainer by a few seconds. For each beat, write ONE short extra sentence that '
               'follows its narration naturally. Use only what the listed facts say: no new facts, no new numbers, no names '
@@ -423,7 +427,13 @@ def lengthen(slug: str, episode, words_per_second: float, seconds_short: float, 
         if sentence[-1] not in '.!?':
             sentence += '.'
         research = entail.research_text(b.source_ids, episode.sources)
-        if ask is not None and research and entail.supported(sentence, research, ask)[0] is False:
+        if not research or grounding.narrowed(sentence, research):
+            continue                                # no fact to say it from, or a range made narrower
+        others = [x.narration for x in episode.beats if x.id != b.id]
+        if entail.repeats(sentence, others) or grounding.repeated_claim(
+                [sentence], [('other', entail.sentences(o)) for o in others], grounding.topic_words(episode)):
+            continue                                # another beat says it already
+        if ask is not None and entail.supported(sentence, research, ask)[0] is False:
             continue                                # says more than the cited fact: not added
         b.narration = f'{b.narration.rstrip()} {sentence}'
         added.append((b.id, sentence))

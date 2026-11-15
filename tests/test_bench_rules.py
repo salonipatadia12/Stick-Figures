@@ -269,6 +269,28 @@ class BenchRunTwo(unittest.TestCase):
         self.assertTrue(any('no kebab-case key' in n for n in notes))
 
 
+class CrudeOilFive(unittest.TestCase):
+    """2026-11-15 crude oil -5: the script came out at 34 s (short no-fact lines); the duration self-repair padded a
+    question beat with its answer and a transition with the twist."""
+
+    def test_fact_beats_take_the_words_no_fact_beats_leave(self):
+        from pipeline import bestof
+        pbs = [dict(kind=k) for k in ('question', 'myth', 'transition', 'fact', 'reaction', 'fact', 'fact', 'callback')]
+        fixed = bestof.per_beat_words(112, len(pbs))
+        chosen = ['What really makes oil?', 'Many think oil comes from dinosaurs.', 'Is that right?']
+        lo, hi = bestof.budget(112, pbs, 3, chosen, fixed)
+        self.assertGreater(lo, fixed[0])                              # the words the short lines left go to the facts
+        self.assertLessEqual(hi, bestof.MAX_BEAT_WORDS)
+        self.assertEqual(bestof.budget(112, pbs, 2, chosen[:2], fixed), fixed)   # a no-fact beat keeps its range
+
+    def test_lengthen_never_pads_a_beat_that_cites_nothing(self):
+        ep = host_episode()
+        for b in ep.beats:
+            b.source_ids = []
+        never = lambda *a: self.fail('no beat cites a fact: nothing to lengthen from')
+        self.assertEqual(repair.lengthen(ep.slug, ep, 2.5, 4.0, write=never), [])
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):

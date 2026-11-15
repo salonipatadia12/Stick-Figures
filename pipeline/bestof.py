@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v6'   # v6: no two lines open with the same three words   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v7'   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
 # v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
@@ -365,6 +365,24 @@ def answers(line: str, promise: str) -> bool:
     return len(_keywords(promise) & _keywords(line)) >= 2
 
 
+NO_FACT_WORDS, HOOK_WORDS, LOOP_WORDS, MAX_BEAT_WORDS = 5, 6, 8, 26
+
+
+def budget(words_total, pbs, k, chosen, fixed) -> tuple:
+    """The word range of beat k so the whole script meets its length (2026-11-15 crude oil -5: short no-fact lines made
+    a 34 s video and the duration self-repair padded them): the words left after the lines chosen so far, minus about 5
+    for each no-fact beat still to come (and the loop), shared by the fact beats left. A no-fact beat keeps the fixed
+    range."""
+    if pbs[k]['kind'] != 'fact' or k == 0 or k == len(pbs) - 1:
+        return fixed
+    rest = pbs[k:]
+    facts = sum(1 for p in rest[:-1] if p['kind'] == 'fact')
+    other = sum(NO_FACT_WORDS for p in rest[:-1] if p['kind'] != 'fact') + LOOP_WORDS
+    left = words_total - sum(len(x.split()) for x in chosen) - other
+    mid = max(fixed[0] + 5, min(MAX_BEAT_WORDS - 4, round(left / max(1, facts))))
+    return max(4, mid - 5), mid + 4
+
+
 def per_beat_words(ctx_words: int, n_beats: int) -> tuple[int, int]:
     """The word range of a middle beat so the video meets its length: what is left after the hook and the loop,
     shared by the middle beats: from 5 under (a short punchy line is welcome) to 4 over."""
@@ -399,6 +417,7 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -
     words = per_beat_words(words_total, len(pbs))
     chosen = []
     for k, ob in enumerate(beats[:len(pbs)]):
+        words = budget(words_total, pbs, k, chosen, words)
         nb = pbs[k + 1] if k + 1 < len(pbs) else None
         nxt = (f'{nb["role"]}: {nb["claim"]}' if nb and nb.get('claim') else f'{nb["role"]} ({nb["kind"]})') if nb else ''
         e = write_beat(episode, facts, pbs, k, chosen, nxt, words, ask, log=log, write=write)
