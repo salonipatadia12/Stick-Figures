@@ -142,6 +142,19 @@ ASSERTS_SCHEMA = dict(type='object', required=['says_it_is_true', 'why'], proper
     says_it_is_true=dict(type='boolean'), why=dict(type='string')))
 
 
+def names_myth(line: str, interp: dict) -> bool:
+    """True when a myth line names what the misconception is about (its subjects, else its own words), first five
+    letters compared ("dinosaur bones" for "oil comes from dinosaurs"); True when the topic has no misconception."""
+    from .qa import content_words
+    misc = (interp or {}).get('misconception', '')
+    subjects = list((interp or {}).get('myth_subjects') or [])
+    if not misc and not subjects:
+        return True
+    topic = {w[:5] for w in content_words(f'{interp.get("question", "")} {interp.get("topic", "")}')}
+    want = {w[:5] for w in content_words(' '.join(subjects) or misc)} - topic
+    return not want or bool({w[:5] for w in content_words(line)} & want)
+
+
 def opener(line: str) -> str:
     """A line's first three words, lowercased ('' for a shorter line): two lines may not open the same way."""
     w = re.findall(r"[a-z']+", (line or '').lower())
@@ -323,6 +336,8 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = 'does not repeat a word of the hook'
         elif kind in ('hook', 'loop') and asserts_myth(c, interp, ask):
             why_not[c] = f'says the myth as a fact ({asserts_myth(c, interp, ask)}); ask, doubt or report it instead'
+        elif pb['kind'] == 'myth' and not names_myth(c, interp):   # 2026-11-15 crude oil -6: "People believe it's
+            why_not[c] = 'does not name what the myth is about'          # ancient sea creature remains" (the truth)
         elif pb['kind'] == 'myth' and not real_belief(c, interp, ask)[0]:
             why_not[c] = f'not the belief people hold ({real_belief(c, interp, ask)[1]})'
         else:

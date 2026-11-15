@@ -484,6 +484,16 @@ class DeeperResearch(unittest.TestCase):
         self.assertEqual(search.FACTS_PER_PAGE, 3)
 
 
+class MythNamesItsSubject(unittest.TestCase):
+    def test_a_myth_line_names_what_the_misconception_is_about(self):
+        # 2026-11-15 crude oil -6: the myth beat said the truth ("ancient sea creature remains")
+        from pipeline import bestof
+        interp = plan_episode().meta['interpretation']
+        self.assertFalse(bestof.names_myth("People believe it's ancient sea creature remains.", interp))
+        self.assertTrue(bestof.names_myth('Many think oil comes from dinosaur bones.', interp))
+        self.assertTrue(bestof.names_myth('Anything at all.', {}))
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):
