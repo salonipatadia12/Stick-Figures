@@ -22,11 +22,16 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v10'   # v10: the hook from the most surprising fact, no answer word, points to its subject   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v11'
+# v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
 # v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
 # repeats too, no markdown in a line, no "{hook} Now you know." loop
+# v6: no two lines open with the same three words; v7: a running word budget for the fact beats
+# v10: the hook from the most surprising fact, no answer word, points to its subject
+# v11: no topic words in the writer's examples ("black liquid gold" reached the yawn payoff); a myth beat falls back
+# to the misconception
 DOUBT = re.compile(r"\?|\b(think|thinks|thought|believe|believes|believed|told|say|says|said|claim|claims|myth|"
                    r"really|actually|not|isn't|wasn't|aren't|weren't|never|no|wrong|maybe|just)\b", re.I)
 PLAIN = ('Here is the surprise.', 'But there is a catch.', 'So what really happened?', 'Now it gets strange.',
@@ -37,10 +42,9 @@ N_BEAT, N_HOOK = 4, 6
 HOOK_MAX_WORDS = 8
 
 WRITE_SYSTEM = """You write ONE beat of a narrated 45-second science Short in the host's story voice: talking to a
-friend, vivid, with rhythm when read aloud, a little dramatic, contractions welcome. Colour is welcome ("black liquid
-gold", "millions of years in the dark"), but every claim about the world must be one the beat's research makes, and
-every group of living things keeps the research's words or a plain equivalent. Never mix up categories (dinosaurs
-were land animals, not sea creatures). Do not copy the research sentence. Give the number of different versions
+friend, vivid, with rhythm when read aloud, a little dramatic, contractions welcome. Colour is welcome ("a slow-motion
+avalanche", "a thousand tiny engines"), but every claim about the world must be one the beat's research makes, and
+every group of living things keeps the research's words or a plain equivalent. Never mix up categories (whales are mammals, not fish). Do not copy the research sentence. Give the number of different versions
 asked for, each in the length asked for."""
 
 RANK_SYSTEM = """You pick the best line for one beat of a narrated science Short: the most vivid, the best rhythm read
@@ -376,6 +380,9 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
         if fallback and pb.get('answer_to') and not answers(fallback, pb['answer_to']) and twist_claim:
             fallback = f'{twist_claim} {fallback}'        # the gate needs the payoff to answer the hook
         fallback = fallback or {'hook': 'What is really going on here?', 'loop': 'Now you know.'}.get(kind, '')
+        misc = ' '.join(str(interp.get('misconception') or '').split()).rstrip('.!?')
+        if not fallback and pb['kind'] == 'myth' and misc:     # 2026-11-15 bench: the yawn myth beat became
+            fallback = f'Many think {misc[0].lower() + misc[1:] if misc[1:2].islower() else misc}.'   # "Here is the surprise." 
         plain = next((x for x in PLAIN if x not in chosen and not entail.repeats(x, chosen)), PLAIN[0])
         entry.update(line=fallback or plain,
                      why='no candidate passed: ' + ('the planned claim' if pb.get('claim') else 'a plain line'))

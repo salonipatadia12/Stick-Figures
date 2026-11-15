@@ -519,6 +519,23 @@ class RewriteKeepsTheAnswer(unittest.TestCase):
         self.assertEqual(line, 'Heat and pressure cooked tiny sea plants and animals into oil.')
 
 
+class MythFallbackAndExamples(unittest.TestCase):
+    def test_a_myth_beat_with_no_survivor_says_the_misconception(self):
+        # 2026-11-15 deep bench: the yawn setup fell back to "Here is the surprise."
+        from pipeline import bestof
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='setup', kind='myth', fact_ids=[], claim=''), dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        t = type('T', (), {})()
+        e = bestof.write_beat(plan_episode(), OIL, plan, 1, ['Hook?'], 'loop', (5, 12), BestOfN.ask(t, []))
+        self.assertEqual(e['line'], 'Many think oil comes from dinosaurs.')
+
+    def test_the_writer_prompt_names_no_benchmark_topic(self):
+        # "That black liquid gold of a sigh" in the yawn payoff came from the writer's own example
+        from pipeline import bestof
+        for word in ('oil', 'gold', 'dinosaur', 'yawn', 'sky', 'rome', 'roman', 'interest'):
+            self.assertNotRegex(bestof.WRITE_SYSTEM.lower(), rf'\b{word}')
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):
