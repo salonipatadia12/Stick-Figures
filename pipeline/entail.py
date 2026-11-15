@@ -277,7 +277,11 @@ def rewrites(sentence: str, research: str, before: str, after: str, ask, why: st
             continue                                  # "bacteria" for plankton again
         if repeats(new, said) or new in out:
             continue                                  # another beat says it already
-        out.append(new if new[-1] in '.!?' else new + '.')
+        new = new if new[-1] in '.!?' else new + '.'
+        from .bestof import UNFINISHED
+        if UNFINISHED.search(new) or not re.match(r'["\'(]?[A-Z0-9]', new):
+            continue                                  # 2026-11-15 bench: "Let time work for you:." (a cut clause)
+        out.append(new)
     return out
 
 

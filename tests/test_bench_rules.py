@@ -548,6 +548,14 @@ class SameEvent(unittest.TestCase):
         self.assertEqual(grounding.on_topic([twist, later], ep, lambda *a: dict(helps=False)), set())
 
 
+class FactCheckRewrites(unittest.TestCase):
+    def test_a_rewrite_that_leaves_a_cut_clause_is_refused(self):
+        # 2026-11-15 deep bench (compound interest b05): "Let time work for you:."
+        ask = lambda s, u, sc: dict(sentences=['Let time work for you:.', 'Let time grow your savings.'])
+        got = entail.rewrites('Let time work for you: higher rates make savings soar.', 's1: savings grow', '', '', ask)
+        self.assertEqual(got, ['Let time grow your savings.'])
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):

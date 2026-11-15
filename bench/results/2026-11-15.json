@@ -2997,6 +2997,711 @@
         "topics": 5
       },
       "finished": "2026-11-15T12:12:11"
+    },
+    {
+      "version": "bench-v2",
+      "label": "9b-deep",
+      "writer": "qwen3.5:9b",
+      "judge": "qwen3.5:9b",
+      "commit": "c607a37",
+      "started": "2026-11-15T15:33:54",
+      "topics": [
+        {
+          "topic": "The real origin of crude oil",
+          "upstream_seconds": 180.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 1130.0,
+          "folder": "bench/work/runs/9b-deep/the-real-origin-of-crude-oil",
+          "scores": {
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook creates mild curiosity by suggesting an unexpected origin ('somewhere deep and dark') for a common object (car fuel), but it doesn't explicitly state the specific biological mechanism (ancien",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              4,
+              6,
+              8
+            ],
+            "flow_why": "The story flow is weak (3) because several lines repeat core information rather than advancing the narrative linearly. 1. Lines 2 and 5 are disconnected: Line 2 sets up a myth to debunk, but Line 5 ('",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 4,
+            "labels_dropped": 9,
+            "fallback_beats": [
+              "b10"
+            ],
+            "facts": 14,
+            "usable_facts": 7,
+            "facts_by_aspect": {
+              "what it is": 3,
+              "how it works": 1,
+              "why it happens": 2,
+              "other": 8
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 93,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Your car came from somewhere deep and dark.",
+                "texts": []
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many think it's made of dinosaur bones.",
+                "texts": [
+                  "MYTH: Dinosaurs in oil",
+                  "MYTH: Dinosaurs",
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Actually, it gets weirder.",
+                "texts": []
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "Geological heat breaks buried dead plants into smaller molecules that make oil.",
+                "texts": [
+                  "Smaller Molecules"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Old ocean matter gets evaluated via its nitrogen clues.",
+                "texts": [
+                  "Nitrogen Isotope Data"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "It's all thermal conversion of sedimentary organic matter from real organisms.",
+                "texts": [
+                  "Thermal conversion",
+                  "sedimentary organic matter",
+                  "living organisms"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "Millions of years ago, tiny sea plants and animals died in the ocean.",
+                "texts": [
+                  "tiny sea plants"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "reveal",
+                "say": "Pressure and heat from above changed ancient remains into crude oil.",
+                "texts": [
+                  "Myth",
+                  "Myth: Dinosaurs"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "Layers of sand, silt, and rock covered the ancient biological remains over millions of years.",
+                "texts": [
+                  "Sand",
+                  "Silt",
+                  "Rock"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.84,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why do we yawn?",
+          "upstream_seconds": 193.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 1665.1,
+          "folder": "bench/work/runs/9b-deep/why-do-we-yawn",
+          "scores": {
+            "hook": 1,
+            "hook_gap": 3,
+            "hook_gives_away": true,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook ('Your yawn came from closeness') directly states the core mechanism (social connection) that the video later confirms with specific examples of social animals. This eliminates curiosity abou",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              4,
+              7,
+              10
+            ],
+            "flow_why": "The story flow is weak (3/5) because several lines repeat the same core information rather than building a linear narrative. Specifically: - Line 4 introduces chimp yawning contagion. - Line 7 repeats",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.174,
+            "narration_rate": 0.0,
+            "text_rate": 0.333,
+            "labels_rewritten": 5,
+            "labels_dropped": 11,
+            "fallback_beats": [
+              "b02",
+              "b07"
+            ],
+            "facts": 14,
+            "usable_facts": 13,
+            "facts_by_aspect": {
+              "what it is": 4,
+              "why it happens": 4,
+              "a surprising detail": 4,
+              "a number or scale": 1,
+              "history or discovery": 1
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 90,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Your yawn came from closeness.",
+                "texts": [
+                  "\"Your yawn came from closeness\""
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Here is the surprise.",
+                "texts": []
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Hold up, friend—it gets weirder.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "Older than babies but not adults yet: chimp yawning contagion grows.",
+                "texts": [
+                  "Contagion Grows"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "In us, the urge to copy that yawn correlates with strong empathic skills.",
+                "texts": [
+                  "Susceptible yawns correlate empathy",
+                  "Contagious yawn"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "Contagious yawning helps social vertebrates synchronize and coordinate group activity patterns.",
+                "texts": [
+                  "social vertebrates"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "Contagious yawning occurs in humans, chimpanzees, dogs, and other social animals alike.",
+                "texts": [
+                  "humans, chimpanzees, dogs",
+                  "social animals alike"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "reveal",
+                "say": "Forget demographics: it's pure empathy driving that contagious stretch.",
+                "texts": [
+                  "Fact"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "That black liquid gold of a sigh proves we're bonding right now.",
+                "texts": [
+                  "It's About Bonding!",
+                  "black liquid gold"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "So, who yawns? Chimps and dogs do too.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.725,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why the Roman Republic fell",
+          "upstream_seconds": 253.4,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 914.9,
+          "folder": "bench/work/runs/9b-deep/why-the-roman-republic-fell",
+          "scores": {
+            "hook": 4,
+            "hook_gap": 4,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook creates a strong curiosity gap by introducing an intriguing paradox ('died twice') that implies a specific historical nuance or event the viewer needs to watch to understand. It does not stat",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              2
+            ],
+            "flow_why": "The story flow is weak (3/5) because the narrative jumps between unrelated concepts without a logical bridge. Lines 4-6 introduce 'ancient DNA' and specific invasions from Pannonia in 1798, which are ",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.138,
+            "narration_rate": 0.0,
+            "text_rate": 0.211,
+            "labels_rewritten": 11,
+            "labels_dropped": 9,
+            "fallback_beats": [
+              "b02",
+              "b07",
+              "b10"
+            ],
+            "facts": 14,
+            "usable_facts": 6,
+            "facts_by_aspect": {
+              "what it is": 2,
+              "how it works": 3,
+              "a surprising detail": 4,
+              "history or discovery": 2,
+              "other": 3
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 90,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Wait, the Eternal City died twice?",
+                "texts": [
+                  "Eternal City",
+                  "\"One Battle? No.\""
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Here is the surprise.",
+                "texts": []
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Hold up, friend—it gets worse.",
+                "texts": [
+                  "Hold up, friend—it gets worse"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "We lost ancient Rome's secrets in that dark, turbulent time.",
+                "texts": [
+                  "Lost Knowledge?",
+                  "ancient Rome's secrets",
+                  "turbulent time"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Even after invaders moved north, Rome still felt the shock of the 1798 republic.",
+                "texts": [
+                  "Rome felt shock of republic",
+                  "republic"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "Ancient DNA proves invaders marched far north from Pannonia into Italy.",
+                "texts": [
+                  "Map: Pannonia ->"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "The ultimate cause of the Roman Republic's fall was immense wealth accumulated from its empire.",
+                "texts": [
+                  "Wealth = Fall?",
+                  "Wealth = Fall?"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "reveal",
+                "say": "Rich harvests made them lazy; why save democracy when gold was waiting?",
+                "texts": [
+                  "Gold Waiting"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "The climate gave us bread; but wealth killed our democracy.",
+                "texts": [
+                  "The climate gave us bread",
+                  "Climate Optimum"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": [
+                  "Now you know"
+                ]
+              }
+            ]
+          },
+          "overall": 0.852,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "How compound interest works",
+          "upstream_seconds": 185.1,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 936.9,
+          "folder": "bench/work/runs/9b-deep/how-compound-interest-works",
+          "scores": {
+            "hook": 4,
+            "hook_gap": 4,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook 'Tiny numbers built fortunes' creates clear curiosity (pull) by contrasting small inputs with massive outputs without stating the specific historical fact or arithmetic method revealed later ",
+            "flow": 2,
+            "flow_judge": 2,
+            "flow_judge_repeated": [
+              6
+            ],
+            "flow_why": "The story flow is weak (score 2) because several lines jump chronologically and thematically without clear transitions. Line 4 introduces a metaphor ('black liquid gold') that isn't resolved until the",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.087,
+            "narration_rate": 0.091,
+            "text_rate": 0.083,
+            "labels_rewritten": 7,
+            "labels_dropped": 13,
+            "fallback_beats": [
+              "b09",
+              "b10"
+            ],
+            "facts": 11,
+            "usable_facts": 7,
+            "facts_by_aspect": {
+              "how it works": 2,
+              "why it happens": 1,
+              "history or discovery": 2,
+              "other": 6
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 86,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Tiny numbers built fortunes.",
+                "texts": [
+                  "Tiny numbers built fortunes"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Folks imagine money rises at a fixed pace.",
+                "texts": [
+                  "MYTH: Fixed Pace"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Wait, that's just half of it.",
+                "texts": [
+                  "\"Hidden Effort?\""
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "It's like black liquid gold multiplying itself while we sleep.",
+                "texts": [
+                  "Interest + Interest",
+                  "black liquid gold"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "The secret? Let time work for you:.",
+                "texts": []
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "Time compounds slowly but surely—the real secret lies in patience.",
+                "texts": [
+                  "Time = More Money",
+                  "patience"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "Starting then, accurate answers came at a steep cost of calculation.",
+                "texts": [
+                  "Laborious Arithmetic"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "reveal",
+                "say": "Stevin found some kept calculation methods hidden as a great secret till 1585.",
+                "texts": [
+                  "Secrets Hidden Until 1585"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "Soon after 1500, printed books enabled the spread of mathematical knowledge about compound interest.",
+                "texts": [
+                  "Soon after 1500"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": [
+                  "Now you know",
+                  "Now you know"
+                ]
+              }
+            ]
+          },
+          "overall": 0.823,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why the sky is blue",
+          "upstream_seconds": 272.4,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 1087.7,
+          "folder": "bench/work/runs/9b-deep/why-the-sky-is-blue",
+          "scores": {
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook 'Your sky came from somewhere small' creates mild curiosity (score of 3) by implying a counter-intuitive origin for the blue color. It makes the viewer wonder what that 'small thing' is and h",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              8
+            ],
+            "flow_why": "The story flow is weak (3/5) because the narrative jumps back and forth between general scattering principles and specific atmospheric composition without a clear logical progression. Lines 4-6 explai",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.143,
+            "narration_rate": 0.0,
+            "text_rate": 0.273,
+            "labels_rewritten": 6,
+            "labels_dropped": 14,
+            "fallback_beats": [
+              "b10"
+            ],
+            "facts": 14,
+            "usable_facts": 10,
+            "facts_by_aspect": {
+              "what it is": 3,
+              "how it works": 3,
+              "why it happens": 3,
+              "a number or scale": 2,
+              "history or discovery": 1,
+              "other": 2
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 85,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Your sky came from somewhere small.",
+                "texts": []
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Most folks say sunlight scatters to make it blue.",
+                "texts": []
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Wait, that's only half true.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "Tiny air particles scatter that golden beam in every direction.",
+                "texts": [
+                  "Atmosphere scatters sunlight"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Oxygen and nitrogen scatter blue waves best.",
+                "texts": [
+                  "Small Molecules = Big Scatter"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "Shorter blue waves get scattered far more by the atmosphere.",
+                "texts": [
+                  "Scattered Atmosphere"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "That's why the horizon glows strangely at dusk.",
+                "texts": [
+                  "reds and yellows reach you"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "reveal",
+                "say": "Instead, it turns that strange blue-gray hue right around our setting Sun.",
+                "texts": [
+                  "blue-gray hue",
+                  "strange blue-gray hue",
+                  "Mars sunset",
+                  "Mars: Blue Sunset"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "That selective scattering by air molecules creates our blue skies on a clear sunny day.",
+                "texts": [
+                  "selective scattering by air molecules",
+                  "air molecules"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.811,
+          "waited": 0,
+          "waits": []
+        }
+      ],
+      "summary": {
+        "overall": 0.81,
+        "hook": 3.0,
+        "flow": 2.8,
+        "accuracy": 1.0,
+        "rewrite": 0.108,
+        "clean": 1.0,
+        "seconds": 1146.92,
+        "topics": 5,
+        "facts": 13.4,
+        "usable": 8.6,
+        "filler": 1.0,
+        "waited": 0.0
+      },
+      "finished": "2026-11-15T17:29:27"
     }
   ]
 }
