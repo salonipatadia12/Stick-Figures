@@ -105,6 +105,59 @@ class HookAndRepeats(unittest.TestCase):
         self.assertEqual(self.prompts, [])                             # the judge was never asked to write
 
 
+class BenchFindings(unittest.TestCase):
+    """2026-11-15 first bench run (crude oil, 9B): three no-fact beats all said "Here is the surprise." (every 4-5 word
+    transition was refused as too short) and auto took the outline's unchecked hook option 2."""
+    ask, episode = BestOfN.ask, BestOfN.episode
+
+    def plan(self):
+        return [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='problem', kind='transition', fact_ids=[], claim=''),
+                dict(role='twist', kind='fact', fact_ids=['s7'], claim='Oil came from tiny sea plants and animals.'),
+                dict(role='payoff', kind='fact', fact_ids=['s8'], claim='Heat and pressure turned the remains into oil.'),
+                dict(role='loop', kind='callback', fact_ids=[], claim='')]
+
+    def test_a_short_transition_is_a_whole_line_and_a_fallback_is_never_repeated(self):
+        from pipeline import bestof
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 1, ['What is in your tank?'], 'twist', (8, 17),
+                              self.ask(['But is that true?']))     # 4 words: refused before (2026-11-15)
+        self.assertEqual(e['line'], 'But is that true?')
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 1, ['Hook?', 'Here is the surprise.'], 'twist', (8, 17),
+                              self.ask([]))
+        self.assertNotEqual(e['line'], 'Here is the surprise.')
+
+    def test_the_payoff_answers_the_hook_and_every_hook_option_is_checked(self):
+        from pipeline import bestof
+        ep = self.episode()
+        o = dict(beats=[dict(narration='', source_ids=[]) for _ in range(5)],
+                 hook_options=[dict(line='outline hook one', loop_line='x', answer='a long outline answer'),
+                               dict(line='outline hook two', loop_line='y', answer='other'),
+                               dict(line='outline hook three', loop_line='z', answer='other')])
+        lines = {0: ['Your gas is older than the dinosaurs.', 'What is really in your tank?'],
+                 1: ['But is that true?'], 2: ['Tiny sea plants and animals made the oil.'],
+                 3: ['Heat and pressure cooked the remains for ages.', 'Heat cooked those tiny sea plants and animals into oil.'],
+                 4: ['Older than the dinosaurs, made by tiny life.']}
+        k = iter(range(99))
+        base = self.ask([])
+        calls = []
+
+        def ask(system, user, schema):
+            if system == bestof.WRITE_SYSTEM:
+                calls.append(user)
+                n = sum(1 for c in calls if 'EARLIER LINES FAILED' not in c) - 1
+                return dict(lines=lines.get(n, []) if 'EARLIER LINES FAILED' not in user else [])
+            return base(system, user, schema)
+        log = bestof.write_all(ep, OIL, o, dict(beats=self.plan(), twist='s7'), 40, ask)
+        pay = next(x for x in log if x['role'] == 'payoff')
+        self.assertIn('does not answer the hook', pay['rejected']['Heat and pressure cooked the remains for ages.'])
+        self.assertEqual(o['beats'][3]['narration'], 'Heat cooked those tiny sea plants and animals into oil.')
+        self.assertEqual(o['beats'][3]['source_ids'], ['s8', 's7'])
+        self.assertEqual([h['line'] for h in o['hook_options']],
+                         ['Your gas is older than the dinosaurs.', 'What is really in your tank?',
+                          'Your gas is older than the dinosaurs.'])
+        self.assertEqual({h['answer'] for h in o['hook_options']}, {'Oil came from tiny sea plants and animals.'})
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):

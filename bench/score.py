@@ -216,7 +216,9 @@ def score(base: Path) -> dict:
                 fails.append(f'{b.id} {field} "{text}": {why}')
     fc = (ep.meta or {}).get('fact_check') or {}
     lab = (ep.meta or {}).get('label_grounding') or {}
-    best = next((e for e in ((ep.meta or {}).get('script') or {}).get('repairs', []) if e.get('stage') == 'best'), {})
+    runs = sorted((base / 'cache').glob('script-*.json'), key=lambda p: p.stat().st_mtime)   # the writer's own log
+    repairs = json.loads(runs[-1].read_text()).get('repairs', []) if runs else []
+    best = next((e for e in repairs if e.get('stage') == 'best'), {})
     fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept')]
     return dict(hook=hook_score, hook_gap=gap, hook_gives_away=bool(h.get('gives_away')), hook_code_gives_away=code_gives,
                 hook_why=' '.join(str(h.get('why') or '').split())[:200],

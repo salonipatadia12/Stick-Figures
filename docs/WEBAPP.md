@@ -181,16 +181,37 @@ confirms instead of rewrites.
    shapes, rotated per episode) and checked against the twist fact. A hook that argues against something nobody
    claims ("Stop calling it dinosaur poop") is refused. The loop must repeat a word of the hook. A beat with no
    survivor keeps its checked claim.
-4. **Word precision.** When a fact names a group (diatoms, plankton, marine, organisms), a line uses that group's own
+
+   User 2026-11-15 (the benchmark brief) added three filters, all in code:
+   - **a hook opens the gap and never states the twist**: it may not name what the twist fact names (other than the
+     myth's subjects), nor say most of the twist claim's words (`grounding.gives_away`). The writer sees the answer
+     with "never say it", and the bank's shapes tease the answer instead of naming it;
+   - **no two beats make the same claim**: each candidate's split claims are compared with every other beat's
+     (`grounding.same_claim`: the shorter claim's content words, topic words aside, are almost all in the other).
+     Only the payoff may restate the twist;
+   - **ranges stay as wide as the fact**: "thousands to millions of years" never becomes "thousands" or
+     "millions", and a magnitude word or number the research does not have fails (`grounding.narrowed`). This runs
+     in the claims check itself, so plan claims, best-of-N lines, rewrites, swaps and on-screen texts all get it.
+4. **Labels from the claim** (user 2026-11-15). After staging, every on-screen text, split label, diagram label and
+   label on a picture must use only words of its beat's narration or planned claim (plus "MYTH", "FACT" and other
+   structure words), with no number the narration does not say (`grounding.ground_labels`). A text that does not
+   is written again from them in one short call per beat, else dropped. So staging no longer invents labels for
+   the fact check to remove. The counts are in `meta.label_grounding`.
+5. **The writer model.** The fact plan's claims, the outline and the best-of-N candidate lines (hooks and loops
+   too) use `OLLAMA_WRITER_MODEL`, which defaults to `OLLAMA_MODEL`. The judge, the claim splitter, the ranking,
+   the labels and every other small call stay on `OLLAMA_MODEL` (qwen3.5:9b). On a 16 GB Mac the two models do not
+   fit in memory together, so Ollama swaps them between calls. A bigger writer is judged on the benchmark
+   (`bench/score.py`) before it becomes the default.
+6. **Word precision.** When a fact names a group (diatoms, plankton, marine, organisms), a line uses that group's own
    words or a direct plain-English equivalent ("plankton", "tiny sea plants and animals", "microscopic"). It never
    uses a broader or different category ("bacteria", "microbes", "bugs"). This is a fixed table, checked in code on
    claims, narration and every on-screen text. The equivalents also go to the judge with the research. A group word
    that only marks a time ("the age of reptiles", "before dinosaurs existed") does not count.
-5. **Source quality.** `script.source_quality` labels a page scientific (journals, science agencies), general, or
+7. **Source quality.** `script.source_quality` labels a page scientific (journals, science agencies), general, or
    simplified (pages for kids or students, course reports). Of two facts that say the same thing, the better
    source is told. A fact only a simplified page states is still used, with a note to phrase it with caution ("much
    of it", "most").
-6. **Research degrades, not fails.** Each query starts at a different keyless engine (DuckDuckGo, Google, Bing,
+8. **Research degrades, not fails.** Each query starts at a different keyless engine (DuckDuckGo, Google, Bing,
    Yandex, Brave, Mojeek, Yahoo, Startpage). An engine that refuses goes to the back for five minutes, with backoff
    and jitter between tries. A `site:` query is retried without the operator. When every engine refuses, the same
    query from any episode of the last 30 days is used (the shared search cache). Wikipedia's API and OpenAlex's API
@@ -238,7 +259,7 @@ back to the server.
 
 | check | fix |
 |---|---|
-| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again. The swapped line must pass the fact check and the word rule; slang ("rock goo") and split replacements ("make ... become") are refused, and then the whole line is written again by best-of-N without the word |
+| words | the checker compares one canonical form (numbers, %, units, CO2, plurals); a word still unheard re-voices its beat once at 0.92x; still unheard after that, the local model picks a plainer synonym that keeps the meaning, the narration (so the captions), labels and anchors get it (`self-repair (QA words)`) and the beat is voiced again. The swapped line must pass the fact check and the word rule; slang ("rock goo") and split replacements ("make ... become") are refused, and then the whole line is written again by best-of-N without the word. A filler that opens a sentence ("Hmm", "Oh", "Well") is never swapped: when Whisper does not hear it, it is dropped at once ("Hmm. Is that right?" -> "Is that right?") and the beat voiced again |
 | text | a label on the host: round 1 moves it (host to the other side and smaller, or an insert label away from the host), round 2 drops it; two texts on each other: only the less important one is dropped (a myth mark, then the beat's key term: its on-screen text or a label naming what the narration says) |
 | duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
 | story_match | a MYTH mark on a picture of the myth (a scene that may not show its beat is a warning to look at: a word test cannot judge a painting well enough to repaint it) |
@@ -340,3 +361,35 @@ In the user's `Stick_Figures` checkout on `pipeline-v2`, with its venvs:
 - A script that needs a base the library does not have stops at the script gate with that message (the host format
   rarely does: scenes are painted inserts).
 - Music (no-music is the default), 16:9, multiple users.
+
+## The writing benchmark (user 2026-11-15)
+
+"Stop fixing one video at a time": every writing change is judged on `bench/score.py`, not on one video.
+`bench/topics.txt` holds 5 varied topics: crude oil (a myth), why we yawn, the fall of the Roman Republic, compound
+interest, and why the sky is blue. For each topic the script runs auto mode up to the approved script, with no
+painting or rendering. It uses the same functions as `stick make --auto` and the web app's Auto toggle, including
+auto's fixes and its script gate. Research and the storyline pick are made once per topic
+(`bench/work/upstream/`, git-ignored), so every run writes from the same facts and storyline. Each run writes into
+its own copy (`bench/work/runs/<label>/`).
+
+| score | how |
+|---|---|
+| hook (1-5) | the judge's fixed rubric for the gap the hook opens; minus 2 when it gives the answer away (the judge, or `grounding.gives_away` in code) |
+| flow (1-5) | the judge's fixed rubric (each beat adds something new and follows on); minus 1 per repeated claim found in code |
+| accuracy (0-1) | share of the final lines and on-screen texts that pass the claims check |
+| rewrite (0-1) | the fact check's rewrite rate |
+| clean (0/1) | auto reached an approved script with no manual step |
+| seconds | the script stage's wall time |
+| overall (0-1) | mean of hook/5, flow/5, accuracy, 1 - rewrite, clean |
+
+The judge is `OLLAMA_MODEL` (qwen3.5:9b) at temperature 0 with fixed prompts. Results are saved to
+`bench/results/<date>.json` and printed next to the previous run. `--writer MODEL` tries another writer,
+`--only crude,yawn` picks topics, and `--compare A B` prints two saved runs side by side.
+
+## Archive (user 2026-11-15)
+
+Episodes are archived, never deleted. `Service.archive(slug, by)` moves `data/episodes/<slug>` and
+`data/outputs/<slug>` to `data/archive/<stamp>-<slug>/`, writes the row as it was to `row.json` there, and keeps the
+row with the state `archived`, which hides it from the list. It is refused while a job of the episode is queued or
+running.
+

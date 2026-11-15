@@ -338,7 +338,11 @@ class OllamaScript(unittest.TestCase):
         self.assertNotIn('source_ids', outline_calls[0]['format']['properties']['beats']['items']['properties'])
         self.assertIn('claim: "Paying yourself first moves savings out before spending."', outline_calls[0]['messages'][1]['content'])
         plan = episode.meta['fact_plan']
-        self.assertEqual([b.source_ids for b in episode.beats], [b['fact_ids'] for b in plan['beats']])  # the plan's facts
+        # the plan's facts; the payoff also cites the twist fact (it answers the hook and may restate it, 2026-11-15)
+        twist = plan['twist']
+        self.assertEqual([b.source_ids for b in episode.beats],
+                         [list(dict.fromkeys(b['fact_ids'] + [twist])) if b['role'] == 'payoff' else b['fact_ids']
+                          for b in plan['beats']])
         self.assertEqual([b.role for b in episode.beats], [r for r, _, _, _ in OUTLINE_BEATS])
         self.assertEqual(episode.meta['fact_plan']['twist'], 's1')
         self.assertEqual(episode.meta['fact_check']['rate'], 0.0)            # the check confirms, rewrites nothing
