@@ -37,7 +37,8 @@ best line."""
 BELIEF_SYSTEM = """A line of a science video says what people believe (the myth the video corrects). Answer whether it
 reports a belief people really hold, as the misconception given states it, without inventing a sillier or different
 version of it ("oil is dinosaur poop" is a strawman of "oil comes from dinosaurs") and without mixing up categories
-("dinosaurs in the sea")."""
+("dinosaurs in the sea"). The common form of the myth, in other words ("oil comes from dinosaur bones"), is a real
+belief."""
 BELIEF_SCHEMA = dict(type='object', required=['real_belief', 'why'], properties=dict(real_belief=dict(type='boolean'),
                                                                                      why=dict(type='string')))
 LINES_SCHEMA = dict(type='object', required=['lines'], properties=dict(lines=dict(
@@ -100,7 +101,11 @@ def real_belief(line: str, interp: dict, ask) -> tuple[bool, str]:
     if not misc:
         return True, 'no misconception to compare with'
     try:
-        a = ask(BELIEF_SYSTEM, f'Line: {line}\nThe misconception: {misc}', BELIEF_SCHEMA) or {}
+        claims = '; '.join(interp.get('claims') or [])
+        subjects = ', '.join(interp.get('myth_subjects') or [])
+        a = ask(BELIEF_SYSTEM, f'Line: {line}\nThe misconception: {misc}'
+                + (f'\nThe topic says: {claims} (so the myth is the opposite)' if claims else '')
+                + (f'\nWhat the myth is about: {subjects}' if subjects else ''), BELIEF_SCHEMA) or {}
     except Exception:
         return True, 'not checked'
     return (a.get('real_belief') is not False), ' '.join(str(a.get('why') or '').split())[:160]
