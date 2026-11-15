@@ -71,12 +71,12 @@ def _record(ledger, step, model, detail, usage):
 
 def generate(system: str, user: str, json_schema: dict | None = None, max_tokens: int = 8000, *, temperature: float = 0.2,
              seed: int = 7, num_ctx: int | None = None, cache=None, ledger=None, step: str = 'llm', detail: str = '',
-             keep_alive: str | None = None, client=None, refresh: bool = False) -> str:
+             keep_alive: str | None = None, client=None, refresh: bool = False, model: str | None = None) -> str:
     """The model's answer as text (JSON text when json_schema is given). refresh=True skips a cached answer (and
-    caches the new one)."""
+    caches the new one). model: an Ollama model other than OLLAMA_MODEL (the writer: config.ollama_writer_model)."""
     if config.script_provider(client) == 'anthropic':
         return _anthropic(system, user, json_schema, max_tokens, ledger=ledger, step=step, detail=detail, client=client)
-    model = config.ollama_model()
+    model = model or config.ollama_model()
     ctx = num_ctx or context_for(system, user, max_tokens)
     options = dict(num_ctx=ctx, num_predict=max_tokens, temperature=temperature, seed=seed)
     key = None

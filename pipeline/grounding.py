@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v1'
+GROUNDING_VERSION = 'ground-v2'   # v2: ranges kept whole in the claims
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -386,6 +386,8 @@ def claim_problem(b, sources, myth, ask) -> str:
     bad = imprecise(b['claim'], allowed)
     if bad:
         return precision_why(bad, allowed)
+    if not b.get('from_research') and narrowed(b['claim'], entail.research_text(b['fact_ids'], sources)):
+        return narrowed(b['claim'], entail.research_text(b['fact_ids'], sources))
     named = groups(' '.join(fact_texts(sources, b['fact_ids']))) - myth
     if b.get('role') == 'twist' and named and not groups(b['claim']) & allowed_for(fact_texts(sources, b['fact_ids'])):
         # 2026-11-15: the twist "This happened before dinosaurs ever walked on Earth" lost the plants and animals
@@ -441,9 +443,11 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
         from . import llm
 
         def generate(system, user, sc, attempt):
+            from . import config
             return llm.generate_json(system, user, sc, PLAN_MAX_TOKENS, temperature=0.3 if attempt == 0 else 0.2,
                                      seed=51 + attempt, cache=cache, ledger=ledger, step='script',
-                                     detail='fact plan' + (f' (repair {attempt})' if attempt else ''))
+                                     detail='fact plan' + (f' (repair {attempt})' if attempt else ''),
+                                     model=config.ollama_writer_model())
     user = plan_user(episode, sources, roles, facts, interp.get('misconception', ''))
     plan, msgs, claims, attempts = None, [], {}, []
     for attempt in range(PLAN_REPAIRS + 1):
@@ -491,3 +495,168 @@ def kinds(episode) -> dict:
     """{beat id: kind} from the episode's plan ({} for an episode written before the plan)."""
     plan = (episode.meta or {}).get('fact_plan') or {}
     return {f'b{k:02d}': b.get('kind', '') for k, b in enumerate(plan.get('beats') or [], 1)}
+
+
+# ------------------------------------------------------------------ ranges, repeated claims, hooks (user 2026-11-15)
+
+NUM_TOKEN = r'(?:\d[\d,.]*|hundreds?|thousands?|millions?|billions?|trillions?)'
+RANGE = re.compile(rf'\b(?:between\s+|from\s+)?({NUM_TOKEN})(?:\s+of)?(?:\s+years?)?\s*(?:to|-|–|—|and|or)\s*'
+                   rf'(?:tens\s+of\s+|hundreds\s+of\s+)?({NUM_TOKEN})\b', re.I)
+TOKEN = re.compile(rf'\b{NUM_TOKEN}\b', re.I)
+
+
+def _num(t: str) -> str:
+    t = t.lower().rstrip('.,').replace(',', '')
+    return t[:-1] if t.endswith('s') and not t[:-1].isdigit() else t
+
+
+def narrowed(line: str, research: str) -> str:
+    """'' when every number or magnitude word of the line is as wide as the research says it; else what is wrong
+    (user 2026-11-15: "thousands to millions" can't become "thousands"). A number the research has only as one end
+    of a range needs the other end in the line too; a magnitude word the research never says is not in it at all.
+    The glossary lines are not research ("millions of years ago" means ancient)."""
+    research = '\n'.join(x for x in str(research or '').splitlines() if not x.startswith('Plain words for it:'))
+    ranges, spans = [], []
+    for m in RANGE.finditer(research):
+        a, b = _num(m.group(1)), _num(m.group(2))
+        if a != b:
+            ranges.append((a, b, m.group(0).strip()))
+            spans.append((m.start(1), m.end(1)))
+            spans.append((m.start(2), m.end(2)))
+    alone = {_num(m.group(0)) for m in TOKEN.finditer(research) if (m.start(), m.end()) not in spans}
+    inrange = {x for a, b, _ in ranges for x in (a, b)}
+    own = {_num(m.group(0)): m.group(0) for m in TOKEN.finditer(line or '')}
+    said = set(own)
+    for t in sorted(said):
+        if t in alone:
+            continue
+        if t in inrange:
+            partners = [(a, b, text) for a, b, text in ranges if t in (a, b)]
+            if not any((b if t == a else a) in said for a, b, _ in partners):
+                return f'narrows the range "{partners[0][2]}" to "{own[t]}"; say the whole range'
+        elif not t.isdigit() or t not in research:
+            return f'"{own[t]}" is a number the research does not have'
+    return ''
+
+
+def claim_stems(text: str, ignore=frozenset()) -> set:
+    from .qa import content_words
+    return content_words(text) - set(ignore)
+
+
+def same_claim(a: str, b: str, ignore=frozenset()) -> bool:
+    """True when two atomic claims say the same thing: the shorter one's content words (topic words aside) are almost
+    all in the other (2026-11-15: "formed before dinosaurs existed" in the twist and again in the loop)."""
+    x, y = claim_stems(a, ignore), claim_stems(b, ignore)
+    small = min(len(x), len(y))
+    return small >= 2 and len(x & y) / small >= 0.75
+
+
+def topic_words(episode) -> set:
+    """Words every claim of the video may share (the topic's own words: "crude", "origin")."""
+    from .qa import content_words
+    interp = (episode.meta or {}).get('interpretation') or {}
+    return content_words(f'{episode.topic} {interp.get("question", "")} {interp.get("topic", "")}')
+
+
+def repeated_claim(claims, earlier, ignore=frozenset()) -> str:
+    """'' or the earlier claim this beat's claims repeat. `earlier`: [(beat label, [claim texts])]."""
+    for c in claims:
+        for label, olds in earlier:
+            for o in olds:
+                if same_claim(c, o, ignore):
+                    return f'{label} already says "{o}"'
+    return ''
+
+
+def gives_away(hook: str, twist_text: str, twist_claim: str, interp: dict, sources, topic: str = '') -> str:
+    """'' when the hook only opens the gap; else how it states the twist (user 2026-11-15: "create the gap, never state
+    the twist"): it names what the twist fact names (other than the myth's subjects), or says most of the twist's own
+    words (beyond the topic, question and myth)."""
+    from .qa import content_words
+    answer = groups(twist_text) - myth_groups(interp, sources)
+    named = groups(hook) & (allowed_for([twist_text]) - myth_groups(interp, sources)) if answer else set()
+    if named:
+        return f'names the answer ({", ".join(sorted(named))})'
+    known = content_words(' '.join([topic, interp.get('question', ''), interp.get('topic', ''),
+                                    interp.get('misconception', '')] + list(interp.get('myth_subjects') or [])))
+    key = content_words(twist_claim) - known
+    hit = content_words(hook) & key
+    if len(key) >= 2 and len(hit) >= max(2, (len(key) + 1) // 2):
+        return f'says the twist ({", ".join(sorted(hit))})'
+    return ''
+
+
+# ------------------------------------------------------------------ labels from the claim (user 2026-11-15)
+
+LABEL_VERSION = 'labels-v1'
+STRUCTURE_WORDS = {'myth', 'fact', 'true', 'false', 'truth', 'real', 'then', 'now', 'before', 'after', 'today', 'step',
+                   'start', 'end', 'answer', 'question', 'wrong', 'right'}
+LABEL_SYSTEM = """You write the short texts shown on screen for ONE beat of a narrated science video. Each text is
+1-3 words (a caption up to 5) and uses ONLY words of the beat's claim or narration given, so it says nothing the beat
+does not say. Keep what each old text pointed at when the claim or narration names it; otherwise name the most
+important thing they say. "MYTH" or "FACT" may mark a side. No slang, no numbers the narration does not say."""
+LABEL_SCHEMA = dict(type='object', required=['texts'], properties=dict(texts=dict(type='array', items=dict(type='string'))))
+
+
+def label_words(b, pb) -> set:
+    """The words a beat's texts may use: its narration and its planned claim (both checked against the facts)."""
+    from .qa import content_words
+    return content_words(f'{b.narration} {(pb or {}).get("claim", "")}') | STRUCTURE_WORDS
+
+
+def from_claim(text: str, b, pb, most: int) -> bool:
+    """True when the text uses only the beat's narration or claim words (no number the narration does not say, no
+    slang), and fits its slot."""
+    from .bestof import SLANG
+    from .entail import NUMBER
+    from .qa import content_words
+    words = content_words(text)
+    nums = {n.strip('.,') for n in NUMBER.findall(text)} - {n.strip('.,') for n in NUMBER.findall(b.narration)}
+    return (bool(text.strip()) and len(text.split()) <= most and words <= label_words(b, pb) and not nums
+            and not set(re.findall(r"[a-z']+", text.lower())) & SLANG)
+
+
+def ground_labels(episode, ask=None, cache=None, ledger=None) -> dict:
+    """Staging labels are written from the beat's claim, like the narration (user 2026-11-15: labels were invented and
+    then removed by the fact check, 43 % of the texts): every on-screen text, split label, diagram label and label on
+    a picture that uses a word the beat's narration and claim do not say is written again from them (one short call
+    per beat), and dropped when no such text comes back. A text that only marks the myth ("MYTH") stays. In place;
+    returns {version, checked, rewritten, dropped, changed: [{beat, field, was, now}]}."""
+    from . import entail
+    plan = ((episode.meta or {}).get('fact_plan') or {}).get('beats') or []
+    out = dict(version=LABEL_VERSION, checked=0, rewritten=0, dropped=0, changed=[])
+    if ask is None:
+        ask = entail.default_ask(cache, ledger)
+    for k, b in enumerate(episode.beats):
+        pb = plan[k] if k < len(plan) else {}
+        slots = []
+        for field, text, most, put, drop in entail.texts(b):
+            out['checked'] += 1
+            if entail.marks_myth(text, episode) or from_claim(text, b, pb, most):
+                continue
+            slots.append((field, text, most, put, drop))
+        if not slots:
+            continue
+        new = []
+        if ask is not None:
+            user = (f'Narration: {b.narration}\nClaim: {pb.get("claim") or "(none: this beat states no fact)"}\n'
+                    'Write these texts again, in this order (same count):\n'
+                    + '\n'.join(f'{n}. {field} (at most {most} words), was "{text}"'
+                                for n, (field, text, most, _, _) in enumerate(slots, 1)))
+            try:
+                got = (ask(LABEL_SYSTEM, user, LABEL_SCHEMA) or {}).get('texts') or []
+                new = [' '.join(str(x or '').split()).strip('"\' .') for x in got]
+            except Exception:
+                new = []
+        for n, (field, text, most, put, drop) in enumerate(slots):
+            cand = new[n] if n < len(new) else ''
+            if cand and from_claim(cand, b, pb, most):
+                put(cand)
+                out['rewritten'] += 1
+                out['changed'].append(dict(beat=b.id, field=field, was=text, now=cand))
+            else:
+                drop()
+                out['dropped'] += 1
+                out['changed'].append(dict(beat=b.id, field=field, was=text, now=''))
+    return out

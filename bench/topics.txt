@@ -1,0 +1,7 @@
+# The writing benchmark (bench/score.py): one topic per line, optionally "topic | niche | audience".
+# Varied on purpose: a myth to correct (crude oil), biology, history, money, physics.
+The real origin of crude oil | science | curious adults
+Why do we yawn? | science | curious adults
+Why the Roman Republic fell | history | curious adults
+How compound interest works | money | young adults
+Why the sky is blue | science | curious adults

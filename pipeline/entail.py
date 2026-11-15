@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 
-ENTAIL_VERSION = 'entail-v2'      # v2: word precision, uncited beats, on-screen text, the rewrite rate
+ENTAIL_VERSION = 'entail-v3'      # v2: word precision, uncited beats, on-screen text, the rewrite rate; v3: ranges
 RATE_LIMIT = 0.2                  # above this share of rewritten lines, the fact-first plan failed (user 2026-11-14)
 
 CHECK_SYSTEM = """You check one sentence of a narrated science video against the research it cites. First say whether
@@ -159,18 +159,23 @@ def verdict(line: str, research: str, allowed: set, ask, system: str = CHECK_SYS
     are checked; metaphor and tone that assert nothing pass. A claim that makes no sense ("dinosaurs were sea
     creatures") fails; word precision runs in code on the claims; each fact claim gets the yes/no judge against the
     research (a beat citing nothing may hold no fact claim at all). On-screen texts keep the whole-text check, and a
-    line the splitter cannot read falls back to it too."""
-    from .grounding import imprecise, precision_why
+    line the splitter cannot read falls back to it too. A number or range must be as wide as the research says it
+    (grounding.narrowed: "thousands to millions" never becomes "thousands")."""
+    from .grounding import imprecise, narrowed, precision_why
     if system == TEXT_SYSTEM:
         bad = imprecise(line, allowed)
         if bad:
             return False, precision_why(bad, allowed)
+        if narrowed(line, research):
+            return False, narrowed(line, research)
         return supported(line, research, ask, system)
     claims, nonsense = split_claims(line, ask)
     if claims is None:
         bad = imprecise(line, allowed)
         if bad:
             return False, precision_why(bad, allowed)
+        if system == CHECK_SYSTEM and narrowed(line, research):
+            return False, narrowed(line, research)
         return supported(line, research, ask, system)
     if nonsense:
         return False, f'does not make sense: {"; ".join(nonsense)}'
@@ -179,6 +184,8 @@ def verdict(line: str, research: str, allowed: set, ask, system: str = CHECK_SYS
     if bad:
         return False, precision_why(bad, allowed)
     facts = [c['text'] for c in claims if c['kind'] == 'fact']
+    if facts and system == CHECK_SYSTEM and narrowed(line, research):   # ranges kept as wide as the fact (in code)
+        return False, narrowed(line, research)
     if system == NONFACT_SYSTEM:
         return (True, 'states no fact') if not facts else (
             False, 'states a fact but the beat cites none (' + '; '.join(repr(x) for x in facts) + ')')

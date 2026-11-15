@@ -252,7 +252,11 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
         beat = beat_of_word(tl, w)
         h = beats_h.get(beat) or {}
         swapped = h.get('swapped') or {}
-        if beat and not h.get('voice_speed'):
+        if beat and w.lower() in FILLERS and w.lower() not in swapped:
+            actions.append(dict(check='words', beat=beat, cause=f'Whisper did not hear the filler "{w}"',
+                                fix=f'drop "{w}" from {beat} and voice it again (a filler is never swapped)',
+                                hint=dict(swap_word=w)))
+        elif beat and not h.get('voice_speed'):
             actions.append(dict(check='words', beat=beat, cause=f'Whisper did not hear "{w}" (no spelling rule explains it)',
                                 fix=f'voice {beat} again at speed {SLOWER}', hint=dict(voice_speed=SLOWER)))
         elif beat and w.lower() not in swapped and w.lower() not in {x.lower() for x in swapped.values()}:
@@ -477,15 +481,25 @@ SLANG = set('goo gunk gloop glop muck stuff junk thingy thing poop dino dinos yu
 REWRITTEN = '(the line said again)'
 
 
-def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=None) -> str:
-    """A word Whisper still did not hear after a slower take: the local model picks a plainer synonym that keeps the
-    meaning; the narration (so the captions too, which follow it), the on-screen text, labels and anchors that use the
-    word get it, and the script approval is re-stamped as the self-repair. A beat that cites facts keeps the swap only
-    when the new line passes the fact check (pipeline/entail.py). Returns the new word ('' when none)."""
-    from . import llm, store
-    b = next((x for x in episode.beats if x.id == beat_id), None)
-    if b is None or not re.search(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", b.narration, re.I):
+DROPPED = '(filler dropped)'
+# user 2026-11-15: filler words are never swapped ("Hmm" became "yes": "Yes, yes. Is that actually right?"); a filler
+# Whisper does not hear is dropped from the line
+FILLERS = set('hmm hm hmmm mm mmm oh ooh ah ahh aha uh um umm er huh wow whoa well yeah yep okay ok hey'.split())
+
+
+def drop_filler(line: str, word: str) -> str:
+    """The line without the filler where it opens a sentence ("Hmm. Is that right?" -> "Is that right?"), the next word
+    capitalised; '' when nothing would be left or the word does not open a sentence there."""
+    pat = re.compile(rf"(^|(?<=[.!?]\s))\s*{re.escape(word)}\b[\s,.!?…-]*", re.I)
+    new = pat.sub('', line).strip()
+    if new == line.strip() or not re.search(r'[A-Za-z]', new):
         return ''
+    return re.sub(r'(^|[.!?]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), new)
+
+
+def _plainer(slug, episode, b, beat_id, word, write=None, check=None) -> tuple:
+    """(new line, the word said instead or REWRITTEN) for a word Whisper did not hear; ('', '') when none."""
+    from . import llm
     if write is None:
         from .cache import for_episode
         cache = for_episode(config.EPISODES_DIR / slug)
@@ -515,15 +529,34 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=Non
         from . import bestof
         line = bestof.rewrite_beat(episode, beat_id, avoid=[word], ask=judge)
         if not line:
-            return ''
+            return '', ''
         new = REWRITTEN
+    return line, new
+
+
+def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=None) -> str:
+    """A word Whisper still did not hear after a slower take: the local model picks a plainer synonym that keeps the
+    meaning; the narration (so the captions too, which follow it), the on-screen text, labels and anchors that use the
+    word get it, and the script approval is re-stamped as the self-repair. A beat that cites facts keeps the swap only
+    when the new line passes the fact check (pipeline/entail.py). Returns the new word ('' when none)."""
+    from . import store
+    b = next((x for x in episode.beats if x.id == beat_id), None)
+    if b is None or not re.search(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", b.narration, re.I):
+        return ''
+    opens = re.search(rf"(^|[.!?]\s)\s*{re.escape(word)}\b", b.narration, re.I)
+    if word.lower() in FILLERS and opens:             # a filler is never swapped: dropped, or left alone
+        line, new = drop_filler(b.narration, word), DROPPED
+    else:
+        line, new = _plainer(slug, episode, b, beat_id, word, write, check)
+    if not line:
+        return ''
     if line[-1] not in '.!?' and b.narration.rstrip()[-1:] in '.!?':
         line += b.narration.rstrip()[-1]
     was = episode.is_approved('script')               # before the narration changes
     old_line = b.narration
     b.narration = line
     sh = b.shot
-    if new == REWRITTEN:                              # 2026-11-15: the marker itself went into a label; the texts keep
+    if new in (REWRITTEN, DROPPED):                   # 2026-11-15: the marker itself went into a label; the texts keep
         sh = None                                     # their words (the text check judged them against the facts)
     else:
         b.on_screen_text = _swap_in(b.on_screen_text or '', word, new)
@@ -538,7 +571,7 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=Non
     if sh and sh.split:
         sh.split.labels = [_swap_in(x, word, new) for x in sh.split.labels]
         sh.split.anchors = [_swap_in(x, word, new) for x in sh.split.anchors]
-    if new == REWRITTEN:                              # words the rewritten line no longer says: re-anchored
+    if new in (REWRITTEN, DROPPED):                   # words the rewritten line no longer says: re-anchored
         from . import auto
         auto.fix_script(episode)
     if was:
@@ -595,7 +628,9 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             merge(repairs, a['beat'], dict(swapped={**(repairs.get('beats', {}).get(a['beat'], {}).get('swapped') or {}),
                                                     word.lower(): now}))
-            entry['fix'] = (f'no clean plainer word for "{word}": the line was written again by best-of-N '
+            entry['fix'] = (f'dropped the filler "{word}" ("{episode.beats[[x.id for x in episode.beats].index(a["beat"])].narration}") '
+                            f'and voiced {a["beat"]} again (captions follow)' if now == DROPPED else
+                            f'no clean plainer word for "{word}": the line was written again by best-of-N '
                             f'("{episode.beats[[x.id for x in episode.beats].index(a["beat"])].narration}") and '
                             f'{a["beat"]} voiced again (captions follow)' if now == REWRITTEN else
                             f'said "{now}" instead of "{word}" and voiced {a["beat"]} again (captions follow)')

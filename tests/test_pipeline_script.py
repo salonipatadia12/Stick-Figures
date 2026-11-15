@@ -413,8 +413,11 @@ class OllamaScript(unittest.TestCase):
         # 2026-11-15: the staging kept drawing "38 days"; the fact check takes a number the beat never says off the
         # screen (logged), so nothing is left for the gate and no rule was loosened
         self.assertEqual([e.where for e in errors], [])
-        removed = [c for c in episode.meta['fact_check']['changed'] if c['was'] == '38 days']
-        self.assertEqual(removed[0]['action'], 'text removed')
+        # 2026-11-15 (labels from the claim): the number is not in the beat's narration or claim, so the label is
+        # written again from them, or dropped, before the fact check
+        removed = [c for c in episode.meta['label_grounding']['changed'] if c['was'] == '38 days']
+        self.assertEqual(len(removed), 1)
+        self.assertNotIn('38', removed[0]['now'])
         self.assertTrue(any('remain after' in n for n in notes))
         b03_calls = [b for b in self.fake.chats if 'STAGE b03' in b['messages'][1]['content']]
         self.assertEqual(len(b03_calls), 1 + script.FREE_REPAIR_ROUNDS)

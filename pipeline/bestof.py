@@ -10,6 +10,11 @@ survivor keeps its planned claim (or, for a no-fact beat, a short line that stat
 
 Hooks and loops fill shapes from data/hooks.json (proven shapes: "you've been told X", "older than", an impossible
 number, a direct question with stakes, before/after ...). The loop repeats a word of the hook.
+
+User 2026-11-15 (the benchmark brief): a hook opens the gap and never states the twist (grounding.gives_away: it may
+not name what the twist fact names, nor say most of the twist's words); no two beats make the same claim
+(grounding.repeated_claim on the split claims; only the payoff may restate the twist); the candidate lines may come
+from a bigger writer model (OLLAMA_WRITER_MODEL) while every check stays on the judge.
 """
 from __future__ import annotations
 
@@ -17,7 +22,8 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v2'   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v3'   # v2: myth lines must be the belief people hold; questions are split into claims too
+# v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 BANK = Path(__file__).resolve().parent.parent / 'data' / 'hooks.json'
 N_BEAT, N_HOOK = 4, 6
 HOOK_MAX_WORDS = 8
@@ -31,8 +37,8 @@ asked for, each in the length asked for."""
 
 RANK_SYSTEM = """You pick the best line for one beat of a narrated science Short: the most vivid, the best rhythm read
 aloud, the most natural follow-on from the previous line, and a good set-up for the next beat. For a hook: the one a
-viewer cannot scroll past, never one that argues against something nobody believes. Answer with the number of the
-best line."""
+viewer cannot scroll past: it opens a question the video answers later and never gives that answer away, and it
+never argues against something nobody believes. Answer with the number of the best line."""
 
 BELIEF_SYSTEM = """A line of a science video says what people believe (the myth the video corrects). Answer whether it
 reports a belief people really hold, as the misconception given states it, without inventing a sillier or different
@@ -141,6 +147,9 @@ def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_ro
         lines.append(f'What it does: {KIND_GUIDE.get(beat["kind"], KIND_GUIDE["transition"])}')
     if misc and (beat['kind'] == 'myth' or kind == 'hook'):
         lines.append(f'The misconception viewers hold: {misc}')
+    if kind == 'hook' and beat.get('answer'):
+        lines.append(f'The answer the video reveals later (NEVER say it, not even in part; make the viewer need it): '
+                     f'{beat["answer"]}')
     if shape_rows:
         lines.append('Write ONE line per shape, in this order:\n' + '\n'.join(
             f'{k}. {r["shape"]}: {r["how"]} (shape only, e.g. on another topic: "{r["example"]}")'
@@ -175,8 +184,10 @@ def rank(kind, survivors, prev, nxt, ask) -> tuple[int, str]:
     return (k, ' '.join(str(a.get('why') or '').split())[:200]) if 0 <= k < len(survivors) else (0, 'out of range')
 
 
-def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(), log=None, retried='') -> dict:
-    """Best-of-N for beat k: {line, ids, tried, kept, why}. `chosen` are the lines chosen so far (earlier beats)."""
+def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(), log=None, retried='', write=None,
+               later=()) -> dict:
+    """Best-of-N for beat k: {line, ids, tried, kept, why}. `chosen` are the lines chosen so far (earlier beats),
+    `later` the lines of the beats after it (a self-repair rewrite); `write` the writer model (else `ask`)."""
     from . import entail, grounding
     from .script import copies
     interp = (episode.meta or {}).get('interpretation') or {}
@@ -194,7 +205,17 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     rows = shapes(kind, episode.slug) if kind in ('hook', 'loop') else ()
     caution = '; '.join(c for c in (grounding.caution(by[i]) for i in ids if i in by) if c)
     prev = chosen[-1] if chosen else ''
-    cands = candidates(kind, pb, research, prev, nxt, lo, hi, n, ask, interp, rows, avoid, caution, retried)
+    twist_claim = next((b.get('claim') for b in plan_beats if b['role'] == 'twist' and b.get('claim')), '') \
+        or (by[twist].claim if twist in by else '')
+    if kind == 'hook':
+        pb = dict(pb, answer=twist_claim)
+    cands = candidates(kind, pb, research, prev, nxt, lo, hi, n, write or ask, interp, rows, avoid, caution, retried)
+    ignore = grounding.topic_words(episode)
+    others = [(f'b{j + 1:02d}', j, line) for j, line in enumerate(chosen)] + \
+             [(f'b{j + 1:02d}', j, line) for j, line in enumerate(later, start=k + 1)]
+    earlier = [(label, [c['text'] for c in (entail.split_claims(line, ask)[0] or []) if c['kind'] == 'fact'])
+               for label, j, line in others
+               if not (role == 'payoff' and j < len(plan_beats) and plan_beats[j]['role'] == 'twist')]
     hook = chosen[0] if chosen else ''
     fact_lines = [by[i].claim for i in ids if i in by] + [by[i].quote for i in ids if i in by and by[i].quote]
     out, why_not = [], {}
@@ -217,6 +238,10 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = 'repeats an earlier line'
         elif set(entail.NUMBER.findall(c)) - set(entail.NUMBER.findall(research)):
             why_not[c] = 'a number the research does not have'
+        elif kind == 'hook' and grounding.gives_away(c, f'{by[twist].claim} {by[twist].quote}' if twist in by else '',
+                                                     twist_claim, interp, facts, episode.topic):
+            why_not[c] = 'gives the twist away: ' + grounding.gives_away(
+                c, f'{by[twist].claim} {by[twist].quote}' if twist in by else '', twist_claim, interp, facts, episode.topic)
         elif kind == 'hook' and strawman(c, interp, by[twist].claim if twist in by else '', episode.topic):
             why_not[c] = ('argues against something nobody claims ('
                           + strawman(c, interp, by[twist].claim if twist in by else '', episode.topic) + ')')
@@ -230,13 +255,18 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             if ok is False and ids and kind in ('hook', 'loop'):   # a hook or loop may also state no fact at all
                 ok2, _ = entail.verdict(c, '', entail.allowed_groups(episode, ()), ask, entail.NONFACT_SYSTEM)
                 ok = True if ok2 is not False else ok
+            again = grounding.repeated_claim([x['text'] for x in (entail.split_claims(c, ask)[0] or [])
+                                              if x['kind'] == 'fact'], earlier, ignore) if ok is not False else ''
             if ok is False:
                 why_not[c] = why
+            elif again:                                # no two beats make the same claim (the payoff may restate the twist)
+                why_not[c] = f'makes the same claim as an earlier beat ({again})'
             else:
                 out.append(c)
     if not out and cands and not retried:            # one more call that sees why each line failed
         why = '\n'.join(f'- "{c}": {r}' for c, r in why_not.items())
-        more = write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=avoid, retried=why)
+        more = write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=avoid, retried=why, write=write,
+                          later=later)
         more['tried'] = cands + more['tried']
         more['rejected'] = {**why_not, **more['rejected']}
         if log is not None:
@@ -265,7 +295,18 @@ def per_beat_words(ctx_words: int, n_beats: int) -> tuple[int, int]:
     return max(4, mid - 5), mid + 4
 
 
-def write_all(episode, facts, o, plan, words_total, ask, log=None) -> list:
+def write_ask(cache=None, ledger=None):
+    """The writer's call for the candidate lines: config.ollama_writer_model (OLLAMA_WRITER_MODEL, else the judge's
+    model), same settings as the judge's ask so a run with one model is unchanged."""
+    from . import config, llm
+    if config.script_provider() != 'ollama':
+        return None
+    model = config.ollama_writer_model()
+    return lambda s, u, sc: llm.generate_json(s, u, sc, 500, cache=cache, ledger=ledger, step='script',
+                                              detail='best-of-N lines', temperature=0.0, model=model)
+
+
+def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -> list:
     """Every beat's narration by best-of-N, in order (in place on the outline o). Returns the log entries."""
     log = log if log is not None else []
     beats = o.get('beats') or []
@@ -275,7 +316,7 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None) -> list:
     for k, ob in enumerate(beats[:len(pbs)]):
         nb = pbs[k + 1] if k + 1 < len(pbs) else None
         nxt = (f'{nb["role"]}: {nb["claim"]}' if nb and nb.get('claim') else f'{nb["role"]} ({nb["kind"]})') if nb else ''
-        e = write_beat(episode, facts, pbs, k, chosen, nxt, words, ask, log=log)
+        e = write_beat(episode, facts, pbs, k, chosen, nxt, words, ask, log=log, write=write)
         ob['narration'] = e['line']
         ob['source_ids'] = e['ids']
         chosen.append(e['line'])
@@ -290,6 +331,7 @@ def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
     plainer swap). The beat's plan line (meta.fact_plan) or, for an older episode, its cited facts. Returns the chosen
     line, or '' when no candidate passed (the line then stays)."""
     from . import entail
+    write = None if ask is not None else write_ask()   # a given ask (a stand-in) also writes
     ask = ask or entail.default_ask()
     if ask is None:
         return ''
@@ -305,7 +347,8 @@ def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
     nb = plan[k + 1] if k + 1 < len(plan) else None
     nxt = episode.beats[k + 1].narration if nb else ''
     e = write_beat(episode, episode.sources, plan, k, [b.narration for b in episode.beats[:k]], nxt,
-                   per_beat_words(len(' '.join(b.narration for b in episode.beats).split()), len(plan)), ask, avoid=avoid)
+                   per_beat_words(len(' '.join(b.narration for b in episode.beats).split()), len(plan)), ask, avoid=avoid,
+                   write=write, later=[b.narration for b in episode.beats[k + 1:]])
     return e['line'] if e['kept'] else ''
 
 

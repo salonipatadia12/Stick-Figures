@@ -60,6 +60,13 @@ def ollama_model() -> str:
     return os.getenv('OLLAMA_MODEL', '').strip() or DEFAULT_OLLAMA_MODEL
 
 
+def ollama_writer_model() -> str:
+    """The model that writes (the fact plan's claims, the outline, the best-of-N lines and hooks); the judge and every
+    small call stay on OLLAMA_MODEL. OLLAMA_WRITER_MODEL, else OLLAMA_MODEL (user 2026-11-15: a bigger writer is tried
+    on the benchmark, bench/score.py, before it becomes the default)."""
+    return os.getenv('OLLAMA_WRITER_MODEL', '').strip() or ollama_model()
+
+
 def ollama_num_ctx() -> int:
     """Context window per call. 4096 keeps a 14B model fast and small next to FLUX on 16 GB; a call that needs more
     gets 8192 for that call only."""

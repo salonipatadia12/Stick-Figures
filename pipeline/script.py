@@ -1004,7 +1004,8 @@ def _outline_call(ctx, schema, cache, ledger, previous=None, issues=(), attempt=
     try:
         return llm.generate_json(ctx.get('outline_system') or SCRIPT_RULES_COMPACT_OUTLINE, user, schema, OUTLINE_MAX_TOKENS,
                                  temperature=0.4 if previous is None else 0.3, seed=21 + attempt, cache=cache,
-                                 ledger=ledger, step='script', detail='outline' + (f' (repair {attempt})' if attempt else ''))
+                                 ledger=ledger, step='script', detail='outline' + (f' (repair {attempt})' if attempt else ''),
+                                 model=config.ollama_writer_model())
     except llm.LLMError as exc:
         raise ScriptError(f'The local model could not write the outline: {exc}') from None
 
@@ -1153,8 +1154,9 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     ctx = _free_context(episode, style, facts, plan)
     model = config.ollama_model()
     from .entail import ENTAIL_VERSION
+    writer = config.ollama_writer_model()
     key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS]
-                 + ([ENTAIL_VERSION, BEST_KEY()] if plan else []))
+                 + ([ENTAIL_VERSION, BEST_KEY()] if plan else []) + ([writer] if writer != model else []))
     path = _cache(base, 'script', key)
     if path.exists() and not regenerate:
         data = json.loads(path.read_text())
@@ -1174,7 +1176,7 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
         from .pacing import writer_rate
         tb = time.time()
         best_log = bestof.write_all(episode, facts, o, plan, round(episode.target_length * writer_rate(style)),
-                                    entail.default_ask(cache, ledger))
+                                    entail.default_ask(cache, ledger), write=bestof.write_ask(cache, ledger))
         log.append(dict(stage='best', attempt=0, seconds=round(time.time() - tb, 1), issues=bestof.view(best_log),
                         entries=best_log))
         times['best_s'] = round(time.time() - tb, 1)
@@ -1248,7 +1250,7 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     times['repairs_s'] = round(sum(e.get('seconds', 0) for e in log if e['stage'] == 'repair'), 1)
     times['total_s'] = round(time.time() - t0, 1)
     remaining = [str(e) for e in errors]
-    _write_json(path, dict(draft=draft.model_dump(), created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=model,
+    _write_json(path, dict(draft=draft.model_dump(), created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=model, writer_model=writer,
                            provider='ollama', prompt_version=PROMPT_VERSION, writer=FREE_SCRIPT_VERSION,
                            outline=o, plan=plan, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats)))
     LAST_RUN['script'] = dict(cached=False, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats),
@@ -1392,6 +1394,12 @@ def _generate(episode, style, base, ledger, client, prov, use_research, regenera
         notes += [f'  plan still off: {x}' for x in plan.get('remaining', [])]
     else:
         out.meta.pop('fact_plan', None)
+    if plan and prov == 'ollama':                 # labels from the beat's claim, before the fact check confirms them
+        from .cache import for_episode
+        lab = grounding.ground_labels(out, cache=for_episode(base), ledger=ledger)
+        out.meta['label_grounding'] = lab
+        notes.append(f'labels from the claims: {lab["checked"]} text(s), {lab["rewritten"]} written again from the '
+                     f'claim, {lab["dropped"]} dropped')
     if prov == 'ollama' and facts:
         # fact entailment (pipeline/entail.py): every sentence that cites a fact is checked against its quote
         from . import entail
