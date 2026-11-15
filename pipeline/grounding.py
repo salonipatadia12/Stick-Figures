@@ -59,6 +59,7 @@ GLOSS = {
     'plankton': 'plankton are tiny, often microscopic, plants and animals that drift in the sea',
     'marine': '"marine" means of the sea or the ocean',
     'organism': '"organisms" means living things, life',
+    'million': '"millions of years ago" means ancient, long ago, prehistoric',
 }
 WORD = re.compile(r"[a-z]+")
 

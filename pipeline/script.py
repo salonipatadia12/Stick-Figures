@@ -699,7 +699,9 @@ def anchor_words(narration: str) -> list:
 
 
 def _kebab(text: str) -> str:
-    return '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))[:60]
+    # 2026-11-14: a cut at 60 characters left "...-props-on-a-", which is not kebab-case: cut at a word
+    return '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))[:60].rsplit('-', 1)[0].strip('-') \
+        if len('-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))) > 60 else '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))
 
 
 def outline_schema(fact_ids, lo, hi, plan=None):
@@ -956,13 +958,70 @@ def narration_issues(episode, facts, o, ask) -> list:
     return out
 
 
+VOICE_SYSTEM = """You are the host of a 45-second science Short, talking to a friend. Say ONE line of the script in
+your own spoken words, as you would say it out loud: change the wording and the order, not the content. Contractions,
+"turns out", "here's the thing", "you" and "we" are welcome. Add NOTHING the research does not say: no new action
+(walked, roamed, sank), place (earth, underground, deep), cause, describing word (giant, small, super, precious),
+number or time; keep every group of living things in the same words or a plain equivalent. 6-16 words. Give three
+different versions."""
+VOICE_SCHEMA = dict(type='object', required=['sentences'], properties=dict(sentences=dict(
+    type='array', items=dict(type='string'), minItems=1, maxItems=3)))
+
+
+def voice_lines(episode, facts, o, ask, generate=None) -> list:
+    """Fact-first: a fact beat whose narration still copies its claim or fact after the outline repairs (2026-11-14:
+    the 9B outline writer copied five claims through three repair rounds) gets one small call that says it in story
+    voice. A version is used only if it copies nothing, keeps the word rule and passes the judge against the beat's
+    facts; else the line stays. Returns the changes [{beat, was, now}] (in place)."""
+    from . import entail
+    if ask is None:
+        return []
+    if generate is None:
+        generate = ask
+    plan = plan_of(o)
+    probe = Episode.model_validate(dict(slug='probe', topic='probe topic', sources=[f.model_dump() for f in facts],
+                                        meta=dict(interpretation=(episode.meta or {}).get('interpretation') or {})))
+    beats = o.get('beats') or []
+    out = []
+    for k, b in enumerate(beats):
+        ids = list(b.get('source_ids') or [])
+        claim = plan[k].get('claim', '') if k < len(plan) else ''
+        lines = [f.claim for f in facts if f.id in ids] + ([claim] if claim else [])
+        if not ids or not copies(b.get('narration', ''), lines):
+            continue
+        before = beats[k - 1]['narration'] if k else ''
+        after = beats[k + 1]['narration'] if k + 1 < len(beats) else ''
+        user = (f'Previous line: {before or "(none)"}\nLINE TO SAY: {b["narration"]}\nNext line: {after or "(none)"}\n\n'
+                f'What it may say (its research):\n{entail.research_text(ids, facts)}')
+        try:
+            got = generate(VOICE_SYSTEM, user, VOICE_SCHEMA) or {}
+        except Exception:
+            continue
+        research = entail.research_text(ids, facts)
+        allowed = entail.allowed_groups(probe, ids)
+        for cand in (got.get('sentences') if isinstance(got.get('sentences'), list) else [])[:3]:
+            cand = ' '.join(str(cand or '').split()).strip('"\' ')
+            others = [x['narration'] for j, x in enumerate(beats) if j != k]
+            if not 4 <= len(cand.split()) <= 18 or copies(cand, lines) or entail.repeats(cand, others):
+                continue
+            if set(entail.NUMBER.findall(cand)) - set(entail.NUMBER.findall(research)):
+                continue
+            if entail.verdict(cand, research, allowed, ask)[0] is False:
+                continue
+            out.append(dict(beat=f'b{k + 1:02d}', was=b['narration'], now=cand))
+            b['narration'] = cand if cand[-1] in '.!?' else cand + '.'
+            break
+    return out
+
+
 def plan_of(o):
     return (o or {}).get('_plan') or []
 
 
 def precision_issues(episode, facts, o) -> list:
     """Word precision (pipeline/grounding.py) on the outline's narration and on-screen text: a group of living things
-    the beat's facts do not name ("bacteria" for plankton), in code, before any beat is staged."""
+    the beat's facts do not name ("bacteria" for plankton), in code, before any beat is staged. (A line copied from
+    its fact is not sent back here: the outline writer copied through three repair rounds, so `voice_lines` says it.)"""
     from . import grounding
     if not facts:
         return []
@@ -972,11 +1031,6 @@ def precision_issues(episode, facts, o) -> list:
     for k, b in enumerate(o.get('beats') or [], 1):
         ids = set(b.get('source_ids') or [])
         allowed = grounding.allowed_for(grounding.fact_texts(facts, ids or None)) | myth
-        claim = ((plan_of(o) or [{}] * k)[k - 1] if plan_of(o) and k <= len(plan_of(o)) else {}).get('claim', '')
-        copied = copies(b.get('narration', ''), [f.claim for f in facts if f.id in ids] + ([claim] if claim else []))
-        if copied:
-            out.append(f'b{k:02d}: the narration copies "{copied}" word for word; say it in story voice, in your own '
-                       'short spoken words (keep what it says)')
         for field in ('narration', 'on_screen_text'):
             bad = grounding.imprecise(b.get(field, ''), allowed)
             if bad:
@@ -1159,7 +1213,7 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     model = config.ollama_model()
     from .entail import ENTAIL_VERSION
     key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS]
-                 + ([OUTLINE_REPAIRS_FACT_FIRST, ENTAIL_VERSION, 'outline-judge'] if plan else []))
+                 + ([OUTLINE_REPAIRS_FACT_FIRST, ENTAIL_VERSION, 'outline-judge', VOICE_SYSTEM] if plan else []))
     path = _cache(base, 'script', key)
     if path.exists() and not regenerate:
         data = json.loads(path.read_text())
@@ -1187,6 +1241,13 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
         o = norm(_outline_call(ctx, oschema, cache, ledger, o, issues, attempt))
         log[-1]['seconds'] = round(time.time() - t, 1)
     times['outline_repairs_s'] = round(time.time() - t0 - times['outline_s'], 1)
+    if plan:                                      # lines still copied from their facts: said in story voice
+        tv = time.time()
+        voiced = voice_lines(episode, facts, o, judge)
+        if voiced:
+            log.append(dict(stage='voice', attempt=0, seconds=round(time.time() - tv, 1),
+                            issues=[f'{v["beat"]}: "{v["was"]}" -> "{v["now"]}" (said in story voice)' for v in voiced]))
+        times['voice_s'] = round(time.time() - tv, 1)
     capped = _cap_graphics(o)
     if capped:
         log.append(dict(stage='outline', attempt=0, issues=capped, seconds=0))
@@ -1303,7 +1364,9 @@ def free_notes(kind: str) -> list:
                f'beat staging {t.get("details_s", "-")} s, repairs {t.get("repairs_s", "-")} s, total {t.get("total_s", "-")} s'
                + (' [from the script cache]' if run.get('cached') else '')]
         for e in run.get('repairs', []):
-            if e['stage'] == 'outline' and not e['attempt']:
+            if e['stage'] == 'voice':
+                out += [f'  {n}' for n in e['issues']]
+            elif e['stage'] == 'outline' and not e['attempt']:
                 out += [f'  {n}' for n in e['issues']]
             elif e['stage'] == 'outline':
                 out.append(f'  outline repair {e["attempt"]}: {len(e["issues"])} issue(s), {e.get("seconds", "-")} s')

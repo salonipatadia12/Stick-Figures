@@ -321,12 +321,10 @@ class Plan(unittest.TestCase):
 class WriterGuards(unittest.TestCase):
     """2026-11-14 scratch run: narration copied research lines, split labels of 4 words, the "MYTH" label rewritten."""
 
-    def test_a_narration_that_copies_its_fact_goes_back_to_the_outline(self):
-        from pipeline import script
-        o = dict(beats=[dict(narration=S3.claim, on_screen_text='', source_ids=['s3'])])
-        self.assertTrue(any('word for word' in m for m in script.precision_issues(plan_episode(), OIL, o)))
-        o['beats'][0]['narration'] = 'Turns out, oil starts as stuff that was once alive, cooked slowly.'
-        self.assertFalse(any('word for word' in m for m in script.precision_issues(plan_episode(), OIL, o)))
+    def test_a_narration_that_copies_its_fact_is_found(self):
+        from pipeline import script                   # (said again in story voice by voice_lines, not sent back)
+        self.assertEqual(script.copies(S3.claim, [S3.claim]), S3.claim)
+        self.assertEqual(script.copies('Turns out, oil starts as stuff that was once alive, cooked slowly.', [S3.claim]), '')
 
     def test_split_labels_are_cut_in_code(self):
         from pipeline import script
@@ -383,6 +381,39 @@ class OutlineStage(unittest.TestCase):
         self.assertTrue(entail.echoes('Tiny Life', 'Oil came from tiny life in the sea.', {'organisms'}))
         self.assertFalse(entail.echoes('Pre-dino era', 'Oil came from tiny life in the sea.', {'organisms'}))
         self.assertFalse(entail.echoes('Tiny bugs', 'Oil came from tiny bugs.', {'organisms'}))   # the word rule first
+
+
+class StoryVoice(unittest.TestCase):
+    """A fact beat still copied from its fact after the outline repairs is said in story voice (2026-11-14 live run)."""
+
+    def test_a_copied_line_is_said_again_and_checked(self):
+        from pipeline import script
+        o = dict(_plan=[dict(role='twist', kind='fact', fact_ids=['s7'], claim=S7.claim)],
+                 beats=[dict(narration=S7.claim, source_ids=['s7'])])
+        voiced = 'Before the dinosaurs, tiny sea plants and animals became our oil.'
+
+        def ask(system, user, schema):
+            if system == script.VOICE_SYSTEM:
+                return dict(sentences=[S7.claim, 'Giant bugs made it.', voiced])     # a copy, a wrong group, a good one
+            return dict(states_a_fact=True, adds=[], supported=True, why='')
+        got = script.voice_lines(plan_episode(), OIL, o, ask)
+        self.assertEqual(o['beats'][0]['narration'], voiced)
+        self.assertEqual(got, [dict(beat='b01', was=S7.claim, now=voiced)])
+
+    def test_a_line_that_fails_the_judge_stays(self):
+        from pipeline import script
+        o = dict(_plan=[], beats=[dict(narration=S7.claim, source_ids=['s7'])])
+        ask = lambda system, user, schema: (dict(sentences=['Ancient giants walked the earth and became oil.'])
+                                            if system == script.VOICE_SYSTEM else
+                                            dict(states_a_fact=True, adds=['walked the earth'], supported=False, why=''))
+        self.assertEqual(script.voice_lines(plan_episode(), OIL, o, ask), [])
+        self.assertEqual(o['beats'][0]['narration'], S7.claim)
+
+    def test_a_long_setting_still_gives_a_kebab_case_key(self):
+        from pipeline import auto
+        key = auto._kebab('a clean white studio background with props on a table empty')
+        self.assertRegex(key, r'^[a-z0-9]+(-[a-z0-9]+)*$')
+        self.assertLessEqual(len(key), 48)
 
 
 class UncitedAndTexts(unittest.TestCase):

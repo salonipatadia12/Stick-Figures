@@ -171,12 +171,14 @@ confirms instead of rewrites.
    fact's own line from research. The plan is in `meta.fact_plan` and on the episode page.
 3. **The outline** gets the plan, not the facts at large. Each beat's narration is written from its claim in story
    voice, with the roles and cited facts fixed. Before any beat is staged, the outline goes back to the writer (up to
-   3 repairs) with three kinds of finding:
-   - a line that copies its fact or claim word for word;
+   3 repairs) with two kinds of finding:
    - a line the judge finds says more than its claim;
    - a line in a no-fact beat that states a fact.
 
-   That way the writer fixes its own lines and the final check confirms. The staging prompt tells each beat what its
+   That way the writer fixes its own lines and the final check confirms. A fact beat that still copies its fact or
+   claim word for word (the 9B writer copied through three repair rounds) gets one small "say it in your own spoken
+   words" call with three versions. A version is used only if it copies nothing, keeps the word rule and passes the
+   judge. The staging prompt tells each beat what its
    labels may say; split labels are cut to 1-3 words in code.
 4. **Word precision.** When a fact names a group (diatoms, plankton, marine, organisms), a line uses that group's own
    words or a direct plain-English equivalent ("plankton", "tiny sea plants and animals", "microscopic"). It never

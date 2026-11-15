@@ -37,7 +37,9 @@ def first_storyline(episode) -> tuple[int | None, str]:
 
 
 def _kebab(text: str) -> str:
-    return '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))[:48]
+    # 2026-11-14: a cut at 48 characters left "...-props-on-a-", which is not kebab-case: cut at a word
+    return '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))[:48].rsplit('-', 1)[0].strip('-') \
+        if len('-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))) > 48 else '-'.join(re.findall(r'[a-z0-9]+', (text or '').lower()))
 
 
 def resolve_bases(episode, lib=None) -> list:
