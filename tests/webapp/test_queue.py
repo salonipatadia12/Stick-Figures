@@ -234,3 +234,20 @@ class ArchiveTest(unittest.TestCase):
             self.assertNotIn(slug, [e['slug'] for e in h.service.list_episodes()])
             with self.assertRaises(core.GateError):
                 h.service.archive(slug)
+
+
+class RenamedFromTest(unittest.TestCase):
+    def test_an_old_slug_goes_to_the_newest_live_episode_made_from_it(self):
+        # 2026-11-15: three crude oil episodes were renamed from one typed slug; the old link went to an archived one
+        from webapp import core
+        with Harness() as h:
+            t = db.now()
+            with h.service.engine.begin() as conn:
+                for k, (slug, state) in enumerate((('oil-3', core.ARCHIVED), ('oil-4', core.DONE), ('oil-5', core.SCRIPTING))):
+                    conn.execute(db.episodes.insert().values(
+                        slug=slug, topic='oil', niche='', audience='', state=state, cost_usd=0.0, renamed_from='typed-oil',
+                        created_at=t + dt.timedelta(minutes=k), updated_at=t))
+            with h.service.engine.connect() as conn:
+                with self.assertRaises(core.Moved) as m:
+                    h.service._episode_row(conn, 'typed-oil')
+            self.assertEqual(m.exception.new, 'oil-5')

@@ -106,7 +106,10 @@ class Service:
     def _episode_row(self, conn, slug):
         row = conn.execute(select(E).where(E.c.slug == slug)).mappings().first()
         if not row:
-            moved = conn.execute(select(E.c.slug).where(E.c.renamed_from == slug)).first()
+            # the newest episode made from this typed slug (2026-11-15: three crude oil episodes share one typed slug,
+            # and an old link went to an archived one)
+            moved = conn.execute(select(E.c.slug).where(E.c.renamed_from == slug)
+                                 .order_by((E.c.state == ARCHIVED).asc(), E.c.created_at.desc())).first()
             if moved:
                 raise Moved(slug, moved[0])
             raise NotFound(slug)
