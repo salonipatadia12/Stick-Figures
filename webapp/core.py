@@ -31,8 +31,9 @@ RESEARCHING, STORYLINES, SCRIPTING, SCRIPT = 'researching', 'storylines', 'scrip
 PAINTING, SCENES, RENDERING = 'painting', 'scenes', 'rendering'
 DONE, DONE_QA_FAILED, FAILED = 'done', 'done_qa_failed', 'failed'
 SPEND_APPROVAL = 'spend_approval'      # addition: a paid step would pass the pre-approved spend; the user decides
+ARCHIVED = 'archived'                  # user 2026-11-15: archived, never deleted (folders under data/archive/)
 STATES = (RESEARCHING, STORYLINES, SCRIPTING, SCRIPT, PAINTING, SCENES, RENDERING, DONE, DONE_QA_FAILED, FAILED,
-          SPEND_APPROVAL)
+          SPEND_APPROVAL, ARCHIVED)
 KIND_STATE = {'pitch': RESEARCHING, 'script': SCRIPTING, 'paint': PAINTING, 'render': RENDERING}
 LLM_KINDS = ('pitch', 'script')
 # SCRIPT_PROVIDER=anthropic routing; the live routing is settings.vps_kinds / settings.mac_kinds
@@ -50,7 +51,7 @@ LLM_WHAT = {'pitch': 'Research/storylines', 'script': 'Script'}
 STATE_LABELS = {RESEARCHING: 'Researching', STORYLINES: 'Pick a storyline', SCRIPTING: 'Writing the script',
                 SCRIPT: 'Review the script', PAINTING: 'Painting scenes', SCENES: 'Review the scenes',
                 RENDERING: 'Rendering', DONE: 'Done', DONE_QA_FAILED: 'Done, QA failed', FAILED: 'Failed',
-                SPEND_APPROVAL: 'Waiting: spend'}
+                SPEND_APPROVAL: 'Waiting: spend', ARCHIVED: 'Archived'}
 GATE_STATES = (STORYLINES, SCRIPT, SCENES, SPEND_APPROVAL, FAILED)
 
 
@@ -216,9 +217,38 @@ class Service:
             self._enqueue(conn, slug, 'pitch')
         return slug
 
+    def archive(self, slug, by=BY) -> str:
+        """Archive an episode, never delete it (user 2026-11-15: "Archive the leftover crude oil episodes"): its
+        folders move to data/archive/<stamp>-<slug>/ (episodes/ and outputs/ inside), its row stays with the state
+        "archived" (hidden from the list), and the folder gets row.json with the row as it was. Refused while a job of
+        it is queued or running. Returns the archive folder."""
+        import json
+        import shutil
+        with self.gate_lock, self.engine.begin() as conn:
+            row = self._episode_row(conn, slug)
+            if row is None:
+                raise GateError([f'no episode {slug}'], status=404)
+            if row['state'] == ARCHIVED:
+                raise GateError([f'{slug} is already archived'])
+            busy = conn.execute(select(J.c.id).where(and_(J.c.slug == slug, J.c.status.in_(['queued', 'running'])))).first()
+            if busy:
+                raise GateError([f'{slug} has a job queued or running; archive it when the job is done'])
+            dest = self.settings.data_dir / 'archive' / f'{time.strftime("%Y%m%d-%H%M%S")}-{slug}'
+            dest.mkdir(parents=True)
+            moved = []
+            for name, root in (('episodes', self.settings.episodes_dir), ('outputs', self.settings.outputs_dir)):
+                if (root / slug).exists():
+                    (dest / name).mkdir()
+                    shutil.move(str(root / slug), str(dest / name / slug))
+                    moved.append(f'{name}/{slug}')
+            (dest / 'row.json').write_text(json.dumps(dict(row, archived_by=by, moved=moved), default=str, indent=2) + '\n')
+            self._set_state(conn, slug, ARCHIVED, auto_note=f'archived by {by} to {dest}')
+        return str(dest)
+
     def list_episodes(self):
         with self.engine.connect() as conn:
-            rows = conn.execute(select(E).order_by(E.c.created_at.desc(), E.c.slug)).mappings().all()
+            rows = conn.execute(select(E).where(E.c.state != ARCHIVED)
+                                .order_by(E.c.created_at.desc(), E.c.slug)).mappings().all()
             names = {}
             for f in conn.execute(select(F.c.slug, F.c.name, F.c.kind)).mappings():
                 names.setdefault(f['slug'], {})[f['kind']] = f['name']

@@ -207,3 +207,30 @@ class FileSafetyTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ArchiveTest(unittest.TestCase):
+    """User 2026-11-15: leftover episodes are archived, never deleted."""
+
+    def test_an_episode_is_archived_with_its_folders_and_hidden_from_the_list(self):
+        from webapp import core
+        with Harness() as h:
+            h.login()
+            slug = to_painting(h)
+            with self.assertRaises(core.GateError):           # the paint job is queued: not now
+                h.service.archive(slug)
+            with h.service.engine.begin() as conn:
+                conn.execute(update(db.jobs).where(db.jobs.c.slug == slug).values(status='done'))
+            (h.settings.outputs_dir / slug).mkdir(parents=True, exist_ok=True)
+            (h.settings.outputs_dir / slug / 'qa.json').write_text('{}')
+            dest = h.service.archive(slug, by='test')
+            from pathlib import Path
+            dest = Path(dest)
+            self.assertTrue((dest / 'episodes' / slug / 'episode.json').is_file())
+            self.assertTrue((dest / 'outputs' / slug / 'qa.json').is_file())
+            self.assertEqual(json.loads((dest / 'row.json').read_text())['slug'], slug)
+            self.assertFalse((h.settings.episodes_dir / slug).exists())
+            self.assertEqual(h.service.episode_row(slug)['state'], core.ARCHIVED)   # the row stays
+            self.assertNotIn(slug, [e['slug'] for e in h.service.list_episodes()])
+            with self.assertRaises(core.GateError):
+                h.service.archive(slug)
