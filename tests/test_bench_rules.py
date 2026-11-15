@@ -536,6 +536,18 @@ class MythFallbackAndExamples(unittest.TestCase):
             self.assertNotRegex(bestof.WRITE_SYSTEM.lower(), rf'\b{word}')
 
 
+class SameEvent(unittest.TestCase):
+    def test_a_fact_sharing_only_the_topic_name_with_the_twist_is_not_rescued(self):
+        # 2026-11-15 deep bench: "the 1798 Roman Republic" shared "Roman", "Republic" with the twist fact
+        from pipeline.models import Episode
+        twist = Source(id='s1', claim='The ultimate cause of the Roman Republic fall was immense wealth from its empire.',
+                       url='https://doi.org/a')
+        later = Source(id='s2', claim='The Roman Republic of 1798 was a sister republic of France.', url='https://doi.org/b')
+        ep = Episode(slug='rome', topic='Why the Roman Republic fell',
+                     meta=dict(interpretation=dict(question='Why did the Roman Republic fall?', twist=dict(id='s1'))))
+        self.assertEqual(grounding.on_topic([twist, later], ep, lambda *a: dict(helps=False)), set())
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):

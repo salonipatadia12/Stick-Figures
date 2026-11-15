@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v6'   # v6: beats and length follow the usable facts   # v2: ranges kept whole in the claims; v3: facts judged on topic
+GROUNDING_VERSION = 'ground-v7'   # v7: the same event or period, topic words do not rescue; v6: beats and length follow the usable facts   # v2: ranges kept whole in the claims; v3: facts judged on topic
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -243,9 +243,10 @@ def _same(a, b) -> bool:
 
 
 ON_TOPIC_SYSTEM = """A fact was found by searching the web for a short explainer video. Answer whether it helps answer the
-video's question: it is about the same subject (the same thing, event, country or process), not another subject
-that only shares a word ("plasma catalysts" for compound interest, "US Federalists" for the Roman Republic, "heart
-failure drugs" for anything else). A fact about the subject's history, causes, effects or how it works helps."""
+video's question: it is about the same subject AND the same event or period, not another subject that only shares a
+word or a name ("plasma catalysts" for compound interest, "US Federalists" or "the 1798 Roman Republic" or "invaders
+of Italy after the empire fell" for the fall of the ancient Roman Republic, "heart failure drugs" for anything else).
+A fact about the subject's own history, causes, effects or how it works helps."""
 ON_TOPIC_SCHEMA = dict(type='object', required=['helps', 'why'], properties=dict(helps=dict(type='boolean'),
                                                                                  why=dict(type='string')))
 
@@ -262,7 +263,9 @@ def on_topic(sources, episode, ask) -> set | None:
     q = interp.get('question') or episode.topic
     by = {s.id: s for s in sources}
     tid = (interp.get('twist') or {}).get('id') or twist_fact(interp, sources)
-    twist_words = _words(by[tid]) if tid in by else set()
+    from .qa import content_words
+    # the topic's own name does not tie a fact to the twist ("Roman", "Republic" for the 1798 Roman Republic)
+    twist_words = (_words(by[tid]) if tid in by else set()) - content_words(f'{episode.topic} {q}')
     keep = set()
     for s in sources:
         try:
