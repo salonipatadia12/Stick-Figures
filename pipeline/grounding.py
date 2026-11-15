@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v3'   # v2: ranges kept whole in the claims; v3: facts judged on topic
+GROUNDING_VERSION = 'ground-v4'   # v2: ranges kept whole in the claims; v3: facts judged on topic
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -242,6 +242,7 @@ def _same(a, b) -> bool:
     return bool(wa and wb) and len(wa & wb) / len(wa | wb) >= DUPLICATE
 
 
+ON_TOPIC_WORDS = 1               # shared content words that keep a fact without asking the judge
 ON_TOPIC_SYSTEM = """A fact was found by searching the web for a short explainer video. Answer whether it helps answer the
 video's question: it is about the same subject (the same thing, event, country or process), not another subject
 that only shares a word ("plasma catalysts" for compound interest, "US Federalists" for the Roman Republic, "heart
@@ -254,13 +255,20 @@ def on_topic(sources, episode, ask) -> set | None:
     """The ids of the facts that help answer the video's question (one short yes/no call each), or None without a
     judge (2026-11-15 bench: plasma catalysts for compound interest, US Federalists and heart-failure drugs for the
     Roman Republic; and the Republic's own senators and allies were never told, sharing no word with the question).
-    A fact the judge cannot answer for is kept."""
+    A fact that shares a content word with the question, topic or claims is kept without a call ("oil" is too short to
+    count, so "crude" does); the judge
+    decides the others. A fact the judge cannot answer for is kept."""
     if ask is None:
         return None
     interp = (episode.meta or {}).get('interpretation') or {}
     q = interp.get('question') or episode.topic
+    from .qa import content_words
+    topic = content_words(' '.join([q, episode.topic] + list(interp.get('claims') or [])))
     keep = set()
     for s in sources:
+        if len(_words(s) & topic) >= ON_TOPIC_WORDS:  # plainly about the topic: kept without asking (2026-11-15 crude
+            keep.add(s.id)                            # oil -5: the judge put "Heat and pressure turned ... into crude
+            continue                                  # oil over millions of years" off topic)
         try:
             a = ask(ON_TOPIC_SYSTEM, f'Video question: {q}\nTopic: {episode.topic}\nFact: {s.claim}', ON_TOPIC_SCHEMA) or {}
         except Exception:
@@ -562,12 +570,14 @@ def narrowed(line: str, research: str) -> str:
     own = {_num(m.group(0)): m.group(0) for m in TOKEN.finditer(line or '')}
     said = set(own)
     for t in sorted(said):
-        if t in alone:
-            continue
-        if t in inrange:
+        if t in inrange:                              # a range in any cited fact wins over a lone mention in another
+            # (2026-11-15 crude oil -5: s1's "millions of years ago" let "turning to fuel over millions of years" pass,
+            # though s5 says the change takes "thousands to millions of years")
             partners = [(a, b, text) for a, b, text in ranges if t in (a, b)]
             if not any((b if t == a else a) in said for a, b, _ in partners):
                 return f'narrows the range "{partners[0][2]}" to "{own[t]}"; say the whole range'
+        elif t in alone:
+            continue
         elif not t.isdigit() or t not in research:
             return f'"{own[t]}" is a number the research does not have'
     return ''

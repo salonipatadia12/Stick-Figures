@@ -31,6 +31,11 @@ class Ranges(unittest.TestCase):
         self.assertEqual(grounding.narrowed('Oil formed 10 to 100 million years ago.', r), '')
         self.assertIn('"65"', grounding.narrowed('Dinosaurs died 65 million years ago.', r))
         self.assertEqual(grounding.narrowed('It lived millions of years ago.', 's7: remains that lived millions of years ago'), '')
+        # 2026-11-15 crude oil -5: a lone "millions" in another cited fact does not excuse narrowing the range
+        both = ('s5: kerogen becomes fossil fuel over thousands to millions of years.\n'
+                's1: plants that lived millions of years ago')
+        self.assertIn('narrows the range', grounding.narrowed('It turned to fuel over millions of years.', both))
+        self.assertEqual(grounding.narrowed('It turned to fuel over thousands to millions of years.', both), '')
 
     def test_the_claims_check_fails_a_narrowed_range_in_code(self):
         asked = []
@@ -171,6 +176,11 @@ class BenchRunOne(unittest.TestCase):
         ep = plan_episode()
         judge = lambda s, u, sc: dict(helps='Plasmas' not in u, why='')
         self.assertEqual(grounding.on_topic([plasma, senators], ep, judge), {'s10'})
+        heat = Source(id='s2', claim='Heat and pressure turned ancient remains into crude oil over millions of years.',
+                      url='https://www.eia.gov/x')
+        asked = []
+        self.assertEqual(grounding.on_topic([heat], ep, lambda *a: asked.append(a) or dict(helps=False)), {'s2'})
+        self.assertEqual(asked, [])                                  # plainly about the topic: not sent to the judge
         self.assertIsNone(grounding.on_topic([plasma], ep, None))
         roles = ['hook', 'clue', 'clue', 'twist', 'payoff', 'loop']
         out = grounding.assign_facts(roles, [S7, plasma, senators], 's7', ep.meta['interpretation'], None,
