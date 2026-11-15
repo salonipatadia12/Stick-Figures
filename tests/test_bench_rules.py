@@ -298,6 +298,24 @@ class CrudeOilFive(unittest.TestCase):
         self.assertEqual(e['line'], line)
         self.assertIn('17-26 words', t.prompts[0])                    # but the writer was asked for the longer line
 
+    def test_each_beat_s_budget_starts_from_the_base_range(self):
+        # 2026-11-15 final bench: the reveal got the twist's budget as its base and required 17 words
+        from pipeline import bestof
+        seen = []
+        real = bestof.write_beat
+
+        def spy(episode, facts, pbs, k, chosen, nxt, words, ask, **kw):
+            seen.append(tuple(words))
+            return dict(line='A plain line here.', ids=[], kept=['A plain line here.'], tried=[], rejected={}, beat=f'b{k + 1:02d}',
+                        role=pbs[k]['role'], kind=pbs[k]['kind'])
+        pbs = [dict(role='hook', kind='question', fact_ids=[], claim=''), dict(role='twist', kind='fact', fact_ids=['s7'], claim='c'),
+               dict(role='reveal', kind='fact', fact_ids=['s8'], claim='c'), dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        o = dict(beats=[dict(narration='', source_ids=[]) for _ in pbs], hook_options=[])
+        with mock.patch.object(bestof, 'write_beat', spy):
+            bestof.write_all(plan_episode(), OIL, o, dict(beats=pbs, twist='s7'), 112, lambda *a: {})
+        base = bestof.per_beat_words(112, len(pbs))
+        self.assertEqual(seen[2][2], base[0])                         # accepted from the base minimum, not 17+
+
     def test_lengthen_never_pads_a_beat_that_cites_nothing(self):
         ep = host_episode()
         for b in ep.beats:

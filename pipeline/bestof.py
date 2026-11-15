@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v8'   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v9'   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
 # v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
@@ -417,10 +417,10 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -
     # the payoff answers the hook (the gate checks it) and may restate the twist, so it may cite the twist fact too
     pbs = [dict(pb, answer_to=promise, fact_ids=list(dict.fromkeys(list(pb['fact_ids']) + ([twist] if twist else []))))
            if pb['role'] == 'payoff' and promise else pb for pb in plan['beats']]
-    words = per_beat_words(words_total, len(pbs))
+    base = per_beat_words(words_total, len(pbs))
     chosen = []
     for k, ob in enumerate(beats[:len(pbs)]):
-        words = budget(words_total, pbs, k, chosen, words)
+        words = budget(words_total, pbs, k, chosen, base)   # from the base range each time, never the last beat's
         nb = pbs[k + 1] if k + 1 < len(pbs) else None
         nxt = (f'{nb["role"]}: {nb["claim"]}' if nb and nb.get('claim') else f'{nb["role"]} ({nb["kind"]})') if nb else ''
         e = write_beat(episode, facts, pbs, k, chosen, nxt, words, ask, log=log, write=write)
