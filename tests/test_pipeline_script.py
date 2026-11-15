@@ -303,6 +303,12 @@ class OllamaScript(unittest.TestCase):
             return dict(best=1, why='the fixture')
         if system == entail.SPLIT_SYSTEM:              # the fixture's lines assert nothing the fake must judge
             return dict(claims=[], nonsense=[])
+        if system == grounding.ON_TOPIC_SYSTEM:        # every fixture fact is about the topic
+            return dict(helps=True, why='the fixture')
+        if system == bestof.ASSERTS_SYSTEM:
+            return dict(says_it_is_true=False, why='the fixture')
+        if system == grounding.LABEL_SYSTEM:
+            return dict(texts=[])
         i = int(user.split('STAGE b')[1][:2]) - 1
         ob = OUTLINE_BEATS[i]
         bad = i in self.bad_label and 'THE CHECKER FOUND' not in user

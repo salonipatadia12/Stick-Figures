@@ -952,7 +952,9 @@ def copies(narration: str, lines) -> str:
 
 def BEST_KEY():
     from . import bestof, entail
-    return [bestof.BEST_VERSION, bestof.WRITE_SYSTEM, bestof.RANK_SYSTEM, bestof.bank().get('version'), entail.SPLIT_SYSTEM]
+    from . import grounding
+    return [bestof.BEST_VERSION, bestof.WRITE_SYSTEM, bestof.RANK_SYSTEM, bestof.bank().get('version'), entail.SPLIT_SYSTEM,
+            grounding.GROUNDING_VERSION, grounding.LABEL_VERSION]
 
 
 def plan_of(o):

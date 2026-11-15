@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v2'   # v2: ranges kept whole in the claims
+GROUNDING_VERSION = 'ground-v3'   # v2: ranges kept whole in the claims; v3: facts judged on topic
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -242,13 +242,42 @@ def _same(a, b) -> bool:
     return bool(wa and wb) and len(wa & wb) / len(wa | wb) >= DUPLICATE
 
 
-def assign_facts(roles, sources, twist, interp, storyline=None) -> dict:
+ON_TOPIC_SYSTEM = """A fact was found by searching the web for a short explainer video. Answer whether it helps answer the
+video's question: it is about the same subject (the same thing, event, country or process), not another subject
+that only shares a word ("plasma catalysts" for compound interest, "US Federalists" for the Roman Republic, "heart
+failure drugs" for anything else). A fact about the subject's history, causes, effects or how it works helps."""
+ON_TOPIC_SCHEMA = dict(type='object', required=['helps', 'why'], properties=dict(helps=dict(type='boolean'),
+                                                                                 why=dict(type='string')))
+
+
+def on_topic(sources, episode, ask) -> set | None:
+    """The ids of the facts that help answer the video's question (one short yes/no call each), or None without a
+    judge (2026-11-15 bench: plasma catalysts for compound interest, US Federalists and heart-failure drugs for the
+    Roman Republic; and the Republic's own senators and allies were never told, sharing no word with the question).
+    A fact the judge cannot answer for is kept."""
+    if ask is None:
+        return None
+    interp = (episode.meta or {}).get('interpretation') or {}
+    q = interp.get('question') or episode.topic
+    keep = set()
+    for s in sources:
+        try:
+            a = ask(ON_TOPIC_SYSTEM, f'Video question: {q}\nTopic: {episode.topic}\nFact: {s.claim}', ON_TOPIC_SCHEMA) or {}
+        except Exception:
+            a = {}
+        if a.get('helps') is not False:
+            keep.add(s.id)
+    return keep
+
+
+def assign_facts(roles, sources, twist, interp, storyline=None, relevant=None) -> dict:
     """{beat index: fact id}, chosen in code (user 2026-11-14: "the facts are chosen in code before writing"). The
     twist beat says the twist fact; for a topic that corrects a myth, the problem beat says the fact that breaks it
     (another fact the claims were judged on); the payoff the fact closest to the question; the reveal the fact of how it
     works (a cause: heat, pressure, a process); the other middle beats the most relevant facts left. A fact is used
     once, a near-duplicate of a used fact is skipped, and a fact that shares nothing with the topic is never used: a
-    beat left without one states no fact."""
+    beat left without one states no fact. `relevant`: the ids the on-topic judge kept (on_topic); then every one of
+    them may be told, whatever words it shares, and no other."""
     from .qa import content_words
     from .understand import has_myth
     by = {s.id: s for s in sources}
@@ -267,7 +296,8 @@ def assign_facts(roles, sources, twist, interp, storyline=None) -> dict:
             used.append(s)
 
     def best(score, pool=None):
-        cands = [s for s in (pool if pool is not None else sources) if free(s) and len(_words(s) & topic) >= RELEVANT]
+        cands = [s for s in (pool if pool is not None else sources) if free(s)
+                 and (s.id in relevant if relevant is not None else len(_words(s) & topic) >= RELEVANT)]
         # of two near-duplicates the scientific source is told, the simplified page only when it is alone
         cands = [s for s in cands if not any(_same(s, o) and quality(o) > quality(s) for o in cands if o is not s)]
         return max(cands, key=lambda s: (score(s), quality(s), -int(s.id[1:]) if s.id[1:].isdigit() else 0), default=None)
@@ -437,7 +467,10 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
     myth = myth_groups(interp, sources)
     ask = ask if ask is not None else entail.default_ask(cache, ledger)
     roles = skeleton(episode.story_format, (aim[0] + aim[1] + 1) // 2)
-    facts = assign_facts(roles, sources, twist, interp, episode.storyline)
+    relevant = on_topic(sources, episode, ask)
+    if relevant is not None and twist:
+        relevant.add(twist)
+    facts = assign_facts(roles, sources, twist, interp, episode.storyline, relevant)
     schema = plan_schema(len(roles))
     if generate is None:
         from . import llm
@@ -479,6 +512,7 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
         _fallback(plan, sources, claims, notes)
     left = plan_issues(plan, sources, myth, None)[0]
     return dict(version=GROUNDING_VERSION, twist=twist, beats=plan['beats'], attempts=attempts, notes=notes,
+                off_topic=sorted(x.id for x in sources if relevant is not None and x.id not in relevant),
                 remaining=left)
 
 
@@ -589,12 +623,12 @@ def gives_away(hook: str, twist_text: str, twist_claim: str, interp: dict, sourc
 
 # ------------------------------------------------------------------ labels from the claim (user 2026-11-15)
 
-LABEL_VERSION = 'labels-v1'
+LABEL_VERSION = 'labels-v2'   # v2 (bench run 1): a label needs a real word; a no-fact beat's labels are its own phrases
 STRUCTURE_WORDS = {'myth', 'fact', 'true', 'false', 'truth', 'real', 'then', 'now', 'before', 'after', 'today', 'step',
                    'start', 'end', 'answer', 'question', 'wrong', 'right'}
 LABEL_SYSTEM = """You write the short texts shown on screen for ONE beat of a narrated science video. Each text is
 1-3 words (a caption up to 5) and uses ONLY words of the beat's claim or narration given, so it says nothing the beat
-does not say. Keep what each old text pointed at when the claim or narration names it; otherwise name the most
+does not say; for a beat with no claim, copy a short phrase of the narration exactly. Keep what each old text pointed at when the claim or narration names it; otherwise name the most
 important thing they say. "MYTH" or "FACT" may mark a side. No slang, no numbers the narration does not say."""
 LABEL_SCHEMA = dict(type='object', required=['texts'], properties=dict(texts=dict(type='array', items=dict(type='string'))))
 
@@ -605,15 +639,22 @@ def label_words(b, pb) -> set:
     return content_words(f'{b.narration} {(pb or {}).get("claim", "")}') | STRUCTURE_WORDS
 
 
+def _phrase(t: str) -> str:
+    return ' '.join(re.findall(r"[a-z0-9']+", t.lower()))
+
+
 def from_claim(text: str, b, pb, most: int) -> bool:
     """True when the text uses only the beat's narration or claim words (no number the narration does not say, no
-    slang), and fits its slot."""
+    slang), has at least one real word, and fits its slot. A beat that states no fact (a question, a reaction) shows
+    only a phrase its narration says as it is (2026-11-15 bench: "Telling Real", "? IS IT", "NO")."""
     from .bestof import SLANG
     from .entail import NUMBER
     from .qa import content_words
     words = content_words(text)
     nums = {n.strip('.,') for n in NUMBER.findall(text)} - {n.strip('.,') for n in NUMBER.findall(b.narration)}
-    return (bool(text.strip()) and len(text.split()) <= most and words <= label_words(b, pb) and not nums
+    if (pb or {}).get('kind', 'fact') not in ('fact', 'myth') and _phrase(text) not in _phrase(b.narration):
+        return False
+    return (bool(words) and len(text.split()) <= most and words <= label_words(b, pb) and not nums
             and not set(re.findall(r"[a-z']+", text.lower())) & SLANG)
 
 

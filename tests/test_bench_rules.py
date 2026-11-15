@@ -158,6 +158,80 @@ class BenchFindings(unittest.TestCase):
         self.assertEqual({h['answer'] for h in o['hook_options']}, {'Oil came from tiny sea plants and animals.'})
 
 
+class BenchRunOne(unittest.TestCase):
+    """2026-11-15 bench run 1 (9B writer): off-topic facts told and on-topic ones skipped; the yawn hook and loop said
+    the myth as a fact; a reveal reported a new belief; a transition gave the twist away; "*really*" read aloud;
+    labels "Telling Real", "NO"."""
+    ask, episode, plan = BestOfN.ask, BestOfN.episode, BestOfN.plan
+
+    def test_facts_judged_on_topic_are_told_whatever_words_they_share(self):
+        plasma = Source(id='s9', claim='Plasmas allow thermodynamically unfavorable reactions to occur easily.',
+                        url='https://doi.org/x')
+        senators = Source(id='s10', claim='Senators lacked an incentive to use their authority.', url='https://doi.org/y')
+        ep = plan_episode()
+        judge = lambda s, u, sc: dict(helps='Plasmas' not in u, why='')
+        self.assertEqual(grounding.on_topic([plasma, senators], ep, judge), {'s10'})
+        self.assertIsNone(grounding.on_topic([plasma], ep, None))
+        roles = ['hook', 'clue', 'clue', 'twist', 'payoff', 'loop']
+        out = grounding.assign_facts(roles, [S7, plasma, senators], 's7', ep.meta['interpretation'], None,
+                                     relevant={'s7', 's10'})
+        self.assertIn('s10', out.values())                           # no word in common with the question, still told
+        self.assertNotIn('s9', out.values())
+
+    def test_a_hook_or_loop_that_says_the_myth_as_a_fact_is_refused(self):
+        from pipeline import bestof
+        interp = self.episode().meta['interpretation']
+        says = lambda s, u, sc: dict(says_it_is_true='It was dinosaurs' in u, why='')
+        self.assertEqual(bestof.asserts_myth('It was dinosaurs.', interp, says), 'dinosaur')
+        self.assertEqual(bestof.asserts_myth('Your gas is older than the dinosaurs.', interp, says), '')   # judge: no
+        self.assertEqual(bestof.asserts_myth('Was it dinosaurs?', interp, says), '')                      # a question
+        base = self.ask(['It was dinosaurs.', 'Was it really dinosaurs?'])
+        ask = lambda s, u, sc: says(s, u, sc) if s == bestof.ASSERTS_SYSTEM else base(s, u, sc)
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 0, [], 'twist', (3, 8), ask)
+        self.assertIn('says the myth as a fact', e['rejected']['It was dinosaurs.'])
+        self.assertEqual(e['line'], 'Was it really dinosaurs?')
+
+    def test_only_the_myth_beat_reports_a_belief(self):
+        from pipeline import bestof
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='reveal', kind='transition', fact_ids=[], claim=''), dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        base = self.ask(['Others claim oil is just old soup.', 'But is that the whole story?'])
+
+        def ask(system, user, schema):
+            if system == entail.SPLIT_SYSTEM and 'Others claim' in user:
+                return dict(claims=[dict(text='oil is just old soup', kind='belief')], nonsense=[])
+            return base(system, user, schema)
+        e = bestof.write_beat(self.episode(), OIL, plan, 1, ['Hook?'], 'loop', (5, 12), ask)
+        self.assertIn('reports a belief', e['rejected']['Others claim oil is just old soup.'])
+        self.assertEqual(e['line'], 'But is that the whole story?')
+
+    def test_a_no_fact_line_counts_as_a_claim_for_repeats_and_markdown_is_stripped(self):
+        from pipeline import bestof
+        chosen = ['Hook?', "But it's not just anyone we copy."]
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='clue', kind='transition', fact_ids=[], claim=''),
+                dict(role='reveal', kind='fact', fact_ids=['s7'], claim='We copy only those we bond with.'),
+                dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        e = bestof.write_beat(self.episode(), OIL, plan, 2, chosen, 'loop', (4, 14),
+                              self.ask(["We don't copy just anyone, only those who bond.", 'Tiny sea plants and animals made the oil.']))
+        self.assertIn("same claim as an earlier beat", e['rejected']["We don't copy just anyone, only those who bond."])
+        self.assertEqual(bestof._clean('Real? Like *really* real'), 'Real? Like really real.')
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 0, [], 'twist', (3, 8),
+                              self.ask(['Believing this costs you billions.', 'but also on the interest.', 'What is in your tank?']))
+        self.assertIn('number the research does not have', e['rejected']['Believing this costs you billions.'])
+        self.assertEqual(e['rejected']['but also on the interest.'], 'starts mid-sentence')
+
+    def test_a_no_fact_beat_shows_only_its_own_phrases(self):
+        ep = host_episode()
+        b = ep.beats[1]
+        b.narration = "Wait... you're telling me this is real?"
+        ep.meta['fact_plan'] = dict(beats=[dict(role=x.role, kind='reaction', fact_ids=[], claim='') for x in ep.beats])
+        pb = ep.meta['fact_plan']['beats'][1]
+        self.assertFalse(grounding.from_claim('Telling Real', b, pb, 3))
+        self.assertTrue(grounding.from_claim('this is real', b, pb, 3))
+        self.assertFalse(grounding.from_claim('NO', b, dict(kind='fact'), 3))     # no real word
+
+
 class WriterModel(unittest.TestCase):
     def test_the_writer_defaults_to_the_judge_model(self):
         with mock.patch.dict(os.environ, {'OLLAMA_MODEL': 'qwen3.5:9b', 'OLLAMA_WRITER_MODEL': ''}):

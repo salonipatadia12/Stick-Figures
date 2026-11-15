@@ -22,9 +22,13 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v4'   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v5'   # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
+# v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
+# repeats too, no markdown in a line, no "{hook} Now you know." loop
+DOUBT = re.compile(r"\?|\b(think|thinks|thought|believe|believes|believed|told|say|says|said|claim|claims|myth|"
+                   r"really|actually|not|isn't|wasn't|aren't|weren't|never|no|wrong|maybe|just)\b", re.I)
 PLAIN = ('Here is the surprise.', 'But there is a catch.', 'So what really happened?', 'Now it gets strange.',
          'Wait. It gets better.', 'Here is the clue.')
 NO_FACT_MIN_WORDS = 2            # "But there's a catch." is a whole transition (2026-11-15 bench: 4-5 word lines refused)
@@ -42,7 +46,8 @@ asked for, each in the length asked for."""
 RANK_SYSTEM = """You pick the best line for one beat of a narrated science Short: the most vivid, the best rhythm read
 aloud, the most natural follow-on from the previous line, and a good set-up for the next beat. For a hook: the one a
 viewer cannot scroll past: it opens a question the video answers later and never gives that answer away, and it
-never argues against something nobody believes. Answer with the number of the best line."""
+never argues against something nobody believes. Never pick a line with broken grammar or a missing verb. Answer with
+the number of the best line."""
 
 BELIEF_SYSTEM = """A line of a science video says what people believe (the myth the video corrects). Answer whether it
 reports a belief people really hold, as the misconception given states it, without inventing a sillier or different
@@ -129,8 +134,40 @@ def shares_stem(a: str, b: str) -> bool:
     return bool(fold(a) & fold(b))
 
 
+ASSERTS_SYSTEM = """A line of a science video names the subject of a common misconception. Answer whether the line itself
+says the misconception is TRUE (as a plain statement, not a question, a doubt or a report of what people think).
+"It was boredom." for the misconception "we yawn because we are bored" says it is true. "Your gas is older than the
+dinosaurs." for "oil comes from dinosaurs" does not: it names dinosaurs but says something else."""
+ASSERTS_SCHEMA = dict(type='object', required=['says_it_is_true', 'why'], properties=dict(
+    says_it_is_true=dict(type='boolean'), why=dict(type='string')))
+
+
+def asserts_myth(line: str, interp: dict, ask=None) -> str:
+    """The myth's words the line says as a plain fact ('' when none, or when it doubts, questions or reports them):
+    2026-11-15 bench: the yawn hook "It was boredom." and its loop "It was boredom. Now you know." stated the myth.
+    Code picks the lines that name a myth word with no doubt in them; the judge then says whether the line states the
+    misconception as true (a model that does not answer lets the line through)."""
+    from .qa import content_words
+    from .understand import has_myth
+    if not has_myth(interp or {}) or DOUBT.search(line or ''):
+        return ''
+    stem = lambda w: w[:5]
+    myth = {stem(w) for w in content_words(' '.join([interp.get('misconception', '')]
+                                                     + list(interp.get('myth_subjects') or [])))}
+    topic = {stem(w) for w in content_words(f'{interp.get("question", "")} {interp.get("topic", "")}')}
+    hit = sorted(w for w in content_words(line) if stem(w) in myth - topic)
+    if not hit or ask is None:
+        return ', '.join(hit) if ask is None else ''
+    try:
+        a = ask(ASSERTS_SYSTEM, f'Line: {line}\nThe misconception: {interp.get("misconception", "")}', ASSERTS_SCHEMA) or {}
+    except Exception:
+        return ''
+    return ', '.join(hit) if a.get('says_it_is_true') is True else ''
+
+
 def _clean(line: str) -> str:
-    line = ' '.join(str(line or '').split()).strip('"\' ')
+    line = re.sub(r'[*_#`~]+', '', str(line or ''))   # 2026-11-15 bench: "Real? Like *really* real" (read aloud)
+    line = ' '.join(line.split()).strip('"\' ')
     line = re.sub(r'^\s*\d+[.)]\s*', '', line)
     return line if not line or line[-1] in '.!?' else line + '.'
 
@@ -222,7 +259,9 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     # the payoff may restate the twist, and the loop is a callback to the hook: those pairs are not repeats
     exempt = lambda j: (role == 'payoff' and j < len(plan_beats) and plan_beats[j]['role'] == 'twist') or \
         (kind == 'loop' and j == 0)
-    earlier = [(label, [c['text'] for c in (entail.split_claims(line, ask)[0] or []) if c['kind'] == 'fact'])
+    # a line that states no fact counts by its own words (2026-11-15 bench: "But it's not just anyone we copy." and
+    # then the twist "we don't copy just anyone")
+    earlier = [(label, [c['text'] for c in (entail.split_claims(line, ask)[0] or []) if c['kind'] == 'fact'] or [line])
                for label, j, line in others if not exempt(j)]
     compare = [line for _, j, line in others if not exempt(j)]
     hook = chosen[0] if chosen else ''
@@ -236,6 +275,10 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = f'{w} words'
         elif UNFINISHED.search(c) or set(re.findall(r"[a-z']+", c.lower())) & SLANG:
             why_not[c] = 'slang or an unfinished line'
+        elif not re.match(r'["\'(]?[A-Z0-9]', c):      # 2026-11-15 bench: the twist "but also on the interest ..."
+            why_not[c] = 'starts mid-sentence'
+        elif grounding.narrowed(c, research):          # also hooks and no-fact lines ("costs you millions")
+            why_not[c] = grounding.narrowed(c, research)
         elif twist_groups and not grounding.groups(c) & (grounding.allowed_for([f'{by[twist].claim} {by[twist].quote}'])
                                                           - grounding.myth_groups(interp, facts)):
             why_not[c] = f'the twist must say what its fact names ({", ".join(sorted(twist_groups))})'
@@ -258,6 +301,8 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = f'does not answer the hook (say what it promised: "{pb["answer_to"][:120]}")'
         elif kind == 'loop' and hook and not shares_stem(c, hook):
             why_not[c] = 'does not repeat a word of the hook'
+        elif kind in ('hook', 'loop') and asserts_myth(c, interp, ask):
+            why_not[c] = f'says the myth as a fact ({asserts_myth(c, interp, ask)}); ask, doubt or report it instead'
         elif pb['kind'] == 'myth' and not real_belief(c, interp, ask)[0]:
             why_not[c] = f'not the belief people hold ({real_belief(c, interp, ask)[1]})'
         else:
@@ -266,10 +311,14 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             if ok is False and ids and kind in ('hook', 'loop'):   # a hook or loop may also state no fact at all
                 ok2, _ = entail.verdict(c, '', entail.allowed_groups(episode, ()), ask, entail.NONFACT_SYSTEM)
                 ok = True if ok2 is not False else ok
-            again = grounding.repeated_claim([x['text'] for x in (entail.split_claims(c, ask)[0] or [])
-                                              if x['kind'] == 'fact'], earlier, ignore) if ok is not False else ''
+            mine = entail.split_claims(c, ask)[0] or [] if ok is not False else []
+            again = grounding.repeated_claim([x['text'] for x in mine if x['kind'] == 'fact'] or [c], earlier,
+                                             ignore) if ok is not False else ''
+            belief = [x['text'] for x in mine if x['kind'] == 'belief'] if pb['kind'] != 'myth' and kind != 'hook' else []
             if ok is False:
                 why_not[c] = why
+            elif belief:                               # 2026-11-15 bench: the yawn reveal "Others claim yawning is ..."
+                why_not[c] = f'reports a belief ({belief[0]}); only the myth beat says what people believe'
             elif again:                                # no two beats make the same claim (the payoff may restate the twist)
                 why_not[c] = f'makes the same claim as an earlier beat ({again})'
             else:
@@ -291,8 +340,7 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
         fallback = pb.get('claim')
         if fallback and pb.get('answer_to') and not answers(fallback, pb['answer_to']) and twist_claim:
             fallback = f'{twist_claim} {fallback}'        # the gate needs the payoff to answer the hook
-        fallback = fallback or {'hook': 'What is really in your tank?',
-                                        'loop': f'{hook} Now you know.' if hook else ''}.get(kind, '')
+        fallback = fallback or {'hook': 'What is really going on here?', 'loop': 'Now you know.'}.get(kind, '')
         plain = next((x for x in PLAIN if x not in chosen and not entail.repeats(x, chosen)), PLAIN[0])
         entry.update(line=fallback or plain,
                      why='no candidate passed: ' + ('the planned claim' if pb.get('claim') else 'a plain line'))
