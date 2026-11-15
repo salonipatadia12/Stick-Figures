@@ -522,17 +522,20 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=Non
     was = episode.is_approved('script')               # before the narration changes
     old_line = b.narration
     b.narration = line
-    b.on_screen_text = _swap_in(b.on_screen_text or '', word, new)
     sh = b.shot
-    for m in sh.motion:
+    if new == REWRITTEN:                              # 2026-11-15: the marker itself went into a label; the texts keep
+        sh = None                                     # their words (the text check judged them against the facts)
+    else:
+        b.on_screen_text = _swap_in(b.on_screen_text or '', word, new)
+    for m in (sh.motion if sh else []):
         m.anchor = _swap_in(m.anchor or '', word, new)
-    if sh.insert:
+    if sh and sh.insert:
         for e in sh.insert.effects:
             e.detail, e.anchor = _swap_in(e.detail or '', word, new), _swap_in(e.anchor or '', word, new)
-    if sh.graphic:
+    if sh and sh.graphic:
         sh.graphic.items = [_swap_in(x, word, new) for x in sh.graphic.items]
         sh.graphic.anchors = [_swap_in(x, word, new) for x in sh.graphic.anchors]
-    if sh.split:
+    if sh and sh.split:
         sh.split.labels = [_swap_in(x, word, new) for x in sh.split.labels]
         sh.split.anchors = [_swap_in(x, word, new) for x in sh.split.anchors]
     if new == REWRITTEN:                              # words the rewritten line no longer says: re-anchored

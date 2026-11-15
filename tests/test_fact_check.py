@@ -752,8 +752,10 @@ class SwapWord(unittest.TestCase):
                 return dict(lines=['Heat and pressure turn it all.', good])
             return dict(best=1, why='') if s == bestof.RANK_SYSTEM else NO_CLAIMS
         self.ep.beats[1].narration = 'Heat and pressure turn this biomass into energy-dense hydrocarbons.'
+        self.ep.beats[1].on_screen_text = 'Heat turn'
         self.assertEqual(repair.swap_word(self.ep.slug, self.ep, self.beat, 'turn', write=write), repair.REWRITTEN)
         self.assertEqual(self.ep.beats[1].narration, good)
+        self.assertEqual(self.ep.beats[1].on_screen_text, 'Heat turn')          # no marker in the texts (2026-11-15)
         self.ep.beats[1].narration = 'Organic matter becomes kerogen first.'
         slang = lambda s, u, sc: (dict(replacement='rock goo', line='Organic matter becomes rock goo first.')
                                   if s == repair.SWAP_SYSTEM else dict(lines=[]) if s == bestof.WRITE_SYSTEM else NO_CLAIMS)

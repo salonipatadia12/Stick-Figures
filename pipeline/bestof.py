@@ -47,9 +47,10 @@ RANK_SCHEMA = dict(type='object', required=['best', 'why'], properties=dict(best
                                                                              why=dict(type='string')))
 
 KIND_GUIDE = {
-    'question': 'ask the question the next beat answers; state no fact',
-    'transition': 'move the story on ("But there is a catch."); state no fact',
-    'reaction': 'the host reacts to what was just said ("Wait, really?"); state no fact',
+    'question': 'ask the question the next beat answers; do not answer it; state no fact',
+    'transition': 'move the story on ("But there is a catch."); do not explain anything; state no fact',
+    'reaction': 'the host reacts with surprise or doubt to the previous line in a few words ("Hold on. Is that really '
+                'true?"); do not explain or correct it (the next beat does that) and state no fact',
     'callback': 'repeat words of the hook with the new meaning; state no fact',
     'myth': 'say what many people believe (the misconception below), clearly as a belief ("Many think..."); keep the '
             'belief itself sensible (no category mix-ups)',
