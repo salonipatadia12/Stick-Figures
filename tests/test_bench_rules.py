@@ -280,10 +280,23 @@ class CrudeOilFive(unittest.TestCase):
         pbs = [dict(kind=k) for k in ('question', 'myth', 'transition', 'fact', 'reaction', 'fact', 'fact', 'callback')]
         fixed = bestof.per_beat_words(112, len(pbs))
         chosen = ['What really makes oil?', 'Many think oil comes from dinosaurs.', 'Is that right?']
-        lo, hi = bestof.budget(112, pbs, 3, chosen, fixed)
+        lo, hi, accept = bestof.budget(112, pbs, 3, chosen, fixed)
         self.assertGreater(lo, fixed[0])                              # the words the short lines left go to the facts
         self.assertLessEqual(hi, bestof.MAX_BEAT_WORDS)
+        self.assertEqual(accept, fixed[0])                            # asked for, never required
         self.assertEqual(bestof.budget(112, pbs, 2, chosen[:2], fixed), fixed)   # a no-fact beat keeps its range
+
+    def test_a_fact_line_of_the_usual_length_is_not_refused_for_the_budget(self):
+        from pipeline import bestof
+        from test_fact_check import BestOfN as B
+        t = type('T', (), dict(ask=B.ask))()
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='clue', kind='fact', fact_ids=['s8'], claim='Heat and pressure turned the remains into oil.'),
+                dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        line = 'Heat and pressure cooked the old remains into oil.'      # 9 words
+        e = bestof.write_beat(plan_episode(), OIL, plan, 1, ['Hook?'], 'loop', (17, 26, 6), t.ask([line]))
+        self.assertEqual(e['line'], line)
+        self.assertIn('17-26 words', t.prompts[0])                    # but the writer was asked for the longer line
 
     def test_lengthen_never_pads_a_beat_that_cites_nothing(self):
         ep = host_episode()

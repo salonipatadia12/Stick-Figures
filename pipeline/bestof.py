@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v7'   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
+BEST_VERSION = 'best-v8'   # v6: no two lines open with the same three words; v7: a running word budget for the fact beats   # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
 # v5 (bench run 1): no myth said as a fact, beliefs only in the myth beat and the hook, no-fact lines count as
@@ -247,9 +247,10 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     by = {f.id: f for f in facts}
     research = entail.research_text(ids, facts)
     allowed = entail.allowed_groups(episode, ids)
-    lo, hi = words if kind == 'beat' else ((3, HOOK_MAX_WORDS) if kind == 'hook' else (4, 14))
+    lo, hi = tuple(words[:2]) if kind == 'beat' else ((3, HOOK_MAX_WORDS) if kind == 'hook' else (4, 14))
+    accept = words[2] if kind == 'beat' and len(words) > 2 else lo   # the budget asks for more, never requires it
     if kind == 'beat' and pb['kind'] != 'fact':
-        lo = NO_FACT_MIN_WORDS
+        lo = accept = NO_FACT_MIN_WORDS
     n = N_HOOK if kind in ('hook', 'loop') else N_BEAT
     rows = shapes(kind, episode.slug) if kind in ('hook', 'loop') else ()
     caution = '; '.join(c for c in (grounding.caution(by[i]) for i in ids if i in by) if c)
@@ -277,7 +278,7 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
                     if role == 'twist' and twist in by else set())
     for c in cands:
         w = len(c.split())
-        if not lo <= w <= hi + 2:
+        if not accept <= w <= hi + 2:
             why_not[c] = f'{w} words'
         elif UNFINISHED.search(c) or set(re.findall(r"[a-z']+", c.lower())) & SLANG:
             why_not[c] = 'slang or an unfinished line'
@@ -380,7 +381,9 @@ def budget(words_total, pbs, k, chosen, fixed) -> tuple:
     other = sum(NO_FACT_WORDS for p in rest[:-1] if p['kind'] != 'fact') + LOOP_WORDS
     left = words_total - sum(len(x.split()) for x in chosen) - other
     mid = max(fixed[0] + 5, min(MAX_BEAT_WORDS - 4, round(left / max(1, facts))))
-    return max(4, mid - 5), mid + 4
+    # (asked from, at most, accepted from): the writer is asked for the longer line, but a line of the usual length is
+    # never refused for it (2026-11-15 final bench: 17-26 required words sent five beats to their fallback)
+    return max(4, mid - 5), mid + 4, fixed[0]
 
 
 def per_beat_words(ctx_words: int, n_beats: int) -> tuple[int, int]:
