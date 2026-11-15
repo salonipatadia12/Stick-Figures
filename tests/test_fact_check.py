@@ -383,6 +383,22 @@ class OutlineStage(unittest.TestCase):
         self.assertFalse(entail.echoes('Tiny bugs', 'Oil came from tiny bugs.', {'organisms'}))   # the word rule first
 
 
+class SwapIsFactChecked(unittest.TestCase):
+    def test_a_swap_the_facts_do_not_support_is_refused(self):
+        # 2026-11-15: "kerogen" was not heard, and the swap said "rock goo"
+        from pipeline.models import Source as Src
+        ep = episode_with({1: 'Organic material turns into oil after becoming kerogen first.'})
+        ep.sources = [Src(id='s3', claim='Organic material transforms into kerogen and then fossil fuel.', url='https://x.edu/k',
+                          quote='organic material transforms into kerogen')]
+
+        def write(system, user, schema):
+            if system == repair.SWAP_SYSTEM:
+                return dict(line='Organic material turns into oil after becoming rock goo first.', replacement='rock goo')
+            return dict(states_a_fact=True, adds=['rock goo'], supported=False, why='the research says kerogen')
+        self.assertEqual(repair.swap_word('x', ep, ep.beats[1].id, 'kerogen', write=write), '')
+        self.assertIn('kerogen', ep.beats[1].narration)
+
+
 class StoryVoice(unittest.TestCase):
     """A fact beat still copied from its fact after the outline repairs is said in story voice (2026-11-14 live run)."""
 

@@ -472,10 +472,11 @@ def _swap_in(text: str, word: str, new: str) -> str:
     return re.sub(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", sub, text, flags=re.I)
 
 
-def swap_word(slug: str, episode, beat_id: str, word: str, write=None) -> str:
+def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=None) -> str:
     """A word Whisper still did not hear after a slower take: the local model picks a plainer synonym that keeps the
     meaning; the narration (so the captions too, which follow it), the on-screen text, labels and anchors that use the
-    word get it, and the script approval is re-stamped as the self-repair. Returns the new word ('' when none)."""
+    word get it, and the script approval is re-stamped as the self-repair. A beat that cites facts keeps the swap only
+    when the new line passes the fact check (pipeline/entail.py). Returns the new word ('' when none)."""
     from . import llm, store
     b = next((x for x in episode.beats if x.id == beat_id), None)
     if b is None or not re.search(rf"(?<![A-Za-z']){re.escape(word)}(?![A-Za-z'])", b.narration, re.I):
@@ -484,6 +485,8 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None) -> str:
         from .cache import for_episode
         cache = for_episode(config.EPISODES_DIR / slug)
         write = lambda s_, u, sc: llm.generate_json(s_, u, sc, 80, cache=cache, step='repair-words', temperature=0.2)
+        from . import entail
+        check = check or entail.default_ask(cache)
     answer = write(SWAP_SYSTEM, json.dumps(dict(line=b.narration, word=word), ensure_ascii=False), SWAP_SCHEMA) or {}
     new = ' '.join(str(answer.get('replacement') or '').split()).strip('"\'.,!? ')
     line = ' '.join(str(answer.get('line') or '').split()).strip('"\' ')
@@ -496,6 +499,13 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None) -> str:
         line = _swap_in(b.narration, word, new)
     if not swapped_line(b.narration, word, line, new):
         return ''
+    if b.source_ids:                                  # 2026-11-15: "kerogen" became "rock goo": the new line is checked
+        from . import entail                          # against the beat's facts like any narration
+        judge = write if check is None else check
+        ok, _ = entail.verdict(line, entail.research_text(b.source_ids, episode.sources),
+                               entail.allowed_groups(episode, b.source_ids), judge)
+        if ok is False:
+            return ''
     if line[-1] not in '.!?' and b.narration.rstrip()[-1:] in '.!?':
         line += b.narration.rstrip()[-1]
     was = episode.is_approved('script')               # before the narration changes
