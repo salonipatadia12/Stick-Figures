@@ -178,9 +178,11 @@ class BenchRunOne(unittest.TestCase):
         self.assertEqual(grounding.on_topic([plasma, senators], ep, judge), {'s10'})
         heat = Source(id='s2', claim='Heat and pressure turned ancient remains into crude oil over millions of years.',
                       url='https://www.eia.gov/x')
-        asked = []
-        self.assertEqual(grounding.on_topic([heat], ep, lambda *a: asked.append(a) or dict(helps=False)), {'s2'})
-        self.assertEqual(asked, [])                                  # plainly about the topic: not sent to the judge
+        # the judge refuses it, but it shares the twist fact's words (s7: "remains", "millions") so it stays; one shared
+        # word ("crude") is not enough
+        gap = Source(id='s4', claim='A gap between rising demand for crude oil and supply is expected.', url='https://x.org')
+        ep.meta['interpretation']['twist'] = dict(id='s7')
+        self.assertEqual(grounding.on_topic([S7, heat, gap], ep, lambda *a: dict(helps=False)), {'s2'})
         self.assertIsNone(grounding.on_topic([plasma], ep, None))
         roles = ['hook', 'clue', 'clue', 'twist', 'payoff', 'loop']
         out = grounding.assign_facts(roles, [S7, plasma, senators], 's7', ep.meta['interpretation'], None,

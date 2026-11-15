@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v4'   # v2: ranges kept whole in the claims; v3: facts judged on topic
+GROUNDING_VERSION = 'ground-v5'   # v2: ranges kept whole in the claims; v3: facts judged on topic
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -242,7 +242,6 @@ def _same(a, b) -> bool:
     return bool(wa and wb) and len(wa & wb) / len(wa | wb) >= DUPLICATE
 
 
-ON_TOPIC_WORDS = 1               # shared content words that keep a fact without asking the judge
 ON_TOPIC_SYSTEM = """A fact was found by searching the web for a short explainer video. Answer whether it helps answer the
 video's question: it is about the same subject (the same thing, event, country or process), not another subject
 that only shares a word ("plasma catalysts" for compound interest, "US Federalists" for the Roman Republic, "heart
@@ -255,25 +254,25 @@ def on_topic(sources, episode, ask) -> set | None:
     """The ids of the facts that help answer the video's question (one short yes/no call each), or None without a
     judge (2026-11-15 bench: plasma catalysts for compound interest, US Federalists and heart-failure drugs for the
     Roman Republic; and the Republic's own senators and allies were never told, sharing no word with the question).
-    A fact that shares a content word with the question, topic or claims is kept without a call ("oil" is too short to
-    count, so "crude" does); the judge
-    decides the others. A fact the judge cannot answer for is kept."""
+    A fact the judge refuses stays when it shares RELEVANT content words with the twist fact. A fact the judge cannot
+    answer for is kept."""
     if ask is None:
         return None
     interp = (episode.meta or {}).get('interpretation') or {}
     q = interp.get('question') or episode.topic
-    from .qa import content_words
-    topic = content_words(' '.join([q, episode.topic] + list(interp.get('claims') or [])))
+    by = {s.id: s for s in sources}
+    tid = (interp.get('twist') or {}).get('id') or twist_fact(interp, sources)
+    twist_words = _words(by[tid]) if tid in by else set()
     keep = set()
     for s in sources:
-        if len(_words(s) & topic) >= ON_TOPIC_WORDS:  # plainly about the topic: kept without asking (2026-11-15 crude
-            keep.add(s.id)                            # oil -5: the judge put "Heat and pressure turned ... into crude
-            continue                                  # oil over millions of years" off topic)
         try:
             a = ask(ON_TOPIC_SYSTEM, f'Video question: {q}\nTopic: {episode.topic}\nFact: {s.claim}', ON_TOPIC_SCHEMA) or {}
         except Exception:
             a = {}
-        if a.get('helps') is not False:
+        # a fact the judge refuses is kept when it shares RELEVANT words with the twist fact (2026-11-15 crude oil -5:
+        # "Heat and pressure turned ancient remains into crude oil" was put off topic; one shared word is not enough:
+        # "crude" also let in the oil supply gap and ultrasound for heavy crude)
+        if a.get('helps') is not False or (s.id != tid and len(_words(s) & twist_words) >= RELEVANT):
             keep.add(s.id)
     return keep
 
