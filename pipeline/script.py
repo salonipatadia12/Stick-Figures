@@ -1175,7 +1175,8 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
         tb = time.time()
         best_log = bestof.write_all(episode, facts, o, plan, round(episode.target_length * writer_rate(style)),
                                     entail.default_ask(cache, ledger))
-        log.append(dict(stage='best', attempt=0, seconds=round(time.time() - tb, 1), issues=bestof.view(best_log)))
+        log.append(dict(stage='best', attempt=0, seconds=round(time.time() - tb, 1), issues=bestof.view(best_log),
+                        entries=best_log))
         times['best_s'] = round(time.time() - tb, 1)
     else:
         for attempt in range(1, OUTLINE_REPAIRS + 1):

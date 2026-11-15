@@ -60,6 +60,9 @@ GLOSS = {
     'marine': '"marine" means of the sea or the ocean',
     'organism': '"organisms" means living things, life',
     'million': '"millions of years ago" means ancient, long ago, prehistoric',
+    'deoxygenat': '"deoxygenation" means removing oxygen',
+    'ancient': '"ancient" means very old',
+    'biomass': '"biomass" means matter from living things',
 }
 WORD = re.compile(r"[a-z]+")
 
@@ -281,10 +284,14 @@ def assign_facts(roles, sources, twist, interp, storyline=None) -> dict:
         judged = [by[i] for v in about for i in v.get('fact_ids') or [] if i in by]
         claims = content_words(' '.join(v['claim'] for v in about))
         take(p, best(lambda s: (len(_words(s) & claims), rel(s)), judged))
-    q = content_words(interp.get('question', '') + (f' {storyline.hook} {storyline.payoff}' if storyline else ''))
+    # the payoff answers the hook: the fact closest to the question and the twist, naming the same living things
+    # (2026-11-15: "deoxygenation" answered nothing the hook asked)
+    q = content_words(interp.get('question', '') + (f' {storyline.hook} {storyline.payoff}' if storyline else '')
+                      + (f' {by[twist].claim}' if twist in by else ''))
+    tg = groups(f'{by[twist].claim} {by[twist].quote}') if twist in by else set()
     pay = next((k for k, r in enumerate(roles) if r == 'payoff'), -1)
     if pay >= 0:
-        take(pay, best(lambda s: (len(_words(s) & q), rel(s))))
+        take(pay, best(lambda s: (2 * len(groups(f'{s.claim} {s.quote}') & tg) + len(_words(s) & q), rel(s))))
     how = content_words('heat pressure process turns turned transform transforms conversion converts layers buried')
     for k, r in enumerate(roles):
         if r == 'reveal':
@@ -379,6 +386,10 @@ def claim_problem(b, sources, myth, ask) -> str:
     bad = imprecise(b['claim'], allowed)
     if bad:
         return precision_why(bad, allowed)
+    named = groups(' '.join(fact_texts(sources, b['fact_ids']))) - myth
+    if b.get('role') == 'twist' and named and not groups(b['claim']) & allowed_for(fact_texts(sources, b['fact_ids'])):
+        # 2026-11-15: the twist "This happened before dinosaurs ever walked on Earth" lost the plants and animals
+        return f'the twist must say what its fact names ({", ".join(sorted(named))}), in plain words'
     if ask is None or b.get('from_research'):
         return ''
     ok, why = entail.supported(b['claim'], entail.research_text(b['fact_ids'], sources), ask)

@@ -56,7 +56,10 @@ KIND_GUIDE = {
 STRAWMAN_STOP = set('call calling called think thought told believe believed everyone people anyone nobody really quite '
                     'actually true truth story whole real again myth wrong stop forget never about maybe sure exactly '
                     'just even thing things what where come comes came made make'.split())
-ARGUE = re.compile(r"\b(not|isn't|aren't|wasn't|weren't|don't|doesn't|didn't|stop|no|never|wrong|myth|lie|lies|forget|"
+SLANG = set('goo gooey gunk gloop glop muck stuff junk thingy poop dino dinos yucky gross ick icky sludge critters '
+            'gazillion'.split())
+UNFINISHED = re.compile(r"(,|;|:|-|\b(and|or|but|if|so|the|a|of|to|that|it's|its))\s*[.!?]$", re.I)
+ARGUE = re.compile(r"\b(if you think|you think|you've been told|you were told|they told you|not|isn't|aren't|wasn't|weren't|don't|doesn't|didn't|stop|no|never|wrong|myth|lie|lies|forget|"
                    r"quit|nope)\b", re.I)
 
 
@@ -103,13 +106,21 @@ def real_belief(line: str, interp: dict, ask) -> tuple[bool, str]:
     return (a.get('real_belief') is not False), ' '.join(str(a.get('why') or '').split())[:160]
 
 
+def shares_stem(a: str, b: str) -> bool:
+    """True when two lines share a content word, plurals folded ("dinosaurs" / "dinosaur")."""
+    from .qa import content_words
+    fold = lambda t: {w[:-1] if w.endswith('s') and len(w) > 4 else w for w in content_words(t)}
+    return bool(fold(a) & fold(b))
+
+
 def _clean(line: str) -> str:
     line = ' '.join(str(line or '').split()).strip('"\' ')
     line = re.sub(r'^\s*\d+[.)]\s*', '', line)
     return line if not line or line[-1] in '.!?' else line + '.'
 
 
-def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_rows=(), avoid=(), caution='') -> list:
+def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_rows=(), avoid=(), caution='',
+               retried='') -> list:
     """The model's n candidate lines for one beat."""
     misc = interp.get('misconception', '')
     lines = [f'BEAT: {beat["role"]}' + (f' (kind: {beat["kind"]})' if beat['kind'] != 'fact' else ''),
@@ -130,6 +141,8 @@ def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_ro
             for k, r in enumerate(shape_rows, 1)))
     if avoid:
         lines.append(f'Do not use the word(s): {", ".join(avoid)}')
+    if retried:
+        lines.append('EARLIER LINES FAILED THE CHECKS (say only what the research says, in plain words):\n' + retried)
     lines.append(f'Give {n} different versions, each {lo}-{hi} words.')
     try:
         a = ask(WRITE_SYSTEM, '\n'.join(lines), LINES_SCHEMA) or {}
@@ -156,10 +169,9 @@ def rank(kind, survivors, prev, nxt, ask) -> tuple[int, str]:
     return (k, ' '.join(str(a.get('why') or '').split())[:200]) if 0 <= k < len(survivors) else (0, 'out of range')
 
 
-def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(), log=None) -> dict:
+def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(), log=None, retried='') -> dict:
     """Best-of-N for beat k: {line, ids, tried, kept, why}. `chosen` are the lines chosen so far (earlier beats)."""
     from . import entail, grounding
-    from .models import _shares_word
     from .script import copies
     interp = (episode.meta or {}).get('interpretation') or {}
     episode = episode.model_copy(update=dict(sources=list(facts)))   # the research of this script (not yet on it)
@@ -176,14 +188,21 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     rows = shapes(kind, episode.slug) if kind in ('hook', 'loop') else ()
     caution = '; '.join(c for c in (grounding.caution(by[i]) for i in ids if i in by) if c)
     prev = chosen[-1] if chosen else ''
-    cands = candidates(kind, pb, research, prev, nxt, lo, hi, n, ask, interp, rows, avoid, caution)
+    cands = candidates(kind, pb, research, prev, nxt, lo, hi, n, ask, interp, rows, avoid, caution, retried)
     hook = chosen[0] if chosen else ''
     fact_lines = [by[i].claim for i in ids if i in by] + [by[i].quote for i in ids if i in by and by[i].quote]
     out, why_not = [], {}
+    twist_groups = (grounding.groups(f'{by[twist].claim} {by[twist].quote}') - grounding.myth_groups(interp, facts)
+                    if role == 'twist' and twist in by else set())
     for c in cands:
         w = len(c.split())
         if not lo <= w <= hi + 2:
             why_not[c] = f'{w} words'
+        elif UNFINISHED.search(c) or set(re.findall(r"[a-z']+", c.lower())) & SLANG:
+            why_not[c] = 'slang or an unfinished line'
+        elif twist_groups and not grounding.groups(c) & (grounding.allowed_for([f'{by[twist].claim} {by[twist].quote}'])
+                                                          - grounding.myth_groups(interp, facts)):
+            why_not[c] = f'the twist must say what its fact names ({", ".join(sorted(twist_groups))})'
         elif any(a.lower() in c.lower() for a in avoid):
             why_not[c] = 'uses an avoided word'
         elif copies(c, fact_lines):
@@ -195,7 +214,7 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
         elif kind == 'hook' and strawman(c, interp, by[twist].claim if twist in by else '', episode.topic):
             why_not[c] = ('argues against something nobody claims ('
                           + strawman(c, interp, by[twist].claim if twist in by else '', episode.topic) + ')')
-        elif kind == 'loop' and hook and not _shares_word(c, hook):
+        elif kind == 'loop' and hook and not shares_stem(c, hook):
             why_not[c] = 'does not repeat a word of the hook'
         elif pb['kind'] == 'myth' and not real_belief(c, interp, ask)[0]:
             why_not[c] = f'not the belief people hold ({real_belief(c, interp, ask)[1]})'
@@ -209,13 +228,22 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
                 why_not[c] = why
             else:
                 out.append(c)
+    if not out and cands and not retried:            # one more call that sees why each line failed
+        why = '\n'.join(f'- "{c}": {r}' for c, r in why_not.items())
+        more = write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=avoid, retried=why)
+        more['tried'] = cands + more['tried']
+        more['rejected'] = {**why_not, **more['rejected']}
+        if log is not None:
+            log.append(more)
+        return more
     entry = dict(beat=f'b{k + 1:02d}', role=role, kind=pb['kind'], tried=cands, rejected=why_not, kept=out)
     if out:
         best, why = rank(kind, out, prev, nxt, ask)
         entry.update(line=out[best], why=why)
     else:                                          # nothing passed: the plan's checked claim, or a plain no-fact line
-        fallback = pb.get('claim') or {'hook': 'What is really in your tank?'}.get(kind, '')
-        entry.update(line=fallback or prev and 'But that is only half the story.' or 'Here is the surprise.',
+        fallback = pb.get('claim') or {'hook': 'What is really in your tank?',
+                                        'loop': f'{hook} Now you know.' if hook else ''}.get(kind, '')
+        entry.update(line=fallback or 'Here is the surprise.',
                      why='no candidate passed: ' + ('the planned claim' if pb.get('claim') else 'a plain line'))
     claims_facts = entail.split_claims(entry['line'], ask)[0] or []
     entry['ids'] = ids if (pb['fact_ids'] or any(c['kind'] == 'fact' for c in claims_facts)) else []

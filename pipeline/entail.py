@@ -285,7 +285,7 @@ def default_ask(cache=None, ledger=None):
     from . import config, llm
     if config.script_provider() != 'ollama':
         return None
-    return lambda s, u, sc: llm.generate_json(s, u, sc, 300, cache=cache, ledger=ledger, step='fact-check',
+    return lambda s, u, sc: llm.generate_json(s, u, sc, 500, cache=cache, ledger=ledger, step='fact-check',
                                               detail='line vs its cited fact', temperature=0.0)
 
 

@@ -451,10 +451,11 @@ class BestOfN(unittest.TestCase):
         self.assertTrue(bestof.strawman('Stop calling it dinosaur poop.', interp))
         self.assertEqual(bestof.strawman('Oil comes from dinosaurs? Not quite.', interp), '')
         self.assertEqual(bestof.strawman('Your gas is older than the dinosaurs.', interp), '')   # argues nothing
-        ask = self.ask(['Stop calling it dinosaur poop.', 'Your gas is older than the dinosaurs.'])
+        ask = self.ask(['Stop calling it dinosaur soup.', 'Your gas is older than the dinosaurs.', 'If you think it is dinosaur goo,.'])
         e = bestof.write_beat(self.episode(), OIL, self.plan(), 0, [], 'twist', (5, 12), ask)
         self.assertEqual(e['line'], 'Your gas is older than the dinosaurs.')
-        self.assertIn('nobody claims', e['rejected']['Stop calling it dinosaur poop.'])
+        self.assertIn('nobody claims', e['rejected']['Stop calling it dinosaur soup.'])
+        self.assertEqual(e['rejected']['If you think it is dinosaur goo,.'], 'slang or an unfinished line')
         self.assertEqual(len(bestof.shapes('hook', 'oil')), bestof.N_HOOK)
         self.assertIn('Write ONE line per shape', self.prompts[0])
 
@@ -462,17 +463,17 @@ class BestOfN(unittest.TestCase):
         from pipeline import bestof
         plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
                 dict(role='setup', kind='myth', fact_ids=[], claim=''), dict(role='loop', kind='callback', fact_ids=[], claim='')]
-        base = self.ask(["Many think oil's dinosaur poop sinking deep.", 'Many think oil comes from dead dinosaurs.'])
+        base = self.ask(["Many think oil is dinosaur soup sinking deep.", 'Many think oil comes from dead dinosaurs.'])
 
         def ask(system, user, schema):
             if system == bestof.BELIEF_SYSTEM:
-                return dict(real_belief='poop' not in user, why='a strawman' if 'poop' in user else '')
+                return dict(real_belief='soup' not in user, why='a strawman' if 'soup' in user else '')
             if system == entail.SPLIT_SYSTEM:
                 return dict(claims=[dict(text=user.removeprefix('Line: '), kind='belief')], nonsense=[])
             return base(system, user, schema)
         e = bestof.write_beat(self.episode(), OIL, plan, 1, ['What is in your tank?'], '', (4, 12), ask)
         self.assertEqual(e['line'], 'Many think oil comes from dead dinosaurs.')
-        self.assertIn('not the belief', e['rejected']["Many think oil's dinosaur poop sinking deep."])
+        self.assertIn('not the belief', e['rejected']["Many think oil is dinosaur soup sinking deep."])
 
     def test_the_loop_repeats_a_word_of_the_hook(self):
         from pipeline import bestof
@@ -480,6 +481,29 @@ class BestOfN(unittest.TestCase):
         e = bestof.write_beat(self.episode(), OIL, self.plan(), 2, ['What is in your tank?', 'x'], '', (5, 12), ask)
         self.assertEqual(e['line'], 'Next time you fill your tank, thank tiny sea plants.')
         self.assertEqual(e['rejected']['So that is the whole story.'], 'does not repeat a word of the hook')
+
+    def test_nothing_passing_gets_one_retry_that_sees_why(self):
+        from pipeline import bestof
+        rounds = [['Bugs did it all.'], ['Tiny sea plants and animals made it.']]
+        base = self.ask([])
+
+        def ask(system, user, schema):
+            if system == bestof.WRITE_SYSTEM:
+                self.prompts.append(user)
+                return dict(lines=rounds.pop(0))
+            return base(system, user, schema)
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 1, ['What is in your tank?'], '', (3, 12), ask)
+        self.assertEqual(e['line'], 'Tiny sea plants and animals made it.')
+        self.assertIn('EARLIER LINES FAILED', self.prompts[1])
+        self.assertIn('Bugs did it all.', self.prompts[1])
+
+    def test_the_twist_says_what_its_fact_names_and_loops_match_plurals(self):
+        from pipeline import bestof
+        ask = self.ask(['It all happened before any dinosaur walked.', 'Tiny sea plants and animals did it, before dinosaurs.'])
+        e = bestof.write_beat(self.episode(), OIL, self.plan(), 1, ['What is in your tank?'], '', (3, 12), ask)
+        self.assertEqual(e['line'], 'Tiny sea plants and animals did it, before dinosaurs.')
+        self.assertIn('the twist must say', e['rejected']['It all happened before any dinosaur walked.'])
+        self.assertTrue(bestof.shares_stem('Not the dinosaurs.', 'Did a dinosaur make it?'))
 
     def test_no_survivor_keeps_the_planned_claim(self):
         from pipeline import bestof
