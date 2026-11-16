@@ -89,6 +89,19 @@ class ScriptSlips(unittest.TestCase):
         self.assertEqual(errs, [])
 
 
+    def test_a_label_number_the_beat_never_says_is_dropped(self):
+        # 2026-11-15 bench (yawn): the label "-0.36° C Drop" on a beat that says "twenty seconds" stopped Auto
+        from pipeline.models import EffectCue
+        ep = host_episode()
+        b = next(x for x in ep.beats if x.shot.visual == 'insert' and x.shot.insert is not None)
+        b.shot.insert.effects = [EffectCue(kind='label', anchor='', at='top', detail='-0.36° C Drop'),
+                                 EffectCue(kind='label', anchor='', at='ground', detail='Cooler')]
+        notes = auto.fix_script(ep)
+        self.assertTrue(any('-0.36' in n for n in notes), notes)
+        self.assertEqual([e.detail for e in b.shot.insert.effects], ['Cooler'])
+        self.assertFalse([i for i in ep.check() if i.severity == 'error' and 'drawn on screen' in i.message])
+
+
 class AutoRender(unittest.TestCase):
     def test_paints_then_renders_and_stops_when_a_scene_fails(self):
         calls = []
