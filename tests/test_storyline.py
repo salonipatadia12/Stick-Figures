@@ -260,8 +260,11 @@ class OllamaPitchTest(unittest.TestCase):
                      angle='its low water starves microbes', myth_subjects=[])
         from pipeline import entail
         judge = dict(states_a_fact=True, adds=[], supported=True, why='s1 says it')     # the twist checked against s1
+        from pipeline import grounding
+        quiet = {understand.CORE_SYSTEM: dict(answer='', fact_ids=[]), grounding.SCORE_SYSTEM: dict(facts=[])}
         fake = FakeOllama(lambda body: heard if body['messages'][0]['content'] == understand.SYSTEM else
-                          judge if body['messages'][0]['content'] == entail.CHECK_SYSTEM else answers.pop(0))
+                          judge if body['messages'][0]['content'] == entail.CHECK_SYSTEM else
+                          quiet.get(body['messages'][0]['content']) or answers.pop(0))
         with tempfile.TemporaryDirectory() as d, patched(fake), \
                 mock.patch.dict(os.environ, {'SCRIPT_PROVIDER': 'ollama', 'ANTHROPIC_API_KEY': '', 'STICK_CACHE_DIR': d}), \
                 mock.patch.object(script, 'research', lambda *a, **k: (src, Path(d) / 'r.json', True)), \

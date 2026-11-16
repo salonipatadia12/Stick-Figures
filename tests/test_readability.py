@@ -27,8 +27,16 @@ class TextSizeLogTest(unittest.TestCase):
         O.slam(frame, O.stacked(('Make it', 'last'), (110, 130)), 2.0, 1.0)
         O.checklist(frame, 2.0, [('Subscriptions', '-$15', 1.2), ('Coffee', '-$5', 1.4)], 1.0)
         sizes = {d['label'].split(':')[0]: d['em'] for d in O.take_text_log()}
-        self.assertAlmostEqual(sizes['Make it / last'], 110, places=1)
+        self.assertAlmostEqual(sizes['Make it last'], 110, places=1)
         self.assertAlmostEqual(sizes['checklist'], 40 * O.CHECKLIST_SCALE, places=1)   # readable on a phone (user 2026-11-10)
+
+    def test_a_stacked_slam_is_logged_as_the_text_it_came_from(self):
+        # 2026-11-15 crude oil -6: the two-line name "Organic Material / -> Kerogen" named no text of the beat
+        frame = Image.new('RGBA', (1080, 1920))
+        O.slam(frame, O.stacked(('Organic Material', '-> Kerogen'), (88, 78), source='Organic material -> kerogen'),
+               2.0, 1.0)
+        log = O.take_text_log()
+        self.assertEqual((log[0]['label'], log[0]['source']), ('Organic Material -> Kerogen', 'Organic material -> kerogen'))
 
     def test_receipt_strip_takes_per_entry_widths_and_keeps_its_type_size(self):
         strip = O.receipt_strip((('MON', '-$12'), ('PAYDAY', 'next')), (128, 168), 120)

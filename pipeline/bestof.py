@@ -22,7 +22,7 @@ import json
 import re
 from pathlib import Path
 
-BEST_VERSION = 'best-v11'
+BEST_VERSION = 'best-v12'   # v12: built around the core answer: linked beats, a flow pass, the hook judged by meaning
 # v2: myth lines must be the belief people hold; questions are split into claims too
 # v3: hooks never state the twist, no two beats make the same claim, the writer may be a bigger model
 # v4: short no-fact lines allowed, no repeated fallback, the payoff answers the hook, every hook option is checked
@@ -211,6 +211,11 @@ def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_ro
         lines.append(f'What it does: {KIND_GUIDE.get(beat["kind"], KIND_GUIDE["transition"])}')
     if misc and (beat['kind'] == 'myth' or kind == 'hook'):
         lines.append(f'The misconception viewers hold: {misc}')
+    if beat.get('link') and prev:                  # user 2026-11-15: each beat follows from the one before it
+        lines.append('Make it follow from the previous line: explain it ("because"), draw what it leads to ("so"), '
+                     'turn it ("but") or build on it ("which means"). No jump to a new point.')
+    if beat.get('core'):
+        lines.append(f'This line must say the core answer (plain words of your own are fine): {beat["core"]}')
     if kind == 'hook' and beat.get('answer'):
         lines.append(f'The answer the video reveals later (NEVER say it, not even in part; make the viewer need it): '
                      f'{beat["answer"]}')
@@ -280,8 +285,12 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
     prev = chosen[-1] if chosen else ''
     twist_claim = next((b.get('claim') for b in plan_beats if b['role'] == 'twist' and b.get('claim')), '') \
         or (by[twist].claim if twist in by else '')
-    if kind == 'hook':
-        pb = dict(pb, answer=twist_claim, hook_fact_claim=by[ids[0]].claim if ids and ids[0] in by else '')
+    from .understand import core as core_of
+    core = core_of(interp).get('text', '')
+    if kind == 'hook':                                # the answer the hook keeps back is the core answer
+        pb = dict(pb, answer=core or twist_claim, hook_fact_claim=by[ids[0]].claim if ids and ids[0] in by else '')
+    elif kind == 'beat' and k >= 2:
+        pb = dict(pb, link=True)
     cands = candidates(kind, pb, research, prev, nxt, lo, hi, n, write or ask, interp, rows, avoid, caution, retried)
     ignore = grounding.topic_words(episode)
     others = [(f'b{j + 1:02d}', j, line) for j, line in enumerate(chosen)] + \
@@ -322,7 +331,7 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = f'opens like an earlier line ("{opener(c)}")'
         elif set(entail.NUMBER.findall(c)) - set(entail.NUMBER.findall(research)):
             why_not[c] = 'a number the research does not have'
-        elif kind == 'hook' and grounding.names_answer(c, pb.get('answer_words') or ()):
+        elif kind == 'hook' and ask is None and grounding.names_answer(c, pb.get('answer_words') or ()):
             why_not[c] = f'names the answer ({grounding.names_answer(c, pb.get("answer_words") or ())})'
         elif kind == 'hook' and not grounding.points_to_subject(c, episode, by.get(ids[0]) if ids else None,
                                                                  pb.get('answer_words') or (), ask):
@@ -334,7 +343,9 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
         elif kind == 'hook' and strawman(c, interp, by[twist].claim if twist in by else '', episode.topic):
             why_not[c] = ('argues against something nobody claims ('
                           + strawman(c, interp, by[twist].claim if twist in by else '', episode.topic) + ')')
-        elif role == 'payoff' and pb.get('answer_to') and not answers(c, pb['answer_to']):
+        elif role == 'payoff' and pb.get('core') and not grounding.says_core(c, pb['core'], episode):
+            why_not[c] = f'does not say the core answer ("{pb["core"][:120]}")'
+        elif role == 'payoff' and not pb.get('core') and pb.get('answer_to') and not answers(c, pb['answer_to']):
             why_not[c] = f'does not answer the hook (say what it promised: "{pb["answer_to"][:120]}")'
         elif kind == 'loop' and hook and not shares_stem(c, hook):
             why_not[c] = 'does not repeat a word of the hook'
@@ -344,6 +355,10 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = 'does not name what the myth is about'          # ancient sea creature remains" (the truth)
         elif pb['kind'] == 'myth' and not real_belief(c, interp, ask)[0]:
             why_not[c] = f'not the belief people hold ({real_belief(c, interp, ask)[1]})'
+        elif kind == 'hook' and grounding.reveals(c, pb.get('answer', ''), ask):   # by meaning (user 2026-11-15)
+            why_not[c] = f'gives the answer away ({grounding.reveals(c, pb.get("answer", ""), ask)})'
+        elif role == 'payoff' and pb.get('core') and not grounding.states_core(c, pb['core'], episode, ask):
+            why_not[c] = f'the judge says it does not state the core answer ("{pb["core"][:120]}")'
         else:
             system = entail.CHECK_SYSTEM if ids else entail.NONFACT_SYSTEM
             ok, why = entail.verdict(c, research, allowed, ask, system)
@@ -377,7 +392,9 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
         entry.update(line=out[best], why=why)
     else:                                          # nothing passed: the plan's checked claim, or a plain no-fact line
         fallback = pb.get('claim')
-        if fallback and pb.get('answer_to') and not answers(fallback, pb['answer_to']) and twist_claim:
+        if pb.get('core') and not (fallback and grounding.says_core(fallback, pb['core'], episode)):
+            fallback = pb['core']                         # the gate needs the core answer said; the research backs it
+        elif fallback and pb.get('answer_to') and not answers(fallback, pb['answer_to']) and twist_claim:
             fallback = f'{twist_claim} {fallback}'        # the gate needs the payoff to answer the hook
         fallback = fallback or {'hook': 'What is really going on here?', 'loop': 'Now you know.'}.get(kind, '')
         misc = ' '.join(str(interp.get('misconception') or '').split()).rstrip('.!?')
@@ -445,10 +462,16 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -
     twist = (interp.get('twist') or {}).get('id') or plan.get('twist', '')
     opts = o.get('hook_options') or []
     twist_claim = next((b.get('claim') for b in plan['beats'] if b['role'] == 'twist' and b.get('claim')), '')
-    answer = twist_claim or ((opts[0].get('answer') or '') if opts else '')   # the hook's answer is the twist
-    promise = ' '.join(x for x in [answer, episode.storyline.payoff if episode.storyline else ''] if x)
-    # the payoff answers the hook (the gate checks it) and may restate the twist, so it may cite the twist fact too
-    pbs = [dict(pb, answer_to=promise, fact_ids=list(dict.fromkeys(list(pb['fact_ids']) + ([twist] if twist else []))))
+    from .understand import core as core_of
+    core = core_of(interp)
+    # the hook's answer is the core answer (user 2026-11-15), else the twist as before
+    answer = core.get('text') or twist_claim or ((opts[0].get('answer') or '') if opts else '')
+    promise = answer if core else ' '.join(x for x in [answer, episode.storyline.payoff if episode.storyline else ''] if x)
+    # the payoff answers the hook (the gate checks it) and says the core answer; it may restate the twist, so it may
+    # cite the twist fact and the core answer's facts too
+    more = ([twist] if twist else []) + list(core.get('fact_ids') or [])
+    pbs = [dict(pb, answer_to=promise, core=core.get('text', ''),
+                fact_ids=list(dict.fromkeys(list(pb['fact_ids']) + [i for i in more if i in {f.id for f in facts}])))
            if pb['role'] == 'payoff' and promise else pb for pb in plan['beats']]
     if pbs and plan.get('hook_fact'):
         pbs[0] = dict(pbs[0], hook_fact=plan['hook_fact'], answer_words=list(plan.get('answer_words') or []))
@@ -462,6 +485,9 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -
         ob['narration'] = e['line']
         ob['source_ids'] = e['ids']
         chosen.append(e['line'])
+    if ask is not None and chosen:
+        flow_pass(episode, facts, beats, pbs, chosen, words_total, base, ask, log, write)
+        core_gate(episode, facts, beats, pbs, chosen, words_total, base, ask, log, write)
     if opts and beats:                             # every hook option is a checked best-of-N hook (2026-11-15 bench:
         hook_entry = next((e for e in log if e['beat'] == 'b01'), {})   # auto took the outline's unchecked option 2)
         lines = [beats[0]['narration']] + [x for x in hook_entry.get('kept', []) if x != beats[0]['narration']]
@@ -470,6 +496,95 @@ def write_all(episode, facts, o, plan, words_total, ask, log=None, write=None) -
             opt['loop_line'] = beats[-1]['narration']
             opt['answer'] = answer
     return log
+
+
+def _again(episode, facts, beats, pbs, chosen, k, words_total, base, ask, log, write, note) -> dict:
+    """Beat k written again by best-of-N with the lines around it fixed, the note saying what was wrong."""
+    nb = pbs[k + 1] if k + 1 < len(pbs) else None
+    nxt = chosen[k + 1] if nb else ''
+    e = write_beat(episode, facts, pbs, k, chosen[:k], nxt, budget(words_total, pbs, k, chosen[:k], base), ask,
+                   retried=note, write=write, later=chosen[k + 1:])
+    e['stage'] = note.split(':')[0]
+    if log is not None:
+        log.append(e)
+    return e
+
+
+def flow_pass(episode, facts, beats, pbs, chosen, words_total, base, ask, log=None, write=None) -> list:
+    """The flow judge scores each pair of adjacent lines (one call, user 2026-11-15); the second line of a weak pair
+    (score <= grounding.WEAK_PAIR) is written again through best-of-N, at most grounding.FLOW_REWRITES of them, and kept only when the
+    judge scores the pair higher. Returns [{beat, was, now, score, new_score}] (in place on beats and chosen)."""
+    from . import grounding
+    done = []
+    for k, sc, why in grounding.weak_pairs(chosen, ask)[:grounding.FLOW_REWRITES]:
+        if k == 0 or k >= len(beats):
+            continue
+        note = (f'FLOW: this line does not follow from the previous line "{chosen[k - 1]}" ({why}). Make it follow: '
+                'explain it ("because"), draw what it leads to ("so"), turn it ("but") or build on it ("which means").')
+        e = _again(episode, facts, beats, pbs, chosen, k, words_total, base, ask, log, write, note)
+        new = e['line'] if e.get('kept') else ''
+        better = grounding.pair_score(chosen[k - 1], new, ask) if new and new != chosen[k] else 0
+        row = dict(beat=f'b{k + 1:02d}', was=chosen[k], score=sc, why=why, now=chosen[k], new_score=better)
+        if better > sc:
+            chosen[k] = beats[k]['narration'] = new
+            beats[k]['source_ids'] = e['ids']
+            row['now'] = new
+        done.append(row)
+    if log is not None and done:
+        log.append(dict(beat='flow', role='flow', kind='flow', tried=[], rejected={}, kept=[], line='', pairs=done))
+    return done
+
+
+def core_gate(episode, facts, beats, pbs, chosen, words_total, base, ask, log=None, write=None) -> dict:
+    """The core answer must be said in the reveal, the twist or the payoff (user 2026-11-15): judged on those lines;
+    when none says it, the payoff is written again through best-of-N, and when that fails too the payoff becomes the
+    core answer itself (the research backs it). Returns {stated, beat, how}."""
+    from . import grounding
+    from .understand import core as core_of
+    core = core_of(episode).get('text', '')
+    out = dict(stated=True, beat='', how='no core answer')
+    if not core:
+        return out
+    at = [k for k, p in enumerate(pbs) if p['role'] in ('reveal', 'twist', 'payoff') and k < len(chosen)]
+    hit = next((k for k in at if grounding.states_core(chosen[k], core, episode, ask)), None)
+    pay = next((k for k, p in enumerate(pbs) if p['role'] == 'payoff'), None)
+    if hit is not None:
+        out.update(beat=f'b{hit + 1:02d}', how='said')
+    elif pay is not None and pay < len(beats):
+        e = _again(episode, facts, beats, pbs, chosen, pay, words_total, base, ask, log, write,
+                   f'CORE: the video never says its core answer; this payoff must say it: "{core}"')
+        new = e['line'] if e.get('kept') and grounding.states_core(e['line'], core, episode, ask) else core
+        chosen[pay] = beats[pay]['narration'] = new
+        beats[pay]['source_ids'] = list(dict.fromkeys(list(e['ids']) + list(core_of(episode).get('fact_ids') or [])))
+        out.update(beat=f'b{pay + 1:02d}', how='payoff written again' if new != core else 'payoff is the core answer')
+    else:
+        out.update(stated=False, how='no payoff beat')
+    if log is not None:
+        log.append(dict(beat='core', role='core', kind='core', tried=[], rejected={}, kept=[], line='', core=out))
+    return out
+
+
+def ensure_core(episode, ask=None) -> str:
+    """'' when the gate's core-answer check passes; else the payoff is written again by best-of-N (rewrite_beat keeps
+    the core answer), or becomes the core answer itself when no line passes, and what was done is returned."""
+    from .understand import core as core_of
+    item = next(((ok, d) for name, ok, d in episode.story_report() if name == 'core answer stated'), (True, ''))
+    pay = next((b for b in episode.beats if b.role == 'payoff'), None)
+    if item[0] or pay is None:
+        return ''
+    from . import grounding
+    core = core_of(episode)
+    was = pay.narration
+    new = rewrite_beat(episode, pay.id, ask=ask)
+    if new and grounding.says_core(new, core['text'], episode):
+        pay.narration = new
+        how = 'written again by best-of-N'
+    else:
+        pay.narration = core['text']
+        how = 'the core answer itself (no written line said it)'
+    pay.source_ids = list(dict.fromkeys(list(pay.source_ids) + [i for i in core.get('fact_ids') or []
+                                                                 if i in {s.id for s in episode.sources}]))
+    return f'{pay.id} did not say it ("{was}"); the payoff is now {how}: "{pay.narration}"'
 
 
 def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
@@ -496,11 +611,16 @@ def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
     pick = (episode.hook_pick or 1) - 1
     answer = twist_claim or (episode.hook_options[pick].answer if 0 <= pick < len(episode.hook_options) else '')
     promise = ' '.join(x for x in [answer, episode.storyline.payoff if episode.storyline else ''] if x)
+    from .understand import core as core_of
+    core = core_of(episode)
+    if core:                                           # the payoff still says the core answer (user 2026-11-15)
+        promise = core['text']
     if plan[k].get('role') == 'payoff' and promise:
         twist = ((episode.meta or {}).get('fact_plan') or {}).get('twist') or \
             (((episode.meta or {}).get('interpretation') or {}).get('twist') or {}).get('id')
-        plan[k] = dict(plan[k], answer_to=promise,
-                       fact_ids=list(dict.fromkeys(list(plan[k]['fact_ids']) + ([twist] if twist else []))))
+        more = ([twist] if twist else []) + list(core.get('fact_ids') or [])
+        plan[k] = dict(plan[k], answer_to=promise, core=core.get('text', ''),
+                       fact_ids=list(dict.fromkeys(list(plan[k]['fact_ids']) + more)))
     nb = plan[k + 1] if k + 1 < len(plan) else None
     nxt = episode.beats[k + 1].narration if nb else ''
     e = write_beat(episode, episode.sources, plan, k, [b.narration for b in episode.beats[:k]], nxt,
@@ -512,6 +632,14 @@ def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
 def view(log) -> list:
     out = []
     for e in log or []:
+        if e.get('pairs') is not None:
+            out += [f'flow {p["beat"]}: pair scored {p["score"]} ({p["why"]})' + (
+                f' -> written again, scored {p["new_score"]}: "{p["now"]}"' if p['now'] != p['was'] else
+                f' -> kept (the new line scored {p["new_score"]})') for p in e['pairs']]
+            continue
+        if e.get('core') is not None:
+            out.append(f'core answer: {e["core"]["how"]}' + (f' in {e["core"]["beat"]}' if e['core']['beat'] else ''))
+            continue
         out.append(f'{e["beat"]} {e["role"]}: {len(e["kept"])} of {len(e["tried"])} passed -> "{e["line"]}"'
                    + (f' ({e["why"]})' if e.get('why') else ''))
     return out

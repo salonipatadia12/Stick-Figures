@@ -26,6 +26,8 @@ Scores per script:
   facts          facts the research found (after the reputable-source filter) / usable (on topic, no duplicates)
   filler         beats that state no fact, besides the hook, the setup and the loop (user 2026-11-15: at most 3)
   waited         seconds the run waited for another app's model on the same Ollama (not the writer's time)
+  core      0/1  the core answer (topic understanding, backed by a fact) is said in the reveal, twist or payoff: the
+                 gate's code check and the judge on the whole narration both say yes (user 2026-11-15)
 
 The judge is the local judge model (OLLAMA_MODEL, qwen3.5:9b) at temperature 0 with fixed prompts. Results go to
 bench/results/<date>.json (one file per day, a list of runs) and are printed next to the previous run.
@@ -46,18 +48,25 @@ ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / 'bench'
 WORK = BENCH / 'work'
 RESULTS = BENCH / 'results'
-SCORE_VERSION = 'bench-v2'     # v2: facts per topic, filler beats, planned length, waits for another app's model
+SCORE_VERSION = 'bench-v3'     # v3: core answer stated, the twist's kind; v2: facts per topic, filler beats, planned length, waits for another app's model
 
 
-def _research_version() -> str:
-    """The research version, read from the source (pipeline is imported only after STICK_EPISODES_DIR is set)."""
+def _version(name: str, module: str) -> str:
+    """A version constant, read from the source (pipeline is imported only after STICK_EPISODES_DIR is set)."""
     import re
-    m = re.search(r"FREE_RESEARCH_VERSION = '([^']+)'", (ROOT / 'pipeline' / 'script.py').read_text())
+    m = re.search(rf"{name} = '([^']+)'", (ROOT / 'pipeline' / module).read_text())
     return m.group(1) if m else 'unknown'
 
 
-# research and the storyline pick are made once per topic and research version (a research change researches again)
-UPSTREAM = WORK / f'upstream-{_research_version()}'
+def _research_version() -> str:
+    return _version('FREE_RESEARCH_VERSION', 'script.py')
+
+
+# research, the topic's understanding (its core answer), the twist and the storyline pick are made once per topic and
+# version (a change to any of them makes the story step again)
+UPSTREAM = WORK / (f'upstream-{_research_version()}' + ''.join(
+    f'-{_version(n, m)}' for n, m in (('UNDERSTAND_VERSION', 'understand.py'), ('TWIST_VERSION', 'grounding.py'))
+    if _version(n, m) not in ('understand-v1', 'unknown')))
 
 HOOK_RUBRIC = """You grade the HOOK (the first line) of a narrated 45-second explainer Short with a fixed rubric.
 gap (1-5): 5 = the viewer must keep watching to learn something specific the line makes them want; 4 = clear pull;
@@ -180,11 +189,21 @@ def score(base: Path) -> dict:
         or (by[twist_id].claim if twist_id in by else '')
     lines = [b.narration for b in ep.beats]
     hook = lines[0]
+    core = interp.get('core') or {}
+    core_text = core.get('text') or ''
+    # core answer stated (user 2026-11-15): the gate's code check, and the judge on the whole narration
+    gate_core = next((ok for name, ok, _ in ep.story_report() if name == 'core answer stated'), None)
+    try:
+        cj = (judge(grounding.STATES_SYSTEM, f'Question: {ep.topic}\nAnswer: {core_text}\nNarration: ' + ' '.join(lines),
+                    grounding.STATES_SCHEMA) or {}) if core_text else {}
+    except Exception as exc:
+        cj = dict(states=None, why=f'not judged ({type(exc).__name__})')
+    core_stated = bool(core_text) and gate_core is True and cj.get('states') is True
     # hook: the judge's gap score, and the code check that it does not state the twist
     code_gives = grounding.gives_away(hook, f'{by[twist_id].claim} {by[twist_id].quote}' if twist_id in by else '',
                                       twist_claim, interp, ep.sources, ep.topic)
     try:
-        h = judge(HOOK_RUBRIC, f'Topic: {ep.topic}\nThe answer the video reveals later: {twist_claim or "(unknown)"}\n'
+        h = judge(HOOK_RUBRIC, f'Topic: {ep.topic}\nThe answer the video reveals later: {core_text or twist_claim or "(unknown)"}\n'
                                f'Hook: {hook}', HOOK_SCHEMA) or {}
     except Exception as exc:
         h = dict(gap=1, gives_away=False, why=f'not judged ({type(exc).__name__})')
@@ -240,7 +259,14 @@ def score(base: Path) -> dict:
     repairs = json.loads(runs[-1].read_text()).get('repairs', []) if runs else []
     best = next((e for e in repairs if e.get('stage') == 'best'), {})
     fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept')]
-    return dict(hook=hook_score, hook_gap=gap, hook_gives_away=bool(h.get('gives_away')), hook_code_gives_away=code_gives,
+    tscore = (interp.get('fact_scores') or {}).get(twist_id) or {}
+    return dict(core=1 if core_stated else 0, core_text=core_text, core_how=core.get('how', ''),
+                core_facts=core.get('fact_ids') or [], core_gate=gate_core, core_judge=cj.get('states'),
+                core_why=' '.join(str(cj.get('why') or '').split())[:200],
+                twist=twist_id, twist_claim=twist_claim, twist_kind=tscore.get('kind', ''),
+                twist_relevance=tscore.get('relevance'), twist_surprise=tscore.get('surprise'),
+                flow_rewrites=sum(1 for e in best.get('entries', []) for p in e.get('pairs') or [] if p['now'] != p['was']),
+                hook=hook_score, hook_gap=gap, hook_gives_away=bool(h.get('gives_away')), hook_code_gives_away=code_gives,
                 hook_why=' '.join(str(h.get('why') or '').split())[:200],
                 flow=flow_score, flow_judge=int(f.get('flow') or 1), flow_judge_repeated=f.get('repeated') or [],
                 flow_why=' '.join(str(f.get('why') or '').split())[:200], repeated_claims=repeats,
@@ -280,7 +306,8 @@ def save_run(run: dict):
     return p
 
 
-METRICS = ('overall', 'hook', 'flow', 'accuracy', 'rewrite', 'clean', 'seconds', 'facts', 'usable', 'filler', 'waited')
+METRICS = ('overall', 'hook', 'flow', 'accuracy', 'rewrite', 'clean', 'core', 'seconds', 'facts', 'usable', 'filler',
+           'waited')
 
 
 def summary(run: dict) -> dict:
@@ -295,7 +322,8 @@ def summary(run: dict) -> dict:
                 facts=avg(lambda t: t['scores'].get('facts') or 0),
                 usable=avg(lambda t: t['scores'].get('usable_facts') or 0),
                 filler=avg(lambda t: t['scores'].get('filler') or 0),
-                waited=avg(lambda t: t.get('waited') or 0))
+                waited=avg(lambda t: t.get('waited') or 0),
+                core=avg(lambda t: t['scores'].get('core') or 0) if any('core' in t['scores'] for t in rows) else None)
 
 
 def compare(a: dict | None, b: dict) -> str:
@@ -307,12 +335,14 @@ def compare(a: dict | None, b: dict) -> str:
         x, y = sa.get(m), sb.get(m)
         d = '' if x is None or y is None else f'{y - x:+.3g}'
         out.append(f'| {m} | {"" if x is None else x} | {"" if y is None else y} | {d} |')
-    out += ['', '| topic | ' + ' | '.join(f'{r["label"]} hook/flow/acc/rw/clean/s/facts/filler' for r in (a, b) if r) + ' |',
+    out += ['', '| topic | ' + ' | '.join(f'{r["label"]} hook/flow/acc/rw/clean/s/facts/filler/core' for r in (a, b) if r)
+            + ' |',
             '|---|' + '---|' * len([r for r in (a, b) if r])]
     cell = lambda t: (f'{t["scores"]["hook"]}/{t["scores"]["flow"]}/{t["scores"]["accuracy"]}/{t["scores"]["rewrite"]}/'
                       f'{"yes" if t["clean"] else "NO"}/{t["seconds"]:.0f}/'
                       f'{t["scores"].get("facts", "?")}({t["scores"].get("usable_facts") or "?"})/'
-                      f'{t["scores"].get("filler", "?")}') if t and 'scores' in t else \
+                      f'{t["scores"].get("filler", "?")}/'
+                      + ({1: 'yes', 0: 'NO'}.get(t['scores'].get('core'), '-'))) if t and 'scores' in t else \
         ('failed: ' + (t.get('error') or '')[:60] if t else '')
     names = list(dict.fromkeys([t['topic'] for r in (a, b) if r for t in r['topics']]))
     for name in names:

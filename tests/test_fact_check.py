@@ -249,8 +249,8 @@ def plan_episode():
                                                                 why='EIA')])))
 
 
-GOOD = {2: 'Oil formed before the dinosaurs were even here.', 6: 'Oil came from tiny sea plants and animals.',
-        7: 'Heat and pressure turned their remains into oil.', 8: 'Oil comes from heated matter of living organisms.'}
+GOOD = {2: 'Oil formed before the dinosaurs were even here.', 7: 'Oil came from tiny sea plants and animals.',
+        6: 'Heat and pressure turned their remains into oil.', 8: 'Oil comes from heated matter of living organisms.'}
 
 
 def answers(claims=None, kinds=None):
@@ -279,10 +279,11 @@ class Plan(unittest.TestCase):
     def test_roles_and_facts_are_chosen_in_code(self):
         from pipeline import grounding
         roles = grounding.skeleton('myth_vs_fact', 10)
-        self.assertEqual(roles, ['hook', 'setup', 'problem', 'stakes', 'clue', 'clue', 'twist', 'reveal', 'payoff', 'loop'])
+        # the reveal (how it works) before the twist (user 2026-11-15: what it is -> how -> why -> twist -> payoff)
+        self.assertEqual(roles, ['hook', 'setup', 'problem', 'stakes', 'clue', 'clue', 'reveal', 'twist', 'payoff', 'loop'])
         interp = plan_episode().meta['interpretation']
         got = grounding.assign_facts(roles, OIL, 's7', interp)
-        self.assertEqual(got, {6: 's7', 2: 's5', 7: 's8', 8: 's3'})    # twist, myth-breaker, how it works, the answer
+        self.assertEqual(got, {7: 's7', 2: 's5', 6: 's8', 8: 's3'})    # twist, myth-breaker, how it works, the answer
         self.assertEqual(grounding.skeleton('mystery', 8).count('clue'), 2)
         abiogenic = Source(id='s9', claim='Abiogenic methane forms by geologic processes.', url='https://x.gov/m', quote='')
         self.assertNotIn('s9', grounding.assign_facts(roles, OIL + [abiogenic], 's7', interp).values())  # off topic
@@ -294,19 +295,19 @@ class Plan(unittest.TestCase):
         self.assertIn('FACT BEAT on s7', self.users[0])
         self.assertIn('microscopic', self.users[0])                      # the plain equivalents of "diatoms"
         self.assertEqual(plan['twist'], 's7')
-        self.assertEqual(plan['beats'][6], dict(role='twist', kind='fact', fact_ids=['s7'], claim=GOOD[6]))
+        self.assertEqual(plan['beats'][7], dict(role='twist', kind='fact', fact_ids=['s7'], claim=GOOD[7]))
         self.assertEqual(plan['beats'][1], dict(role='setup', kind='myth', fact_ids=[], claim=''))
         self.assertEqual(plan['beats'][3], dict(role='stakes', kind='transition', fact_ids=[], claim=''))  # no fact left
         self.assertEqual(plan['remaining'], [])
 
     def test_an_imprecise_claim_goes_back_then_becomes_the_facts_own_line(self):
         from pipeline import grounding
-        bad = {6: 'Oil came from tiny marine bacteria.'}
+        bad = {7: 'Oil came from tiny marine bacteria.'}
         self.answers = [answers(bad), answers({**bad, 2: "garbled"}), answers(bad)]
         plan = self.plan()
         self.assertEqual(len(self.users), 1 + grounding.PLAN_REPAIRS)
         self.assertIn("'bacteria'", self.users[1])                          # the repair says what is wrong
-        self.assertEqual(plan['beats'][6]['claim'], S7.claim)
+        self.assertEqual(plan['beats'][7]['claim'], S7.claim)
         self.assertEqual(plan['beats'][2]['claim'], GOOD[2])               # a claim that passed is kept
         self.assertTrue(any('the fact as research wrote it' in n for n in plan['notes']))
 
@@ -316,13 +317,13 @@ class Plan(unittest.TestCase):
         plan = self.plan()
         ep = plan_episode()
         ctx = script._free_context(ep, styles.load('cozy'), OIL, plan)
-        self.assertIn(f'b07 twist [fact beat, s7]: claim: "{GOOD[6]}"', ctx['outline_user'])
+        self.assertIn(f'b08 twist [fact beat, s7]: claim: "{GOOD[7]}"', ctx['outline_user'])
         self.assertIn('b01 hook [question: states no fact]', ctx['outline_user'])
         self.assertNotIn('Research facts', ctx['outline_user'])
         self.assertEqual(ctx['outline_system'], script.SCRIPT_RULES_FACT_FIRST_OUTLINE)
         o = script._apply_plan(dict(beats=[dict(narration='x', on_screen_text='', visual='insert') for _ in range(10)]), plan)
         self.assertEqual([b['role'] for b in o['beats']][:3], ['hook', 'setup', 'problem'])
-        self.assertEqual(o['beats'][6]['source_ids'], ['s7'])
+        self.assertEqual(o['beats'][7]['source_ids'], ['s7'])
         self.assertIn('bacteria', ' '.join(script.precision_issues(ep, OIL, dict(beats=[
             dict(narration='Tiny bacteria made it.', on_screen_text='', source_ids=['s7'])]))))
 

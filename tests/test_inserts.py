@@ -158,7 +158,8 @@ class TextPlacementQaTest(unittest.TestCase):
                        chars=[[150, 500, 800, 1700]])]
         r = qa.text_check(frames, [])
         self.assertFalse(r['pass_'])
-        self.assertEqual(r['overlapping_text'][0]['texts'], 'Longer path, more red / short path | long path')
+        # the two texts as a list (a text's own " / " or "|" can never be read as the boundary)
+        self.assertEqual(r['overlapping_text'][0]['texts'], ['Longer path, more red', 'short path | long path'])
         self.assertEqual(r['text_on_character'][0]['text'], 'Mostly red')
 
     def test_uk_spellings_and_close_proper_names_are_heard(self):

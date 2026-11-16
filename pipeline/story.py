@@ -268,8 +268,15 @@ def _pitch(episode, base, ledger, client, regenerate, prov):
     if prov == 'ollama':
         facts, more = claim_followup(episode, interp, facts, base, ledger)
         notes += more
+        facts, more = core_support(episode, interp, facts, base, ledger)   # the core answer, backed by a fact
+        notes += more
     from . import grounding
-    tid = grounding.twist_fact(interp, facts)     # fact-first (user 2026-11-14): the twist is a fact, picked in code
+    # the twist (user 2026-11-15): the most surprising of the facts most relevant to the core answer, never a side
+    # fact (history, trivia) unless the question is about history; scored in one call, else picked in code as before
+    scores = grounding.score_facts(facts, interp, episode, grounding.default_judge(base, ledger) if prov == 'ollama'
+                                   else None)
+    interp['fact_scores'] = scores
+    tid = grounding.pick_twist(interp, facts, scores)
     by = {f.id: f for f in facts}
     interp['twist'] = dict(id=tid, claim=by[tid].claim) if tid in by else {}
     episode.meta['interpretation'] = interp
@@ -326,18 +333,8 @@ def claim_followup(episode, interp, facts, base, ledger, search_claim=None, veri
         if v['verdict'] != 'unverified' or v.get('fact_ids') or any(d['claim'] == v['claim'] for d in done):
             continue
         queries, found = search_claim(v['claim'])
-        import difflib
-        new = []
-        for f in found:                               # the same fact twice (two pages of one site): kept once
-            seen = [x.claim.lower() for x in facts] + [x['claim'].lower() for x in new]
-            if f['quote'] not in {x.quote for x in facts} and \
-                    not any(difflib.SequenceMatcher(None, f['claim'].lower(), c).ratio() > 0.8 for c in seen):
-                new.append(f)
-        kept, _ = keep_reputable([Source(id='s0', claim=f['claim'], url=f['url'], title=f.get('title') or '',
-                                         quote=f['quote']) for f in new])
-        kept = [f.model_copy(update=dict(id=f's{len(facts) + i}')) for i, f in enumerate(kept, 1)]
+        kept = add_facts(episode, facts, found)
         facts += kept
-        episode.meta.setdefault('claim_facts', []).extend(f.model_dump(exclude={'id'}) for f in kept)
         done.append(dict(claim=v['claim'], queries=queries, facts=[f.id for f in kept]))
         again = verify(dict(interp, claims=[v['claim']]), facts) if kept else []
         if again and again[0]['verdict'] != 'unverified':
@@ -347,6 +344,61 @@ def claim_followup(episode, interp, facts, base, ledger, search_claim=None, veri
                         + (f'; {len(kept)} new fact(s) did not settle it' if kept else ''))
         notes.append(f'  claim "{v["claim"]}": searched again ({"; ".join(queries)}), {len(kept)} new fact(s) -> '
                      f'{interp["verdicts"][k]["verdict"]}')
+    return facts, notes
+
+
+def add_facts(episode, facts, found) -> list:
+    """The new facts of a follow-up search as Sources with the next ids: the same fact twice (two pages of one site)
+    kept once, reputable pages only. They join meta['claim_facts'], so the script step has them under the same ids."""
+    import difflib
+    from .script import keep_reputable
+    new = []
+    for f in found:
+        seen = [x.claim.lower() for x in facts] + [x['claim'].lower() for x in new]
+        if f['quote'] not in {x.quote for x in facts} and \
+                not any(difflib.SequenceMatcher(None, f['claim'].lower(), c).ratio() > 0.8 for c in seen):
+            new.append(f)
+    kept, _ = keep_reputable([Source(id='s0', claim=f['claim'], url=f['url'], title=f.get('title') or '',
+                                     quote=f['quote']) for f in new])
+    kept = [f.model_copy(update=dict(id=f's{len(facts) + i}')) for i, f in enumerate(kept, 1)]
+    episode.meta.setdefault('claim_facts', []).extend(f.model_dump(exclude={'id'}) for f in kept)
+    return kept
+
+
+def core_support(episode, interp, facts, base, ledger, search_claim=None, verify=None, ask=None):
+    """The core answer (user 2026-11-15: "build everything around the answer") backed by research: the facts that
+    support the sentence the understanding step wrote; when none does, two targeted searches for it and a second check;
+    when still none, the answer written again from the facts themselves (one call), citing them. Sets
+    interp['core'] = {text, fact_ids, how, queries}; returns (facts, notes)."""
+    from . import entail, search, understand
+    from .cache import for_episode
+    cache = for_episode(base)
+    search_claim = search_claim or (lambda c: search.claim_followup(c, interp.get('question', ''), cache, ledger))
+    verify = verify or (lambda i, f: understand.verify(i, f, cache=cache, ledger=ledger))
+    ask = ask if ask is not None else entail.default_ask(cache, ledger)
+    text = interp.get('core_answer') or ''
+    facts, notes, queries = list(facts), [], []
+
+    def backed(t):
+        v = (verify(dict(interp, claims=[t]), facts) or [{}])[0] if t else {}
+        return v.get('fact_ids') if v.get('verdict') == 'supported' else []
+    ids = backed(text)
+    how = 'supported'
+    if text and not ids:
+        queries, found = search_claim(text)
+        kept = add_facts(episode, facts, found)
+        facts += kept
+        ids = backed(text) if kept else []
+        how = 'searched'
+        notes.append(f'  core answer: searched for it ({"; ".join(queries)}), {len(kept)} new fact(s)')
+    if not ids:
+        got = understand.core_from_facts(interp.get('question') or episode.topic, facts, ask)
+        if got.get('text'):
+            text, ids, how = got['text'], got['fact_ids'], 'from facts'
+        else:
+            how = 'unsupported'
+    interp['core'] = dict(text=text, fact_ids=ids, how=how, queries=queries)
+    notes.append(f'core answer ({how}{": " + ", ".join(ids) if ids else ""}): {text or "(none)"}')
     return facts, notes
 
 

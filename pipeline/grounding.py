@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 
-GROUNDING_VERSION = 'ground-v7'   # v7: the same event or period, topic words do not rescue; v6: beats and length follow the usable facts   # v2: ranges kept whole in the claims; v3: facts judged on topic
+GROUNDING_VERSION = 'ground-v8'   # v8: built around the core answer (payoff fact, causal order, scored hook fact); v7: the same event or period, topic words do not rescue; v6: beats and length follow the usable facts   # v2: ranges kept whole in the claims; v3: facts judged on topic
 
 # words that name a group of living things -> the group
 _GROUP_WORDS = {
@@ -176,6 +176,82 @@ def twist_fact(interp: dict, sources) -> str:
     return max([s for s in sources if s is top or _same(s, top)], key=lambda s: (quality(s), score(s))).id
 
 
+# ------------------------------------------------------------------ the twist from the core answer (user 2026-11-15)
+
+TWIST_VERSION = 'twist-v2'        # v2: scored on relevance to the core answer and surprise; no side fact
+KINDS_OF_FACT = ('what', 'how', 'why', 'effect', 'number', 'history', 'trivia')
+SIDE = ('history', 'trivia')      # a side fact: the twist only when the question is about history
+CHAIN = {'what': 0, 'how': 1, 'why': 2, 'effect': 3, 'number': 3, 'history': 4, 'trivia': 5}   # the causal order
+SCORE_SYSTEM = """You rate research facts for a short explainer video that answers one question. For EACH fact give:
+relevance (1-5): 5 = it is part of the core answer or says how or why it is true; 3 = it helps explain the subject;
+1 = it is about something else. surprise (1-5): 5 = a curious viewer who knows only the common idea would not expect
+it. kind: "what" (what the thing is), "how" (how it works, the steps), "why" (the cause), "effect" (what it leads
+to), "number" (a size, amount or time), "history" (who found it, when, past events), "trivia" (a side detail)."""
+SCORE_SCHEMA = dict(type='object', required=['facts'], properties=dict(facts=dict(type='array', items=dict(
+    type='object', required=['id', 'relevance', 'surprise', 'kind'],
+    properties=dict(id=dict(type='string'), relevance=dict(type='integer'), surprise=dict(type='integer'),
+                    kind=dict(type='string', enum=list(KINDS_OF_FACT)))))))
+
+
+def default_judge(base=None, ledger=None, max_tokens=1400):
+    """The local judge with room for one answer per fact (the facts' scores), or None without the local model."""
+    from . import config, llm
+    from .cache import for_episode
+    if config.script_provider() != 'ollama':
+        return None
+    cache = for_episode(base) if base is not None else None
+    return lambda s, u, sc: llm.generate_json(s, u, sc, max_tokens, cache=cache, ledger=ledger, step='twist',
+                                              detail='facts scored on the core answer', temperature=0.0)
+
+
+def score_facts(sources, interp, episode, ask) -> dict:
+    """{fact id: {relevance, surprise, kind}} in one call; {} without a judge or an answer. Facts are sent in groups
+    of 8 so the answer stays short enough to be whole."""
+    if ask is None or not sources:
+        return {}
+    interp = interp or {}
+    core = (interp.get('core') or {}).get('text') or interp.get('core_answer') or ''
+    head = (f'Question: {interp.get("question") or episode.topic}\n'
+            + (f'Core answer: {core}\n' if core else '')
+            + f'The common idea: {interp.get("misconception") or episode.topic}\nFacts:\n')
+    out = {}
+    for k in range(0, len(sources), 8):
+        part = sources[k:k + 8]
+        try:
+            got = (ask(SCORE_SYSTEM, head + '\n'.join(f'{s.id}: {s.claim}' for s in part), SCORE_SCHEMA) or {}).get('facts')
+        except Exception:
+            got = None
+        ids = {s.id for s in part}
+        for x in got or []:
+            if isinstance(x, dict) and str(x.get('id')) in ids:
+                clip = lambda v: max(1, min(5, int(v))) if isinstance(v, (int, float)) else 3
+                out[str(x['id'])] = dict(relevance=clip(x.get('relevance')), surprise=clip(x.get('surprise')),
+                                         kind=x.get('kind') if x.get('kind') in KINDS_OF_FACT else 'what')
+    return out
+
+
+def pick_twist(interp, sources, scores) -> str:
+    """The twist fact's id: among the facts most relevant to the core answer (the top relevance, and one below it
+    when the top is 5), the most surprising; a side fact (history, trivia) only when the question is about history,
+    and the fact that backs the core answer only when no other fact is that relevant (the payoff says the core
+    answer). Without scores: twist_fact, picked in code as before."""
+    if not scores or not sources:
+        return twist_fact(interp, sources)
+    interp = interp or {}
+    known = [s for s in sources if s.id in scores]
+    pool = [s for s in known if interp.get('about_history') or scores[s.id]['kind'] not in SIDE] or known
+    if not pool:
+        return twist_fact(interp, sources)
+    top = max(scores[s.id]['relevance'] for s in pool)
+    best = [s for s in pool if scores[s.id]['relevance'] >= (top - 1 if top == 5 else top)]
+    core_ids = set((interp.get('core') or {}).get('fact_ids') or [])
+    best = [s for s in best if s.id not in core_ids] or best
+    order = {s.id: k for k, s in enumerate(sources)}
+    pick = max(best, key=lambda s: (scores[s.id]['surprise'], scores[s.id]['relevance'], -order[s.id]))
+    # a near-duplicate from a better source says the same thing: that one is told
+    return max([s for s in sources if s is pick or _same(s, pick)], key=lambda s: (quality(s), s is pick)).id
+
+
 # ------------------------------------------------------------------ the plan
 
 KINDS = ['fact', 'question', 'transition', 'reaction', 'callback', 'myth']
@@ -228,7 +304,9 @@ def skeleton(fmt: str, n: int) -> list:
         mid = ['clue'] * rising
     else:
         mid = ['stakes'] + ['clue'] * (rising - 1)
-    return ['hook'] + (['setup'] if setup else []) + ['problem'] + mid + ['twist'] + (['reveal'] if reveal else []) \
+    # the reveal (how it works) comes before the twist: what it is -> how it works -> why -> twist -> payoff (user
+    # 2026-11-15: fact beats in causal order)
+    return ['hook'] + (['setup'] if setup else []) + ['problem'] + mid + (['reveal'] if reveal else []) + ['twist'] \
         + ['payoff', 'loop']
 
 
@@ -280,7 +358,21 @@ def on_topic(sources, episode, ask) -> set | None:
     return keep
 
 
-def assign_facts(roles, sources, twist, interp, storyline=None, relevant=None) -> dict:
+def chain_order(roles, facts: dict, scores: dict) -> dict:
+    """The middle fact beats (after the problem, before the twist) re-ordered as a chain (user 2026-11-15): what it is,
+    then how it works, then why, then what it leads to; the roles stay where they are, their facts move. Unscored
+    facts keep their place among the others."""
+    if not scores:
+        return facts
+    t = next((k for k, r in enumerate(roles) if r == 'twist'), len(roles))
+    p = next((k for k, r in enumerate(roles) if r == 'problem'), 0)
+    slots = [k for k in sorted(facts) if p < k < t and roles[k] in ('stakes', 'clue', 'reason', 'reveal')]
+    ranked = sorted((facts[k] for k in slots), key=lambda i: (CHAIN.get((scores.get(i) or {}).get('kind'), 3),
+                                                              -(scores.get(i) or {}).get('relevance', 3)))
+    return {**facts, **dict(zip(slots, ranked))}
+
+
+def assign_facts(roles, sources, twist, interp, storyline=None, relevant=None, scores=None) -> dict:
     """{beat index: fact id}, chosen in code (user 2026-11-14: "the facts are chosen in code before writing"). The
     twist beat says the twist fact; for a topic that corrects a myth, the problem beat says the fact that breaks it
     (another fact the claims were judged on); the payoff the fact closest to the question; the reveal the fact of how it
@@ -311,7 +403,9 @@ def assign_facts(roles, sources, twist, interp, storyline=None, relevant=None) -
         # of two near-duplicates the scientific source is told, the simplified page only when it is alone
         cands = [s for s in cands if not any(_same(s, o) and quality(o) > quality(s) for o in cands if o is not s)]
         return max(cands, key=lambda s: (score(s), quality(s), -int(s.id[1:]) if s.id[1:].isdigit() else 0), default=None)
-    rel = lambda s: len(_words(s) & topic)
+    scores = scores or {}
+    # relevance to the core answer (the judge's score) first, then the words shared with the topic
+    rel = lambda s: ((scores.get(s.id) or {}).get('relevance', 0), len(_words(s) & topic))
     t = next((k for k, r in enumerate(roles) if r == 'twist'), -1)
     if twist in by and t >= 0:
         take(t, by[twist])
@@ -330,12 +424,15 @@ def assign_facts(roles, sources, twist, interp, storyline=None, relevant=None) -
                       + (f' {by[twist].claim}' if twist in by else ''))
     tg = groups(f'{by[twist].claim} {by[twist].quote}') if twist in by else set()
     pay = next((k for k, r in enumerate(roles) if r == 'payoff'), -1)
+    core_ids = [i for i in (interp.get('core') or {}).get('fact_ids') or [] if i in by]
     if pay >= 0:
-        take(pay, best(lambda s: (2 * len(groups(f'{s.claim} {s.quote}') & tg) + len(_words(s) & q), rel(s))))
+        # the payoff says the core answer (user 2026-11-15): it stands on the fact that backs it
+        mine = best(rel, [by[i] for i in core_ids]) if core_ids else None
+        take(pay, mine or best(lambda s: (2 * len(groups(f'{s.claim} {s.quote}') & tg) + len(_words(s) & q), rel(s))))
     how = content_words('heat pressure process turns turned transform transforms conversion converts layers buried')
     for k, r in enumerate(roles):
         if r == 'reveal':
-            take(k, best(lambda s: (len(_words(s) & how), rel(s))))
+            take(k, best(lambda s: ((scores.get(s.id) or {}).get('kind') == 'how', len(_words(s) & how), rel(s))))
     for k, r in enumerate(roles):
         if r in FACT_ROLES and k not in out:
             take(k, best(rel))
@@ -527,14 +624,16 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
     myth = myth_groups(interp, sources)
     ask = ask if ask is not None else entail.default_ask(cache, ledger)
     relevant = on_topic(sources, episode, ask)
-    if relevant is not None and twist:
-        relevant.add(twist)
+    if relevant is not None:          # the twist and the facts that back the core answer are always told
+        relevant |= {i for i in [twist] + list((interp.get('core') or {}).get('fact_ids') or []) if i}
     n_usable = len(usable(sources, relevant))
     n = beats_for(n_usable, length[0], length[1]) if length else (aim[0] + aim[1] + 1) // 2
     roles = skeleton(episode.story_format, n)
-    facts = assign_facts(roles, sources, twist, interp, episode.storyline, relevant)
+    scores = interp.get('fact_scores') or {}
+    facts = assign_facts(roles, sources, twist, interp, episode.storyline, relevant, scores)
     if length:
         roles, facts = trim(roles, facts)
+    facts = chain_order(roles, facts, scores)
     schema = plan_schema(len(roles))
     if generate is None:
         from . import llm
@@ -579,10 +678,16 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
                off_topic=sorted(x.id for x in sources if relevant is not None and x.id not in relevant),
                usable_facts=n_usable, remaining=left)
     pool = usable(sources, relevant)
-    order = surprise_order(pool, episode, ask)            # the hook is written from the most surprising fact
+    # the hook is written from the most surprising fact (the facts' scores when the story step made them)
+    order = [x.id for x in sorted(pool, key=lambda x: (-scores[x.id]['surprise'], -scores[x.id]['relevance']))
+             if x.id in scores] if scores else []
+    order = (order + [x.id for x in pool if x.id not in order]) if order else surprise_order(pool, episode, ask)
     by = {x.id: x for x in sources}
+    from .understand import core as core_of
     out.update(surprise=order, hook_fact=order[0] if order else twist,
-               answer_words=answer_words(by.get(twist), episode))
+               answer_words=answer_words(by.get(twist), episode), core=core_of(interp).get('text', ''),
+               chain=[(scores.get(b['fact_ids'][0]) or {}).get('kind', '') if b['fact_ids'] else ''
+                      for b in plan['beats']])
     if length:
         told = {k for k, b in enumerate(plan['beats']) if b['kind'] == 'fact'}
         out.update(seconds=planned_seconds(roles, told, length[0], length[1]), brief_seconds=length[0],
@@ -844,3 +949,101 @@ def points_to_subject(hook: str, episode, hook_fact=None, answer=(), ask=None) -
     except Exception:
         return True
     return a.get('points') is not False
+
+
+# ------------------------------------------------------------------ built around the answer (user 2026-11-15)
+
+REVEALS_SYSTEM = """You judge the first line (the hook) of a short explainer video. Question: does this hook reveal or strongly
+imply the answer, or any part of it? A viewer who read only the hook could then guess that part of the answer."""
+REVEALS_SCHEMA = dict(type='object', required=['reveals', 'why'], properties=dict(reveals=dict(type='boolean'),
+                                                                                  why=dict(type='string')))
+STATES_SYSTEM = """Answer whether the narration of a short explainer video says this answer to its question: the same
+idea in any words (plainer is fine). A line that only hints at it, or says a different part of the story, does not."""
+STATES_SCHEMA = dict(type='object', required=['states', 'why'], properties=dict(states=dict(type='boolean'),
+                                                                                why=dict(type='string')))
+FLOW_SYSTEM = """You check that the narration of a short explainer video flows as one chain: each line follows from
+the line before it (it explains it with "because", draws the result with "so", turns it with "but", or builds on it
+with "which means"), not a jump to a new point. For EACH pair of adjacent lines give a score: 5 = the second line
+clearly follows from the first; 3 = related, but a jump; 1 = no link at all. The last line may call back to the
+first line of the video instead."""
+FLOW_SCHEMA = dict(type='object', required=['pairs'], properties=dict(pairs=dict(type='array', items=dict(
+    type='object', required=['second', 'score', 'why'],
+    properties=dict(second=dict(type='integer'), score=dict(type='integer'), why=dict(type='string'))))))
+WEAK_PAIR = 2                     # a pair scored this or lower gets its second line written again
+FLOW_REWRITES = 3                 # at most this many lines are written again for flow
+
+
+def reveals(hook: str, answer: str, ask) -> str:
+    """'' when the hook keeps the answer back, else why it gives it away (one yes/no call, user 2026-11-15: the word
+    match let "Your yawn came from closeness" through). The prompt is the user's own question with no example: it
+    judged 12 of 12 labelled hooks right on the 9B, where one wording with an example mid-sentence let every hook
+    through (the 9B is that sensitive to wording). Without a judge or an answer: ''."""
+    if ask is None or not answer or not hook:
+        return ''
+    try:
+        a = ask(REVEALS_SYSTEM, f'Answer: {answer}\nHook: {hook}', REVEALS_SCHEMA) or {}
+    except Exception:
+        return ''
+    return (' '.join(str(a.get('why') or '').split())[:160] or 'the judge says it does') if a.get('reveals') is True else ''
+
+
+def core_words(core: str, episode) -> tuple[set, set]:
+    """(all content words of the core answer, the ones that are not the topic's own words or words of time and scale)."""
+    from .qa import content_words
+    cw = content_words(core)
+    return cw, cw - topic_words(episode) - content_words(' '.join(GENERIC_ANSWER))
+
+
+def says_core(line: str, core: str, episode) -> bool:
+    """The code half of "the narration states the core answer" (the gate's check): the line shares two of the core
+    answer's content words, one of them more than the topic's own name ("earn" for compound interest)."""
+    from .qa import content_words
+    cw, own = core_words(core, episode)
+    shared = content_words(line) & cw
+    return len(shared) >= min(2, len(cw)) and bool(shared & own or not own)
+
+
+def states_core(line: str, core: str, episode, ask=None) -> bool:
+    """True when the line says the core answer: the code check, then the judge (one yes/no call) when there is one."""
+    if not core:
+        return True
+    if not says_core(line, core, episode):
+        return False
+    if ask is None:
+        return True
+    try:
+        a = ask(STATES_SYSTEM, f'Question: {episode.topic}\nAnswer: {core}\nNarration: {line}', STATES_SCHEMA) or {}
+    except Exception:
+        return True
+    return a.get('states') is not False
+
+
+def weak_pairs(lines: list, ask) -> list:
+    """[(index of the second line, score, why)] for adjacent lines that do not follow one from the other (one call for
+    all pairs), weakest first; [] without a judge."""
+    if ask is None or len(lines) < 2:
+        return []
+    user = 'Lines:\n' + '\n'.join(f'{k}. {x}' for k, x in enumerate(lines, 1))
+    try:
+        got = (ask(FLOW_SYSTEM, user, FLOW_SCHEMA) or {}).get('pairs') or []
+    except Exception:
+        return []
+    out = {}
+    for x in got:
+        try:
+            k, sc = int(x.get('second')) - 1, int(x.get('score'))
+        except (TypeError, ValueError):
+            continue
+        if 1 <= k < len(lines) and sc <= WEAK_PAIR:
+            out.setdefault(k, (k, sc, ' '.join(str(x.get('why') or '').split())[:160]))
+    return sorted(out.values(), key=lambda t: (t[1], t[0]))
+
+
+def pair_score(a: str, b: str, ask) -> int:
+    """The flow judge's score for one pair (3 when it does not answer)."""
+    got = {}
+    try:
+        got = ((ask(FLOW_SYSTEM, f'Lines:\n1. {a}\n2. {b}', FLOW_SCHEMA) or {}).get('pairs') or [{}])[0]
+        return int(got.get('score'))
+    except Exception:
+        return 3

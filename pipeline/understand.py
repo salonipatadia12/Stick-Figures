@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import re
 
-UNDERSTAND_VERSION = 'understand-v1'
+UNDERSTAND_VERSION = 'understand-v2'   # v2: the core answer, and whether the question is about history
 VERDICTS = ('supported', 'mainstream-disputed', 'fringe/false', 'unverified')
 MYTHY = ('mainstream-disputed', 'fringe/false')
 PREFERRED = ('myth_vs_fact', 'mystery', 'revelation')
@@ -33,10 +33,17 @@ claim the topic states or assumes, each as a short plain sentence (for "how does
 holds that the video should correct (the misconception), and the most interesting TRUE angle for a 45-second
 explainer. Give a clean title of at most 60 characters (never the typed text; no clickbait) and the picture subjects
 that would show the misconception on screen (one or two nouns, e.g. "dinosaur"). Do not judge whether the claims are
-true here."""
+true here.
+CORE ANSWER: the direct answer to the question in ONE plain sentence of at most 20 words, as an expert would say it
+to a friend: what it is, or how or why it happens ("Compound interest means your interest starts earning interest
+too."). Never a teaser or a question; no history unless the question asks about the past.
+ABOUT HISTORY: true only when the question asks about past events or people (why an empire fell, who discovered
+something), false when it asks what something is or how or why it happens."""
 
-SCHEMA = dict(type='object', required=['question', 'title', 'claims', 'misconception', 'angle', 'myth_subjects'],
+SCHEMA = dict(type='object', required=['question', 'title', 'claims', 'misconception', 'angle', 'myth_subjects',
+                                       'core_answer', 'about_history'],
               properties=dict(question=dict(type='string'), title=dict(type='string'),
+                              core_answer=dict(type='string'), about_history=dict(type='boolean'),
                               claims=dict(type='array', items=dict(type='string')),
                               misconception=dict(type='string'), angle=dict(type='string'),
                               myth_subjects=dict(type='array', items=dict(type='string'))))
@@ -74,6 +81,7 @@ def fallback(topic: str) -> dict:
     q = (q[:1].upper() + q[1:] + '?') if q else 'What is this about?'
     title = q.rstrip('?')[:60]
     return dict(question=q, title=title, slug='', claims=[], misconception='', angle='', myth_subjects=[],
+                core_answer='', about_history=False,
                 source='fallback', version=UNDERSTAND_VERSION, topic=topic)      # no slug: the episode keeps its own
 
 
@@ -89,7 +97,16 @@ def clean(data: dict, topic: str) -> dict:
     return dict(question=q if q.endswith('?') else q.rstrip('.') + '?', title=title, slug=slug_for(title), claims=claims,
                 misconception=' '.join(str(data.get('misconception') or '').split()),
                 angle=' '.join(str(data.get('angle') or '').split()), myth_subjects=subjects,
+                core_answer=core_text(data.get('core_answer')), about_history=data.get('about_history') is True,
                 source='model', version=UNDERSTAND_VERSION, topic=topic)
+
+
+def core_text(text) -> str:
+    """The core answer as one sentence: trimmed, a full stop, never a question."""
+    t = ' '.join(str(text or '').split()).strip('"\' ')
+    if not t or t.endswith('?'):
+        return ''
+    return t if t[-1] in '.!' else t + '.'
 
 
 def interpret(topic: str, cache=None, ledger=None, generate=None) -> dict:
@@ -150,6 +167,37 @@ def verify(interp: dict, facts: list, cache=None, ledger=None, generate=None) ->
     return out
 
 
+CORE_SYSTEM = """Answer a video's question in ONE plain sentence of at most 20 words, using only the research facts
+given: what it is, or how or why it happens. Cite the ids of the facts the sentence stands on. If no fact answers the
+question, give an empty sentence."""
+CORE_SCHEMA = dict(type='object', required=['answer', 'fact_ids'], properties=dict(
+    answer=dict(type='string'), fact_ids=dict(type='array', items=dict(type='string'))))
+
+
+def core_from_facts(question: str, facts: list, ask) -> dict:
+    """{text, fact_ids}: the core answer written from the facts when none backs the one written from the question (a
+    sentence that cites no known fact is not used)."""
+    if ask is None or not facts:
+        return {}
+    try:
+        a = ask(CORE_SYSTEM, f'Question: {question}\n\nResearch facts:\n' + '\n'.join(f'{f.id}: {f.claim}' for f in facts),
+                CORE_SCHEMA) or {}
+    except Exception:
+        return {}
+    known = {f.id for f in facts}
+    ids = [i for i in a.get('fact_ids') or [] if i in known]
+    text = core_text(a.get('answer'))
+    return dict(text=text, fact_ids=ids) if text and ids else {}
+
+
+def core(episode_or_interp) -> dict:
+    """The episode's core answer ({text, fact_ids, how}), {} when it has none (an episode made before it)."""
+    interp = episode_or_interp if isinstance(episode_or_interp, dict) else \
+        ((episode_or_interp.meta or {}).get('interpretation') or {})
+    c = interp.get('core') or {}
+    return c if c.get('text') else {}
+
+
 def has_myth(interp: dict) -> bool:
     """True when the story corrects something: a claim judged disputed or false, or a named misconception."""
     return bool(interp.get('misconception')) or any(v.get('verdict') in MYTHY for v in interp.get('verdicts') or [])
@@ -175,6 +223,8 @@ def brief(interp: dict) -> str:
     lines = [f'What the viewer asked (typed as "{interp.get("topic", "")}"): {interp.get("question", "")}']
     # 2026-11-14: the local model's angle said "marine bacteria (zooplankton)" and "10-25 million years" with no
     # source: the angle and misconception steer the story; only the research facts may be stated
+    if (interp.get('core') or {}).get('text'):
+        lines.append(f'The core answer the video must say (in the reveal or the payoff): {interp["core"]["text"]}')
     twist = interp.get('twist') or {}
     if twist.get('claim'):
         # fact-first (user 2026-11-14): the angle the model wrote from memory ("microscopic marine bacteria") no

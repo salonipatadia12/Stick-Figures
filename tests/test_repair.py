@@ -80,6 +80,42 @@ class Text(unittest.TestCase):
         self.assertEqual([(x['beat'], x['hint']) for x in a], [('b02', {'drop': ['Other']})])
         self.assertIn('keep "The Myth"', a[0]['fix'])
 
+    def test_a_stacked_text_in_an_old_report_is_dropped_whole(self):
+        # 2026-11-15 crude oil -6: "MYTH / Is that / actually right?" dropped "Is that", a text the beat did not have,
+        # so the slam stayed and QA failed it again; the same for "Organic Material / -> Kerogen"
+        ep = dict(beats=[dict(id='b02', narration='Is that actually right?', on_screen_text='Is that actually right?',
+                              shot=dict(visual='insert', insert=dict(key='a', scene='', effects=[
+                                  dict(kind='label', anchor='', at='top', detail='MYTH')]),
+                                        motion=[dict(recipe='text_slam', anchor='', detail='')])),
+                         dict(id='b03', narration='Organic matter turns to fuel over thousands of years.',
+                              on_screen_text='Organic Material -> Kerogen', shot=dict(visual='insert', insert=dict(
+                                  key='b', scene='', effects=[dict(kind='label', anchor='', at='top',
+                                                                   detail='Thousands to Millions')])))])
+        rep = failing(text=dict(overlapping_text=[dict(texts='MYTH / Is that / actually right?', t=3.0),
+                                                  dict(texts='Thousands to Millions / Organic Material / -> Kerogen',
+                                                       t=8.0)], pass_=False))
+        a = repair.diagnose(rep, TL, ep, {})
+        drops = {x['beat']: x['hint']['drop'] for x in a}
+        self.assertEqual(drops['b02'], ['Is that actually right?'])          # the MYTH mark stays
+        self.assertIn(drops['b03'][0], ('Thousands to Millions', 'Organic Material -> Kerogen'))
+        shown = repair.repaired_episode_dict(ep, {'beats': {b: {'drop': d} for b, d in drops.items()}})
+        left = {b['id']: repair.spec_texts(b) for b in shown['beats']}
+        self.assertEqual(left['b02'], ['MYTH'])
+        self.assertEqual(len(left['b03']), 1)
+        self.assertNotIn(drops['b03'][0], left['b03'])
+
+    def test_qa_names_an_overlap_from_the_layout_manifest(self):
+        # the renderer's own list: a slam stacked on two lines is still the one on_screen_text, with its beat
+        frames = [dict(t=3.0 + k / 30, label='x', em=80, items=[[100, 100, 600, 200, 'MYTH'],
+                                                                [150, 150, 700, 300, 'Is that actually right?']])
+                  for k in range(30)]
+        layout = qa.layout_manifest(frames, TL)
+        self.assertEqual([r['text'] for r in layout['b02']], ['MYTH', 'Is that actually right?'])
+        self.assertEqual(layout['b02'][1]['box'], [150, 150, 700, 300])
+        got = qa.text_check(frames, [], layout=layout)['overlapping_text']
+        self.assertEqual(got[0]['texts'], ['MYTH', 'Is that actually right?'])
+        self.assertEqual(got[0]['beat'], 'b02')
+
     def test_a_dropped_split_label_is_gone(self):
         ep = dict(beats=[dict(id='b07', narration='x', shot=dict(visual='split', insert=dict(key='a', scene='', effects=[]),
                                                                  split=dict(key='b', scene='', labels=['Fact: Tiny', 'Myth'], anchors=['', ''])))])

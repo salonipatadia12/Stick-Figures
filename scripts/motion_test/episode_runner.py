@@ -46,7 +46,9 @@ def text_summary(drawn: list) -> dict:
         far = max(boxed, key=lambda d: (d['box'][2] - 1080) + (d['box'][3] - 1440))      # the one nearest the right/bottom limits
         out['box'] = [left, min(d['box'][1] for d in boxed), far['box'][2], max(d['box'][3] for d in boxed)]
         out['box_label'] = far['label']
-        out['items'] = [d['box'] + [d['label']] for d in boxed]          # each text's own box, for the overlap checks
+        # each text's own box, for the overlap checks, named by the episode's text it was drawn from (a slam stacked
+        # on two lines is still its one on_screen_text)
+        out['items'] = [d['box'] + [d.get('source') or d['label']] for d in boxed]
     return out
 LEAD_IN, GAP, TAIL = 0.35, 0.25, 1.0
 RIG_CODE = ['pipeline/rig/puppet.py', 'pipeline/rig/hands.py', 'pipeline/rig/props.py', 'pipeline/rig/actions.py',
@@ -353,16 +355,18 @@ class Runner:
         for p in clips:
             caption_boxes += json.loads(p.with_suffix('.captions.json').read_text())
             text_sizes += json.loads(p.with_suffix('.text.json').read_text())
+        from pipeline import qa
+        layout = qa.layout_manifest(text_sizes, tl)            # the texts drawn per beat, as rendered (QA reads it)
+        (self.out / qa.LAYOUT_FILE).write_text(json.dumps(layout, indent=1))
         (self.out / 'timeline.json').write_text(json.dumps(dict(
             title=tl['title'], voice=args.voice, duration=round(tl['duration'], 2), shots=[dict(name=n, start=a, end=b) for n, a, b in plan],
             beats=[dict(id=b['id'], start=round(b['start'], 3), end=round(b['end'], 3), words=b['words']) for b in tl['beats']],
             sfx=sorted([dict(t=round(t, 3), name=n, gain=g) for t, n, g in events], key=lambda e: e['t'])), indent=1))
         print(final, f"{tl['duration']:.2f}s", f'{time.perf_counter() - t_start:.0f}s', flush=True)
         if not args.no_qa:
-            from pipeline import qa
             ep_data = json.loads(self.episode_path.read_text())
             shown = repair.repaired_episode_dict(ep_data, repair.load(self.slug))     # tidy and dropped labels as drawn
-            report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes,
+            report = qa.run(final, tl, lines, caption_boxes, self.out, plan, args.voice, text_sizes=text_sizes, layout=layout,
                             ledger=ROOT / 'episodes' / self.slug / 'ledger.json', library=self.library_summary(),
                             promised=qa.promised_texts(shown), episode=shown)
             print(json.dumps(report['summary'], indent=1))

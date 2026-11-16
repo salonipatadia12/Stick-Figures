@@ -116,8 +116,11 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
             sp = shot.get('split') or {}
             if sp.get('labels'):
                 sp['labels'] = ['' if x in drop else x for x in sp['labels']]
-            if spec.get('on_screen_text') in drop:
+            if tidy_label(spec.get('on_screen_text') or '') in drop:
                 spec['on_screen_text'] = ''
+            for m in shot.get('motion') or []:
+                if m.get('recipe') == 'text_slam' and tidy_label(m.get('detail') or '') in drop:
+                    m['detail'] = ''
             notes.append(f'{b.id}: dropped {sorted(drop)}')
         for text, region in (h.get('label_at') or {}).items():
             for e in (shot.get('insert') or {}).get('effects') or []:
@@ -143,7 +146,7 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
         if b.shot.host is not None and host:
             b.shot.host.side, b.shot.host.size = host['side'], host['size']
         b.on_screen_text = spec.get('on_screen_text', b.on_screen_text)
-        if h.get('myth_mark') and shot.get('motion') is not None:
+        if (h.get('myth_mark') or drop) and shot.get('motion') is not None:
             from .models import Motion
             b.shot.motion = [Motion.model_validate(m) for m in shot['motion']]
     return notes
@@ -195,8 +198,11 @@ def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
             sp = shot.get('split') or {}
             if sp.get('labels'):
                 sp['labels'] = ['' if x in drop else x for x in sp['labels']]
-            if b.get('on_screen_text') in drop:
+            if tidy_label(b.get('on_screen_text') or '') in drop:
                 b['on_screen_text'] = ''
+            for m in shot.get('motion') or []:
+                if m.get('recipe') == 'text_slam' and tidy_label(m.get('detail') or '') in drop:
+                    m['detail'] = ''
     return ep
 
 
@@ -226,6 +232,41 @@ def _host_side(ep_data: dict, beat: str, hints: dict) -> str:
 def _content(text: str) -> set:
     from .qa import _stem, content_words
     return {_stem(w) for w in content_words(str(text or ''))}
+
+
+def spec_texts(spec: dict) -> list:
+    """Every text a beat's spec puts on screen (tidied): insert labels, diagram items, split labels, its on-screen text
+    and a text slam's own text."""
+    shot = spec.get('shot') or {}
+    out = [tidy_label(box[k]) for box, k in _texts(shot)]
+    out += [spec.get('on_screen_text') or '']
+    out += [m.get('detail') or '' for m in shot.get('motion') or [] if m.get('recipe') == 'text_slam']
+    return list(dict.fromkeys(t for t in out if t and t.strip()))
+
+
+def spec_text(label: str, spec: dict) -> str:
+    """The beat's own text a drawn text came from: the same text, else the one text holding all its words (a slam the
+    renderer stacked on two lines, an older report's "Is that" of "Is that actually right?"); else the label as given."""
+    texts = spec_texts(spec)
+    t = tidy_label(label)
+    if t in texts or t == 'caption':
+        return t
+    words = _content(t) or set(t.lower().split())
+    holding = [x for x in texts if words and words <= (_content(x) or set(x.lower().split()))]
+    return min(holding, key=len) if holding else t
+
+
+def split_pair(texts: str, spec: dict) -> list:
+    """An overlap named as one string "A / B" (QA before the layout manifest) as its two texts. A text stacked on two
+    lines was named with the same " / " ("MYTH / Is that / actually right?"), so the cut is the one where both sides
+    are texts of the beat; else every piece, as before."""
+    pieces = [x.strip() for x in str(texts).split(' / ')]
+    known = set(spec_texts(spec)) | {'caption'}
+    for i in range(1, len(pieces)):
+        a, b = ' '.join(pieces[:i]), ' '.join(pieces[i:])
+        if tidy_label(a) in known and tidy_label(b) in known:
+            return [a, b]
+    return pieces
 
 
 def importance(text: str, spec: dict, ep_data: dict | None = None) -> tuple:
@@ -272,12 +313,13 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
     expanded = []
     for item, where in problems:
         texts = item.get('texts')
-        if texts and not item.get('text'):           # an overlap ("A / B"): only the less important text gives way
-            parts = texts if isinstance(texts, list) else [x.strip() for x in str(texts).split(' / ')]
-            on_caption = 'caption' in parts
-            parts = [x for x in parts if x and x != 'caption']          # the caption itself never gives way
-            beat = beat_at(tl, float(item.get('t', 0)))
+        if texts and not item.get('text'):           # an overlap ([A, B]): only the less important text gives way
+            beat = item.get('beat') or beat_at(tl, float(item.get('t', 0)))
             spec = next((b for b in ep_data.get('beats', []) if b.get('id') == beat), {})
+            parts = texts if isinstance(texts, list) else split_pair(texts, spec)
+            on_caption = 'caption' in parts
+            # the caption itself never gives way; a text is named as the beat has it, so a drop matches it
+            parts = [spec_text(x, spec) for x in parts if x and x != 'caption']
             if on_caption and parts:
                 expanded += [(dict(item, text=x, keep='the caption'), where) for x in parts]
             elif len(parts) > 1:
@@ -290,7 +332,7 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
             expanded.append((item, where))
     for item, where in expanded:
         label = item.get('text') or item.get('label') or ''
-        beat = beat_at(tl, float(item.get('t', 0)))
+        beat = item.get('beat') or beat_at(tl, float(item.get('t', 0)))
         if not beat or (beat, label) in seen:
             continue
         seen.add((beat, label))

@@ -256,6 +256,38 @@ confirms instead of rewrites.
    are looked up from the start: Wikipedia only to find a topic's reference links, never cited itself; OpenAlex
    papers are cited by DOI. Both are keyless; OpenAlex shares a small free daily budget per IP address.
 
+13. **Built around the answer (user 2026-11-15).** Topic understanding also writes the **core answer**: one plain
+   sentence that answers the interpreted question ("Compound interest means your interest starts earning interest
+   too"), and whether the question is about history. After research, the claims check is asked whether a fact backs
+   it. When none does, two targeted searches are made for it (the claim follow-up's own search), and it is checked
+   again. When still none does, the answer is written again from the facts themselves, citing them (one call). The
+   result is `interpretation.core` = {text, fact_ids, how: supported, searched, from facts or unsupported}. The
+   writers' brief names it, and the payoff stands on its fact.
+14. **The twist from the core answer.** One call scores every fact on relevance to the core answer (1-5), surprise
+   (1-5) and kind (what, how, why, effect, number, history, trivia), stored as `interpretation.fact_scores`. The twist
+   is the most surprising of the most relevant facts (the top relevance, and one below it when the top is 5). It is
+   never a side fact (history, trivia) unless the question is about history. The fact that backs the core answer is
+   used only when no other fact is as relevant, because the payoff says it. With no judge, the code pick stays
+   (`grounding.twist_fact`). The hook fact is the most surprising usable fact by the same scores (no extra call).
+15. **Causal order and flow.** The reveal (how it works) now comes before the twist. The middle fact beats are
+   ordered as a chain by their kind, from what it is to how it works to why to what it leads to
+   (`grounding.chain_order`), then the twist, then the payoff. Each beat after the first is asked to follow from the
+   one before it ("because", "so", "but", "which means"). After all lines are written, the flow judge scores every
+   adjacent pair in one call. The second line of a pair scored 2 or lower is written again by best-of-N (at most
+   3 lines), and the new line is kept only when the judge scores the pair higher. The log is under the script's
+   best-of-N repairs ("flow b05: pair scored 1 ...").
+16. **The core answer is said.** The payoff's candidates must say the core answer: a code check (two of its
+   content words, one of them more than the topic's own name) and then the judge's yes/no. After the flow pass, and
+   again after the fact check, the gate's story check "core answer stated" needs a reveal, twist or payoff line that
+   says it. When none does, the payoff is written again by best-of-N, or becomes the core answer itself (which the
+   research backs). The script gate fails a script with no line that says it.
+17. **Hook giveaway by meaning.** The word match is replaced by one yes/no call per candidate hook: "does this hook
+   reveal or strongly imply the answer, or any part of it?", asked with the core answer. On the 9B it judged 12 of 12
+   labelled hooks right: "Your yawn came from closeness", "You caught that yawn from someone you love" and "Your car
+   runs on ancient plankton" are refused; "Why does one yawn set off a whole room?" and "What is really in your fuel
+   tank?" pass. The 9B is very sensitive to the prompt's wording: one wording with an example in it let every hook
+   through. The word match stays only for a run with no judge.
+
 ## Fact check before the script gate (user 2026-11-14)
 
 At the end of the script step on the Mac (`pipeline/entail.py`), every narrated sentence and every text on screen is
@@ -301,6 +333,16 @@ back to the server.
 | text | a label on the host: round 1 moves it (host to the other side and smaller, or an insert label away from the host), round 2 drops it; two texts on each other: only the less important one is dropped (a myth mark, then the beat's key term: its on-screen text or a label naming what the narration says) |
 | duration | one short sentence from the beat's cited facts on the 1-2 thinnest middle beats (no new numbers) |
 | story_match | a MYTH mark on a picture of the myth (a scene that may not show its beat is a warning to look at: a word test cannot judge a painting well enough to repaint it) |
+
+**The layout manifest (user 2026-11-15).** At render time the runner writes `layout.json` next to the video: each
+beat's texts as the renderer drew them, with the box where each settled and the seconds it was on screen
+(`qa.layout_manifest`). QA reads that file, so it checks the exact final texts and positions, never the episode's
+list before the drops. An overlap names its two texts as a list, with the beat, and `text.layout` lists each beat's
+drawn texts. A text is named by the episode's own text it came from. Before this, a slam stacked on two lines was
+named "Is that / actually right?". QA joined an overlapping pair with the same " / ", so crude oil -6's repair
+dropped "Is that" and "-> Kerogen", texts the beats did not have; the slams stayed and failed QA again. An older
+report's "A / B" is now cut where both sides are texts of the beat (`repair.split_pair`), and a drop always names a
+text the beat has (`repair.spec_text`), including a text slam's own text.
 
 What is still wrong after two rounds is listed in plain words on the phone ("Still wrong after the self-repair"),
 with the repairs made under "Fixed automatically"; the episode is "Done, QA failed". qa.json carries `repairs`
@@ -407,7 +449,8 @@ In the user's `Stick_Figures` checkout on `pipeline-v2`, with its venvs:
 interest, and why the sky is blue. For each topic the script runs auto mode up to the approved script, with no
 painting or rendering. It uses the same functions as `stick make --auto` and the web app's Auto toggle, including
 auto's fixes and its script gate. Research and the storyline pick are made once per topic
-(`bench/work/upstream/`, git-ignored), so every run writes from the same facts and storyline. Each run writes into
+(`bench/work/upstream-<versions>/`, git-ignored; a new research, understanding or twist version makes them
+again), so every run writes from the same facts and storyline. Each run writes into
 its own copy (`bench/work/runs/<label>/`).
 
 | score | how |
@@ -420,6 +463,7 @@ its own copy (`bench/work/runs/<label>/`).
 | seconds | the script stage's wall time (waits for another app's model included; "waited" says how long) |
 | facts | facts the research found, and (in brackets) the usable ones the plan could tell |
 | filler | beats that state no fact besides the hook, setup and loop (at most 3) |
+| core (0/1) | the core answer is said in the reveal, twist or payoff: the gate's code check and the judge on the whole narration both say yes |
 | overall (0-1) | mean of hook/5, flow/5, accuracy, 1 - rewrite, clean |
 
 The judge is `OLLAMA_MODEL` (qwen3.5:9b) at temperature 0 with fixed prompts. Results are saved to

@@ -281,9 +281,45 @@ def captions_check(boxes: list) -> dict:
                 safe=C.SAFE, pass_=not bad)
 
 
-def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, promised: list | None = None) -> dict:
+LAYOUT_FILE = 'layout.json'
+
+
+def layout_manifest(text_sizes: list, tl: dict) -> dict:
+    """The texts the renderer drew, per beat, written at render time (user 2026-11-15: QA checks the exact final list
+    and positions the renderer used, not the episode's list before the self-repair's drops): {beat: [{text, box,
+    first, last}]}, each text once per beat, named by the episode's own text it was drawn from, its box where it
+    settled (its last frame), first and last the seconds it was on screen."""
+    beats = [(b['id'], b['start'], b['end']) for b in tl.get('beats', [])]
+
+    def beat_of(t):
+        return next((i for i, a, z in beats if a <= t < z), None) or min(
+            beats, key=lambda b: min(abs(t - b[1]), abs(t - b[2])), default=(None,))[0]
+    out = {}
+    for d in text_sizes:
+        for it in d.get('items', []):
+            b = beat_of(d['t'])
+            row = next((r for r in out.setdefault(b, []) if r['text'] == it[4]), None)
+            if row is None:
+                out[b].append(dict(text=it[4], box=list(it[:4]), first=d['t'], last=d['t']))
+            else:
+                row['box'], row['last'] = list(it[:4]), d['t']
+    return out
+
+
+def _beat_with(layout: dict, a: str, b: str, t: float):
+    """The beat whose drawn texts include both a and b at time t (from the layout manifest)."""
+    for beat, rows in (layout or {}).items():
+        names = {r['text'] for r in rows if r['first'] - 0.05 <= t <= r['last'] + 0.05}
+        if a in names and (b in names or b == 'caption'):
+            return beat
+    return None
+
+
+def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, promised: list | None = None,
+               layout: dict | None = None) -> dict:
     """Every on-screen text must read on a phone: its type at least `min_px` tall (font em, frame pixels).
-    text_sizes: per frame, the smallest text drawn (from overlays' log); captions bring their font size."""
+    text_sizes: per frame, the smallest text drawn (from overlays' log); captions bring their font size. layout: the
+    render's manifest (layout_manifest); an overlap names its two texts as a list, with the beat they were drawn in."""
     small = [d for d in text_sizes if d['em'] < min_px]
     small_caps = [b for b in caption_boxes if b['font_size'] < min_px]
     offenders = sorted({d['label']: d['em'] for d in small}.items(), key=lambda kv: kv[1])
@@ -300,11 +336,11 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, prom
         items = d.get('items', [])
         for i, a in enumerate(items):
             for b in items[i + 1:]:
-                if _overlap(a, b) > 0.08 or _overlap(b, a) > 0.08:
-                    overlaps.setdefault(f'{a[4]} / {b[4]}', d['t'])
+                if (_overlap(a, b) > 0.08 or _overlap(b, a) > 0.08) and a[4] != b[4]:
+                    overlaps.setdefault((a[4], b[4]), d['t'])
             cap = caps.get(round(d['t'], 2))
             if cap and _overlap(a, cap) > 0.05:
-                overlaps.setdefault(f'{a[4]} / caption', d['t'])
+                overlaps.setdefault((a[4], 'caption'), d['t'])
             for c in d.get('chars', []):
                 if _overlap(a, c) > 0.12:
                     on_body.setdefault(a[4], d['t'])
@@ -318,7 +354,9 @@ def text_check(text_sizes: list, caption_boxes: list, min_px: float = 40.0, prom
     return dict(min_px=min_px, frames_with_text=len(text_sizes), brief_text=brief[:12], missing_text=missing[:12],
                 caption_on_character_s=round(cap_on_body / 30, 1), caption_on_host_frames=len(on_host),
                 caption_on_host=[dict(t=b['t'], text=b['text'], px=b['on_host']) for b in on_host][:12],
-                overlapping_text=[dict(texts=k, t=v) for k, v in overlaps.items()][:12],
+                overlapping_text=[dict(texts=list(k), t=v, beat=_beat_with(layout, k[0], k[1], v)) for k, v in
+                                  overlaps.items()][:12],
+                layout={b: [r['text'] for r in rows] for b, rows in (layout or {}).items()},
                 text_on_character=[dict(text=k, t=v) for k, v in on_body.items()][:12],
                 smallest_px=min([d['em'] for d in text_sizes] + [b['font_size'] for b in caption_boxes], default=None),
                 too_small=[dict(label=l, em=e) for l, e in offenders][:12], caption_frames_too_small=len(small_caps),
@@ -701,7 +739,9 @@ def contact_sheet(video: Path, plan: list, out: Path, cols: int = 5):
 
 def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, plan: list, voice: str,
         text_sizes: list | None = None, ledger: Path | None = None, library: dict | None = None,
-        promised: list | None = None, episode: dict | None = None) -> dict:
+        promised: list | None = None, episode: dict | None = None, layout: dict | None = None) -> dict:
+    if layout is None and (out_dir / LAYOUT_FILE).exists():       # the manifest the renderer wrote with this video
+        layout = json.loads((out_dir / LAYOUT_FILE).read_text())
     duration = probe_duration(video)
     target = float(tl.get('target', 45))
     loud = sfx.loudness(video)
@@ -722,7 +762,7 @@ def run(video: Path, tl: dict, lines: list, caption_boxes: list, out_dir: Path, 
         freeze=freezes(video),
         captions=captions_check(caption_boxes) | dict(lines=len(lines), srt=str((out_dir / (video.stem + '.srt')).relative_to(ROOT))),
         words=words_check(script, heard),
-        text=text_check(text_sizes or [], caption_boxes, promised=promised),
+        text=text_check(text_sizes or [], caption_boxes, promised=promised, layout=layout),
         fill=fill_check(video),
         host=host_check(text_sizes or []),
         loudness=dict(**loud, target_lufs=-14.0, max_true_peak=-1.0,

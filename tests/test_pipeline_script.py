@@ -317,6 +317,12 @@ class OllamaScript(unittest.TestCase):
             return dict(order=['s1', 's2'])
         if system == grounding.POINTS_SYSTEM:
             return dict(points=True, why='the fixture')
+        if system == grounding.REVEALS_SYSTEM:
+            return dict(reveals=False, why='the fixture')
+        if system == grounding.FLOW_SYSTEM:            # every pair follows (no flow rewrite)
+            return dict(pairs=[])
+        if system == grounding.STATES_SYSTEM:
+            return dict(states=True, why='the fixture')
         i = int(user.split('STAGE b')[1][:2]) - 1
         ob = OUTLINE_BEATS[i]
         bad = i in self.bad_label and 'THE CHECKER FOUND' not in user

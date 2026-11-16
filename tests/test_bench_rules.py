@@ -459,11 +459,19 @@ class HookFromSurprise(unittest.TestCase):
                 dict(role='loop', kind='callback', fact_ids=[], claim='')]
         ep.meta['interpretation']['twist'] = dict(id='s6')
         base = BestOfN.ask(type('T', (), {})(), ['Your yawn came from a stranger.', 'Can your dog catch your yawn?'])
-        ask = lambda s, u, sc: dict(points=True, why='') if s == grounding.POINTS_SYSTEM else base(s, u, sc)
+        # the giveaway is judged by meaning (user 2026-11-15): the judge is asked against the answer
+        judged = []
+        gives = ('stranger', 'closeness')
+        ask = lambda s, u, sc: dict(points=True, why='') if s == grounding.POINTS_SYSTEM else (
+            judged.append(u) or dict(reveals=any(w in u.split('Hook:')[1] for w in gives), why='it says who')
+            if s == grounding.REVEALS_SYSTEM else base(s, u, sc))
         prompts = []
-        write = lambda s, u, sc: prompts.append(u) or dict(lines=['Your yawn came from a stranger.', 'Can your dog catch your yawn?'])
+        lines = ['Your yawn came from a stranger.', 'Your yawn came from closeness.', 'Can your dog catch your yawn?']
+        write = lambda s, u, sc: prompts.append(u) or dict(lines=lines)
         e = bestof.write_beat(ep, facts, plan, 0, [], 'twist', (3, 8), ask, write=write)
-        self.assertIn('names the answer', e['rejected']['Your yawn came from a stranger.'])
+        self.assertIn('gives the answer away', e['rejected']['Your yawn came from a stranger.'])
+        self.assertIn('gives the answer away', e['rejected']['Your yawn came from closeness.'])   # no answer word in it
+        self.assertIn('Answer: Only social bonds make yawns spread.', judged[0])
         self.assertEqual(e['line'], 'Can your dog catch your yawn?')
         self.assertIn('Even dogs catch human yawns.', prompts[0])     # built from the most surprising fact
         self.assertIn('Never use these words', prompts[0])
@@ -668,7 +676,7 @@ class Bench(unittest.TestCase):
         b = dict(label='b', topics=[dict(t, clean=False, overall=0.6)]); b['summary'] = score.summary(b)
         table = score.compare(a, b)
         self.assertIn('| clean | 1.0 | 0.0 | -1 |', table)
-        self.assertIn('| X | 4/3/1.0/0.1/yes/100/11(9)/2 | 4/3/1.0/0.1/NO/100/11(9)/2 |', table)
+        self.assertIn('| X | 4/3/1.0/0.1/yes/100/11(9)/2/- | 4/3/1.0/0.1/NO/100/11(9)/2/- |', table)   # no core yet
         self.assertIn('| facts | 11.0 | 11.0 | +0 |', table)
         self.assertIn('| filler | 2.0 | 2.0 | +0 |', table)
         self.assertEqual(score.overall(t['scores'], True), round((0.8 + 0.6 + 1 + 0.9 + 1) / 5, 3))

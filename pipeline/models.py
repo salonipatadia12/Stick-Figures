@@ -883,6 +883,13 @@ class Episode(Strict):
         out.append(('payoff answers the hook', len(shared) >= 2,
                     f'shares {", ".join(shared)}' if len(shared) >= 2 else
                     f'the payoff "{payoff}" does not say the promised answer ("{answer.strip()}")'))
+        # built around the answer (user 2026-11-15): the core answer is said in the reveal, the twist or the payoff
+        core = (((self.meta or {}).get('interpretation') or {}).get('core') or {}).get('text') or ''
+        if core:
+            from .grounding import says_core
+            said = [b.id for b in self.beats if b.role in ('reveal', 'twist', 'payoff') and says_core(b.narration, core, self)]
+            out.append(('core answer stated', bool(said), f'said in {", ".join(said)}' if said else
+                        f'no reveal, twist or payoff says the core answer ("{core}")'))
         return out
 
     @staticmethod

@@ -207,7 +207,8 @@ def draw_text_items(frame, t, items, centre, spec, t_min=None):
         if kind == 'slam':
             words = payload.split()
             if len(words) > 3:
-                im = O.stacked((' '.join(words[:len(words) // 2]), ' '.join(words[len(words) // 2:])), (88, 78))
+                im = O.stacked((' '.join(words[:len(words) // 2]), ' '.join(words[len(words) // 2:])), (88, 78),
+                               source=payload)
             else:
                 im = O.text_layer(payload, 96 if len(payload) <= 12 else 80)
             O.slam(frame, im, t, at, centre=centre, until=until)

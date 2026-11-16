@@ -30,9 +30,13 @@ TEXT_MIN_PX = 40                          # the smallest on-screen type that rea
 _text_log: list = []
 
 
-def note_text(label: str, em_px: float, box=None):
-    """box = (left, top, right, bottom) in frame pixels, so QA can check the text stays in the safe area."""
+def note_text(label: str, em_px: float, box=None, source: str | None = None):
+    """box = (left, top, right, bottom) in frame pixels, so QA can check the text stays in the safe area. `source`: the
+    episode's own text this one was drawn from (an on-screen text, a label) when it differs from `label`; the layout
+    manifest and QA name a text by it, so the self-repair's drop names a text the episode has."""
     d = dict(label=label, em=round(float(em_px), 1))
+    if source and source != label:
+        d['source'] = source
     if box is not None:
         d['box'] = [int(round(v)) for v in box]
     _text_log.append(d)
@@ -73,8 +77,10 @@ def take_text_log() -> list:
     return out
 
 
-def mark(im: Image.Image, label: str, em: float) -> Image.Image:
+def mark(im: Image.Image, label: str, em: float, source: str | None = None) -> Image.Image:
     im.info['label'], im.info['em'] = label, float(em)
+    if source:
+        im.info['source'] = source
     return im
 
 
@@ -159,14 +165,17 @@ def settle(times: list, t0: float, t1: float, hold: float = MIN_HOLD, step: floa
 
 
 @lru_cache(maxsize=16)
-def stacked(lines: tuple, sizes: tuple, fill=(255, 255, 255)) -> Image.Image:
+def stacked(lines: tuple, sizes: tuple, fill=(255, 255, 255), source: str | None = None) -> Image.Image:
+    """Lines drawn one under the other, named by their whole text read in order (2026-11-15 crude oil -6: named
+    "Is that / actually right?", QA's "A / B" overlap split it into "Is that" and the self-repair dropped a text the
+    beat did not have, twice)."""
     parts = [text_layer(t, s, fill) for t, s in zip(lines, sizes)]
     im = Image.new('RGBA', (max(p.width for p in parts), sum(p.height for p in parts) - 18 * (len(parts) - 1)), (0, 0, 0, 0))
     y = 0
     for p in parts:
         im.alpha_composite(p, ((im.width - p.width) // 2, y))
         y += p.height - 18
-    return mark(im, ' / '.join(lines), min(sizes))
+    return mark(im, ' '.join(lines), min(sizes), source)
 
 
 def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C, until: float | None = None):
@@ -180,7 +189,7 @@ def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C
         em = im.info.get('em', 0) * f
         sm = im.resize((max(1, int(im.width * f)), max(1, int(im.height * f))), Image.BICUBIC)
         if 'em' in im.info:
-            mark(sm, im.info.get('label', '?'), em)
+            mark(sm, im.info.get('label', '?'), em, im.info.get('source'))
         im = sm
     cx = max(C.SAFE['left'] + im.width / 2, min(centre[0], C.SAFE['right'] - im.width / 2))   # slide inside the safe area
     centre = (cx, centre[1])
@@ -194,7 +203,7 @@ def slam(frame: Image.Image, im: Image.Image, t: float, t0: float, centre=TEXT_C
     xy = (int(centre[0] - sized.width / 2 + shake), int(centre[1] - sized.height / 2))
     frame.alpha_composite(sized, xy)
     if 'em' in im.info and u > 0.3:                     # logged once settled: the overshoot dips below size by design
-        note_text(im.info.get('label', '?'), im.info['em'] * s, _box(xy, sized))
+        note_text(im.info.get('label', '?'), im.info['em'] * s, _box(xy, sized), im.info.get('source'))
 
 
 CHECKLIST_SCALE = 1.5

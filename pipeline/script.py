@@ -1433,4 +1433,11 @@ def _generate(episode, style, base, ledger, client, prov, use_research, regenera
                      f'{len(result["changed"])} changed; rewrite rate {round(100 * result["rate"])} %'
                      + (' (above 20 %: the fact plan failed)' if result['plan_failed'] else ''))
         notes += [f'  {x}' for x in entail.view(result) + result['notes']]
+    if plan and prov == 'ollama':
+        # the gate's core-answer check (user 2026-11-15): a script whose reveal, twist and payoff no longer say the core
+        # answer (a fact-check rewrite can cut it) gets its payoff written again
+        from . import bestof
+        fixed = bestof.ensure_core(out)
+        if fixed:
+            notes.append(f'core answer: {fixed}')
     return out, notes
