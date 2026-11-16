@@ -261,7 +261,8 @@ class OllamaPitchTest(unittest.TestCase):
         from pipeline import entail
         judge = dict(states_a_fact=True, adds=[], supported=True, why='s1 says it')     # the twist checked against s1
         from pipeline import grounding
-        quiet = {understand.CORE_SYSTEM: dict(answer='', fact_ids=[]), grounding.SCORE_SYSTEM: dict(facts=[])}
+        quiet = {understand.CORE_SYSTEM: dict(answer='', fact_ids=[]), grounding.SCORE_SYSTEM: dict(facts=[]),
+                 grounding.ON_TOPIC_SYSTEM: dict(helps=True, why='')}
         fake = FakeOllama(lambda body: heard if body['messages'][0]['content'] == understand.SYSTEM else
                           judge if body['messages'][0]['content'] == entail.CHECK_SYSTEM else
                           quiet.get(body['messages'][0]['content']) or answers.pop(0))

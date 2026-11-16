@@ -78,6 +78,26 @@ class Support(unittest.TestCase):
                          ('Interest is added, then earns interest.', ['s1'], 'from facts'))
 
 
+class SupportOnTopic(unittest.TestCase):
+    def test_written_from_the_facts_only_from_facts_on_topic(self):
+        # 2026-11-15 bench: the Roman Republic's answer stood on a fact about the later Empire's migrations
+        offered = []
+
+        def ask(system, user, schema):
+            if system == grounding.ON_TOPIC_SYSTEM:
+                return dict(helps='Medici' not in user, why='')
+            offered.append(user)
+            return dict(answer='Interest is added, then earns interest.', fact_ids=['s1'])
+        interp = dict(question='How does compound interest work?', core_answer=CORE)
+        ep = Episode(slug='ci', topic='How compound interest works', meta=dict(interpretation=interp))
+        with tempfile.TemporaryDirectory() as d:
+            story.core_support(ep, interp, list(F), Path(d), None, search_claim=lambda c: ([], []),
+                               verify=lambda i, f: [dict(claim=CORE, verdict='unverified', fact_ids=[])], ask=ask)
+        self.assertNotIn('Medici', offered[0])
+        self.assertIn('s3: Interest added', offered[0])
+        self.assertEqual(interp['core']['how'], 'from facts')
+
+
 class Twist(unittest.TestCase):
     SCORES = dict(facts=[dict(id='s1', relevance=5, surprise=2, kind='what'),
                          dict(id='s2', relevance=3, surprise=5, kind='history'),

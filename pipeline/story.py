@@ -392,7 +392,13 @@ def core_support(episode, interp, facts, base, ledger, search_claim=None, verify
         how = 'searched'
         notes.append(f'  core answer: searched for it ({"; ".join(queries)}), {len(kept)} new fact(s)')
     if not ids:
-        got = understand.core_from_facts(interp.get('question') or episode.topic, facts, ask)
+        # only from facts about the same subject and period (2026-11-15 bench: the Roman Republic's answer was written
+        # from a mis-read fact about the later Empire's barbarian migrations); the on-topic answers are cached, so the
+        # plan's own on-topic pass reuses them
+        from . import grounding
+        rel = grounding.on_topic(facts, episode, ask)
+        pool = [f for f in facts if rel is None or f.id in rel]
+        got = understand.core_from_facts(interp.get('question') or episode.topic, pool, ask)
         if got.get('text'):
             text, ids, how = got['text'], got['fact_ids'], 'from facts'
         else:
