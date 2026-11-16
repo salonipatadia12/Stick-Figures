@@ -880,11 +880,19 @@ class Episode(Strict):
             answer += ' ' + self.storyline.payoff
         payoff = self.beats[pay].narration if 0 <= pay < len(self.beats) else ''
         shared = sorted(_keywords(answer) & _keywords(payoff))
-        out.append(('payoff answers the hook', len(shared) >= 2,
-                    f'shares {", ".join(shared)}' if len(shared) >= 2 else
-                    f'the payoff "{payoff}" does not say the promised answer ("{answer.strip()}")'))
-        # built around the answer (user 2026-11-15): the core answer is said in the reveal, the twist or the payoff
         core = (((self.meta or {}).get('interpretation') or {}).get('core') or {}).get('text') or ''
+        if core:
+            # the hook's answer is the core answer: the same check as the writer's (2026-11-15 bench: "earning" and
+            # "earns" are one word to the core check, two to the keyword match, and auto stopped at the gate)
+            from .grounding import says_core
+            ok = says_core(payoff, core, self)
+            out.append(('payoff answers the hook', ok, 'says the core answer' if ok else
+                        f'the payoff "{payoff}" does not say the core answer ("{core}")'))
+        else:
+            out.append(('payoff answers the hook', len(shared) >= 2,
+                        f'shares {", ".join(shared)}' if len(shared) >= 2 else
+                        f'the payoff "{payoff}" does not say the promised answer ("{answer.strip()}")'))
+        # built around the answer (user 2026-11-15): the core answer is said in the reveal, the twist or the payoff
         if core:
             from .grounding import says_core
             said = [b.id for b in self.beats if b.role in ('reveal', 'twist', 'payoff') and says_core(b.narration, core, self)]

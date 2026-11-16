@@ -624,12 +624,20 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
     myth = myth_groups(interp, sources)
     ask = ask if ask is not None else entail.default_ask(cache, ledger)
     relevant = on_topic(sources, episode, ask)
+    scores = interp.get('fact_scores') or {}
+    keep = {i for i in [twist] + list((interp.get('core') or {}).get('fact_ids') or []) if i}
+    if scores:
+        # a side fact (history, trivia) is told only when the question is about history, and a fact scored as about
+        # something else never (2026-11-15 bench: compound interest told Fibonacci, the Low Countries and printed books
+        # in three beats); thin facts make a shorter video instead
+        side = {i for i, x in scores.items() if x['relevance'] <= 1
+                or (x['kind'] in SIDE and not interp.get('about_history'))} - keep
+        relevant = (relevant if relevant is not None else {x.id for x in sources}) - side
     if relevant is not None:          # the twist and the facts that back the core answer are always told
-        relevant |= {i for i in [twist] + list((interp.get('core') or {}).get('fact_ids') or []) if i}
+        relevant |= keep
     n_usable = len(usable(sources, relevant))
     n = beats_for(n_usable, length[0], length[1]) if length else (aim[0] + aim[1] + 1) // 2
     roles = skeleton(episode.story_format, n)
-    scores = interp.get('fact_scores') or {}
     facts = assign_facts(roles, sources, twist, interp, episode.storyline, relevant, scores)
     if length:
         roles, facts = trim(roles, facts)

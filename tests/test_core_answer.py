@@ -103,6 +103,22 @@ class Twist(unittest.TestCase):
         grounding.score_facts(F, episode().meta['interpretation'], episode(), lambda s, u, sc: asked.append(u) or {})
         self.assertIn(f'Core answer: {CORE}', asked[0])
 
+    def test_a_side_fact_is_never_told_unless_the_question_is_about_history(self):
+        # 2026-11-15 bench: compound interest told Fibonacci, the Low Countries and printed books in three beats
+        from test_fact_check import GOOD, OIL, Judge, answers, plan_episode
+        ep = plan_episode()
+        scores = {'s3': dict(relevance=4, surprise=5, kind='history'), 's5': dict(relevance=5, surprise=2, kind='what'),
+                  's7': dict(relevance=5, surprise=4, kind='what'), 's8': dict(relevance=5, surprise=3, kind='how')}
+        ep.meta['interpretation']['fact_scores'] = scores
+        gen = lambda *a: answers()
+        plan = grounding.make_plan(ep, OIL, (9, 11), ask=Judge(ok=set(GOOD.values())), generate=gen)
+        told = {i for b in plan['beats'] for i in b['fact_ids']}
+        self.assertNotIn('s3', told)
+        self.assertNotEqual(plan['hook_fact'], 's3')             # nor is the hook built from it
+        ep.meta['interpretation']['about_history'] = True
+        plan = grounding.make_plan(ep, OIL, (9, 11), ask=Judge(ok=set(GOOD.values())), generate=gen)
+        self.assertIn('s3', {i for b in plan['beats'] for i in b['fact_ids']})
+
     def test_middle_fact_beats_run_what_how_why(self):
         roles = ['hook', 'problem', 'stakes', 'clue', 'clue', 'twist', 'payoff', 'loop']
         sc = dict(a=dict(kind='why', relevance=4), b=dict(kind='what', relevance=4), c=dict(kind='how', relevance=5),
@@ -130,7 +146,9 @@ class SaysCore(unittest.TestCase):
         self.assertFalse(report['core answer stated'])
         pay = next(b for b in ep.beats if b.role == 'payoff')
         pay.narration = 'And that is how your interest earns interest too.'
-        self.assertTrue({name: ok for name, ok, _ in ep.story_report()}['core answer stated'])
+        got = {name: ok for name, ok, _ in ep.story_report()}
+        self.assertTrue(got['core answer stated'])
+        self.assertTrue(got['payoff answers the hook'])               # the same check as the writer's
 
 
 class Flow(unittest.TestCase):

@@ -258,7 +258,7 @@ def score(base: Path) -> dict:
     runs = sorted((base / 'cache').glob('script-*.json'), key=lambda p: p.stat().st_mtime)   # the writer's own log
     repairs = json.loads(runs[-1].read_text()).get('repairs', []) if runs else []
     best = next((e for e in repairs if e.get('stage') == 'best'), {})
-    fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept')]
+    fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept') and e['beat'] not in ('flow', 'core')]
     tscore = (interp.get('fact_scores') or {}).get(twist_id) or {}
     return dict(core=1 if core_stated else 0, core_text=core_text, core_how=core.get('how', ''),
                 core_facts=core.get('fact_ids') or [], core_gate=gate_core, core_judge=cj.get('states'),
