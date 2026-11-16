@@ -3702,6 +3702,1124 @@
         "waited": 0.0
       },
       "finished": "2026-11-15T17:29:27"
+    },
+    {
+      "version": "bench-v3",
+      "label": "core-smoke",
+      "writer": "qwen3.5:9b",
+      "judge": "qwen3.5:9b",
+      "commit": "e90f739+changes",
+      "started": "2026-11-15T20:20:35",
+      "topics": [
+        {
+          "topic": "How compound interest works",
+          "upstream_seconds": 288.5,
+          "clean": false,
+          "problems": [
+            "story: payoff answers the hook: the payoff \"See? It's earning on your savings AND the interest you already made.\" does not say the promised answer (\"Compound interest means your money earns interest on both the original amount and any previously earned interest. By keeping the principal and interest together, time becomes your most powerful multiplier.\")"
+          ],
+          "error": "",
+          "seconds": 899.3,
+          "folder": "bench/work/runs/core-smoke/how-compound-interest-works",
+          "scores": {
+            "core": 1,
+            "core_text": "Compound interest means your money earns interest on both the original amount and any previously earned interest.",
+            "core_how": "supported",
+            "core_facts": [
+              "s3"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly concludes with 'It's earning on your savings AND the interest you already made,' which directly restates the definition of compound interest provided in the answer ('money ear",
+            "twist": "s7",
+            "twist_claim": "Time makes your savings grow more because you earn on interest earned earlier too.",
+            "twist_kind": "effect",
+            "twist_relevance": 4,
+            "twist_surprise": 3,
+            "flow_rewrites": 0,
+            "hook": 2,
+            "hook_gap": 2,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook 'The simple interest myth' is a weak title rather than an engaging opening line. It fails to open a specific question (Gap score of 2) because it reads like a chapter heading or summary topic",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              4
+            ],
+            "flow_why": "The story flow is weak (3/5) because several lines feel disconnected or redundant rather than building a logical progression. Specifically: - **Line 1** introduces the 'myth', but **Line 2** immediate",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.083,
+            "narration_rate": 0.0,
+            "text_rate": 0.154,
+            "labels_rewritten": 5,
+            "labels_dropped": 5,
+            "fallback_beats": [
+              "b10",
+              "core"
+            ],
+            "facts": 10,
+            "usable_facts": 6,
+            "facts_by_aspect": {
+              "how it works": 2,
+              "history or discovery": 2,
+              "other": 6
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 94,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "The simple interest myth.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many think money just sits there earning flat rates.",
+                "texts": [
+                  "MYTH: Just a Fee",
+                  "Myth",
+                  "MYTH: Just a Fee"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "So the real game begins.",
+                "texts": []
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "Because compounding frequency and higher rates make savings grow faster.",
+                "texts": [
+                  "Compounding often helps",
+                  "Savings + Interest",
+                  "Compound interest"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "But old civilizations got this clue long before the tables.",
+                "texts": []
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "But some kept calculation methods hidden like treasures right here at home.",
+                "texts": [
+                  "Secret Tables Hidden"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "reveal",
+                "say": "Which meant the secret savings tricks finally reached us all.",
+                "texts": [
+                  "printed books"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "twist",
+                "say": "So don't rush to spend; let time do the heavy lifting as old interest births even more new wealth.",
+                "texts": [
+                  "Compound interest earns over time",
+                  "new wealth"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "See? It's earning on your savings AND the interest you already made.",
+                "texts": [
+                  "'savings'",
+                  "earning"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.583,
+          "waited": 0,
+          "waits": []
+        }
+      ],
+      "summary": {
+        "overall": 0.583,
+        "hook": 2.0,
+        "flow": 3.0,
+        "accuracy": 1.0,
+        "rewrite": 0.083,
+        "clean": 0.0,
+        "seconds": 899.3,
+        "topics": 1,
+        "facts": 10.0,
+        "usable": 6.0,
+        "filler": 1.0,
+        "waited": 0.0,
+        "core": 1.0
+      },
+      "finished": "2026-11-15T20:40:45"
+    },
+    {
+      "version": "bench-v3",
+      "label": "core-smoke2",
+      "writer": "qwen3.5:9b",
+      "judge": "qwen3.5:9b",
+      "commit": "e6d282a+changes",
+      "started": "2026-11-15T20:41:45",
+      "topics": [
+        {
+          "topic": "How compound interest works",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 790.9,
+          "folder": "bench/work/runs/core-smoke2/how-compound-interest-works",
+          "scores": {
+            "core": 1,
+            "core_text": "Compound interest means your money earns interest on both the original amount and any previously earned interest.",
+            "core_how": "supported",
+            "core_facts": [
+              "s3"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly states 'Compound interest means you earn money on both your savings and past interest,' which directly answers the question by explaining that compound interest works by earni",
+            "twist": "s7",
+            "twist_claim": "Time is the key because longer periods mean you earn much more interest.",
+            "twist_kind": "effect",
+            "twist_relevance": 4,
+            "twist_surprise": 3,
+            "flow_rewrites": 3,
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook 'Nobody watched the snowball grow' creates mild curiosity (score of 3) by implying a missed opportunity or an unnoticed phenomenon related to growth. It does not explicitly state how compound",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              2
+            ],
+            "flow_why": "The story flow is weak (3/5) primarily because Line 6 ('So let your money sit...') directly contradicts the advice given in Lines 1-4 and creates a logical jump that breaks the narrative arc. While it",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.059,
+            "narration_rate": 0.0,
+            "text_rate": 0.111,
+            "labels_rewritten": 2,
+            "labels_dropped": 5,
+            "fallback_beats": [
+              "b08"
+            ],
+            "facts": 10,
+            "usable_facts": 3,
+            "facts_by_aspect": {
+              "how it works": 2,
+              "history or discovery": 2,
+              "other": 6
+            },
+            "filler_beats": [
+              "b03",
+              "b05"
+            ],
+            "filler": 2,
+            "beats": 8,
+            "planned_seconds": 30,
+            "words": 61,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Nobody watched the snowball grow.",
+                "texts": [
+                  "Nobody watched"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many think your money just sits there.",
+                "texts": [
+                  "MYTH: Money just sits there",
+                  "Myth",
+                  "money sits there"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "So don't just wait.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "But you can grow faster by adding more, raising rates, or compounding often.",
+                "texts": [
+                  "Compounding Often"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Hold on... time changes everything.",
+                "texts": []
+              },
+              {
+                "beat": "b06",
+                "role": "twist",
+                "say": "So let your money sit; the clock works for you hard.",
+                "texts": [
+                  "TIME = KEY",
+                  "TIME = KEY"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "payoff",
+                "say": "Compound interest means you earn money on both your savings and past interest.",
+                "texts": []
+              },
+              {
+                "beat": "b08",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.828,
+          "waited": 0,
+          "waits": []
+        }
+      ],
+      "summary": {
+        "overall": 0.828,
+        "hook": 3.0,
+        "flow": 3.0,
+        "accuracy": 1.0,
+        "rewrite": 0.059,
+        "clean": 1.0,
+        "seconds": 790.9,
+        "topics": 1,
+        "facts": 10.0,
+        "usable": 3.0,
+        "filler": 2.0,
+        "waited": 0.0,
+        "core": 1.0
+      },
+      "finished": "2026-11-15T20:55:15"
+    },
+    {
+      "version": "bench-v3",
+      "label": "9b-core",
+      "writer": "qwen3.5:9b",
+      "judge": "qwen3.5:9b",
+      "commit": "e239eaa",
+      "started": "2026-11-15T20:55:41",
+      "topics": [
+        {
+          "topic": "The real origin of crude oil",
+          "upstream_seconds": 252.8,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 1065.6,
+          "folder": "bench/work/runs/9b-core/the-real-origin-of-crude-oil",
+          "scores": {
+            "core": 1,
+            "core_text": "Crude oil forms from ancient marine microorganisms buried under sediment that were transformed by heat and pressure over millions of years.",
+            "core_how": "supported",
+            "core_facts": [
+              "s2",
+              "s5",
+              "s9",
+              "s13"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly concludes with a sentence identical to the provided answer ('Crude oil forms from ancient marine microorganisms...'), directly confirming the scientific explanation after debu",
+            "twist": "s12",
+            "twist_claim": "Oil forms in specific mudrocks rich with the right type of organic material.",
+            "twist_kind": "how",
+            "twist_relevance": 5,
+            "twist_surprise": 3,
+            "flow_rewrites": 0,
+            "hook": 1,
+            "hook_gap": 2,
+            "hook_gives_away": true,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook fails on 'gap' because it presents a definitive statement ('Believing...') rather than an open question or mystery that compels the viewer to watch for *what* they were wrong about. It lacks ",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              7
+            ],
+            "flow_why": "The story flow is rated a **3** because several lines feel disconnected or redundant rather than building naturally toward the payoff. Specifically: - Lines 1 and 2 introduce myths (monsters/dinosaurs",
+            "repeated_claims": [],
+            "accuracy": 0.962,
+            "accuracy_fails": [
+              "b09 narration \"Crude oil forms from ancient marine microorganisms buried under sediment that were transformed by heat and pressure over millions of years.\": says 'microorganisms', a group its facts do not name (they name: algae, animals, creatures, diatoms, dinosaurs, organisms, plankton, plants, reptiles); use the facts' own words for it or a direct plain equivalent, never a broader or different category"
+            ],
+            "rewrite": 0.077,
+            "narration_rate": 0.1,
+            "text_rate": 0.062,
+            "labels_rewritten": 4,
+            "labels_dropped": 15,
+            "fallback_beats": [
+              "b09",
+              "b10"
+            ],
+            "facts": 14,
+            "usable_facts": 7,
+            "facts_by_aspect": {
+              "what it is": 1,
+              "how it works": 5,
+              "a surprising detail": 2,
+              "history or discovery": 2,
+              "other": 4
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 105,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Believing monsters made oil wastes our history.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "So many still swear in dinosaurs sank to make oil.",
+                "texts": [
+                  "Fact",
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Wait, really?",
+                "texts": [
+                  "Wait, really?",
+                  "Wait, really?"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "But wait: geochemists say overwhelming proof points to life.",
+                "texts": [
+                  "EVIDENCE: BIOGENIC ORIGIN",
+                  "MYTH: Dinosaurs",
+                  "EVIDENCE: Biogenic Origin"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "But thermal conversion turns sedimentary organic matter from life into biogenic oil.",
+                "texts": [
+                  "organic -> biogenic",
+                  "Organic matter becomes biogenic oil"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "So when you go past ten meters deep, anaerobic bacteria don't act anymore, letting organic matter become kerogen.",
+                "texts": [
+                  "KEROGEN",
+                  "Become Kerogen"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "reveal",
+                "say": "But it was those prehistoric plankton that turned into crude oil.",
+                "texts": [
+                  "SOURCE: TINY SEA LIFE"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "twist",
+                "say": "But only mudrocks packed with the right organic kerogen can make oil.",
+                "texts": [
+                  "MYTH: Dinosaurs",
+                  "FACT: Mudrocks"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "Crude oil forms from ancient marine microorganisms buried under sediment that were transformed by heat and pressure over millions of years.",
+                "texts": []
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": [
+                  "NOW YOU KNOW"
+                ]
+              }
+            ]
+          },
+          "overall": 0.737,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why do we yawn?",
+          "upstream_seconds": 252.4,
+          "clean": false,
+          "problems": [
+            "b07: \"0.36\" is drawn on screen (\"-0.36° C Drop\") but this beat never says it; on-screen numbers must match the narration or on_screen_text"
+          ],
+          "error": "",
+          "seconds": 1045.9,
+          "folder": "bench/work/runs/9b-core/why-do-we-yawn",
+          "scores": {
+            "core": 1,
+            "core_text": "Yawning helps regulate brain temperature and increases alertness.",
+            "core_how": "supported",
+            "core_facts": [
+              "s2"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly states that 'Yawning cools the brain' and explains this happens because it allows 'warm blood to escape,' which directly supports the answer's claim that yawning helps regulat",
+            "twist": "s11",
+            "twist_claim": "Scientists have not found that sleepiness or low oxygen causes it.",
+            "twist_kind": "why",
+            "twist_relevance": 5,
+            "twist_surprise": 4,
+            "flow_rewrites": 0,
+            "hook": 5,
+            "hook_gap": 5,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "This hook uses a vivid metaphor ('skull vent steam') to create immediate curiosity about how yawning functions physically without revealing the scientific answer (brain temperature regulation). It for",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              2
+            ],
+            "flow_why": "The story flow is weak (3/5) because several lines are disconnected or nonsensical in context. - **Line 1** ('Nobody saw the skull vent steam') introduces a bizarre metaphor that isn't explained and f",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.033,
+            "narration_rate": 0.0,
+            "text_rate": 0.05,
+            "labels_rewritten": 4,
+            "labels_dropped": 11,
+            "fallback_beats": [
+              "b02",
+              "b09",
+              "b10"
+            ],
+            "facts": 14,
+            "usable_facts": 7,
+            "facts_by_aspect": {
+              "what it is": 3,
+              "how it works": 3,
+              "why it happens": 2,
+              "a surprising detail": 2,
+              "a number or scale": 2,
+              "other": 2
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 99,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Nobody saw the skull vent steam.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many think people often believe yawning is contagious or a sign of boredom rather than a physiological cooling mechanism.",
+                "texts": [
+                  "MYTH: Boredom?",
+                  "MYTH",
+                  "FACT",
+                  "MYTH: Contagious?",
+                  "Sign of boredom"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "But there's a catch.",
+                "texts": [
+                  "But there's a catch",
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "Because specific pathways use these mood boosters to start it.",
+                "texts": [
+                  "Dopamine & Serotonin",
+                  "Dopamine & Serotonin",
+                  "specific neural pathways"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "And that airflow change ramps up facial blood circulation.",
+                "texts": [
+                  "increases facial blood circulation"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "Which means the action flows out of there along a path.",
+                "texts": [
+                  "Along Path"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "reveal",
+                "say": "But look: that chill hits in just twenty seconds flat.",
+                "texts": [
+                  "-0.36° C Drop"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "twist",
+                "say": "But it's not about needing rest or low air.",
+                "texts": [
+                  "No Low Oxygen!",
+                  "Myth: Sleepiness/Low Air",
+                  "MYTH",
+                  "FACT"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "Yawning cools the brain by allowing warm blood to escape from the skull when the jaw opens widely.",
+                "texts": [
+                  "Cooling The Brain"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": [
+                  "Now you know"
+                ]
+              }
+            ]
+          },
+          "overall": 0.713,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why the Roman Republic fell",
+          "upstream_seconds": 353.5,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 804.5,
+          "folder": "bench/work/runs/9b-core/why-the-roman-republic-fell",
+          "scores": {
+            "core": 1,
+            "core_text": "The Roman Republic fell due to immense wealth and barbarian migrations.",
+            "core_how": "from facts",
+            "core_facts": [
+              "s5",
+              "s8"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly includes the sentence 'The Roman Republic fell due to immense wealth and barbarian migrations,' which is identical in meaning (and wording) to the provided answer.",
+            "twist": "s10",
+            "twist_claim": "Senators lacked an incentive to use their constitutional authority to save the democracy.",
+            "twist_kind": "why",
+            "twist_relevance": 5,
+            "twist_surprise": 4,
+            "flow_rewrites": 0,
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook creates mild curiosity by framing a search for 'who' caused the fall, but it fails to open a specific question about *how* or *what forces* led to the collapse. Since the actual answer involv",
+            "flow": 2,
+            "flow_judge": 2,
+            "flow_judge_repeated": [
+              3
+            ],
+            "flow_why": "The story flow is weak (score: 2) because the narrative jumps between unrelated concepts without a logical bridge. Line 1 asks about 'who' ended the Republic, but Lines 4-6 introduce an unexplained el",
+            "repeated_claims": [],
+            "accuracy": 0.95,
+            "accuracy_fails": [
+              "b02 narration \"Many think that Rome's decline was caused by a single event rather than systemic issues.\": states a fact but the beat cites none ('The decline of Rome was not caused by systemic issues.')"
+            ],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 6,
+            "labels_dropped": 6,
+            "fallback_beats": [
+              "b02",
+              "b07",
+              "b08",
+              "b07"
+            ],
+            "facts": 20,
+            "usable_facts": 3,
+            "facts_by_aspect": {
+              "what it is": 3,
+              "how it works": 3,
+              "a surprising detail": 3,
+              "history or discovery": 2,
+              "other": 3
+            },
+            "filler_beats": [
+              "b04",
+              "b05"
+            ],
+            "filler": 2,
+            "beats": 8,
+            "planned_seconds": 30,
+            "words": 65,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Let's find who really ended the Republic.",
+                "texts": []
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many think that Rome's decline was caused by a single event rather than systemic issues.",
+                "texts": [
+                  "MYTH: ONE EVENT?",
+                  "MYTH: ONE EVENT?",
+                  "FACT: SYSTEMIC ISSUES"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "But it was centuries of debated barbarian migrations that ended it.",
+                "texts": [
+                  "CENTURIES OF MIGRATION",
+                  "ended it"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "But that calm hid a terrible secret.",
+                "texts": [
+                  "calm hid a terrible secret"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Wait, really?",
+                "texts": [
+                  "Wait"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "twist",
+                "say": "But with all that gold, saving democracy felt pointless.",
+                "texts": [
+                  "NO INCENTIVE TO SAVE DEMOCRACY",
+                  "gold",
+                  "incentive low"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "payoff",
+                "say": "The Roman Republic fell due to immense wealth and barbarian migrations.",
+                "texts": [
+                  "immense wealth"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": [
+                  "Now you know"
+                ]
+              }
+            ]
+          },
+          "overall": 0.79,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "How compound interest works",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 827.0,
+          "folder": "bench/work/runs/9b-core/how-compound-interest-works",
+          "scores": {
+            "core": 1,
+            "core_text": "Compound interest means your money earns interest on both the original amount and any previously earned interest.",
+            "core_how": "supported",
+            "core_facts": [
+              "s3"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly states 'Compound interest means you earn money on both your savings and past interest,' which directly answers the question by explaining that compound interest works by earni",
+            "twist": "s7",
+            "twist_claim": "Time is the key because longer periods mean you earn much more interest.",
+            "twist_kind": "effect",
+            "twist_relevance": 4,
+            "twist_surprise": 3,
+            "flow_rewrites": 3,
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook 'Nobody watched the snowball grow' creates mild curiosity (score of 3) by implying a missed opportunity or an unnoticed phenomenon related to growth. It does not explicitly state how compound",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              2
+            ],
+            "flow_why": "The story flow is weak (3/5) primarily because Line 6 ('So let your money sit...') directly contradicts the advice given in Lines 1-4 and creates a logical jump that breaks the narrative arc. While it",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.059,
+            "narration_rate": 0.0,
+            "text_rate": 0.111,
+            "labels_rewritten": 2,
+            "labels_dropped": 5,
+            "fallback_beats": [
+              "b08"
+            ],
+            "facts": 10,
+            "usable_facts": 3,
+            "facts_by_aspect": {
+              "how it works": 2,
+              "history or discovery": 2,
+              "other": 6
+            },
+            "filler_beats": [
+              "b03",
+              "b05"
+            ],
+            "filler": 2,
+            "beats": 8,
+            "planned_seconds": 30,
+            "words": 61,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Nobody watched the snowball grow.",
+                "texts": [
+                  "Nobody watched"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many think your money just sits there.",
+                "texts": [
+                  "MYTH: Money just sits there",
+                  "Myth",
+                  "money sits there"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "So don't just wait.",
+                "texts": [
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "But you can grow faster by adding more, raising rates, or compounding often.",
+                "texts": [
+                  "Compounding Often"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Hold on... time changes everything.",
+                "texts": []
+              },
+              {
+                "beat": "b06",
+                "role": "twist",
+                "say": "So let your money sit; the clock works for you hard.",
+                "texts": [
+                  "TIME = KEY",
+                  "TIME = KEY"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "payoff",
+                "say": "Compound interest means you earn money on both your savings and past interest.",
+                "texts": []
+              },
+              {
+                "beat": "b08",
+                "role": "loop",
+                "say": "Now you know.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.828,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why the sky is blue",
+          "upstream_seconds": 913.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 1289.5,
+          "folder": "bench/work/runs/9b-core/why-the-sky-is-blue",
+          "scores": {
+            "core": 1,
+            "core_text": "Rayleigh scattering makes shorter blue wavelengths scatter more than longer red ones.",
+            "core_how": "supported",
+            "core_facts": [
+              "s1",
+              "s2",
+              "s6",
+              "s7",
+              "s8",
+              "s9",
+              "s11",
+              "s13"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly explains that sunlight's blue components are scattered more than red ones due to oxygen and nitrogen in the atmosphere, directly answering 'Why the sky is blue' with the conce",
+            "twist": "s1",
+            "twist_claim": "Blue light is scattered more than other colors because it travels in shorter waves.",
+            "twist_kind": "why",
+            "twist_relevance": 5,
+            "twist_surprise": 3,
+            "flow_rewrites": 0,
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook creates mild curiosity by suggesting an origin story ('strange'), but it lacks a specific question or problem that demands the scientific answer (Rayleigh scattering). It is vague enough to b",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              6
+            ],
+            "flow_why": "The story flow drops to a 3 because several lines (4, 5, 7, and especially 8) repeat the exact same scientific concept regarding Rayleigh scattering without adding new information or advancing the nar",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 7,
+            "labels_dropped": 11,
+            "fallback_beats": [
+              "b04",
+              "b06",
+              "b07",
+              "b09"
+            ],
+            "facts": 14,
+            "usable_facts": 8,
+            "facts_by_aspect": {
+              "what it is": 2,
+              "how it works": 3,
+              "why it happens": 3,
+              "a number or scale": 3,
+              "history or discovery": 1,
+              "other": 2
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 10,
+            "planned_seconds": 43,
+            "words": 102,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Blue came from somewhere strange.",
+                "texts": [
+                  "Blue came from somewhere strange"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "People say our atmosphere mirrors back deep-space hues.",
+                "texts": [
+                  "MYTH",
+                  "Myth",
+                  "Fact"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "But there's a catch.",
+                "texts": [
+                  "But there's a catch",
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "White sunlight has its blue components scattered to the side while red keeps traveling straight.",
+                "texts": [
+                  "sunlight",
+                  "red ray traveling"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Oxygen and nitrogen's small size makes them great at scattering that blue.",
+                "texts": [
+                  "Blue Scatters!",
+                  "Blue Scatters!"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "clue",
+                "say": "Molecules in Earth's atmosphere scatter blue light more strongly than red light.",
+                "texts": [
+                  "Molecules scatter blue light",
+                  "Strongly Light"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "reveal",
+                "say": "Small suspended particles scatter shorter waves much more than longer ones.",
+                "texts": [
+                  "Shorter waves"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "twist",
+                "say": "But since it travels as smaller waves, blue light gets scattered best.",
+                "texts": [
+                  "Blue light scattered best",
+                  "shorter waves"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "payoff",
+                "say": "This selective scattering by air molecules creates the blue sky we see on sunny days.",
+                "texts": [
+                  "Blue Sky Painted!"
+                ]
+              },
+              {
+                "beat": "b10",
+                "role": "loop",
+                "say": "Now you know why our sky is blue!",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.84,
+          "waited": 0,
+          "waits": []
+        }
+      ],
+      "summary": {
+        "overall": 0.782,
+        "hook": 3.0,
+        "flow": 2.8,
+        "accuracy": 0.982,
+        "rewrite": 0.034,
+        "clean": 0.8,
+        "seconds": 1006.5,
+        "topics": 5,
+        "facts": 14.4,
+        "usable": 5.6,
+        "filler": 1.4,
+        "waited": 0.0,
+        "core": 1.0
+      },
+      "finished": "2026-11-15T22:50:47"
     }
   ]
 }
