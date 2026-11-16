@@ -165,6 +165,16 @@ def opener(line: str) -> str:
     return ' '.join(w[:3]) if len(w) >= 3 else ''
 
 
+LINKS = ('but', 'so', 'because', 'which', 'and', 'then', 'yet')
+LINK_OPENS = 2                   # a link word opens at most this many lines, never two in a row
+
+
+def link_word(line: str) -> str:
+    """The link word a line opens with ("But wait: ..." -> "but"), else ''."""
+    w = re.findall(r"[a-z']+", (line or '').lower())
+    return w[0] if w and w[0] in LINKS else ''
+
+
 def asserts_myth(line: str, interp: dict, ask=None) -> str:
     """The myth's words the line says as a plain fact ('' when none, or when it doubts, questions or reports them):
     2026-11-15 bench: the yawn hook "It was boredom." and its loop "It was boredom. Now you know." stated the myth.
@@ -213,7 +223,8 @@ def candidates(kind, beat, research, prev, nxt, lo, hi, n, ask, interp, shape_ro
         lines.append(f'The misconception viewers hold: {misc}')
     if beat.get('link') and prev:                  # user 2026-11-15: each beat follows from the one before it
         lines.append('Make it follow from the previous line: explain it ("because"), draw what it leads to ("so"), '
-                     'turn it ("but") or build on it ("which means"). No jump to a new point.')
+                     'turn it ("but") or build on it ("which means"). No jump to a new point. The link may sit '
+                     'inside the line; do not open with the same link word as the previous line.')
     if beat.get('core'):
         lines.append(f'This line must say the core answer (plain words of your own are fine): {beat["core"]}')
     if kind == 'hook' and beat.get('answer'):
@@ -329,6 +340,10 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = 'repeats an earlier line'
         elif opener(c) and opener(c) in {opener(x) for x in compare}:   # 2026-11-15 bench (14B): "But there's a twist" x3
             why_not[c] = f'opens like an earlier line ("{opener(c)}")'
+        elif link_word(c) and (link_word(c) == link_word(prev) or
+                               sum(1 for x in compare if link_word(x) == link_word(c)) >= LINK_OPENS):
+            # 2026-11-15 bench (crude oil): asked to link each beat, the writer opened four lines with "But"
+            why_not[c] = f'opens with "{link_word(c)}" like too many lines already (link inside the line instead)'
         elif set(entail.NUMBER.findall(c)) - set(entail.NUMBER.findall(research)):
             why_not[c] = 'a number the research does not have'
         elif kind == 'hook' and ask is None and grounding.names_answer(c, pb.get('answer_words') or ()):

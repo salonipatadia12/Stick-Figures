@@ -189,6 +189,23 @@ class Flow(unittest.TestCase):
         self.assertEqual(beats[2]['narration'], new)
 
 
+class Links(unittest.TestCase):
+    def test_a_link_word_opens_at_most_two_lines_never_two_in_a_row(self):
+        ep = episode()
+        plan = [dict(role='hook', kind='question', fact_ids=[], claim=''),
+                dict(role='clue', kind='transition', fact_ids=[], claim=''),
+                dict(role='clue', kind='transition', fact_ids=[], claim=''),
+                dict(role='loop', kind='callback', fact_ids=[], claim='')]
+        from test_fact_check import BestOfN
+        t = BestOfN('setUp')
+        t.prompts, t.ranked = [], []
+        e = bestof.write_beat(ep, F, plan, 2, ['Why does money grow?', 'But nobody adds a cent.'], 'loop', (2, 9),
+                              t.ask(['But who pays for it?', 'Then what happens next?']))
+        self.assertIn('opens with "but"', e['rejected']['But who pays for it?'])
+        self.assertEqual(e['line'], 'Then what happens next?')
+        self.assertEqual(bestof.link_word('So, what now?'), 'so')
+
+
 class Gate(unittest.TestCase):
     def test_no_line_saying_it_makes_the_payoff_the_core_answer(self):
         ep = episode()
