@@ -3,6 +3,8 @@
 swapped for a plainer one (pipeline/repair.py). User 2026-11-14. The local model and the search are stand-ins."""
 import json
 import sys
+import os as _os
+_os.environ.setdefault('STICK_EMBED', '0')     # no real embedding model in the tests
 import tempfile
 import unittest
 from pathlib import Path

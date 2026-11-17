@@ -48,7 +48,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / 'bench'
 WORK = BENCH / 'work'
 RESULTS = BENCH / 'results'
-SCORE_VERSION = 'bench-v3'     # v3: core answer stated, the twist's kind; v2: facts per topic, filler beats, planned length, waits for another app's model
+SCORE_VERSION = 'bench-v4'     # v4: the whole-script writer's log (scripts, winner, repairs, drops); v3: core answer stated, the twist's kind; v2: facts per topic, filler beats, planned length, waits for another app's model
 
 
 def _version(name: str, module: str) -> str:
@@ -120,6 +120,13 @@ def upstream(t) -> tuple[Path, float, str]:
     fields = cli.BRIEF_DEFAULTS | {k: t[k] for k in ('niche', 'audience') if t[k]}
     styles.load(fields['style'])
     if not (base / 'episode.json').is_file():
+        # a new story-step version (the twist, the understanding) on the same research: the older snapshot's cache comes
+        # along, so the searches, pages and model calls that did not change are replayed and the facts stay the same
+        # (user 2026-11-16: benchmark runs are compared on the same facts); only the changed calls run again
+        older = sorted((p for p in WORK.glob(f'upstream-{_research_version()}*/{slug}/cache') if p.parent.parent != UPSTREAM),
+                       key=lambda p: p.stat().st_mtime, reverse=True)
+        if older and not (base / 'cache').exists():
+            shutil.copytree(older[0], base / 'cache')
         store.save(Episode(slug=slug, topic=t['topic'], **fields, voice=Voice()), base)
     ep, _ = store.load(base)
     from pipeline.story import pitch
@@ -258,14 +265,23 @@ def score(base: Path) -> dict:
     runs = sorted((base / 'cache').glob('script-*.json'), key=lambda p: p.stat().st_mtime)   # the writer's own log
     repairs = json.loads(runs[-1].read_text()).get('repairs', []) if runs else []
     best = next((e for e in repairs if e.get('stage') == 'best'), {})
-    fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept') and e['beat'] not in ('flow', 'core')]
+    whole = (next((e for e in repairs if e.get('stage') == 'whole'), {}) or {}).get('entry') or {}
+    fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept') and e['beat'] not in ('flow', 'core')] \
+        + [r['beat'] for r in whole.get('unresolved') or []]
     tscore = (interp.get('fact_scores') or {}).get(twist_id) or {}
     return dict(core=1 if core_stated else 0, core_text=core_text, core_how=core.get('how', ''),
                 core_facts=core.get('fact_ids') or [], core_gate=gate_core, core_judge=cj.get('states'),
                 core_why=' '.join(str(cj.get('why') or '').split())[:200],
                 twist=twist_id, twist_claim=twist_claim, twist_kind=tscore.get('kind', ''),
                 twist_relevance=tscore.get('relevance'), twist_surprise=tscore.get('surprise'),
-                flow_rewrites=sum(1 for e in best.get('entries', []) for p in e.get('pairs') or [] if p['now'] != p['was']),
+                flow_rewrites=sum(1 for e in best.get('entries', []) for p in e.get('pairs') or [] if p['now'] != p['was'])
+                + sum(1 for p in whole.get('flow') or [] if p['now'] != p['was']),
+                scripts=[dict(script=r['script'], failing=len(r['problems']), score=r.get('score'),
+                              problems={str(k): v for k, v in r['problems'].items()}) for r in whole.get('scripts') or []],
+                winner=whole.get('winner'), survived=whole.get('survived'),
+                line_repairs=[dict(beat=r['beat'], fixed=r['fixed'], was=r['was'], now=r['now'], why=r['why'])
+                              for r in whole.get('repairs') or []],
+                dropped=[r['beat'] for r in whole.get('dropped') or []],
                 hook=hook_score, hook_gap=gap, hook_gives_away=bool(h.get('gives_away')), hook_code_gives_away=code_gives,
                 hook_why=' '.join(str(h.get('why') or '').split())[:200],
                 flow=flow_score, flow_judge=int(f.get('flow') or 1), flow_judge_repeated=f.get('repeated') or [],

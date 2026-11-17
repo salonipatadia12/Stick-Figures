@@ -4,6 +4,8 @@ model only for the writing calls."""
 import json
 import os
 import sys
+import os as _os
+_os.environ.setdefault('STICK_EMBED', '0')     # no real embedding model in the tests
 import tempfile
 import unittest
 from pathlib import Path

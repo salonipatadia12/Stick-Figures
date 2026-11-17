@@ -67,7 +67,7 @@ RANK_SCHEMA = dict(type='object', required=['best', 'why'], properties=dict(best
 
 KIND_GUIDE = {
     'question': 'ask the question the next beat answers; do not answer it; state no fact',
-    'transition': 'move the story on ("But there is a catch."); do not explain anything; state no fact',
+    'transition': 'move the story on in a few words of your own (no stock line); do not explain anything; state no fact',
     'reaction': 'the host reacts with surprise or doubt to the previous line in a few words ("Hold on. Is that really '
                 'true?"); do not explain or correct it (the next beat does that) and state no fact',
     'callback': 'repeat words of the hook with the new meaning; state no fact',
@@ -272,7 +272,7 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
                later=()) -> dict:
     """Best-of-N for beat k: {line, ids, tried, kept, why}. `chosen` are the lines chosen so far (earlier beats),
     `later` the lines of the beats after it (a self-repair rewrite); `write` the writer model (else `ask`)."""
-    from . import entail, grounding
+    from . import entail, grounding, whole
     from .script import copies
     interp = (episode.meta or {}).get('interpretation') or {}
     episode = episode.model_copy(update=dict(sources=list(facts)))   # the research of this script (not yet on it)
@@ -327,6 +327,8 @@ def write_beat(episode, facts, plan_beats, k, chosen, nxt, words, ask, avoid=(),
             why_not[c] = 'slang or an unfinished line'
         elif not re.match(r'["\'(]?[A-Z0-9]', c):      # 2026-11-15 bench: the twist "but also on the interest ..."
             why_not[c] = 'starts mid-sentence'
+        elif whole.CANNED.match(c):                    # user 2026-11-16: no stock line ("But there is a catch.")
+            why_not[c] = 'a stock line'
         elif grounding.narrowed(c, research):          # also hooks and no-fact lines ("costs you millions")
             why_not[c] = grounding.narrowed(c, research)
         elif twist_groups and not grounding.groups(c) & (grounding.allowed_for([f'{by[twist].claim} {by[twist].quote}'])
@@ -604,44 +606,11 @@ def ensure_core(episode, ask=None) -> str:
 
 def rewrite_beat(episode, beat_id: str, avoid=(), ask=None) -> str:
     """Best-of-N for one beat of a finished script (the self-repair: a word Whisper does not hear and that has no clean
-    plainer swap). The beat's plan line (meta.fact_plan) or, for an older episode, its cited facts. Returns the chosen
-    line, or '' when no candidate passed (the line then stays)."""
-    from . import entail
-    write = None if ask is not None else write_ask()   # a given ask (a stand-in) also writes
-    ask = ask or entail.default_ask()
-    if ask is None:
-        return ''
-    k = next((i for i, b in enumerate(episode.beats) if b.id == beat_id), None)
-    if k is None:
-        return ''
-    plan = list(((episode.meta or {}).get('fact_plan') or {}).get('beats') or [])
-    if len(plan) != len(episode.beats):
-        plan = [dict(role=b.role, kind='fact' if b.source_ids else 'transition', fact_ids=list(b.source_ids), claim='')
-                for b in episode.beats]
-    plan = [dict(p, fact_ids=list(b.source_ids) if p.get('kind') == 'fact' else p.get('fact_ids', []))
-            for p, b in zip(plan, episode.beats)]
-    # the payoff still answers the hook (2026-11-15 crude oil -6: the self-repair rewrote it for an unheard "turned" and
-    # the hook was no longer answered)
-    twist_claim = next((p.get('claim') for p in plan if p.get('role') == 'twist' and p.get('claim')), '')
-    pick = (episode.hook_pick or 1) - 1
-    answer = twist_claim or (episode.hook_options[pick].answer if 0 <= pick < len(episode.hook_options) else '')
-    promise = ' '.join(x for x in [answer, episode.storyline.payoff if episode.storyline else ''] if x)
-    from .understand import core as core_of
-    core = core_of(episode)
-    if core:                                           # the payoff still says the core answer (user 2026-11-15)
-        promise = core['text']
-    if plan[k].get('role') == 'payoff' and promise:
-        twist = ((episode.meta or {}).get('fact_plan') or {}).get('twist') or \
-            (((episode.meta or {}).get('interpretation') or {}).get('twist') or {}).get('id')
-        more = ([twist] if twist else []) + list(core.get('fact_ids') or [])
-        plan[k] = dict(plan[k], answer_to=promise, core=core.get('text', ''),
-                       fact_ids=list(dict.fromkeys(list(plan[k]['fact_ids']) + more)))
-    nb = plan[k + 1] if k + 1 < len(plan) else None
-    nxt = episode.beats[k + 1].narration if nb else ''
-    e = write_beat(episode, episode.sources, plan, k, [b.narration for b in episode.beats[:k]], nxt,
-                   per_beat_words(len(' '.join(b.narration for b in episode.beats).split()), len(plan)), ask, avoid=avoid,
-                   write=write, later=[b.narration for b in episode.beats[k + 1:]])
-    return e['line'] if e['kept'] else ''
+    plainer swap): pipeline/whole.py `rewrite`, the same checks as the whole script (user 2026-11-16). Returns the
+    chosen line, or '' when no candidate passed (the line then stays)."""
+    from . import whole
+    return whole.rewrite(episode, beat_id, avoid=avoid, ask=ask,
+                         why=('the voice does not say ' + ', '.join(f'"{a}"' for a in avoid) + ' clearly') if avoid else '')
 
 
 def view(log) -> list:

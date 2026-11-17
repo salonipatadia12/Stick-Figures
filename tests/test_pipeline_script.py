@@ -1,5 +1,7 @@
 import json
 import os
+import os as _os
+_os.environ.setdefault('STICK_EMBED', '0')     # no real embedding model in the tests
 import tempfile
 import unittest
 from pathlib import Path
@@ -298,7 +300,14 @@ class OllamaScript(unittest.TestCase):
             return dict(states_a_fact=True, adds=[], supported=True, why='the fact says it')
         if system == entail.NONFACT_SYSTEM:            # and every uncited line states no fact
             return dict(states_a_fact=False, adds=[], supported=True, why='a transition')
-        from pipeline import bestof
+        from pipeline import bestof, whole
+        if system == whole.WRITE_SYSTEM:               # whole scripts: the fixture's lines (script 1 opens on an extra hook)
+            lines = [n for _, n, _, _ in OUTLINE_BEATS]
+            if self.hooks and body['options']['seed'] == whole.SEED:
+                lines[0] = self.hooks[0]
+            return dict(lines=lines)
+        if system == whole.SCORE_SYSTEM:
+            return dict(gap=3, why='the fixture')
         if system == bestof.WRITE_SYSTEM:              # best-of-N: the fixture's own line for that beat's role
             role = user.split('BEAT: ', 1)[1].split()[0]
             lines = [n for r, n, _, _ in OUTLINE_BEATS if r == role]
@@ -387,7 +396,7 @@ class OllamaScript(unittest.TestCase):
         self.assertEqual(episode.meta['script']['prompt_version'], 'script-v7')
 
     def test_a_hook_that_runs_long_is_never_chosen(self):
-        # fact-first: the narration is chosen by best-of-N (pipeline/bestof.py), not repaired through the outline
+        # fact-first: the narration is the best of whole scripts (pipeline/whole.py), not repaired through the outline
         self.hooks = ['So here is the long story of why your salary keeps on leaking away']
         self.bad_label = set()
         episode, notes = self.run_generate()
@@ -395,7 +404,7 @@ class OllamaScript(unittest.TestCase):
         self.assertEqual(len(outline_calls), 1)
         self.assertEqual(episode.beats[0].narration, "Your salary didn't shrink. It leaked.")
         self.assertEqual(episode.hook_options[0].line, episode.beats[0].narration)
-        self.assertTrue(any('best-of-N narration' in n for n in notes))
+        self.assertTrue(any('whole-script narration' in n for n in notes))
 
     def test_outline_helpers(self):
         o = free_outline()

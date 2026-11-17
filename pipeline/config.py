@@ -65,6 +65,12 @@ def ollama_yield() -> bool:
     return os.getenv('OLLAMA_YIELD', '1').strip().lower() not in ('0', 'false', 'no', 'off')
 
 
+def ollama_embed_model() -> str:
+    """The local embedding model for repeats by meaning (user 2026-11-16: nomic-embed-text, Apache 2.0):
+    OLLAMA_EMBED_MODEL, else nomic-embed-text. Without it the repeat check falls back to shared words."""
+    return os.getenv('OLLAMA_EMBED_MODEL', '').strip() or 'nomic-embed-text'
+
+
 def ollama_writer_model() -> str:
     """The model that writes (the fact plan's claims, the outline, the best-of-N lines and hooks); the judge and every
     small call stay on OLLAMA_MODEL. OLLAMA_WRITER_MODEL, else OLLAMA_MODEL (user 2026-11-15: a bigger writer is tried

@@ -178,19 +178,30 @@ def twist_fact(interp: dict, sources) -> str:
 
 # ------------------------------------------------------------------ the twist from the core answer (user 2026-11-15)
 
-TWIST_VERSION = 'twist-v2'        # v2: scored on relevance to the core answer and surprise; no side fact
-KINDS_OF_FACT = ('what', 'how', 'why', 'effect', 'number', 'history', 'trivia')
+TWIST_VERSION = 'twist-v3'        # v3: the twist changes the viewer's mind (no list, definition or name); a myth's twist corrects it
+# v2: scored on relevance to the core answer and surprise; no side fact
+KINDS_OF_FACT = ('what', 'how', 'why', 'effect', 'number', 'definition', 'list', 'history', 'trivia')
 SIDE = ('history', 'trivia')      # a side fact: the twist only when the question is about history
-CHAIN = {'what': 0, 'how': 1, 'why': 2, 'effect': 3, 'number': 3, 'history': 4, 'trivia': 5}   # the causal order
+NOT_TWIST = ('definition', 'list')   # user 2026-11-16: "three types of kerogen" is no twist
+CHAIN = {'what': 0, 'definition': 0, 'list': 1, 'how': 1, 'why': 2, 'effect': 3, 'number': 3, 'history': 4, 'trivia': 5}
+# a fact that only names, defines or sorts things (code, besides the judge's kind)
+NAMING = re.compile(r"\b(classif\w*|categori\w*|(?:three|two|four|five|several|many|different|main) (?:types|kinds|classes|groups|categories)"
+                    r"|types? of|kinds? of|is (?:called|named|known as|defined as)|are (?:called|named|known as)|refers? to"
+                    r"|is defined|stands for)\b", re.I)
 SCORE_SYSTEM = """You rate research facts for a short explainer video that answers one question. For EACH fact give:
 relevance (1-5): 5 = it is part of the core answer or says how or why it is true; 3 = it helps explain the subject;
 1 = it is about something else. surprise (1-5): 5 = a curious viewer who knows only the common idea would not expect
 it. kind: "what" (what the thing is), "how" (how it works, the steps), "why" (the cause), "effect" (what it leads
-to), "number" (a size, amount or time), "history" (who found it, when, past events), "trivia" (a side detail)."""
+to), "number" (a size, amount or time), "definition" (what a word means, or what something is called), "list" (sorts
+things into types or kinds, or lists them), "history" (who found it, when, past events), "trivia" (a side detail).
+changes_mind: true when the fact is a cause or a counter-intuitive result that changes how the viewer understands the
+subject; false for a definition, a name, a list of types or a plain description. corrects_myth: true when the fact
+shows the common idea is wrong (it says what is true instead)."""
 SCORE_SCHEMA = dict(type='object', required=['facts'], properties=dict(facts=dict(type='array', items=dict(
-    type='object', required=['id', 'relevance', 'surprise', 'kind'],
+    type='object', required=['id', 'relevance', 'surprise', 'kind', 'changes_mind', 'corrects_myth'],
     properties=dict(id=dict(type='string'), relevance=dict(type='integer'), surprise=dict(type='integer'),
-                    kind=dict(type='string', enum=list(KINDS_OF_FACT)))))))
+                    kind=dict(type='string', enum=list(KINDS_OF_FACT)), changes_mind=dict(type='boolean'),
+                    corrects_myth=dict(type='boolean'))))))
 
 
 def default_judge(base=None, ledger=None, max_tokens=1400):
@@ -226,28 +237,52 @@ def score_facts(sources, interp, episode, ask) -> dict:
             if isinstance(x, dict) and str(x.get('id')) in ids:
                 clip = lambda v: max(1, min(5, int(v))) if isinstance(v, (int, float)) else 3
                 out[str(x['id'])] = dict(relevance=clip(x.get('relevance')), surprise=clip(x.get('surprise')),
-                                         kind=x.get('kind') if x.get('kind') in KINDS_OF_FACT else 'what')
+                                         kind=x.get('kind') if x.get('kind') in KINDS_OF_FACT else 'what',
+                                         changes_mind=x.get('changes_mind') is not False,
+                                         corrects_myth=x.get('corrects_myth') is True)
     return out
 
 
+def can_twist(s, score: dict, interp: dict) -> bool:
+    """True when a fact may be the twist (user 2026-11-16): a cause or a counter-intuitive result that changes the
+    viewer's understanding; never a definition, a list of types or a name (the judge's kind, or the words "classified",
+    "three types of", "is called" in code); a side fact (history, trivia) only when the question is about history or
+    the fact corrects the myth."""
+    kind = (score or {}).get('kind', 'what')
+    if kind in NOT_TWIST or NAMING.search(f'{s.claim}'):
+        return False
+    if kind in SIDE and not ((interp or {}).get('about_history') or (score or {}).get('corrects_myth')):
+        return False
+    return (score or {}).get('changes_mind', True) is not False
+
+
 def pick_twist(interp, sources, scores) -> str:
-    """The twist fact's id: among the facts most relevant to the core answer (the top relevance, and one below it
-    when the top is 5), the most surprising; a side fact (history, trivia) only when the question is about history,
-    and the fact that backs the core answer only when no other fact is that relevant (the payoff says the core
-    answer). Without scores: twist_fact, picked in code as before."""
+    """The twist fact's id. For a topic that corrects a myth, the fact that corrects it (the judge's corrects_myth),
+    the most relevant and surprising of them (it may back the core answer too: the payoff then says another of the core
+    answer's facts). Otherwise, among the facts most relevant to the core answer (the top relevance, and one below it
+    when the top is 5), the most surprising, the core answer's own facts only when no other fact is that relevant.
+    Either way only a fact that can_twist (user 2026-11-16: never "three types of kerogen"); when none can, any fact
+    that is not a definition or a list. Without scores: twist_fact, picked in code as before."""
+    from .understand import has_myth
     if not scores or not sources:
         return twist_fact(interp, sources)
     interp = interp or {}
     known = [s for s in sources if s.id in scores]
-    pool = [s for s in known if interp.get('about_history') or scores[s.id]['kind'] not in SIDE] or known
+    pool = [s for s in known if can_twist(s, scores[s.id], interp)] or \
+        [s for s in known if scores[s.id]['kind'] not in NOT_TWIST and not NAMING.search(s.claim)] or known
     if not pool:
         return twist_fact(interp, sources)
-    top = max(scores[s.id]['relevance'] for s in pool)
-    best = [s for s in pool if scores[s.id]['relevance'] >= (top - 1 if top == 5 else top)]
-    core_ids = set((interp.get('core') or {}).get('fact_ids') or [])
-    best = [s for s in best if s.id not in core_ids] or best
     order = {s.id: k for k, s in enumerate(sources)}
-    pick = max(best, key=lambda s: (scores[s.id]['surprise'], scores[s.id]['relevance'], -order[s.id]))
+    myth = [s for s in pool if scores[s.id].get('corrects_myth') and scores[s.id]['relevance'] >= 3] \
+        if has_myth(interp) else []
+    if myth:
+        pick = max(myth, key=lambda s: (scores[s.id]['relevance'], scores[s.id]['surprise'], -order[s.id]))
+    else:
+        top = max(scores[s.id]['relevance'] for s in pool)
+        best = [s for s in pool if scores[s.id]['relevance'] >= (top - 1 if top == 5 else top)]
+        core_ids = set((interp.get('core') or {}).get('fact_ids') or [])
+        best = [s for s in best if s.id not in core_ids] or best
+        pick = max(best, key=lambda s: (scores[s.id]['surprise'], scores[s.id]['relevance'], -order[s.id]))
     # a near-duplicate from a better source says the same thing: that one is told
     return max([s for s in sources if s is pick or _same(s, pick)], key=lambda s: (quality(s), s is pick)).id
 
@@ -631,7 +666,7 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
         # something else never (2026-11-15 bench: compound interest told Fibonacci, the Low Countries and printed books
         # in three beats); thin facts make a shorter video instead
         side = {i for i, x in scores.items() if x['relevance'] <= 1
-                or (x['kind'] in SIDE and not interp.get('about_history'))} - keep
+                or (x['kind'] in SIDE and not interp.get('about_history') and not x.get('corrects_myth'))} - keep
         relevant = (relevant if relevant is not None else {x.id for x in sources}) - side
     if relevant is not None:          # the twist and the facts that back the core answer are always told
         relevant |= keep

@@ -77,7 +77,7 @@ def yield_to_others(model: str, sleep=time.sleep, clock=time.time) -> float:
     if not config.ollama_yield():
         return 0.0
     host = config.ollama_host()
-    ours = {model, config.ollama_model(), config.ollama_writer_model()}
+    ours = {model, config.ollama_model(), config.ollama_writer_model(), config.ollama_embed_model()}
     others = foreign_models(host, ours)
     if not others:
         return 0.0

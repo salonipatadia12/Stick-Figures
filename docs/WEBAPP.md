@@ -288,6 +288,40 @@ confirms instead of rewrites.
    tank?" pass. The 9B is very sensitive to the prompt's wording: one wording with an example in it let every hook
    through. The word match stays only for a run with no judge.
 
+18. **Whole-script best-of-N (user 2026-11-16).** "The line-by-line pipeline is over-constrained ... Simplify instead
+   of adding checks." The fact-first outline stays: code picks the roles, the core answer, the twist and the one fact
+   each beat says, and the outline names the single point each beat makes (`pipeline/whole.py`). The writer then
+   writes 4 complete scripts, one call each, with a different hook shape and seed per script. Every line of every
+   script goes through one list of checks: code first, and the judge only for a line that code passes. A script with
+   no failing line survives. Survivors are scored on the judge's hook gap (1-5), the mean flow score of every pair of
+   lines (1-5) and, in code, how close the script is to its length. The best one is kept. When no script survives,
+   the one with the fewest failing lines is kept and only those lines are written again (best-of-N for that line,
+   kept only if it passes). A pair scored 2 or lower has its second line written again, kept only if the pair scores
+   higher. The one-line self-repair after the render (a word the voice does not say) uses the same checks.
+   The old line-by-line writer (`bestof.write_all`) is no longer called.
+19. **One fact, one beat; repeats by meaning.** Code gives each fact to exactly one beat. Two lines that say the same
+   thing are found with a local embedding model (`nomic-embed-text`, Apache 2.0, on the same Ollama:
+   `OLLAMA_EMBED_MODEL`; `pipeline/embed.py`). A pair repeats when its cosine is 0.78 or more, or 0.70 or more and
+   still 0.20 or more once the script's shared subject is taken out (the vectors centred on the script's mean). Raw
+   cosine alone cannot tell them apart, because every line is about the topic. The payoff may restate one line (the
+   core answer, once). The myth beat, the hook against the payoff and the loop are never repeats. Without the
+   embedding model, shared words stand in. Tuned on the 9b-core benchmark scripts and crude oil -8: there it flags
+   the four lines that said "plankton was buried and heated into oil" and nothing else.
+20. **Gentler fact check.** The claims check now rejects only a claim that adds something its fact does not make (a
+   new cause, effect, thing, kind of living thing, place, time, number or certainty) or contradicts it. Plainer
+   words, details left out, vivid verbs and what the fact plainly implies pass. Narrowed numbers and ranges still fail
+   (in code). Tuned on the lines the 9b-core benchmark refused: "But time is the engine: longer periods mean way more
+   earnings" (refused for omitting "savings account") now passes.
+21. **No raw fallbacks.** No line is ever replaced by a research sentence or a stock line ("Now you know.", "But
+   there is a catch.": a code check refuses them in every script and rewrite). When no script and no rewrite gives
+   a line that passes, the beat is dropped if the video stays above 30 s and the story keeps its shape (never the hook,
+   the problem, the twist, the payoff or the loop). Otherwise the line stays, and the log reports it as unresolved.
+22. **Twist quality.** The fact scores also say whether a fact changes how the viewer understands the subject (a
+   cause or a counter-intuitive result) and whether it corrects the myth. Two kinds are new: definition and list. A
+   list of types, a definition or a name ("Kerogen is classified into three types": also caught in code by
+   "classified", "types of", "is called") is never the twist. For a topic with a myth, the twist is the fact that
+   corrects it, even when it is a history fact or backs the core answer ("formed ... before dinosaurs" for crude oil).
+
 ## Fact check before the script gate (user 2026-11-14)
 
 At the end of the script step on the Mac (`pipeline/entail.py`), every narrated sentence and every text on screen is
@@ -450,7 +484,9 @@ interest, and why the sky is blue. For each topic the script runs auto mode up t
 painting or rendering. It uses the same functions as `stick make --auto` and the web app's Auto toggle, including
 auto's fixes and its script gate. Research and the storyline pick are made once per topic
 (`bench/work/upstream-<versions>/`, git-ignored; a new research, understanding or twist version makes them
-again), so every run writes from the same facts and storyline. Each run writes into
+again), so every run writes from the same facts and storyline. A new understanding or twist version on the same
+research starts from the older snapshot's cache, so the searches and every unchanged call are replayed and the facts
+stay the same. Each run writes into
 its own copy (`bench/work/runs/<label>/`).
 
 | score | how |

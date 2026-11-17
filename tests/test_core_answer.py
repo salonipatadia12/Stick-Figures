@@ -4,6 +4,8 @@ causal order, each beat linked to the one before it (a flow judge per adjacent p
 again), the hook judged by meaning, and the gate failing a script that never says the core answer. Every model is a
 stand-in; nothing is searched."""
 import sys
+import os as _os
+_os.environ.setdefault('STICK_EMBED', '0')     # no real embedding model in the tests
 import tempfile
 import unittest
 from pathlib import Path
@@ -110,7 +112,7 @@ class Twist(unittest.TestCase):
 
     def test_the_most_surprising_of_the_most_relevant_never_a_side_fact(self):
         sc = self.scores()
-        self.assertEqual(sc['s2'], dict(relevance=3, surprise=5, kind='history'))
+        self.assertEqual({k: sc['s2'][k] for k in ('relevance', 'surprise', 'kind')}, dict(relevance=3, surprise=5, kind='history'))
         interp = episode().meta['interpretation']
         # s2 (history, most surprising) and s5 (barely relevant) are out; s3 backs the core answer (the payoff's)
         self.assertEqual(grounding.pick_twist(interp, F, sc), 's4')

@@ -24,16 +24,21 @@ from __future__ import annotations
 
 import re
 
-ENTAIL_VERSION = 'entail-v3'      # v2: word precision, uncited beats, on-screen text, the rewrite rate; v3: ranges
+ENTAIL_VERSION = 'entail-v4'      # v4: only what adds a claim or contradicts fails; v2: word precision, uncited beats, on-screen text, the rewrite rate; v3: ranges
 RATE_LIMIT = 0.2                  # above this share of rewritten lines, the fact-first plan failed (user 2026-11-14)
 
-CHECK_SYSTEM = """You check one sentence of a narrated science video against the research it cites. First say whether
-the sentence states a fact at all (a question, a transition, a joke or "here is why" states none). If it does, list
-every word or phrase OF THE SENTENCE that says something the cited research does not say: a different or more
-specific cause, organism, material, place, number, date, field of science or certainty (in "oil starts with tiny
-marine bacteria", against research about "living organisms": "tiny marine bacteria"). A plainer or simpler wording of
-the research is fine, and so is leaving its details out: list only what the sentence ADDS. supported=true when the
-list is empty."""
+CHECK_SYSTEM = """You check one claim of a narrated science video against the research it cites. The video simplifies
+for a general audience, so judge what the claim MEANS, not its wording. First say whether it states a fact at all (a
+question, a transition, a joke or "here is why" states none). If it does, list:
+adds: only a claim the research does not make: a new cause, effect, thing, material, kind of living thing, place,
+time, number or certainty that the research does not state ("hormones" for research about neurotransmitters; "within
+seconds" when the research gives no time; a step or a substance the research never names).
+contradicts: what says the opposite of the research ("lets more light through" for research that says it scatters
+more; "away from you" for research that says "toward you").
+Never list: plainer or everyday words for the research's own things ("cash" for "money", "the heart's own wiring" for
+"the sinoatrial node", "way down" for "below 200 meters"), leaving details, places or qualifiers out (a claim about
+plants in general from research about one crop is fine), and vivid verbs or metaphors for the same process ("cooks",
+"snowballs", "an engine"). supported=true when both lists are empty."""
 
 NONFACT_SYSTEM = """You check one line of a narrated science video that cites no research. Say whether it states a fact
 about the world: that something is or was so, a cause, what a thing is made of or where it comes from, a number or a
@@ -51,6 +56,11 @@ is fine. supported=true when the list is empty."""
 
 CHECK_SCHEMA = dict(type='object', required=['states_a_fact', 'adds', 'supported', 'why'],
                     properties=dict(states_a_fact=dict(type='boolean'), adds=dict(type='array', items=dict(type='string')),
+                                    supported=dict(type='boolean'), why=dict(type='string')))
+# the claims check (user 2026-11-16: reject only what ADDS a claim or CONTRADICTS the fact; simpler is fine)
+CLAIM_SCHEMA = dict(type='object', required=['states_a_fact', 'adds', 'contradicts', 'supported', 'why'],
+                    properties=dict(states_a_fact=dict(type='boolean'), adds=dict(type='array', items=dict(type='string')),
+                                    contradicts=dict(type='array', items=dict(type='string')),
                                     supported=dict(type='boolean'), why=dict(type='string')))
 
 REWRITE_SYSTEM = """You fix one sentence of a narrated science video that says more than its research supports.
@@ -102,7 +112,8 @@ def supported(sentence: str, research: str, ask, system: str = CHECK_SYSTEM) -> 
     try:
         label = 'Text' if system == TEXT_SYSTEM else 'Sentence'
         a = ask(system, f'{label}: {sentence}\n\n' + (f'Cited research:\n{research}' if system != NONFACT_SYSTEM else
-                                                    'It cites no research.'), CHECK_SCHEMA) or {}
+                                                    'It cites no research.'),
+                CLAIM_SCHEMA if system == CHECK_SYSTEM else CHECK_SCHEMA) or {}
     except Exception as e:                            # the model is down: never stop the episode for it
         return None, f'not checked: the local model did not answer ({type(e).__name__})'
     if not isinstance(a, dict) or not isinstance(a.get('supported'), bool):
@@ -116,6 +127,9 @@ def supported(sentence: str, research: str, ask, system: str = CHECK_SYSTEM) -> 
             return True, why
         return False, ('states a fact but the beat cites none' + (f' ({", ".join(repr(x) for x in adds)})' if adds else '')
                        + (f': {why}' if why else ''))
+    against = [str(x) for x in a.get('contradicts') or [] if str(x).strip()] if system == CHECK_SYSTEM else []
+    if against:
+        return False, f'contradicts the research ({", ".join(repr(x) for x in against)}): {why}'
     real = [x for x in adds if added_words(x, sentence, research)]
     if a['supported'] or not real:
         # 2026-11-14: the 9B judge failed "over millions of years" for leaving out kerogen; an "addition" whose words

@@ -953,8 +953,10 @@ def copies(narration: str, lines) -> str:
 def BEST_KEY():
     from . import bestof, entail
     from . import grounding
+    from . import embed, whole
     return [bestof.BEST_VERSION, bestof.WRITE_SYSTEM, bestof.RANK_SYSTEM, bestof.bank().get('version'), entail.SPLIT_SYSTEM,
-            grounding.GROUNDING_VERSION, grounding.LABEL_VERSION]
+            grounding.GROUNDING_VERSION, grounding.LABEL_VERSION, whole.WHOLE_VERSION, whole.WRITE_SYSTEM,
+            whole.N_SCRIPTS, entail.CHECK_SYSTEM, embed.RAW, embed.RAW_LOW, embed.CENTRED]
 
 
 def plan_of(o):
@@ -1183,14 +1185,14 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     norm = lambda x: _normalise_outline(_apply_plan(x, plan))
     o = norm(_outline_call(ctx, oschema, cache, ledger))
     times['outline_s'] = round(time.time() - t0, 1)
-    if plan:                                      # best-of-N narration (pipeline/bestof.py); the outline gives the rest
-        from . import bestof, entail
+    if plan:                                      # whole-script best-of-N (pipeline/whole.py); the outline gives the rest
+        from . import bestof, entail, whole
         from .pacing import writer_rate
         tb = time.time()
-        best_log = bestof.write_all(episode, facts, o, plan, round(episode.target_length * writer_rate(style)),
-                                    entail.default_ask(cache, ledger), write=bestof.write_ask(cache, ledger))
-        log.append(dict(stage='best', attempt=0, seconds=round(time.time() - tb, 1), issues=bestof.view(best_log),
-                        entries=best_log))
+        rate = writer_rate(style)
+        got = whole.write(episode, facts, o, plan, round(episode.target_length * rate), entail.default_ask(cache, ledger),
+                          rate, write_script=whole.default_write(cache, ledger), write_line=bestof.write_ask(cache, ledger))
+        log.append(dict(stage='whole', attempt=0, seconds=round(time.time() - tb, 1), issues=whole.view(got), entry=got))
         times['best_s'] = round(time.time() - tb, 1)
     else:
         for attempt in range(1, OUTLINE_REPAIRS + 1):
@@ -1329,8 +1331,8 @@ def free_notes(kind: str) -> list:
                f'beat staging {t.get("details_s", "-")} s, repairs {t.get("repairs_s", "-")} s, total {t.get("total_s", "-")} s'
                + (' [from the script cache]' if run.get('cached') else '')]
         for e in run.get('repairs', []):
-            if e['stage'] == 'best':
-                out.append(f'  best-of-N narration: {e.get("seconds", "-")} s')
+            if e['stage'] in ('best', 'whole'):
+                out.append(f'  {"whole-script" if e["stage"] == "whole" else "best-of-N"} narration: {e.get("seconds", "-")} s')
                 out += [f'    {n}' for n in e['issues']]
             elif e['stage'] == 'outline' and not e['attempt']:
                 out += [f'  {n}' for n in e['issues']]

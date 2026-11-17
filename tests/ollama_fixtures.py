@@ -37,6 +37,9 @@ class FakeOllama:
         if url.endswith('/api/generate'):
             self.unloads.append(json)
             return Resp(data={'done': True})
+        if url.endswith('/api/embed'):             # no embedding model here: repeats fall back to shared words
+            self.embeds = getattr(self, 'embeds', []) + [json]
+            return Resp(404)
         with self._lock:
             self.active += 1
             self.peak = max(self.peak, self.active)
