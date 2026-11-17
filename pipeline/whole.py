@@ -97,8 +97,8 @@ def context(episode, facts, plan, words_total) -> dict:
     for k, pb in enumerate(pbs):
         if k == 0:
             ids.append([hook_fact] if hook_fact in by else [])
-        elif k == n - 1:
-            ids.append([])
+        elif k == n - 1:                               # the loop may restate the twist (it cites it, as before)
+            ids.append([twist] if twist in by else [])
         else:
             ids.append(list(pb['fact_ids']))
     # word ranges: the fact beats share what the hook, the loop and the no-fact beats leave
@@ -146,7 +146,9 @@ def outline_text(ctx, shape=None) -> str:
             hf = by.get(ctx['hook_fact'])
             line = f'{k + 1}. HOOK, {lo}-{hi} words: open a question the viewer must see answered.'
             if shape:
-                line += f' Shape: {shape["shape"]}: {shape["how"]} (shape only; on another topic: "{shape["example"]}").'
+                # the shape without its example (2026-11-16 bench: "It was sunlight. Now it's in your tank." came back as
+                # the yawn hook "It was boredom, now it's in your tank.")
+                line += f' Shape: {shape["shape"]}: {shape["how"]}.'
             if hf is not None:
                 line += f' Tease this surprising fact without saying it: {hf.claim}'
             subject = ', '.join(sorted(ctx['topic'])[:6])
@@ -172,9 +174,21 @@ def outline_text(ctx, shape=None) -> str:
                     + (f'\n   Its fact: {facts}' if facts and facts != point else ''))
             if pb['role'] == 'payoff' and pb.get('core'):
                 from . import grounding
-                own = sorted(grounding.core_words(pb['core'], ep)[1])[:8]
+                # the core answer's own group words may be ones its facts do not use (2026-11-16 bench: "marine
+                # microorganisms" for facts about plankton and algae): the line says them in the facts' words
+                wrong = grounding.imprecise(pb['core'], ctx['allowed'][k])
+                from .qa import content_words
+                stems = grounding.core_words(pb['core'], ep)[1] - content_words(' '.join(wrong))
+                own = list(dict.fromkeys(w.lower() for w in re.findall(r"[A-Za-z']+", pb['core'])
+                                         if content_words(w) & stems))[:8]   # the answer's own words, not stems
                 line += ('\n   This line must say the core answer, in plain words of your own'
-                         + (f', using at least two of: {", ".join(own)}.' if own else '.'))
+                         + (f', using at least two of: {", ".join(own)}.' if own else '.')
+                         + ' Say only the parts of it that its facts back.')   # 2026-11-16 bench: "increases alertness"
+                                                                                # (yawn) had no fact
+                if wrong:
+                    named = ', '.join(sorted(ctx['allowed'][k] - grounding.myth_groups(interp, ctx['facts'])))
+                    line += (f'\n   Do not say {", ".join(repr(w) for w in wrong)}: its facts name {named}; use those '
+                             'words.')
             caution = '; '.join(c for c in (bestof_caution(by[i]) for i in ctx['ids'][k] if i in by) if c)
             if caution:
                 line += f'\n   NOTE: {caution}'
@@ -296,7 +310,7 @@ def judge_problem(c, k, lines, ctx, ask) -> tuple[str, list]:
             return '', []
     if ok is False:
         return why, ids
-    if kind == 'hook':                                 # the hook cites its fact only when it states one
+    if kind in ('hook', 'loop'):                       # a hook or a loop cites its fact only when it states one
         claims = entail.split_claims(c, ask)[0] or []
         return '', ids if any(x['kind'] == 'fact' for x in claims) else []
     return '', ids if pb['kind'] == 'fact' else []

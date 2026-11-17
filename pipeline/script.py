@@ -1442,4 +1442,12 @@ def _generate(episode, style, base, ledger, client, prov, use_research, regenera
         fixed = bestof.ensure_core(out)
         if fixed:
             notes.append(f'core answer: {fixed}')
+    if prov == 'ollama' and out.hook_options and out.beats:
+        # the hook options carry the lines as written; a fact-check rewrite of the loop (or of hook 1) after that must
+        # reach them, or picking a hook puts the old loop back under the new staging (2026-11-16 bench: crude oil's
+        # loop "So where did that first drop come from?" lost its anchor "where" when auto picked hook 1)
+        if out.beats[-1].role in ('loop', 'ending'):
+            for opt in out.hook_options:
+                opt.loop_line = out.beats[-1].narration
+        out.hook_options[0].line = out.beats[0].narration
     return out, notes
