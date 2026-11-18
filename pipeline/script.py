@@ -1169,6 +1169,10 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     model = config.ollama_model()
     from .entail import ENTAIL_VERSION
     writer = config.ollama_writer_model()
+    from .llm import active_route
+    route = active_route()                       # SCRIPT_PROVIDER=claude-code: Claude Code writes and judges
+    if route is not None:
+        model = writer = f'claude-code:{route.model}'
     key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS]
                  + ([ENTAIL_VERSION, BEST_KEY()] if plan else []) + ([writer] if writer != model else []))
     path = _cache(base, 'script', key)
@@ -1265,7 +1269,8 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     times['total_s'] = round(time.time() - t0, 1)
     remaining = [str(e) for e in errors]
     _write_json(path, dict(draft=draft.model_dump(), created=time.strftime('%Y-%m-%dT%H:%M:%S'), model=model, writer_model=writer,
-                           provider='ollama', prompt_version=PROMPT_VERSION, writer=FREE_SCRIPT_VERSION,
+                           provider='claude-code' if route is not None else 'ollama', prompt_version=PROMPT_VERSION,
+                           writer=FREE_SCRIPT_VERSION,
                            outline=o, plan=plan, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats)))
     LAST_RUN['script'] = dict(cached=False, timings=times, repairs=log, remaining=remaining, cache=dict(cache.stats),
                               plan=plan)
@@ -1394,6 +1399,66 @@ def _generate(episode, style, base, ledger, client, prov, use_research, regenera
         if not facts:
             raise ScriptError('No fact came from a government, university or peer-reviewed source, so no script was '
                               'written. Re-run research, or pick a topic with better sources.')
+    if prov == 'ollama' and config.script_writer() == 'claude-code':
+        return _script_claude_code(episode, style, base, ledger, client, prov, use_research, regenerate, facts, notes)
+    return _script(episode, style, base, ledger, client, prov, use_research, regenerate, facts, notes)
+
+
+def core_by_claude_code(episode, facts, base, ledger) -> list:
+    """SCRIPT_PROVIDER=claude-code: the core answer written again from the facts (on topic) inside the script step, by
+    the routed judge (user 2026-11-17: the script step's core answer goes through Claude Code; the 9B's could use words
+    no fact uses, or claim what no fact backs). The story step's stays when none comes back. Returns notes."""
+    from . import entail, grounding, understand
+    from .cache import for_episode
+    interp = dict((episode.meta or {}).get('interpretation') or {})
+    ask = entail.default_ask(for_episode(base), ledger)
+    rel = grounding.on_topic(facts, episode, ask)
+    pool = [f for f in facts if rel is None or f.id in rel]
+    got = understand.core_from_facts(interp.get('question') or episode.topic, pool, ask)
+    old = (interp.get('core') or {}).get('text') or ''
+    if not got.get('text'):
+        return [f'core answer: Claude Code wrote none from the facts; the story step\'s stays: {old or "(none)"}']
+    interp['core'] = dict(interp.get('core') or {}, text=got['text'], fact_ids=got['fact_ids'],
+                          how='from facts (claude-code)', story_step=old)
+    episode.meta['interpretation'] = interp
+    return [f'core answer written from the facts by Claude Code ({", ".join(got["fact_ids"])}): {got["text"]}'
+            + (f' (the story step\'s: {old})' if old and old != got['text'] else '')]
+
+
+def _script_claude_code(episode, style, base, ledger, client, prov, use_research, regenerate, facts, notes):
+    """The script step through headless Claude Code (pipeline/claude_code.py); research stays as it was. When Claude
+    Code is not logged in or hits a usage limit, the local 9B pipeline writes the script from the start and the notes,
+    the episode (meta.script.claude_code) and the phone say so."""
+    from . import claude_code, llm
+    info = dict(model=config.claude_code_model())
+    why = claude_code.preflight()
+    if not why:
+        attempt = episode.model_copy(deep=True)    # the plan sizes the episode in place: a fallback starts clean
+        out = None
+        with llm.claude_route() as route:
+            try:
+                more = core_by_claude_code(attempt, facts, base, ledger)
+                out, got = _script(attempt, style, base, ledger, client, prov, use_research, regenerate, facts,
+                                   list(notes) + more)
+            except Exception:
+                if not route.down:
+                    raise
+        info |= route.summary()
+        why = route.down
+        if not why and out is not None:
+            out.meta['script'] = dict(out.meta.get('script') or {}, model=info['model'], provider='claude-code',
+                                      claude_code=info)
+            got.insert(0, f'script written by Claude Code ({info["model"]}): {info["calls"]} call(s) '
+                          f'({info["cached"]} from the cache), {info["seconds"]} s in all, {info["mean_s"]} s a call, '
+                          f'slowest {info["max_s"]} s')
+            return out, got
+    msg = f'Claude Code was not available ({why}), so the local 9B pipeline wrote this script'
+    out, got = _script(episode, style, base, ledger, client, prov, use_research, regenerate, facts, [msg] + list(notes))
+    out.meta['script'] = dict(out.meta.get('script') or {}, claude_code=dict(info, down=why, fallback=True))
+    return out, got
+
+
+def _script(episode, style, base, ledger, client, prov, use_research, regenerate, facts, notes):
     draft, path, cached = write(episode, style, facts, base, ledger, client, 'script' in regenerate)
     notes.append(f'script: {len(draft.beats)} beats ({"cache" if cached else "new"}: {path.name})')
     notes += free_notes('script')

@@ -141,6 +141,7 @@
   {% if sc.storyline %}<p class="small"><span class="badge">{{ sc.storyline.format|replace('_', ' ') }}</span> {{ sc.storyline.title }}</p>{% endif %}
   <p class="muted small">{{ sc.beats|length }} beats · {{ sc.words }} words ≈ {{ sc.seconds }} s (target {{ sc.target_length }} s)</p>
   <p class="small"><strong>Hook promise:</strong> {{ sc.hook_promise }}</p>
+  {% if sc.writer %}<p class="small notice {{ 'ok' if sc.writer.ok else 'warn' }}" role="status">{{ sc.writer.text }}</p>{% endif %}
 </div>
 
 {% if sc.story_check %}

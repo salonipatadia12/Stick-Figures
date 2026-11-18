@@ -350,7 +350,8 @@ def llm(ctx: Ctx) -> Outcome:
         files.append(dict(path=str(p), name=p.name, kind='cache'))
     ctx.report('upload', 95, f'{what} done: sending it back')
     return Outcome(dict(notes=[str(n) for n in (ans.get('notes') or [])], episode=episode,
-                        ledger=read_json(d / 'ledger.json'), provider='ollama', ollama_version=version), files)
+                        ledger=read_json(d / 'ledger.json'), provider=str(ans.get('writer') or 'ollama'),
+                        writer_fallback=str(ans.get('writer_fallback') or ''), ollama_version=version), files)
 
 
 HANDLERS = dict(paint=paint, render=render, pitch=llm, script=llm)

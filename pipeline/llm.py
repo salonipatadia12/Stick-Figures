@@ -10,6 +10,10 @@ output is Ollama's JSON-schema `format`, which constrains decoding, so the answe
 (recipes, verbs, sound names) can only take allowed values. Every call is free and is recorded in the episode's
 ledger at $0.00 with provider 'ollama'; answers are cached by hash(system + user + model + schema + options).
 
+SCRIPT_PROVIDER=claude-code (user 2026-11-17, a comparison; not the default): everything as with ollama, except that
+the calls made inside `with claude_route():` (the script step: core answer, plan, outline, whole scripts, judge, fact
+check) go to headless Claude Code on the subscription login (pipeline/claude_code.py), each call's time logged.
+
 SCRIPT_PROVIDER=anthropic: the same call through the Anthropic API, budgeted in the ledger before it is sent (no
 retries). research/story/script keep their own Anthropic requests; this branch is for callers of this module.
 
@@ -19,6 +23,8 @@ most OLLAMA_PARALLEL (2) run at once, and a step ends with unload() so the model
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
+import contextvars
 import json
 import threading
 import time
@@ -38,6 +44,61 @@ CONTENTION = []                 # [{at, waited_s, others, model}] this process w
 
 class LLMError(RuntimeError):
     pass
+
+
+class ClaudeCodeDown(LLMError):
+    """Claude Code cannot be used (no login, a usage limit): the route is down and the step falls back."""
+
+
+class Route:
+    """The calls of one script step sent to Claude Code: the model, why it went down ('' while it works), each call."""
+
+    def __init__(self, model: str):
+        self.model, self.down, self.calls = model, '', []
+        self._lock = threading.Lock()
+
+    def summary(self) -> dict:
+        secs = [c['seconds'] for c in self.calls if c.get('seconds') is not None and not c.get('cached')]
+        return dict(model=self.model, calls=len(self.calls), cached=sum(1 for c in self.calls if c.get('cached')),
+                    seconds=round(sum(secs), 1), mean_s=round(sum(secs) / len(secs), 1) if secs else 0.0,
+                    max_s=max(secs) if secs else 0.0, down=self.down,
+                    api_equivalent_usd=round(sum(c.get('api_equivalent_usd') or 0 for c in self.calls), 4),
+                    by_step={k: sum(1 for c in self.calls if c['step'] == k) for k in dict.fromkeys(c['step'] for c in self.calls)})
+
+
+_ROUTE: contextvars.ContextVar = contextvars.ContextVar('stick_llm_route', default=None)
+
+
+@contextlib.contextmanager
+def claude_route(model: str | None = None):
+    """Inside: generate() goes to Claude Code (config.claude_code_model unless `model`). Yields the Route."""
+    r = Route(model or config.claude_code_model())
+    token = _ROUTE.set(r)
+    try:
+        yield r
+    finally:
+        _ROUTE.reset(token)
+
+
+def active_route():
+    """The Claude Code route of this call, None when calls go to Ollama."""
+    return _ROUTE.get()
+
+
+def run_parallel(fn, items: list, workers: int | None = None) -> list:
+    """[fn(x) for x in items], in order; at once (config.claude_code_parallel) when calls go to Claude Code, one after
+    another on Ollama (its server runs one at a time). An exception is returned in its slot."""
+    def one(x):
+        try:
+            return fn(x)
+        except Exception as exc:                     # noqa: BLE001 - the caller decides per slot
+            return exc
+    workers = workers or (config.claude_code_parallel() if active_route() is not None else 1)
+    if len(items) <= 1 or workers == 1:
+        return [one(x) for x in items]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:   # each task keeps the route (contextvars)
+        futs = [pool.submit(contextvars.copy_context().run, one, x) for x in items]
+        return [f.result() for f in futs]
 
 
 def _requests():
@@ -113,6 +174,10 @@ def generate(system: str, user: str, json_schema: dict | None = None, max_tokens
     caches the new one). model: an Ollama model other than OLLAMA_MODEL (the writer: config.ollama_writer_model)."""
     if config.script_provider(client) == 'anthropic':
         return _anthropic(system, user, json_schema, max_tokens, ledger=ledger, step=step, detail=detail, client=client)
+    route = active_route()
+    if route is not None:
+        return _claude_code(route, system, user, json_schema, cache=cache, ledger=ledger, step=step, detail=detail,
+                            temperature=temperature, seed=seed, refresh=refresh)
     model = model or config.ollama_model()
     ctx = num_ctx or context_for(system, user, max_tokens)
     options = dict(num_ctx=ctx, num_predict=max_tokens, temperature=temperature, seed=seed)
@@ -164,7 +229,7 @@ def generate_json(system, user, json_schema, max_tokens=4000, **kw) -> dict:
 def generate_batch(prompts: list, workers: int | None = None, as_json: bool = False) -> list:
     """Run several generate() calls at once (OLLAMA_PARALLEL, default 2) and return the answers in order. A call that
     fails returns its LLMError in its slot instead of failing the others, so only that one is retried."""
-    workers = workers or config.ollama_parallel()
+    workers = workers or (config.claude_code_parallel() if active_route() is not None else config.ollama_parallel())
     fn = generate_json if as_json else generate
 
     def one(p):
@@ -175,8 +240,9 @@ def generate_batch(prompts: list, workers: int | None = None, as_json: bool = Fa
             return exc
     if len(prompts) <= 1 or workers == 1:
         return [one(p) for p in prompts]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
-        return list(pool.map(one, prompts))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:   # each task keeps the route (contextvars)
+        futs = [pool.submit(contextvars.copy_context().run, one, p) for p in prompts]
+        return [f.result() for f in futs]
 
 
 def unload(model: str | None = None) -> bool:
@@ -189,6 +255,41 @@ def unload(model: str | None = None) -> bool:
         return r.status_code == 200
     except Exception:
         return False
+
+
+# ------------------------------------------------------------------ claude code (SCRIPT_PROVIDER=claude-code)
+
+def _claude_code(route, system, user, json_schema, *, cache, ledger, step, detail, temperature, seed, refresh):
+    """One call through headless Claude Code (cached like an Ollama call; the seed and temperature only tell the four
+    drafts apart in the cache: the CLI has no such settings). Logged in the ledger at $0.00 with its seconds."""
+    from . import claude_code
+    key = None
+    if cache is not None:
+        from .cache import prompt_hash
+        key = prompt_hash('claude-code', route.model, system, user, json_schema, dict(temperature=temperature, seed=seed))
+        hit = None if refresh else cache.get_llm(key)
+        if hit is not None:
+            with route._lock:
+                route.calls.append(dict(step=step, detail=detail, cached=True, seconds=0.0))
+            return hit['text']
+    if route.down:
+        raise ClaudeCodeDown(f'Claude Code is not available: {route.down}')
+    try:
+        text, usage = claude_code.ask(system, user, json_schema, mdl=route.model)
+    except claude_code.Unavailable as exc:
+        with route._lock:
+            route.down = route.down or ' '.join(str(exc).split())[:300]
+        raise ClaudeCodeDown(f'Claude Code is not available: {route.down}') from None
+    with route._lock:
+        route.calls.append(dict(step=step, detail=detail, seconds=usage['seconds'], input=usage['input'],
+                                output=usage['output'], api_equivalent_usd=usage.get('api_equivalent_usd')))
+    if ledger is not None:
+        with _ledger_lock:
+            ledger.record_free(step, 'claude-code', route.model, detail, usage)
+    if cache is not None and key:
+        cache.put_llm(key, dict(text=text, model=route.model, provider='claude-code', step=step, usage=usage,
+                                created=time.strftime('%Y-%m-%dT%H:%M:%S')))
+    return text
 
 
 # ------------------------------------------------------------------ anthropic (SCRIPT_PROVIDER=anthropic)

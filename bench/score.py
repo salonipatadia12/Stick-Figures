@@ -3,6 +3,8 @@ on this, not on one video."
 
     .venv/bin/python bench/score.py                         # every topic of bench/topics.txt, the current writer
     .venv/bin/python bench/score.py --writer qwen3:14b      # a bigger WRITER (the judge stays OLLAMA_MODEL)
+    .venv/bin/python bench/score.py --provider claude-code  # the script step through headless Claude Code (the
+                                                            # subscription); the scores' judge stays OLLAMA_MODEL
     .venv/bin/python bench/score.py --only crude --label try-x
     .venv/bin/python bench/score.py --compare LABEL_A LABEL_B   # no run: two saved runs side by side
 
@@ -48,7 +50,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / 'bench'
 WORK = BENCH / 'work'
 RESULTS = BENCH / 'results'
-SCORE_VERSION = 'bench-v4'     # v4: the whole-script writer's log (scripts, winner, repairs, drops); v3: core answer stated, the twist's kind; v2: facts per topic, filler beats, planned length, waits for another app's model
+SCORE_VERSION = 'bench-v5'     # v5: the script step's writer can be Claude Code (its calls' times); v4: the whole-script writer's log (scripts, winner, repairs, drops); v3: core answer stated, the twist's kind; v2: facts per topic, filler beats, planned length, waits for another app's model
 
 
 def _version(name: str, module: str) -> str:
@@ -269,7 +271,10 @@ def score(base: Path) -> dict:
     fallbacks = [e['beat'] for e in best.get('entries', []) if not e.get('kept') and e['beat'] not in ('flow', 'core')] \
         + [r['beat'] for r in whole.get('unresolved') or []]
     tscore = (interp.get('fact_scores') or {}).get(twist_id) or {}
-    return dict(core=1 if core_stated else 0, core_text=core_text, core_how=core.get('how', ''),
+    cc = ((ep.meta or {}).get('script') or {}).get('claude_code') or {}
+    return dict(claude_code={k: cc.get(k) for k in ('model', 'calls', 'cached', 'seconds', 'mean_s', 'max_s', 'down',
+                                                     'by_step', 'api_equivalent_usd')} if cc else None,
+                core=1 if core_stated else 0, core_text=core_text, core_how=core.get('how', ''),
                 core_facts=core.get('fact_ids') or [], core_gate=gate_core, core_judge=cj.get('states'),
                 core_why=' '.join(str(cj.get('why') or '').split())[:200],
                 twist=twist_id, twist_claim=twist_claim, twist_kind=tscore.get('kind', ''),
@@ -371,6 +376,8 @@ def compare(a: dict | None, b: dict) -> str:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('--writer', help='the writer model (OLLAMA_WRITER_MODEL); default: the judge model')
+    ap.add_argument('--provider', choices=('ollama', 'claude-code'),
+                    help='SCRIPT_PROVIDER for the script step (default: ollama; claude-code: headless Claude Code)')
     ap.add_argument('--label', help='a name for this run (default: date, time and writer)')
     ap.add_argument('--only', help='only topics whose text contains this (comma-separated)')
     ap.add_argument('--compare', nargs=2, metavar=('A', 'B'), help='print two saved runs side by side and stop')
@@ -387,7 +394,11 @@ def main(argv=None):
     config.load_env()
     if args.writer:                                   # .env must not take the writer back
         os.environ['OLLAMA_WRITER_MODEL'] = args.writer
+    if args.provider:
+        os.environ['SCRIPT_PROVIDER'] = args.provider
     writer, judge = config.ollama_writer_model(), config.ollama_model()
+    if config.script_writer() == 'claude-code':
+        writer = 'claude-code:' + config.claude_code_model()
     started = time.strftime('%Y-%m-%dT%H:%M:%S')
     label = args.label or f'{started[:16].replace(":", "")}-{writer.replace(":", "-")}'
     prev = (all_runs() or [None])[-1]

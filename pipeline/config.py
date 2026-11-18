@@ -17,8 +17,11 @@ SCRIPT_MODEL = 'claude-sonnet-5-5'
 
 # Research, storylines and the script (user 2026-11-10: the Anthropic credits ran out). `ollama` is free and local
 # (research by DuckDuckGo, writing by a local model); `anthropic` is the earlier paid path, kept as it was.
-SCRIPT_PROVIDERS = ('ollama', 'anthropic')
+SCRIPT_PROVIDERS = ('ollama', 'anthropic', 'claude-code')
 DEFAULT_SCRIPT_PROVIDER = 'ollama'
+# claude-code (user 2026-11-17, a comparison; not the default): the local pipeline as with `ollama` (research, facts,
+# painting, voice, render), but the script step's model calls go to headless Claude Code on the subscription login
+DEFAULT_CLAUDE_CODE_MODEL = 'claude-sonnet-5-5'
 DEFAULT_OLLAMA_HOST = 'http://localhost:11434'
 DEFAULT_OLLAMA_MODEL = 'qwen3.5:9b'     # Apache-2.0, 6.6 GB; picked over qwen2.5:14b on the sunsets test (user 2026-11-11)
 
@@ -46,10 +49,26 @@ def script_provider(client=None) -> str:
     if value:
         if value not in SCRIPT_PROVIDERS:
             raise ValueError(f'SCRIPT_PROVIDER={value!r}: use one of {", ".join(SCRIPT_PROVIDERS)}')
-        return value
+        return 'ollama' if value == 'claude-code' else value   # claude-code is the local path; see script_writer()
     if _flag('STICK_FAKE_ANTHROPIC') or client is not None:
         return 'anthropic'
     return DEFAULT_SCRIPT_PROVIDER
+
+
+def script_writer() -> str:
+    """Who makes the script step's model calls: 'claude-code' when SCRIPT_PROVIDER=claude-code (headless `claude -p`
+    on the subscription login; pipeline/claude_code.py), else 'ollama'. Everything else follows script_provider()."""
+    return 'claude-code' if os.getenv('SCRIPT_PROVIDER', '').strip().lower() == 'claude-code' else 'ollama'
+
+
+def claude_code_model() -> str:
+    """The model Claude Code writes and judges with: CLAUDE_CODE_MODEL, else claude-sonnet-5-5."""
+    return os.getenv('CLAUDE_CODE_MODEL', '').strip() or DEFAULT_CLAUDE_CODE_MODEL
+
+
+def claude_code_parallel() -> int:
+    """Claude Code calls at once where the step allows it (the four whole-script drafts, the beats' staging)."""
+    return max(1, min(6, int(os.getenv('CLAUDE_CODE_PARALLEL', '4'))))
 
 
 def ollama_host() -> str:

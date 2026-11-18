@@ -11,11 +11,12 @@ from pathlib import Path
 
 LLM_KINDS = ('pitch', 'script')             # research + storylines, the script: the language-model steps
 HEAVY_KINDS = ('paint', 'render')           # always on the Mac
-PROVIDERS = ('ollama', 'anthropic')
+PROVIDERS = ('ollama', 'anthropic', 'claude-code')   # claude-code: on the Mac like ollama (its script step via Claude Code)
 
 
 def provider_from_env() -> str:
-    """SCRIPT_PROVIDER: `ollama` (default; free, on the Mac) or `anthropic` (paid, on the VPS runner)."""
+    """SCRIPT_PROVIDER: `ollama` (default; free, on the Mac), `claude-code` (on the Mac, the script step through the
+    subscription's Claude Code) or `anthropic` (paid, on the VPS runner)."""
     value = (os.getenv('SCRIPT_PROVIDER', '') or 'ollama').strip().lower()
     if value not in PROVIDERS:
         raise ValueError(f'SCRIPT_PROVIDER must be one of {", ".join(PROVIDERS)}, not {value!r}')

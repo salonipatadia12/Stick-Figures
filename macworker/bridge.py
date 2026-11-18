@@ -8,8 +8,9 @@ long-running worker never holds stale pipeline code. Run by file path, not as pa
 
 The answer is one line on stdout: `BRIDGE_JSON {...}`. Everything else (FLUX progress) passes through.
 Uses only the pipeline's public helpers: inserts.jobs/render/qa/library/save_library and the propgen equivalents;
-story.pitch and script.generate for pitch/script, always with SCRIPT_PROVIDER=ollama, no Anthropic key and a ledger
-that refuses any paid reservation (nothing paid can be sent from the Mac).
+story.pitch and script.generate for pitch/script, with SCRIPT_PROVIDER=ollama (or claude-code for the script step, on
+the subscription login: script_writer), no Anthropic key and a ledger that refuses any paid reservation (nothing paid
+can be sent from the Mac).
 """
 from __future__ import annotations
 
@@ -175,10 +176,28 @@ class PaidCallRefused(RuntimeError):
     pass
 
 
+def script_writer(environ=os.environ, config_file: Path | None = None) -> str:
+    """'claude-code' when the worker was told SCRIPT_PROVIDER=claude-code (its environment, else its config file
+    ~/.config/stick-worker/config), else 'ollama' (the default; user 2026-11-17: "Don't change the default until I
+    decide"). claude-code: the script step through headless Claude Code on the subscription login, no API key."""
+    value = (environ.get('SCRIPT_PROVIDER') or '').strip().lower()
+    if not value:
+        path = config_file or Path(environ.get('STICK_WORKER_CONFIG') or Path.home() / '.config/stick-worker/config')
+        try:
+            for line in Path(path).expanduser().read_text().splitlines():
+                k, _, v = line.strip().partition('=')
+                if k.strip() == 'SCRIPT_PROVIDER':
+                    value = v.strip().strip('"').strip("'").lower()
+        except OSError:
+            pass
+    return 'claude-code' if value == 'claude-code' else 'ollama'
+
+
 def free_only_env(episodes_dir: Path, environ=os.environ):
-    """Before the pipeline is imported: the local model, no Anthropic key (an empty value also keeps the repo's .env
-    from supplying one) and the job's own episodes folder."""
-    environ['SCRIPT_PROVIDER'] = 'ollama'
+    """Before the pipeline is imported: the local model (or the subscription's Claude Code for the script step, see
+    script_writer), no Anthropic key (an empty value also keeps the repo's .env from supplying one) and the job's own
+    episodes folder."""
+    environ['SCRIPT_PROVIDER'] = script_writer(environ)
     environ['ANTHROPIC_API_KEY'] = ''
     environ['STICK_EPISODES_DIR'] = str(episodes_dir)
 
@@ -206,8 +225,6 @@ def llm(kind: str, slug: str, episodes_dir: Path, repo: Path) -> dict:
     sys.path.insert(0, str(repo))
     from pipeline import config, store, styles
     config.EPISODES_DIR = Path(episodes_dir)
-    if hasattr(config, 'SCRIPT_PROVIDER'):
-        config.SCRIPT_PROVIDER = 'ollama'
     try:
         episode, base = store.load(slug)
         ledger = free_ledger(base / 'ledger.json', config)
@@ -224,7 +241,11 @@ def llm(kind: str, slug: str, episodes_dir: Path, repo: Path) -> dict:
             or isinstance(e, (ValueError, RuntimeError, OSError))
         msg = ' '.join(str(e).split()) if known else f'{type(e).__name__}: {" ".join(str(e).split())}'
         return dict(error=msg[:3000] or type(e).__name__, type=type(e).__name__)
-    return dict(notes=[str(n) for n in notes])
+    if kind != 'script':
+        return dict(notes=[str(n) for n in notes])
+    cc = ((episode.meta or {}).get('script') or {}).get('claude_code') or {}
+    return dict(notes=[str(n) for n in notes], writer='claude-code' if cc and not cc.get('down') else 'ollama',
+                writer_fallback=cc.get('down') or '')
 
 
 def main(argv: list) -> int:

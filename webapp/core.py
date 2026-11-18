@@ -371,6 +371,10 @@ class Service:
                 slug = self._llm_done(conn, j, result) or slug
             else:
                 self._mac_done(conn, j, result, t)
+        if j['kind'] == 'script' and result.get('writer_fallback'):
+            # SCRIPT_PROVIDER=claude-code on the Mac, but Claude Code was not logged in or hit a usage limit
+            self.notify(slug, 'Claude Code was not available', 'The local 9B pipeline wrote the script instead: '
+                        + str(result['writer_fallback'])[:160])
         self.after_step(slug)
 
     def _mac_done(self, conn, j, result, t):
@@ -1040,7 +1044,16 @@ class Service:
         story_check = [dict(item=i, ok=ok, detail=d) for i, ok, d in episode.story_report()] \
             if episode.host_format and episode.storyline_pick else []
         sl = episode.storyline
-        return dict(title=episode.title, hook_promise=episode.hook_promise, words=episode.word_count(),
+        meta = (episode.meta or {}).get('script') or {}
+        cc = meta.get('claude_code') or {}
+        writer = None
+        if cc.get('down'):
+            writer = dict(ok=False, text=f'Claude Code was not available ({cc["down"][:200]}), so the local 9B '
+                                         'pipeline wrote this script.')
+        elif cc:
+            writer = dict(ok=True, text=f'Written by Claude Code ({cc.get("model")}): {cc.get("calls", 0)} calls, '
+                                        f'{cc.get("seconds", 0)} s, {cc.get("mean_s", 0)} s a call.')
+        return dict(title=episode.title, hook_promise=episode.hook_promise, words=episode.word_count(), writer=writer,
                     seconds=round(episode.word_count() / style.words_per_second),
                     target_length=episode.target_length, approved=episode.is_approved('script'),
                     storyline=dict(n=episode.storyline_pick, format=sl.format, title=sl.title, pitch=sl.pitch) if sl else None,

@@ -516,8 +516,10 @@ def write(episode, facts, o, plan, words_total, ask, rate, write_script=None, wr
     ctx = context(episode, facts, plan, words_total)
     write_script = write_script or (lambda s, u, sc, k: ask(s, u, sc))
     scripts = []
+    from .llm import run_parallel                 # at once through Claude Code; one after another on Ollama
+    drafts = run_parallel(lambda k: draft(ctx, k, write_script), list(range(N_SCRIPTS)))
     for k in range(N_SCRIPTS):
-        lines = draft(ctx, k, write_script)
+        lines = drafts[k] if isinstance(drafts[k], list) else []
         scripts.append(dict(script=k + 1, lines=lines, problems={} if lines else {-1: 'the writer gave no usable script'},
                             ids={}, score=None, stopped=False))
     # the judge goes through the scripts with the fewest code failures first, each only while it can still win

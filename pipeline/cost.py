@@ -24,7 +24,7 @@ TOKEN_PRICES = {
     'claude-sonnet-5-5': dict(input='2.00', output='10.00', cache_write_5m='2.50', cache_write_1h='4.00', cache_read='0.10'),
 }
 WEB_SEARCH_USD = Decimal('0.01')  # $10 per 1,000 searches
-FREE_PROVIDERS = ('ollama', 'duckduckgo')  # local model and keyless search: logged at $0.00
+FREE_PROVIDERS = ('ollama', 'duckduckgo', 'claude-code')  # local model, keyless search, the Claude subscription (no API spend): $0.00
 MILLION = Decimal(1_000_000)
 
 
