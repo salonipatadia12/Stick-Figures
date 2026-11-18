@@ -56,6 +56,51 @@ MotionRecipe = Literal[
 ANCHORED_RECIPES = {'punch_in', 'pose_swap', 'impact_shake', 'text_slam', 'number_counter',
                     'underline_draw', 'arrow_draw', 'icon_pop', 'checklist_tick'}
 MAX_ON_SCREEN_WORDS = 5
+# a staging direction is never text on screen (user 2026-11-18: the sky video slammed "Slam 'BLUE SCATTERS, RED GOES
+# STRAIGHT' at the bottom of the frame"; crude oil showed "10 METERS DEEP lands at the top of the stack"): quotes and
+# words that tell the camera or the composer what to do
+STAGING_WORDS = re.compile(
+    r"\b(slams?|slammed|slamming|frames?|bottom|top|zoom(?:s|ed|ing)?|camera|close-?ups?|on-?screen|onscreen|"
+    r"screen|overlays?|captions?|corner|cut to|fade[sd]? (?:in|out)|pans? (?:in|out|left|right|across|to|over)|"
+    r"lands? (?:at|on|in) the|pops? (?:up|in)|appears? (?:at|on|in) the)\b", re.I)
+OPEN_QUOTE = re.compile(r"[\"“”]|(?:^|[\s(\[])['‘’](?=\w)")
+QUOTED = re.compile(r"[\"“‘']([^\"“”‘’']{2,60})[\"”’']")
+
+
+def staging_leak(text: str) -> str:
+    """'' for a text fit to show on screen, else what makes it a staging direction (a quote, a direction word)."""
+    text = str(text or '')
+    if OPEN_QUOTE.search(text):
+        return 'a quote mark'
+    m = STAGING_WORDS.search(text)
+    return f'the direction word "{m.group(0)}"' if m else ''
+
+
+def shown_texts(b) -> list:
+    """Every text a beat puts on screen: on_screen_text, a slam's detail (shown when there is no on_screen_text), the
+    parts of a checklist or split compare, split labels, diagram labels, label and pin effects."""
+    sh, ost = b.shot, b.on_screen_text.strip()
+    out = [ost] if ost else []
+    for m in sh.motion:
+        if m.recipe == 'text_slam' and m.detail.strip() and not ost:
+            out.append(m.detail)
+        elif m.recipe in ('checklist_tick', 'split_compare'):
+            out += [p.strip() for p in m.detail.split('|') if p.strip()]
+    if sh.split:
+        out += [x for x in sh.split.labels or [] if x.strip()]
+    if sh.graphic:
+        out += [x for x in sh.graphic.items if x.strip()]
+    if sh.insert:
+        out += [e.detail for e in sh.insert.effects if e.kind in ('label', 'pin') and e.detail.strip()]
+    return out
+
+
+def unstaged(text: str) -> str:
+    """The words to show from a staging direction that quotes them ("Slam 'BLUE SCATTERS' at the bottom" -> "BLUE
+    SCATTERS"), else ''."""
+    m = QUOTED.search(str(text or ''))
+    inner = ' '.join(m.group(1).split()).strip(' .,') if m else ''
+    return inner if inner and not staging_leak(inner) else ''
 
 # ---- staging vocabulary (script v3). The base library is keyed by setting + pose + cast; the action
 # library (pipeline/rig/actions.py) is keyed by verb. A script is composed from these, so the words are fixed.
@@ -964,6 +1009,11 @@ class Episode(Strict):
                 if n.strip().casefold() not in said:
                     err(where, f'"{n}" is drawn on screen ("{text}") but this beat never says it; on-screen numbers must '
                                'match the narration or on_screen_text')
+        for text in shown_texts(b):
+            leak = staging_leak(text)
+            if leak:
+                err(where, f'the on-screen text "{text}" is a staging direction ({leak}); put only the words to show '
+                           '(no quotes, no "slam", "frame", "top", "bottom", "zoom")')
         # on_screen_text is drawn by a text recipe; without one the composer slams it on a shared word (a fallback)
         shows = {m.recipe for m in sh.motion}
         ost = b.on_screen_text.strip()

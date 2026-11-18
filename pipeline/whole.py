@@ -344,6 +344,18 @@ def repeats(lines, ctx) -> dict:
     return out
 
 
+def every_question(lines, ctx, ask):
+    """Every question the judge may ask about a script (for one call under Claude Code): each line's checks, a hook
+    or loop that may state no fact, the hook score and the flow of each pair."""
+    from . import entail
+    n = len(lines)
+    for k, c in enumerate(lines):
+        judge_problem(c, k, lines, ctx, ask)
+        if ctx['ids'][k] and k in (0, n - 1):
+            entail.verdict(c, '', entail.allowed_groups(ctx['episode'], ()), ask, entail.NONFACT_SYSTEM)
+    score(lines, ctx, ask)
+
+
 def code_check(lines, ctx) -> dict:
     """{index: why} from code alone: each line's code checks and the repeats across the script by meaning."""
     problems = {}
@@ -437,6 +449,14 @@ def fix_line(ctx, lines, k, why, ask, write, n=4, avoid=()) -> tuple[str, list, 
     cands = bestof.candidates(kind, pb, ctx['research'][k], prev, nxt, lo, hi, n if kind == 'beat' else bestof.N_HOOK,
                               write or ask, ctx['interp'], rows, tuple(avoid), caution,
                               f'- "{lines[k]}": {why}\n(no stock line; say only what its fact says, in plain words)')
+    from . import batch, grounding
+    memo = ask if isinstance(ask, batch.Memo) else batch.Memo(ask)
+    if memo.on:
+        ask = memo
+    # Claude Code: every candidate's checks, and its flow with the line before, in one call
+    memo.collect(lambda a: [(judge_problem(c, k, lines[:k] + [c] + lines[k + 1:], ctx, a),
+                            grounding.pair_score(prev, c, a) if prev else 0) for c in cands],
+                f'checks of the candidates for b{k + 1:02d}')
     ok, used = [], {}
     for c in cands:
         trial = lines[:k] + [c] + lines[k + 1:]
@@ -522,6 +542,12 @@ def write(episode, facts, o, plan, words_total, ask, rate, write_script=None, wr
         lines = drafts[k] if isinstance(drafts[k], list) else []
         scripts.append(dict(script=k + 1, lines=lines, problems={} if lines else {-1: 'the writer gave no usable script'},
                             ids={}, score=None, stopped=False))
+    from . import batch
+    memo = batch.Memo(ask)
+    if memo.on:                                   # Claude Code: one call per script for every check of every line
+        run_parallel(lambda r: memo.collect(lambda a: every_question(r['lines'], ctx, a),
+                                            f'checks of script {r["script"]}'), [r for r in scripts if r['lines']])
+        ask = memo
     # the judge goes through the scripts with the fewest code failures first, each only while it can still win
     best = None
     for row in sorted((r for r in scripts if r['lines']), key=lambda r: (len(code_check(r['lines'], ctx)), r['script'])):

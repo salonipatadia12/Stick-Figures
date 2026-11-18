@@ -321,7 +321,7 @@ confirms instead of rewrites.
    list of types, a definition or a name ("Kerogen is classified into three types": also caught in code by
    "classified", "types of", "is called") is never the twist. For a topic with a myth, the twist is the fact that
    corrects it, even when it is a history fact or backs the core answer ("formed ... before dinosaurs" for crude oil).
-23. **The writer can be Claude Code** (user 2026-11-17, a comparison: **not the default**). With
+23. **The writer is Claude Code** (user 2026-11-17; **the Mac worker's default since 2026-11-18**). With
    `SCRIPT_PROVIDER=claude-code` the script step's model calls go to headless Claude Code (`claude -p`, the Mac's
    subscription login, no API key; `pipeline/claude_code.py`). That covers the core answer (written again from the
    on-topic facts), the fact plan, the outline, the four whole scripts (drafted at once), the judge, the staging, the
@@ -333,8 +333,19 @@ confirms instead of rewrites.
    slowest call. If Claude Code is not logged in or hits a usage limit (checked before the step with
    `claude auth status`, and on every call), the 9B pipeline writes the script from the start. The notes, the script
    card on the phone ("Claude Code was not available …") and a push notification say so.
-   - On the Mac worker: add `SCRIPT_PROVIDER=claude-code` to `~/.config/stick-worker/config` and restart the worker.
-     Remove the line to go back. The bridge passes on nothing else, so a paid provider is never used.
+   - **Few calls** (user 2026-11-18: "target under 25 calls per video"; `pipeline/batch.py`). Every check of a script
+     goes out in ONE call: each check still has its own prompt and code, but it first runs with a recorder that notes
+     every question it would ask, the questions go out together (each names its rules, written once), and the check
+     runs again on the answers. That covers each whole draft (every line's checks, the hook score, the flow of each
+     pair), the candidates of a repaired line, the fact check (every narrated line, on-screen text and label), the
+     facts' relevance, the plan's claims and the labels. The claims split and the claim check are one question per
+     line (`entail.LINE_SYSTEM`). Every beat is staged in one call. Only a question that depends on an answer (the
+     rewrite of a line that failed) goes on its own. The repeat check runs locally (`nomic-embed-text`), with no
+     Claude Code call. The count per episode is in the notes ("N call(s) ... by step: ...") and on the phone. On
+     Ollama the 9B still asks one question at a time.
+   - On the Mac worker it is the default. To make the 9B write every script, add `SCRIPT_PROVIDER=ollama` to
+     `~/.config/stick-worker/config` and restart the worker. The bridge passes on nothing else, so a paid provider is
+     never used.
    - Benchmark: `bench/score.py --provider claude-code`. Its scoring judge stays the local `qwen3.5:9b`, so every
      writer is scored on the same yardstick.
 

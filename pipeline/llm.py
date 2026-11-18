@@ -10,7 +10,7 @@ output is Ollama's JSON-schema `format`, which constrains decoding, so the answe
 (recipes, verbs, sound names) can only take allowed values. Every call is free and is recorded in the episode's
 ledger at $0.00 with provider 'ollama'; answers are cached by hash(system + user + model + schema + options).
 
-SCRIPT_PROVIDER=claude-code (user 2026-11-17, a comparison; not the default): everything as with ollama, except that
+SCRIPT_PROVIDER=claude-code (user 2026-11-17; the Mac worker's default since 2026-11-18): everything as with ollama, except that
 the calls made inside `with claude_route():` (the script step: core answer, plan, outline, whole scripts, judge, fact
 check) go to headless Claude Code on the subscription login (pipeline/claude_code.py), each call's time logged.
 
@@ -63,7 +63,17 @@ class Route:
                     seconds=round(sum(secs), 1), mean_s=round(sum(secs) / len(secs), 1) if secs else 0.0,
                     max_s=max(secs) if secs else 0.0, down=self.down,
                     api_equivalent_usd=round(sum(c.get('api_equivalent_usd') or 0 for c in self.calls), 4),
-                    by_step={k: sum(1 for c in self.calls if c['step'] == k) for k in dict.fromkeys(c['step'] for c in self.calls)})
+                    by_step={k: sum(1 for c in self.calls if c['step'] == k) for k in dict.fromkeys(c['step'] for c in self.calls)},
+                    by_detail=self.by_detail())
+
+    def by_detail(self) -> dict:
+        """{what: calls} with the numbers taken out ("whole script 3" -> "whole script"), in the order first made."""
+        import re
+        out = {}
+        for c in self.calls:
+            what = re.sub(r'\s+', ' ', re.sub(r'\b[bq]?\d+\b', '', (c.get('detail') or c['step']).split(':')[0])).strip()
+            out[what or c['step']] = out.get(what or c['step'], 0) + 1
+        return out
 
 
 _ROUTE: contextvars.ContextVar = contextvars.ContextVar('stick_llm_route', default=None)

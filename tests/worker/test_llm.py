@@ -195,6 +195,7 @@ class BridgeTest(TmpDir, unittest.TestCase):
             from pipeline import config as pconfig
             seen.update(client=client, base=base, env=(os.environ['SCRIPT_PROVIDER'], os.environ['ANTHROPIC_API_KEY'],
                                                        os.environ['STICK_EPISODES_DIR']), dir=pconfig.EPISODES_DIR)
+            seen['provider'] = pconfig.script_provider()      # the pitch stays local under claude-code
             ledger.reserve('research', 'ollama', 'qwen2.5:14b', 0)     # a free reservation passes
             with self.assertRaises(bridge.PaidCallRefused):
                 ledger.reserve('storyline', 'anthropic', 'claude', 0.05)
@@ -205,7 +206,9 @@ class BridgeTest(TmpDir, unittest.TestCase):
         self.assertEqual(ans, dict(notes=['storylines: 3 (new)']))
         self.assertIsNone(seen['client'])
         self.assertEqual(Path(seen['base']), self.edir / SLUG)
-        self.assertEqual(seen['env'], ('ollama', '', str(self.edir)))
+        # the default writer is Claude Code (user 2026-11-18); everything but the script step stays on the local model
+        self.assertEqual(seen['env'], ('claude-code', '', str(self.edir)))
+        self.assertEqual(seen['provider'], 'ollama')
         self.assertEqual(seen['dir'], self.edir)
         self.assertEqual(json.loads((self.edir / SLUG / 'episode.json').read_text())['title'], 'Pitched')
         entries = json.loads((self.edir / SLUG / 'ledger.json').read_text())['entries']

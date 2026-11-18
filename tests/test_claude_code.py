@@ -242,14 +242,14 @@ class Fallback(unittest.TestCase):
 
 
 class WorkerSwitch(unittest.TestCase):
-    def test_the_mac_worker_keeps_ollama_unless_told_claude_code(self):
+    def test_the_mac_worker_writes_with_claude_code_unless_told_ollama(self):
         from macworker import bridge
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / 'config'
-            self.assertEqual(bridge.script_writer({}, f), 'ollama')
-            f.write_text('STICK_SERVER=https://x\nSCRIPT_PROVIDER=claude-code\n')
-            self.assertEqual(bridge.script_writer({}, f), 'claude-code')
-            self.assertEqual(bridge.script_writer({'SCRIPT_PROVIDER': 'ollama'}, f), 'ollama')   # the environment first
+            self.assertEqual(bridge.script_writer({}, f), 'claude-code')         # the default (user 2026-11-18)
+            f.write_text('STICK_SERVER=https://x\nSCRIPT_PROVIDER=ollama\n')
+            self.assertEqual(bridge.script_writer({}, f), 'ollama')              # the 9B, when told so
+            self.assertEqual(bridge.script_writer({'SCRIPT_PROVIDER': 'claude-code'}, f), 'claude-code')   # env first
             self.assertEqual(bridge.script_writer({'SCRIPT_PROVIDER': 'anthropic'}, f), 'ollama')   # never paid
             env = {'SCRIPT_PROVIDER': 'claude-code', 'ANTHROPIC_API_KEY': 'sk-x'}
             bridge.free_only_env(Path(d), env)

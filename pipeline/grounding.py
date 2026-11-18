@@ -379,6 +379,11 @@ def on_topic(sources, episode, ask) -> set | None:
     from .qa import content_words
     # the topic's own name does not tie a fact to the twist ("Roman", "Republic" for the 1798 Roman Republic)
     twist_words = (_words(by[tid]) if tid in by else set()) - content_words(f'{episode.topic} {q}')
+    from . import batch                               # Claude Code: every fact in one call
+    return batch.run(lambda a: _on_topic(sources, q, episode, tid, twist_words, a), ask, what='facts on topic')
+
+
+def _on_topic(sources, q, episode, tid, twist_words, ask) -> set:
     keep = set()
     for s in sources:
         try:
@@ -709,7 +714,8 @@ def make_plan(episode, sources, aim, cache=None, ledger=None, ask=None, generate
                 if b['kind'] == 'fact' and k not in claims:
                     b['claim'] = plan['beats'][k]['claim']
         plan = got
-        msgs, claims = plan_issues(plan, sources, myth, ask)
+        from . import batch                           # Claude Code: every claim of the plan in one call
+        msgs, claims = batch.run(lambda a: plan_issues(plan, sources, myth, a), ask, what='plan claims')
         attempts.append(dict(attempt=attempt, issues=list(msgs)))
         if not msgs:
             break
@@ -873,13 +879,14 @@ def from_claim(text: str, b, pb, most: int) -> bool:
     only a phrase its narration says as it is (2026-11-15 bench: "Telling Real", "? IS IT", "NO")."""
     from .bestof import SLANG
     from .entail import NUMBER
+    from .models import staging_leak
     from .qa import content_words
     words = content_words(text)
     nums = {n.strip('.,') for n in NUMBER.findall(text)} - {n.strip('.,') for n in NUMBER.findall(b.narration)}
     if (pb or {}).get('kind', 'fact') not in ('fact', 'myth') and _phrase(text) not in _phrase(b.narration):
         return False
     return (bool(words) and len(text.split()) <= most and words <= label_words(b, pb) and not nums
-            and not set(re.findall(r"[a-z']+", text.lower())) & SLANG)
+            and not set(re.findall(r"[a-z']+", text.lower())) & SLANG and not staging_leak(text))
 
 
 def ground_labels(episode, ask=None, cache=None, ledger=None) -> dict:
@@ -888,11 +895,18 @@ def ground_labels(episode, ask=None, cache=None, ledger=None) -> dict:
     a picture that uses a word the beat's narration and claim do not say is written again from them (one short call
     per beat), and dropped when no such text comes back. A text that only marks the myth ("MYTH") stays. In place;
     returns {version, checked, rewritten, dropped, changed: [{beat, field, was, now}]}."""
+    from . import batch, entail
+    if ask is None:
+        ask = entail.default_ask(cache, ledger)
+    # Claude Code: every beat's texts in one call (seen first on a copy: the step changes the texts)
+    return batch.run(lambda a: _ground_labels(episode, a), ask, what='labels from the claims',
+                     record=lambda a: _ground_labels(episode.model_copy(deep=True), a))
+
+
+def _ground_labels(episode, ask) -> dict:
     from . import entail
     plan = ((episode.meta or {}).get('fact_plan') or {}).get('beats') or []
     out = dict(version=LABEL_VERSION, checked=0, rewritten=0, dropped=0, changed=[])
-    if ask is None:
-        ask = entail.default_ask(cache, ledger)
     for k, b in enumerate(episode.beats):
         pb = plan[k] if k < len(plan) else {}
         slots = []

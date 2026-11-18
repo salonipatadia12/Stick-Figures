@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import re
 
-ENTAIL_VERSION = 'entail-v4'      # v4: only what adds a claim or contradicts fails; v2: word precision, uncited beats, on-screen text, the rewrite rate; v3: ranges
+ENTAIL_VERSION = 'entail-v5'      # v5: over-generalising fails, staging directions on screen fail, one call per script under Claude Code; v4: only what adds a claim or contradicts fails; v2: word precision, uncited beats, on-screen text, the rewrite rate; v3: ranges
 RATE_LIMIT = 0.2                  # above this share of rewritten lines, the fact-first plan failed (user 2026-11-14)
 
 CHECK_SYSTEM = """You check one claim of a narrated science video against the research it cites. The video simplifies
@@ -34,11 +34,13 @@ adds: only a claim the research does not make: a new cause, effect, thing, mater
 time, number or certainty that the research does not state ("hormones" for research about neurotransmitters; "within
 seconds" when the research gives no time; a step or a substance the research never names).
 contradicts: what says the opposite of the research ("lets more light through" for research that says it scatters
-more; "away from you" for research that says "toward you").
+more; "away from you" for research that says "toward you"), and what OVER-GENERALISES: a claim about all of a thing
+where the research says only some of it ("some X" or "certain X" said as "X": "mushrooms are poisonous" for research
+that says some mushrooms are; "it starts in clay, rich in iron" for research that says only some clays are
+iron-rich; "bats carry rabies" for "a few bats"), or "always" where the research says often or can.
 Never list: plainer or everyday words for the research's own things ("cash" for "money", "the heart's own wiring" for
-"the sinoatrial node", "way down" for "below 200 meters"), leaving details, places or qualifiers out (a claim about
-plants in general from research about one crop is fine), and vivid verbs or metaphors for the same process ("cooks",
-"snowballs", "an engine"). supported=true when both lists are empty."""
+"the sinoatrial node", "way down" for "below 200 meters"), leaving details or places out, and vivid verbs or
+metaphors for the same process ("cooks", "snowballs", "an engine"). supported=true when both lists are empty."""
 
 NONFACT_SYSTEM = """You check one line of a narrated science video that cites no research. Say whether it states a fact
 about the world: that something is or was so, a cause, what a thing is made of or where it comes from, a number or a
@@ -51,8 +53,8 @@ or a diagram label) against the research its beat cites. First say whether it st
 names a thing, a place or a step that is shown ("Ocean floor", "Rock layers", "Heat"), or marks the myth ("MYTH:
 Dinosaurs?"), states none; a text that says what something is, is made of, comes from or does states one ("Fact:
 Microbes" says the answer is microbes). If it states one, list every word OF THE TEXT that says something the research
-does not say: a different or more specific group, material, place, number or cause. A plainer wording of the research
-is fine. supported=true when the list is empty."""
+does not say: a different or more specific group, material, place, number or cause, or all of a thing where the
+research says only some of it. A plainer wording of the research is fine. supported=true when the list is empty."""
 
 CHECK_SCHEMA = dict(type='object', required=['states_a_fact', 'adds', 'supported', 'why'],
                     properties=dict(states_a_fact=dict(type='boolean'), adds=dict(type='array', items=dict(type='string')),
@@ -154,6 +156,64 @@ SPLIT_SCHEMA = dict(type='object', required=['claims', 'nonsense'], properties=d
     nonsense=dict(type='array', maxItems=3, items=dict(type='string'))))
 
 
+# the split and the check in one question (Claude Code, user 2026-11-18: "batch ... the claims split"): the same rules
+LINE_SYSTEM = ("You check one line of a narrated science video in two steps.\n\nSTEP 1, THE CLAIMS. " + SPLIT_SYSTEM
+               + "\n\nSTEP 2, EACH FACT CLAIM against the research the line cites (when it cites none, leave the lists "
+                 "empty: any fact claim fails there). " + CHECK_SYSTEM.replace(
+                   'You check one claim of a narrated science video against the research it cites. ', '')
+               .replace('First say whether it states a fact at all (a\nquestion, a transition, a joke or "here is why" '
+                        'states none). If it does, list:', 'For each fact claim list:')
+               .replace('supported=true when both lists are empty.', 'A claim is supported when both lists are empty.'))
+LINE_SCHEMA = dict(type='object', required=['claims', 'nonsense', 'why'], properties=dict(
+    claims=dict(type='array', maxItems=5, items=dict(type='object', required=['text', 'kind', 'adds', 'contradicts'],
+                                                     properties=dict(text=dict(type='string'),
+                                                                     kind=dict(type='string', enum=['fact', 'belief']),
+                                                                     adds=dict(type='array', items=dict(type='string')),
+                                                                     contradicts=dict(type='array',
+                                                                                      items=dict(type='string'))))),
+    nonsense=dict(type='array', maxItems=3, items=dict(type='string')), why=dict(type='string')))
+
+
+def line_verdict(line: str, research: str, allowed: set, ask, system: str) -> tuple[bool | None, str]:
+    """verdict() as ONE question (the split and the check of each claim together), for Claude Code: the same code
+    rules on its answer (nonsense, group words, ranges, a cited-nothing beat holds no fact, adds that only leave things
+    out are not additions)."""
+    from .grounding import imprecise, narrowed, precision_why
+    cites = system == CHECK_SYSTEM
+    try:
+        a = ask(LINE_SYSTEM, f'Line: {line}\n\n' + (f'Cited research:\n{research}' if cites else 'It cites no research.'),
+                LINE_SCHEMA) or {}
+    except Exception as e:                            # the model is down: never stop the episode for it
+        return None, f'not checked: the model did not answer ({type(e).__name__})'
+    if not isinstance(a, dict) or not isinstance(a.get('claims'), list):
+        return None, 'not checked: the answer had no claims'
+    claims = [c for c in a['claims'] if isinstance(c, dict) and str(c.get('text') or '').strip()]
+    nonsense = [' '.join(str(x).split()) for x in a.get('nonsense') or [] if str(x).strip()]
+    why = ' '.join(str(a.get('why') or '').split())[:200]
+    if nonsense:
+        return False, f'does not make sense: {"; ".join(nonsense)}'
+    said = set(re.findall(r'[a-z]+', ' '.join(str(c['text']) for c in claims).lower()))
+    bad = [w for w in imprecise(line, allowed) if w in said]
+    if bad:
+        return False, precision_why(bad, allowed)
+    facts = [c for c in claims if c.get('kind') != 'belief']
+    if facts and cites and narrowed(line, research):
+        return False, narrowed(line, research)
+    if not cites:
+        return (True, 'states no fact') if not facts else (
+            False, 'states a fact but the beat cites none (' + '; '.join(repr(str(c['text'])) for c in facts) + ')')
+    for c in facts:
+        text = ' '.join(str(c['text']).split())
+        against = [str(x) for x in c.get('contradicts') or [] if str(x).strip()]
+        if against:
+            return False, f'the claim "{text}" contradicts or over-generalises the research ' \
+                          f'({", ".join(repr(x) for x in against)}): {why}'
+        real = [str(x) for x in c.get('adds') or [] if str(x).strip() and added_words(str(x), text, research)]
+        if real:
+            return False, f'the claim "{text}" adds {", ".join(repr(x) for x in real)}: {why}'
+    return True, f'{len(facts)} claim(s) supported' if facts else 'asserts no fact'
+
+
 def split_claims(line: str, ask):
     """([{text, kind}], [nonsense]) of a line, or (None, None) when the model gave no usable answer."""
     try:
@@ -176,6 +236,9 @@ def verdict(line: str, research: str, allowed: set, ask, system: str = CHECK_SYS
     line the splitter cannot read falls back to it too. A number or range must be as wide as the research says it
     (grounding.narrowed: "thousands to millions" never becomes "thousands")."""
     from .grounding import imprecise, narrowed, precision_why
+    from .llm import active_route
+    if system != TEXT_SYSTEM and active_route() is not None:   # Claude Code: the split and the check in one question
+        return line_verdict(line, research, allowed, ask, system)
     if system == TEXT_SYSTEM:
         bad = imprecise(line, allowed)
         if bad:
@@ -307,11 +370,10 @@ def rewrite(sentence: str, research: str, before: str, after: str, ask, **kw) ->
 
 def default_ask(cache=None, ledger=None):
     """The local model, or None when this run has none (the paid provider: nothing is checked, it is noted)."""
-    from . import config, llm
+    from . import batch, config
     if config.script_provider() != 'ollama':
         return None
-    return lambda s, u, sc: llm.generate_json(s, u, sc, 500, cache=cache, ledger=ledger, step='fact-check',
-                                              detail='line vs its cited fact', temperature=0.0)
+    return batch.asker(cache, ledger, step='fact-check', detail='line vs its cited fact', max_tokens=500)
 
 
 # ------------------------------------------------------------------ texts on screen
@@ -385,8 +447,9 @@ def text_rewrites(text: str, research: str, narration: str, max_words: int, ask,
     for x in (a.get('sentences') if isinstance(a.get('sentences'), list) else [])[:2]:
         new = ' '.join(str(x or '').split()).strip('"\' .')
         from .bestof import SLANG
+        from .models import staging_leak
         if not new or len(new.split()) > max_words or new.casefold() == text.casefold() or imprecise(new, allowed) \
-                or set(re.findall(r"[a-z']+", new.lower())) & SLANG:
+                or set(re.findall(r"[a-z']+", new.lower())) & SLANG or staging_leak(new):
             continue
         if set(NUMBER.findall(new)) - set(NUMBER.findall(research + ' ' + narration)):
             continue
@@ -433,7 +496,18 @@ def check_texts(b, episode, ask, out):
         stray = {n.strip('.,') for n in NUMBER.findall(text)} - {n.strip('.,') for n in NUMBER.findall(said)}
         from .bestof import SLANG
         slang = set(re.findall(r"[a-z']+", text.lower())) & SLANG
-        if stray:                                     # 2026-11-15: "DINOSAURS (65 MYA)" on a beat that says no number
+        from .models import staging_leak, unstaged
+        leak = staging_leak(text)
+        if leak:                                      # 2026-11-17: "Slam 'BLUE SCATTERS ...' at the bottom of the frame"
+            ok, why = False, f'a staging direction, not a text to show ({leak})'
+            inner = unstaged(text)                    # the words it quotes, when they pass as a text of their own
+            if inner and len(inner.split()) <= most and verdict(inner, research or NO_RESEARCH, allowed, ask,
+                                                                 TEXT_SYSTEM)[0] is not False:
+                put(inner)
+                out['changed'].append(dict(beat=b.id, field=field, was=text, now=inner, fact_ids=list(b.source_ids),
+                                           why=why, action='text rewritten (the words it quoted)'))
+                continue
+        elif stray:                                   # 2026-11-15: "DINOSAURS (65 MYA)" on a beat that says no number
             ok, why = False, f'a number the beat never says ({", ".join(sorted(stray))})'
         elif slang:                                   # 2026-11-15: "MYTH: Dinosaur Poop" on the hook
             ok, why = False, f'slang ({", ".join(sorted(slang))})'
@@ -468,12 +542,23 @@ def check(episode, cache=None, ledger=None, ask=None) -> dict:
     """Check every sentence and every on-screen text of every beat; rewrite or drop what the facts do not support (in
     place). Returns {version, checked, text_checked, changed: [{beat, field, was, now, action, fact_ids, why}], rate,
     plan_failed, notes}."""
-    from . import grounding
+    from . import batch
     ask = ask or default_ask(cache, ledger)
-    out = dict(version=ENTAIL_VERSION, checked=0, text_checked=0, changed=[], notes=[])
     if ask is None:
-        out['notes'].append('fact check: not run (it uses the local model)')
-        return out
+        return dict(version=ENTAIL_VERSION, checked=0, text_checked=0, changed=[], notes=[
+            'fact check: not run (it uses the local model)'], rate=0.0, plan_failed=False)
+    # Claude Code: every line and every text of the script in one call (the check runs first on a copy to see them)
+    memo = batch.Memo(ask)
+    out = batch.run(lambda a: _check(episode, a), memo, record=lambda a: _check(episode.model_copy(deep=True), a),
+                    what='fact check: every line and text')
+    if memo.on:
+        out['batched'] = dict(fetched=memo.fetched, asked_alone=memo.missed)
+    return out
+
+
+def _check(episode, ask) -> dict:
+    from . import grounding
+    out = dict(version=ENTAIL_VERSION, checked=0, text_checked=0, changed=[], notes=[])
     beats = episode.beats
     kinds = grounding.kinds(episode)
     claims = {f'b{k:02d}': (b.get('claim') or '') for k, b in enumerate(((episode.meta or {}).get('fact_plan') or {})

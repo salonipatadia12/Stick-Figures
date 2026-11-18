@@ -177,9 +177,11 @@ class PaidCallRefused(RuntimeError):
 
 
 def script_writer(environ=os.environ, config_file: Path | None = None) -> str:
-    """'claude-code' when the worker was told SCRIPT_PROVIDER=claude-code (its environment, else its config file
-    ~/.config/stick-worker/config), else 'ollama' (the default; user 2026-11-17: "Don't change the default until I
-    decide"). claude-code: the script step through headless Claude Code on the subscription login, no API key."""
+    """'claude-code' (the default since 2026-11-18, user: "Make SCRIPT_PROVIDER=claude-code the default on the Mac
+    worker"): the script step through headless Claude Code on the subscription login, no API key; the local 9B
+    pipeline takes over by itself when Claude Code is not logged in or hits a usage limit. 'ollama' when the worker is
+    told so (SCRIPT_PROVIDER=ollama in its environment, else in its config file ~/.config/stick-worker/config): the 9B
+    pipeline writes every script."""
     value = (environ.get('SCRIPT_PROVIDER') or '').strip().lower()
     if not value:
         path = config_file or Path(environ.get('STICK_WORKER_CONFIG') or Path.home() / '.config/stick-worker/config')
@@ -190,7 +192,7 @@ def script_writer(environ=os.environ, config_file: Path | None = None) -> str:
                     value = v.strip().strip('"').strip("'").lower()
         except OSError:
             pass
-    return 'claude-code' if value == 'claude-code' else 'ollama'
+    return 'ollama' if value and value != 'claude-code' else 'claude-code'
 
 
 def free_only_env(episodes_dir: Path, environ=os.environ):

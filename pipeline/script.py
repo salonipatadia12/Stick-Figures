@@ -1096,10 +1096,21 @@ def _detail_from(raw, ob, cast_ids):
                              actions=[a for a in st.get('actions') or [] if a['who'] in cast][:3],
                              props=[dict(name=p['name'], held_by=p['held_by'] if p['held_by'] in cast else '', where=p['where'])
                                     for p in st.get('props') or []][:4]),
-                motion=[dict(recipe=m['recipe'], anchor=m['anchor'], detail=m['detail']) for m in raw['motion']][:2],
+                motion=[dict(recipe=m['recipe'], anchor=m['anchor'], detail=_shown(m)) for m in raw['motion']][:2],
                 continuity=' '.join(str(raw.get('continuity') or '').split())[:240])
     return dict(visual_intent=raw['visual_intent'], shot=shot,
                 sfx=[dict(name=s['name'], anchor=s['anchor']) for s in raw.get('sfx') or []][:1])
+
+
+def _shown(m) -> str:
+    """A text recipe's detail as the words to show: a staging direction that quotes them gives the quoted words
+    (2026-11-17: "Slam 'BLUE SCATTERS, RED GOES STRAIGHT' at the bottom of the frame"); one that quotes nothing stays
+    for the checker, which sends it back to the beat's call."""
+    from .models import staging_leak, unstaged
+    d = ' '.join(str(m.get('detail') or '').split())
+    if m.get('recipe') == 'text_slam' and staging_leak(d) and unstaged(d):
+        return unstaged(d)
+    return d
 
 
 def split_labels(labels) -> list:
@@ -1143,6 +1154,17 @@ def _stage_beats(ctx, o, indices, cache, ledger, previous=None, issues=None, att
                             json_schema=schema, max_tokens=BEAT_MAX_TOKENS, temperature=0.2, seed=31 + attempt,
                             cache=cache, ledger=ledger, step='script',
                             detail=f'b{i + 1:02d} staging' + (f' (repair {attempt})' if attempt else '')))
+    if llm.active_route() is not None and len(prompts) > 1:
+        # Claude Code (user 2026-11-18: "target under 25 calls per video"): every beat staged in one call, the rules
+        # written once; a beat with no usable answer gets its own call
+        from . import batch
+        got = batch.many([(p['system'], p['user'], p['json_schema']) for p in prompts], cache=cache, ledger=ledger,
+                         step='script', detail='staging' + (f' (repair {attempt})' if attempt else ''),
+                         temperature=0.2, seed=31 + attempt, max_tokens=BEAT_MAX_TOKENS * len(prompts))
+        alone = [k for k, a in enumerate(got) if not isinstance(a, dict)]
+        for k, a in zip(alone, llm.generate_batch([prompts[k] for k in alone], as_json=True)):
+            got[k] = a
+        return dict(zip(indices, got))
     return dict(zip(indices, llm.generate_batch(prompts, as_json=True)))
 
 
@@ -1450,7 +1472,8 @@ def _script_claude_code(episode, style, base, ledger, client, prov, use_research
                                       claude_code=info)
             got.insert(0, f'script written by Claude Code ({info["model"]}): {info["calls"]} call(s) '
                           f'({info["cached"]} from the cache), {info["seconds"]} s in all, {info["mean_s"]} s a call, '
-                          f'slowest {info["max_s"]} s')
+                          f'slowest {info["max_s"]} s; by step: '
+                          + ', '.join(f'{k} {v}' for k, v in (info.get('by_detail') or info['by_step']).items()))
             return out, got
     msg = f'Claude Code was not available ({why}), so the local 9B pipeline wrote this script'
     out, got = _script(episode, style, base, ledger, client, prov, use_research, regenerate, facts, [msg] + list(notes))
