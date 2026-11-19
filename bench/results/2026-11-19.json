@@ -1,0 +1,1050 @@
+{
+  "version": "bench-v5",
+  "runs": [
+    {
+      "version": "bench-v5",
+      "label": "claude-native-try",
+      "writer": "claude-code:claude-sonnet-5-5",
+      "judge": "qwen3.5:9b",
+      "commit": "c4fd9c8+changes",
+      "started": "2026-11-19T01:32:46",
+      "topics": [
+        {
+          "topic": "The real origin of crude oil",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 337.7,
+          "folder": "bench/work/runs/claude-native-try/the-real-origin-of-crude-oil",
+          "scores": {
+            "claude_code": {
+              "model": "claude-sonnet-5-5",
+              "calls": 22,
+              "cached": 0,
+              "seconds": 463.4,
+              "mean_s": 21.1,
+              "max_s": 102.21,
+              "down": "",
+              "by_step": {
+                "fact-check": 13,
+                "script": 9
+              },
+              "api_equivalent_usd": 0.9508
+            },
+            "core": 1,
+            "core_text": "Crude oil forms when buried remains of ancient marine organisms become kerogen in organic-rich mudrocks, then thermally convert into oil.",
+            "core_how": "from facts (claude-code)",
+            "core_facts": [
+              "s5",
+              "s6",
+              "s9",
+              "s12",
+              "s13"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly states that 'crude oil is buried marine life, turned to kerogen, then converted by heat into oil,' which directly matches the answer provided.",
+            "twist": "s13",
+            "twist_claim": "Those remains were sea animals and plants that lived before dinosaurs existed.",
+            "twist_kind": "history",
+            "twist_relevance": 5,
+            "twist_surprise": 5,
+            "flow_rewrites": 0,
+            "scripts": [],
+            "winner": null,
+            "survived": null,
+            "line_repairs": [],
+            "dropped": [],
+            "hook": 5,
+            "hook_gap": 5,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook asks a specific question ('What was...') that directly sets up the video's revelation about ancient marine organisms and kerogen. It creates immediate curiosity without stating the answer.",
+            "flow": 4,
+            "flow_judge": 4,
+            "flow_judge_repeated": [
+              7
+            ],
+            "flow_why": "The story generally flows well from the hook (line 1) through the misconception correction and scientific explanation to a clear payoff in line 8. However, Line 7 ('Those remains were animals and plan",
+            "repeated_claims": [],
+            "accuracy": 0.914,
+            "accuracy_fails": [
+              "b06 narration \"Oil forms in mudrocks that are rich in organic matter and hold the right kerogen.\": the claim \"Oil forms in mudrocks.\" contradicts the research (\"Oil forms in mudrocks (implies any or general mudrocks) vs research stating 'not all mudrocks' are suitable\", \"OVER-GENERALISES: The claim implies oil formation is a property of mudrocks generally, whereas the research specifies only those that are 'organic-rich with appropriate kerogen type'\"): The sentence states as a general fact ('Oil forms in mudrocks') without qualifying conditions. The cited research explicitly limits this to specific types of mudrocks ('organic-rich with appropriate k",
+              "b07 narration \"Those remains were animals and plants of ancient seas, living before the dinosaurs.\": the claim \"Those remains were animals.\" contradicts the research (\"what: 'Those remains were animals' vs research saying 'animals and plants', over-generalises: the claim implies all or only animal remains are discussed while the research explicitly includes plant remains as a source.\"): The sentence states that the remains were animals. The cited research (s13) quotes stating crude oil was formed from 'animals and plants'. By omitting 'plants' entirely in the claim ('Those remains we",
+              "b08 narration \"So crude oil is buried marine life, turned to kerogen, then converted by heat into oil.\": the claim \"Crude oil is buried marine life.\" contradicts the research ('buried marine life', \"OVER-GENERALISES: a claim that crude oil is composed of or consists entirely of 'marine life' (implying the organisms themselves are still there as buried matter), whereas the research clarifies it is formed from organic *matter* derived from living organisms via thermal conversion and transformation into kerogen.\"): The sentence states that crude oil IS 'buried marine life'. The cited research explains a process where organic matter (remains) transforms chemically ('thermal conversion', 'transformed into kerogen'"
+            ],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 4,
+            "labels_dropped": 1,
+            "fallback_beats": [],
+            "facts": 14,
+            "usable_facts": 5,
+            "facts_by_aspect": {
+              "what it is": 1,
+              "how it works": 5,
+              "a surprising detail": 2,
+              "history or discovery": 2,
+              "other": 4
+            },
+            "filler_beats": [
+              "b04"
+            ],
+            "filler": 1,
+            "beats": 9,
+            "planned_seconds": 45,
+            "words": 108,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "What was crude oil before it was oil?",
+                "texts": [
+                  "MYTH: DINOSAUR OIL"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "You probably picture dinosaurs or sea monsters sinking into a swamp.",
+                "texts": [
+                  "MYTH: DINOSAUR OIL",
+                  "MYTH: DINOSAURS",
+                  "MYTH: SEA MONSTERS",
+                  "sinking into a swamp"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "But most geochemists say the evidence overwhelmingly points to living things.",
+                "texts": [
+                  "OVERWHELMING EVIDENCE",
+                  "GEOCHEMISTS",
+                  "LIVING THINGS"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "So how does life turn into something you can pump?",
+                "texts": [
+                  "LIFE",
+                  "how does life"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Below ten meters, anaerobic bacteria stop acting, and the remains turn into kerogen.",
+                "texts": [
+                  "Below ten meters: kerogen",
+                  "Ten meters",
+                  "Bacteria stop",
+                  "Kerogen"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "reveal",
+                "say": "Oil forms in mudrocks that are rich in organic matter and hold the right kerogen.",
+                "texts": [
+                  "ONLY SOME MUDROCKS",
+                  "ORGANIC MATTER",
+                  "KEROGEN"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "Those remains were animals and plants of ancient seas, living before the dinosaurs.",
+                "texts": [
+                  "BEFORE DINOSAURS",
+                  "ANIMALS",
+                  "PLANTS"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "payoff",
+                "say": "So crude oil is buried marine life, turned to kerogen, then converted by heat into oil.",
+                "texts": [
+                  "Buried life, heat, oil",
+                  "Buried marine life",
+                  "Kerogen",
+                  "Heat"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "loop",
+                "say": "Next time you see crude oil, ask what it was before.",
+                "texts": [
+                  "MYTH: DINOSAUR OIL",
+                  "MYTH: DINOSAUR OIL"
+                ]
+              }
+            ]
+          },
+          "overall": 0.943,
+          "waited": 0,
+          "waits": []
+        }
+      ],
+      "summary": {
+        "overall": 0.943,
+        "hook": 5.0,
+        "flow": 4.0,
+        "accuracy": 0.914,
+        "rewrite": 0.0,
+        "clean": 1.0,
+        "seconds": 337.7,
+        "topics": 1,
+        "facts": 14.0,
+        "usable": 5.0,
+        "filler": 1.0,
+        "waited": 0.0,
+        "core": 1.0
+      },
+      "finished": "2026-11-19T01:40:26"
+    },
+    {
+      "version": "bench-v5",
+      "label": "claude-native",
+      "writer": "claude-code:claude-sonnet-5-5",
+      "judge": "qwen3.5:9b",
+      "commit": "0461f84",
+      "started": "2026-11-19T02:24:18",
+      "topics": [
+        {
+          "topic": "The real origin of crude oil",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 358.6,
+          "folder": "bench/work/runs/claude-native/the-real-origin-of-crude-oil",
+          "scores": {
+            "claude_code": {
+              "model": "claude-sonnet-5-5",
+              "calls": 24,
+              "cached": 0,
+              "seconds": 489.7,
+              "mean_s": 20.4,
+              "max_s": 101.91,
+              "down": "",
+              "by_step": {
+                "fact-check": 15,
+                "script": 9
+              },
+              "api_equivalent_usd": 1.0631
+            },
+            "core": 1,
+            "core_text": "Crude oil forms when buried organic remains of ancient marine organisms become kerogen in organic-rich mudrocks, then thermally convert into oil.",
+            "core_how": "from facts (claude-code)",
+            "core_facts": [
+              "s5",
+              "s6",
+              "s9",
+              "s12",
+              "s13"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly addresses the question by explaining that crude oil forms from 'ancient marine animals and plants' (organic remains) which become kerogen and then convert into oil. It directl",
+            "twist": "s13",
+            "twist_claim": "The remains came from marine animals and plants that lived before dinosaurs existed.",
+            "twist_kind": "history",
+            "twist_relevance": 5,
+            "twist_surprise": 5,
+            "flow_rewrites": 0,
+            "scripts": [],
+            "winner": null,
+            "survived": null,
+            "line_repairs": [],
+            "dropped": [],
+            "hook": 5,
+            "hook_gap": 5,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook asks a specific question ('Is it dinosaurs?') that directly addresses the common misconception without revealing the actual scientific answer (kerogen/organic-rich mudrocks). This creates hig",
+            "flow": 4,
+            "flow_judge": 4,
+            "flow_judge_repeated": [
+              2
+            ],
+            "flow_why": "The story generally flows well from the hook (lines 1-2) to the scientific explanation and final payoff (line 9). However, line 7 ('Those remains were ancient marine animals...') feels slightly redund",
+            "repeated_claims": [],
+            "accuracy": 0.833,
+            "accuracy_fails": [
+              "b04 on-screen text \"Leftover bits of things\": adds 'Leftover', 'bits': The text uses 'Leftover bits' which implies a specific type or state of remains (implying waste or incomplete parts), whereas the research cites states oil is formed from the general 'remains of organ",
+              "b04 label on the picture \"Things that lived\": adds 'Things', 'lived': The text 'Things that lived' identifies a general category. The research specifies the content of this category as 'remains of organic material'. By listing every word in the text ('Things', 'that', '",
+              "b05 diagram label \"Kerogen forms\": adds 'forms': The text states 'Kerogen forms' as a general statement. The research specifies that this transformation happens under specific conditions: 'at depths greater than 10 meters where anaerobic bacteria no",
+              "b06 narration \"Crude oil forms in mudrocks packed with organic matter and the right kind of kerogen.\": the claim \"Crude oil forms in mudrocks.\" contradicts the research ('forms in mudrocks', \"OVER-GENERALISES: a claim about all of 'mudrocks' where the research says only some (specifically those that are organic-rich with appropriate kerogen type) form crude oil.\"): The sentence states as an absolute fact ('Crude oil forms in mudrocks') without qualification. The cited research explicitly limits this to 'mudrocks that are organic-rich' and notes that 'not all mud",
+              "b07 narration \"Those remains were ancient marine animals and plants, from before dinosaurs.\": the claim \"Those remains were ancient plants.\" contradicts the research (\"what: 'Those remains were ancient plants' vs research saying oil formed from both animals and plants\", \"over-generalises: The claim implies the specific remains mentioned in the video context are exclusively or solely plants ('ancient plants'), whereas the cited research (s13) explicitly states that crude oil is formed from a mixture of 'animals AND plant remains'. By stating they were ancient plants without qualification, the sentence presents this as an exclusive composition for those remains, ignoring the animal component mentioned in the source.\"): The claim contradicts and over-generalises because it isolates 'plants' from a mixture of animals and plants described in the research. The sentence asserts that the specific subject ('Those remains')",
+              "b07 on-screen text \"MYTH vs FACT: BEFORE DINOSAURS\": adds 'MYTH': The text labels the topic 'BEFORE DINOSAURS' as a 'MYTH', implying that oil did not form before dinosaurs. However, the cited research (s13) explicitly states in its quote and plain words summary that"
+            ],
+            "rewrite": 0.027,
+            "narration_rate": 0.0,
+            "text_rate": 0.036,
+            "labels_rewritten": 7,
+            "labels_dropped": 0,
+            "fallback_beats": [],
+            "facts": 14,
+            "usable_facts": 7,
+            "facts_by_aspect": {
+              "what it is": 1,
+              "how it works": 5,
+              "a surprising detail": 2,
+              "history or discovery": 2,
+              "other": 4
+            },
+            "filler_beats": [],
+            "filler": 0,
+            "beats": 9,
+            "planned_seconds": 45,
+            "words": 106,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Is the oil you burn really dinosaurs?",
+                "texts": [
+                  "MYTH?"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "You probably think crude oil is sea monsters or dinosaurs sinking into swamps.",
+                "texts": [
+                  "MYTH: DINOSAUR OIL",
+                  "MYTH: DINOSAUR OIL"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Oil worth drilling for needs specific elements and processes inside a sedimentary basin.",
+                "texts": [
+                  "SEDIMENTARY BASIN",
+                  "Elements",
+                  "Processes",
+                  "Sedimentary basin",
+                  "Elements and Processes"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "The leading theory says oil comes from the remains of organic material.",
+                "texts": [
+                  "Leftover bits of things",
+                  "Things that lived"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Deeper than ten meters, anaerobic bacteria no longer act, so organic matter becomes kerogen.",
+                "texts": [
+                  "Ten meters → kerogen",
+                  "Ten meters",
+                  "Kerogen forms",
+                  "Organic matter",
+                  "Kerogen"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "reveal",
+                "say": "Crude oil forms in mudrocks packed with organic matter and the right kind of kerogen.",
+                "texts": [
+                  "ORGANIC-RICH MUDROCKS",
+                  "Organic-rich mudrocks",
+                  "Kerogen"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "Those remains were ancient marine animals and plants, from before dinosaurs.",
+                "texts": [
+                  "MYTH vs FACT: BEFORE DINOSAURS",
+                  "Myth",
+                  "Fact",
+                  "Marine animals",
+                  "Plants",
+                  "Marine animals and plants"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "payoff",
+                "say": "So oil is ancient marine remains, turned to kerogen in mudrock, then thermally converted.",
+                "texts": [
+                  "Thermal conversion",
+                  "Mudrock"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "loop",
+                "say": "So no, oil was never melted dinosaurs.",
+                "texts": [
+                  "MYTH"
+                ]
+              }
+            ]
+          },
+          "overall": 0.921,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why do we yawn?",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 362.9,
+          "folder": "bench/work/runs/claude-native/why-do-we-yawn",
+          "scores": {
+            "claude_code": {
+              "model": "claude-sonnet-5-5",
+              "calls": 23,
+              "cached": 0,
+              "seconds": 494.8,
+              "mean_s": 21.5,
+              "max_s": 125.48,
+              "down": "",
+              "by_step": {
+                "fact-check": 14,
+                "script": 9
+              },
+              "api_equivalent_usd": 0.9863
+            },
+            "core": 1,
+            "core_text": "Yawning likely occurs to cool the brain, as wide jaw opening and altered breathing increase facial blood circulation and release warm blood.",
+            "core_how": "from facts (claude-code)",
+            "core_facts": [
+              "s2",
+              "s8"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly concludes with 'So yawning likely cools the brain,' which directly answers the question's premise about why we yawn. It also explains the mechanism ('using a wide jaw and alte",
+            "twist": "s14",
+            "twist_claim": "Newborns' head and eye area cooled about 0.36°C within 10 to 20 seconds of yawning.",
+            "twist_kind": "number",
+            "twist_relevance": 5,
+            "twist_surprise": 2,
+            "flow_rewrites": 0,
+            "scripts": [],
+            "winner": null,
+            "survived": null,
+            "line_repairs": [],
+            "dropped": [],
+            "hook": 5,
+            "hook_gap": 5,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook establishes a specific frequency ('five to twenty times') which creates immediate curiosity about the 'Why' without revealing the scientific mechanism (brain cooling). It forces the viewer to",
+            "flow": 5,
+            "flow_judge": 5,
+            "flow_judge_repeated": [],
+            "flow_why": "The story follows a tight logical progression: it starts with the phenomenon (yawning), debunks common myths (sleepiness/oxygen), introduces the mechanism (breathing rate/blood circulation), provides ",
+            "repeated_claims": [],
+            "accuracy": 0.885,
+            "accuracy_fails": [
+              "b03 narration \"Scientists haven't found that it means you're sleepy or short on oxygen.\": the claim \"Scientists haven't found that [it] means you're sleepy.\" contradicts the research (\"what: 'means you're sleepy' (implying yawning indicates sleepiness or a need for sleep), research says: 'Yawning is associated with sleepiness, but scientists haven't found that it indicates a need for sleep'\", 'over-generalises: none'): The sentence states as fact that the link between yawning and being sleepy has not been found ('Scientists haven't found that [it] means you're sleepy'). The cited research explicitly contradicts this",
+              "b03 split label \"MYTH: SLEEPY\": adds 'MYTH', 'SLEEPY': The text labels 'Sleepy' as a 'MYTH', which contradicts the research that states yawning is associated with sleepiness but does not indicate a need for sleep. Additionally, the specific words 'MYTH' a",
+              "b07 narration \"So yawning likely cools the brain, using a wide jaw and altered breathing to release warm blood.\": the claim \"A wide jaw releases warm blood during yawning.\" adds 'a wide jaw releases warm blood', 'during yawning': The research states that the mechanism involves 'allowing warm blood to escape from the skull' generally when the jaw opens widely and breathing deeply occurs. The video claim adds specific agency ('A"
+            ],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 3,
+            "labels_dropped": 5,
+            "fallback_beats": [],
+            "facts": 14,
+            "usable_facts": 6,
+            "facts_by_aspect": {
+              "what it is": 3,
+              "how it works": 3,
+              "why it happens": 2,
+              "a surprising detail": 2,
+              "a number or scale": 2,
+              "other": 2
+            },
+            "filler_beats": [],
+            "filler": 0,
+            "beats": 8,
+            "planned_seconds": 45,
+            "words": 103,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "You yawn five to twenty times daily. Why?",
+                "texts": []
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "It's a deliberate deep breath with your mouth stretched wide.",
+                "texts": [
+                  "A DEEP BREATH",
+                  "WIDE MOUTH"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Scientists haven't found that it means you're sleepy or short on oxygen.",
+                "texts": [
+                  "MYTH: SLEEP, OXYGEN",
+                  "MYTH: SLEEPY",
+                  "MYTH: OXYGEN"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "What it does change is your breathing rate, which boosts blood circulation in your face.",
+                "texts": [
+                  "Breathing rate changes",
+                  "Breathing rate",
+                  "Blood circulation",
+                  "Face"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "reveal",
+                "say": "And opening your jaw wide lets warm blood escape from the skull.",
+                "texts": [
+                  "WARM BLOOD",
+                  "WARM BLOOD ESCAPES lands on screen"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "twist",
+                "say": "In newborns, the head and eye area cooled about 0.36°C within 10 to 20 seconds of yawning.",
+                "texts": [
+                  "Cooled about 0.36°C",
+                  "Newborn head",
+                  "10-20 seconds"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "payoff",
+                "say": "So yawning likely cools the brain, using a wide jaw and altered breathing to release warm blood.",
+                "texts": [
+                  "LIKELY COOLS THE BRAIN",
+                  "WIDE JAW"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "loop",
+                "say": "So catch your next yawn, and notice how wide your jaw opens.",
+                "texts": [
+                  "Catch your next yawn",
+                  "MYTH"
+                ]
+              }
+            ]
+          },
+          "overall": 0.977,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why the Roman Republic fell",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 261.2,
+          "folder": "bench/work/runs/claude-native/why-the-roman-republic-fell",
+          "scores": {
+            "claude_code": {
+              "model": "claude-sonnet-5-5",
+              "calls": 24,
+              "cached": 0,
+              "seconds": 382.5,
+              "mean_s": 15.9,
+              "max_s": 33.69,
+              "down": "",
+              "by_step": {
+                "fact-check": 15,
+                "script": 9
+              },
+              "api_equivalent_usd": 0.8056
+            },
+            "core": 1,
+            "core_text": "Immense wealth from its empire ultimately destroyed the Republic, while senators lacked any incentive to use their constitutional authority to save it.",
+            "core_how": "from facts (claude-code)",
+            "core_facts": [
+              "s5",
+              "s10"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly states that 'the ultimate cause was the immense wealth its empire piled up' which 'destroyed the Republic,' and adds that 'senators had no incentive to use their constitutiona",
+            "twist": "s5",
+            "twist_claim": "The ultimate cause was the immense wealth Rome accumulated from its empire.",
+            "twist_kind": "effect",
+            "twist_relevance": 5,
+            "twist_surprise": 4,
+            "flow_rewrites": 0,
+            "scripts": [],
+            "winner": null,
+            "survived": null,
+            "line_repairs": [],
+            "dropped": [],
+            "hook": 1,
+            "hook_gap": 3,
+            "hook_gives_away": true,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook asks a question about senatorial inaction ('Why... watch'), but it does not open a specific gap of curiosity regarding *what* caused the fall or what happened next. It is too close to the act",
+            "flow": 4,
+            "flow_judge": 4,
+            "flow_judge_repeated": [],
+            "flow_why": "The story flow is strong (4/5) because the lines generally follow a logical progression: starting with an engaging hook about senatorial inaction, dismissing common misconceptions ('one single event')",
+            "repeated_claims": [],
+            "accuracy": 0.947,
+            "accuracy_fails": [
+              "b05 narration \"The ultimate cause was the immense wealth its empire piled up.\": the claim \"The ultimate cause was the immense wealth its empire piled up.\" contradicts the research (\"what says: The ultimate cause of the Roman Republic's fall was immense wealth accumulated from its empire.\", 'OVER-GENERALISES: none (the claim accurately reflects the specific finding cited in the research without broadening it to all causes or implying universality where only a specific instance is discussed).'): The sentence states that 'immense wealth' was the ultimate cause. The research explicitly identifies 'immense wealth accumulated from its empire' as 'the ultimate cause'. There are no added elements ("
+            ],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 5,
+            "labels_dropped": 1,
+            "fallback_beats": [],
+            "facts": 18,
+            "usable_facts": 3,
+            "facts_by_aspect": {
+              "what it is": 3,
+              "how it works": 3,
+              "a surprising detail": 3,
+              "history or discovery": 2,
+              "other": 3
+            },
+            "filler_beats": [
+              "b02",
+              "b03"
+            ],
+            "filler": 2,
+            "beats": 7,
+            "planned_seconds": 45,
+            "words": 75,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Why did Rome's senators watch the Republic die?",
+                "texts": []
+              },
+              {
+                "beat": "b02",
+                "role": "problem",
+                "say": "Most people blame one single event for the fall.",
+                "texts": [
+                  "MYTH: one single event",
+                  "MYTH",
+                  "The fall",
+                  "MYTH",
+                  "Most people blame"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "stakes",
+                "say": "So what actually brought it down?",
+                "texts": [
+                  "What actually",
+                  "Brought it down"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "Rome leaned on mild, wet weather, the Roman Climate Optimum, to grow rich harvests.",
+                "texts": [
+                  "RICH HARVESTS",
+                  "Roman Climate Optimum"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "twist",
+                "say": "The ultimate cause was the immense wealth its empire piled up.",
+                "texts": [
+                  "IMMENSE WEALTH",
+                  "IMMENSE WEALTH"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "payoff",
+                "say": "That wealth destroyed the Republic, and senators had no incentive to use their constitutional authority to save it.",
+                "texts": [
+                  "NO INCENTIVE"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "loop",
+                "say": "So when someone blames one event, remember those senators.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.789,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "How compound interest works",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 264.9,
+          "folder": "bench/work/runs/claude-native/how-compound-interest-works",
+          "scores": {
+            "claude_code": {
+              "model": "claude-sonnet-5-5",
+              "calls": 28,
+              "cached": 2,
+              "seconds": 362.4,
+              "mean_s": 13.9,
+              "max_s": 31.84,
+              "down": "",
+              "by_step": {
+                "fact-check": 18,
+                "script": 10
+              },
+              "api_equivalent_usd": 0.7498
+            },
+            "core": 1,
+            "core_text": "You earn interest on both your original savings and the interest already earned, so growth accelerates, especially over longer periods.",
+            "core_how": "from facts (claude-code)",
+            "core_facts": [
+              "s3",
+              "s7"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly states 'interest you've already earned counts too' and explains that because of this ('You earn on both'), growth accelerates over time ('the longer your money stays in saving",
+            "twist": "s3",
+            "twist_claim": "You earn interest on your savings and also on the interest you already earned.",
+            "twist_kind": "definition",
+            "twist_relevance": 5,
+            "twist_surprise": 1,
+            "flow_rewrites": 0,
+            "scripts": [],
+            "winner": null,
+            "survived": null,
+            "line_repairs": [],
+            "dropped": [],
+            "hook": 3,
+            "hook_gap": 3,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook creates mild curiosity by framing compound interest as historical 'secret' knowledge that the viewer might now understand. However, it does not explicitly state *what* was secret (the mechani",
+            "flow": 3,
+            "flow_judge": 3,
+            "flow_judge_repeated": [
+              1
+            ],
+            "flow_why": "The story flow is weak (3/5) because Line 4 acts as a significant disconnect in the narrative arc. The sequence starts with an intriguing hook about interest being 'secret' (Lines 1 & 7), moves to a m",
+            "repeated_claims": [],
+            "accuracy": 1.0,
+            "accuracy_fails": [],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 3,
+            "labels_dropped": 1,
+            "fallback_beats": [],
+            "facts": 10,
+            "usable_facts": 5,
+            "facts_by_aspect": {
+              "how it works": 2,
+              "history or discovery": 2,
+              "other": 6
+            },
+            "filler_beats": [
+              "b03"
+            ],
+            "filler": 1,
+            "beats": 7,
+            "planned_seconds": 45,
+            "words": 76,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "Why was interest math once a secret?",
+                "texts": [
+                  "interest math once a secret",
+                  "INTEREST MATH"
+                ]
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Most of us assume interest only counts your first deposit.",
+                "texts": [
+                  "MYTH: First deposit only",
+                  "MYTH"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "So what was everyone missing?",
+                "texts": []
+              },
+              {
+                "beat": "b04",
+                "role": "clue",
+                "say": "Then Fibonacci, in 1202, developed techniques for it, but they needed a great deal of laborious arithmetic.",
+                "texts": [
+                  "FIBONACCI, 1202",
+                  "FIBONACCI, 1202"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "twist",
+                "say": "The twist: interest you've already earned counts too, not just your savings.",
+                "texts": [
+                  "INTEREST ON INTEREST",
+                  "Savings",
+                  "Interest earned",
+                  "Interest on interest"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "payoff",
+                "say": "You earn on both, so the longer your money stays in savings, the more you earn.",
+                "texts": [
+                  "LONGER = MORE",
+                  "Your money",
+                  "Longer",
+                  "The longer"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "loop",
+                "say": "No wonder some people guarded it like a secret.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.84,
+          "waited": 0,
+          "waits": []
+        },
+        {
+          "topic": "Why the sky is blue",
+          "upstream_seconds": 0.0,
+          "clean": true,
+          "problems": [],
+          "error": "",
+          "seconds": 337.9,
+          "folder": "bench/work/runs/claude-native/why-the-sky-is-blue",
+          "scores": {
+            "claude_code": {
+              "model": "claude-sonnet-5-5",
+              "calls": 25,
+              "cached": 0,
+              "seconds": 436.7,
+              "mean_s": 17.5,
+              "max_s": 111.46,
+              "down": "",
+              "by_step": {
+                "fact-check": 16,
+                "script": 9
+              },
+              "api_equivalent_usd": 0.9396
+            },
+            "core": 1,
+            "core_text": "Sunlight is scattered by tiny air molecules, which scatter short-wavelength blue light much more strongly than red, so blue reaches your eyes from all directions.",
+            "core_how": "from facts (claude-code)",
+            "core_facts": [
+              "s1",
+              "s2",
+              "s7",
+              "s8"
+            ],
+            "core_gate": true,
+            "core_judge": true,
+            "core_why": "The narration explicitly explains the mechanism of Rayleigh scattering (oxygen and nitrogen molecules working best on shorter wavelengths), states that blue light scatters more than other colors like ",
+            "twist": "s11",
+            "twist_claim": "White sunlight has its blue part scattered to the side while its red part keeps going straight.",
+            "twist_kind": "effect",
+            "twist_relevance": 4,
+            "twist_surprise": 3,
+            "flow_rewrites": 0,
+            "scripts": [],
+            "winner": null,
+            "survived": null,
+            "line_repairs": [],
+            "dropped": [],
+            "hook": 5,
+            "hook_gap": 5,
+            "hook_gives_away": false,
+            "hook_code_gives_away": "",
+            "hook_why": "The hook asks 'How' without providing the answer (scattering/Rayleigh scattering), creating high curiosity. It avoids stating that air molecules scatter light directly.",
+            "flow": 4,
+            "flow_judge": 5,
+            "flow_judge_repeated": [],
+            "flow_why": "The story follows a logical progression from the opening question (Line 1) through common misconceptions and scientific explanations to a clear payoff. Each line introduces new information: Line 2 add",
+            "repeated_claims": [
+              "b09: b07 already says \"Blue light from sunlight is scattered to your eyes.\""
+            ],
+            "accuracy": 0.88,
+            "accuracy_fails": [
+              "b02 narration \"Many people think the atmosphere is a mirror, bouncing blue light down from space.\": states a fact but the beat cites none ('The atmosphere bounces blue light down from space.')",
+              "b07 narration \"Sunlight looks white, but its blue gets scattered to your eyes while red keeps going straight.\": the claim \"Sunlight looks white.\" contradicts the research (\"what says 'white sunlight appears' (implying it is inherently white) for research that explains this appearance is an optical effect caused by scattering ('blue components scattered... red keeps traveling straight')\", 'OVER-GENERALISES: a claim about the inherent nature of sunlight being described simply as looking white without qualifying that this specific visual perception relies on the differential scattering process detailed in the research'): The sentence 'Sunlight looks white' is treated as an absolute fact by the video. However, the cited research explains that this appearance is a result of blue components being scattered while red trav",
+              "b09 narration \"So look up: that sky is air scattering blue.\": the claim \"Air scatters light to make the sky appear blue.\" contradicts the research ('what says the opposite of the research', 'OVER-GENERALISES: a claim about all light scattering where the research specifies components (blue vs red)'): The sentence states that 'Air scatters light' as a general mechanism to make the sky blue. The cited research specifically attributes this effect to white sunlight having its 'blue components scattere"
+            ],
+            "rewrite": 0.0,
+            "narration_rate": 0.0,
+            "text_rate": 0.0,
+            "labels_rewritten": 2,
+            "labels_dropped": 1,
+            "fallback_beats": [],
+            "facts": 14,
+            "usable_facts": 5,
+            "facts_by_aspect": {
+              "what it is": 2,
+              "how it works": 3,
+              "why it happens": 3,
+              "a number or scale": 3,
+              "history or discovery": 1,
+              "other": 2
+            },
+            "filler_beats": [
+              "b04"
+            ],
+            "filler": 1,
+            "beats": 9,
+            "planned_seconds": 45,
+            "words": 108,
+            "lines": [
+              {
+                "beat": "b01",
+                "role": "hook",
+                "say": "How does colorless air make a blue sky?",
+                "texts": []
+              },
+              {
+                "beat": "b02",
+                "role": "setup",
+                "say": "Many people think the atmosphere is a mirror, bouncing blue light down from space.",
+                "texts": [
+                  "MYTH: BLUE MIRROR",
+                  "MYTH: BLUE MIRROR",
+                  "Blue light down"
+                ]
+              },
+              {
+                "beat": "b03",
+                "role": "problem",
+                "say": "Sunlight enters our atmosphere, and tiny air molecules scatter it in every direction.",
+                "texts": [
+                  "Scattered in all directions"
+                ]
+              },
+              {
+                "beat": "b04",
+                "role": "stakes",
+                "say": "So why would blue get picked out?",
+                "texts": [
+                  "WHY BLUE?"
+                ]
+              },
+              {
+                "beat": "b05",
+                "role": "clue",
+                "say": "Here's the clue: oxygen and nitrogen are small enough to work best on shorter wavelengths.",
+                "texts": [
+                  "Shorter wavelengths scatter more",
+                  "Oxygen",
+                  "Nitrogen",
+                  "Shorter wavelengths"
+                ]
+              },
+              {
+                "beat": "b06",
+                "role": "reveal",
+                "say": "Blue travels in shorter waves, so it scatters more than other colors.",
+                "texts": [
+                  "BLUE = SHORTER WAVES",
+                  "Other colors"
+                ]
+              },
+              {
+                "beat": "b07",
+                "role": "twist",
+                "say": "Sunlight looks white, but its blue gets scattered to your eyes while red keeps going straight.",
+                "texts": [
+                  "Blue scattered, red straight",
+                  "White sunlight",
+                  "Blue scattered",
+                  "Red straight"
+                ]
+              },
+              {
+                "beat": "b08",
+                "role": "payoff",
+                "say": "That selective scattering by air molecules is what makes a clear, sunny sky blue.",
+                "texts": [
+                  "SCATTERING = BLUE SKY"
+                ]
+              },
+              {
+                "beat": "b09",
+                "role": "loop",
+                "say": "So look up: that sky is air scattering blue.",
+                "texts": []
+              }
+            ]
+          },
+          "overall": 0.936,
+          "waited": 0,
+          "waits": []
+        }
+      ],
+      "summary": {
+        "overall": 0.893,
+        "hook": 3.8,
+        "flow": 4.0,
+        "accuracy": 0.909,
+        "rewrite": 0.005,
+        "clean": 1.0,
+        "seconds": 317.1,
+        "topics": 5,
+        "facts": 14.0,
+        "usable": 5.2,
+        "filler": 0.8,
+        "waited": 0.0,
+        "core": 1.0
+      },
+      "finished": "2026-11-19T03:02:05"
+    }
+  ]
+}

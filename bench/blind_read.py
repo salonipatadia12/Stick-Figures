@@ -27,18 +27,33 @@ def lines_for(runs: dict, labels: list, topic: str):
     return None, None
 
 
+def orders(spec: list, names: list, seed: int) -> dict:
+    """{topic: the writers' order}, seeded (the same file each time), drawn again until the order is not the same on
+    every topic: a letter that always means one writer would give the key away (2026-11-19: two writers came out
+    A/B on all five topics, twice)."""
+    for k in range(100):
+        rng = random.Random(seed + k)
+        got = {}
+        for name in names:
+            order = list(range(len(spec)))
+            rng.shuffle(order)
+            got[name] = order
+        if len(names) < 2 or len(spec) < 2 or len({tuple(o) for o in got.values()}) > 1:
+            return got
+    return got
+
+
 def build(spec: list, seed: int = 20261117) -> str:
     runs = {r['label']: r for r in all_runs()}
-    rng = random.Random(seed)
     letters = 'ABCDEFG'
     out = ['# Blind read', '', 'Each topic has one script per writer, in a shuffled order. Narration only, no scores. '
            'Pick the best per topic before you read the key at the bottom.', '']
     key = []
-    for t in topics():
-        name = t['topic']
-        got = [(who, *lines_for(runs, labels, name)) for who, labels in spec]
+    names = [t['topic'] for t in topics()]
+    order = orders(spec, names, seed)
+    for name in names:
+        got = [(spec[i][0], *lines_for(runs, spec[i][1], name)) for i in order[name]]
         got = [g for g in got if g[1]]
-        rng.shuffle(got)
         out += [f'## {name}', '']
         row = []
         for letter, (who, lines, label) in zip(letters, got):
