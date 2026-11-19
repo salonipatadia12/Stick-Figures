@@ -106,6 +106,7 @@ class Hook(unittest.TestCase):
         ep = Episode(slug='x', topic='The real origin of crude oil', target_length=45)
         self.assertTrue(native.restates_topic('Picture this: the real origin of crude.', ep))
         self.assertTrue(native.restates_topic('The real origin of crude oil.', ep))
+        self.assertEqual(native.HOOK_WORDS[1], 8)                     # the gate's and auto's hook limit
         self.assertEqual(native.restates_topic('Did dinosaurs really fill your gas tank?', ep), '')
         self.assertEqual(native.restates_topic('Your fuel is older than the dinosaurs.', ep), '')
 
@@ -168,6 +169,33 @@ class Gate(unittest.TestCase):
         ep.meta['length_plan'] = dict(word_budget=round(n / 1.15))
         msgs = [(i.severity, i.message) for i in ep.check(['lead'], 2.7) if 'budget' in i.message]
         self.assertEqual([s for s, _ in msgs], ['warning'])
+
+
+class DrawnNumbers(unittest.TestCase):
+    """2026-11-19 bench: "BELOW 10 METERS: KEROGEN" on a slam the composer never shows (the beat has on_screen_text),
+    for narration that says "ten"; "1202: Fibonacci's techniques" slammed on a beat that never says 1202."""
+
+    def test_a_number_said_in_words_counts(self):
+        from pipeline.models import says_number
+        self.assertTrue(says_number('10', 'below ten meters'))
+        self.assertTrue(says_number('42', 'forty-two of them'))
+        self.assertFalse(says_number('1202', 'long ago'))
+
+    def test_a_slam_not_shown_is_not_checked_and_auto_drops_an_unsaid_number(self):
+        from pipeline import auto
+        from test_auto_and_qa_fixes import host_episode
+        ep = host_episode()
+        b = ep.beats[1]
+        b.on_screen_text = ''
+        b.shot.motion[0].recipe, b.shot.motion[0].detail = 'text_slam', "1202: Fibonacci's techniques"
+        errs = lambda: [i.message for i in ep.check(['lead'], 2.7) if i.severity == 'error' and '1202' in i.message]
+        self.assertTrue(errs())
+        b.on_screen_text = 'Old math'
+        self.assertFalse(errs())                                  # the composer shows on_screen_text, not the detail
+        b.on_screen_text = ''
+        auto.fix_script(ep)
+        self.assertEqual(b.shot.motion[0].detail, '')
+        self.assertFalse(errs())
 
 
 class Lexicon(unittest.TestCase):

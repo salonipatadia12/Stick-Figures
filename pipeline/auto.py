@@ -130,13 +130,28 @@ def fix_script(episode) -> list:
                 m.anchor = ''
         # a number drawn on screen that the beat never says (the gate's own check, models._check_visual): the label or
         # diagram item is dropped, the narration keeps the fact (2026-11-15 bench: yawn's "-0.36° C Drop" stopped Auto)
-        from .models import NUMBER
+        from .models import NUMBER, says_number
         said = spoken + ' ' + b.on_screen_text.casefold()
-        unsaid = lambda t: any(n.strip().casefold() not in said for n in NUMBER.findall(t or ''))
+        unsaid = lambda t: any(not says_number(n, said) for n in NUMBER.findall(t or ''))
         if sh.insert is not None:
             for e in [e for e in sh.insert.effects if e.kind == 'label' and unsaid(e.detail)]:
                 notes.append(f'{b.id}: the label "{e.detail}" shows a number the beat never says; dropped')
                 sh.insert.effects.remove(e)
+        if sh.split is not None and any(unsaid(x) for x in sh.split.labels or []):
+            notes.append(f'{b.id}: a split label with a number the beat never says is left blank')
+            sh.split.labels = ['' if unsaid(x) else x for x in sh.split.labels]
+        for m in sh.motion:                           # 2026-11-19 bench: "1202: Fibonacci's techniques" on a slam
+            if m.recipe == 'text_slam' and m.detail and (b.on_screen_text.strip() or unsaid(m.detail)):
+                if not b.on_screen_text.strip():
+                    notes.append(f'{b.id}: the slam "{m.detail}" shows a number the beat never says; dropped')
+                m.detail = ''                         # with on_screen_text the slam shows that, not its detail
+            elif m.recipe in ('checklist_tick', 'split_compare') and m.detail and unsaid(m.detail):
+                parts = [x.strip() for x in m.detail.split('|') if x.strip() and not unsaid(x)]
+                notes.append(f'{b.id}: {m.recipe} rows with a number the beat never says are dropped')
+                if parts and (m.recipe == 'checklist_tick' or len(parts) == 2):
+                    m.detail = ' | '.join(parts)
+                else:
+                    m.recipe, m.anchor, m.detail = 'push_in', '', ''
         if sh.graphic is not None and any(unsaid(x) for x in sh.graphic.items):
             notes.append(f'{b.id}: diagram items with a number the beat never says are left blank')
             sh.graphic.items = ['' if unsaid(x) else x for x in sh.graphic.items]

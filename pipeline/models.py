@@ -80,6 +80,35 @@ OPEN_QUOTE = re.compile(r"[\"“”]|(?:^|[\s(\[])['‘’](?=\w)")
 QUOTED = re.compile(r"[\"“‘']([^\"“”‘’']{2,60})[\"”’']")
 
 
+ONES = 'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen ' \
+       'seventeen eighteen nineteen'.split()
+TENS = 'twenty thirty forty fifty sixty seventy eighty ninety'.split()
+
+
+def number_words(n: int) -> str:
+    """An integer under 1000 in words ("10" -> "ten", "42" -> "forty-two"); '' outside that."""
+    if not 0 <= n < 1000:
+        return ''
+    if n < 20:
+        return ONES[n]
+    if n < 100:
+        return TENS[n // 10 - 2] + ('-' + ONES[n % 10] if n % 10 else '')
+    rest = number_words(n % 100) if n % 100 else ''
+    return f'{ONES[n // 100]} hundred' + (f' {rest}' if rest else '')
+
+
+def says_number(n: str, said: str) -> bool:
+    """True when the text says the number, in digits or in words ("10" in "below ten meters")."""
+    n = n.strip().casefold()
+    if n in said:
+        return True
+    digits = n.replace(',', '')
+    if digits.isdigit():
+        w = number_words(int(digits))
+        return bool(w) and (w in said or w.replace('-', ' ') in said)
+    return False
+
+
 def staging_leak(text: str) -> str:
     """'' for a text fit to show on screen, else what makes it a staging direction (a quote, a direction word)."""
     text = str(text or '')
@@ -1026,14 +1055,16 @@ class Episode(Strict):
         """Visual type, insert and graphic cues are consistent; numbers drawn on screen are numbers the beat says."""
         where, sh = b.id, b.shot
         said = spoken + ' ' + b.on_screen_text.casefold()
-        drawn = [m.detail for m in sh.motion if m.recipe in ('split_compare', 'checklist_tick', 'text_slam')]
+        # a slam's detail is drawn only when the beat has no on_screen_text (the composer shows that instead)
+        drawn = [m.detail for m in sh.motion if m.recipe in ('split_compare', 'checklist_tick')
+                 or (m.recipe == 'text_slam' and not b.on_screen_text.strip())]
         if sh.graphic:
             drawn += sh.graphic.items
         if sh.insert:
             drawn += [e.detail for e in sh.insert.effects if e.kind == 'label']
         for text in drawn:
             for n in NUMBER.findall(text):
-                if n.strip().casefold() not in said:
+                if not says_number(n, said):
                     err(where, f'"{n}" is drawn on screen ("{text}") but this beat never says it; on-screen numbers must '
                                'match the narration or on_screen_text')
         for text in shown_texts(b):

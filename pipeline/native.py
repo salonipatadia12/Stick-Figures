@@ -29,7 +29,7 @@ BUDGET_TOL = 0.10                 # the narration stays within +-10 % of the wor
 GATE_OVER = 0.20                  # and the gate stops a script more than 20 % over it
 MIN_BEATS, MAX_BEATS = 7, 11
 MAX_LINE_WORDS = 26
-HOOK_WORDS = (3, 10)
+HOOK_WORDS = (3, 8)                # the gate and auto.pick_hook allow at most 8 (bestof.HOOK_MAX_WORDS)
 KINDS = ('fact', 'question', 'transition', 'reaction', 'callback', 'myth')
 ANGLES = ('a sharp question the viewer cannot answer yet', 'a surprising contrast between what people think and what is so',
           'a stake: why the answer matters to the viewer', 'the strongest gap you can find in the facts')
@@ -69,7 +69,7 @@ def plan_schema():
 
 WRITE_SYSTEM = """You write the whole narration of a narrated vertical explainer Short from its plan: one line per beat,
 in order, in the host's voice: talking to a friend, vivid, with rhythm when read aloud, contractions welcome.
-- THE HOOK (line 1, 3-10 words) opens a gap the viewer needs closed: a sharp question, a surprising contrast or a
+- THE HOOK (line 1, 3-8 words) opens a gap the viewer needs closed: a sharp question, a surprising contrast or a
   stake. It names the subject, but never restates the title or the topic (not "Picture this: the real origin of X",
   not "Let's talk about X"), and never gives the answer away, not even in part.
 - Every line moves the story one step closer to the core answer and follows from the line before (it explains it,
@@ -267,7 +267,7 @@ def code_problem(c, k, lines, ctx) -> str:
     if not c.strip():
         return 'empty'
     if k == 0 and not HOOK_WORDS[0] <= w <= HOOK_WORDS[1]:
-        return f'the hook is {w} words (3-10)'
+        return f'the hook is {w} words ({HOOK_WORDS[0]}-{HOOK_WORDS[1]})'
     if w > MAX_LINE_WORDS:
         return f'{w} words: at most {MAX_LINE_WORDS} a line'
     if bestof.UNFINISHED.search(c) or set(re.findall(r"[a-z']+", c.lower())) & bestof.SLANG:
