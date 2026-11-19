@@ -7,7 +7,9 @@ The fixes per check:
 * words: the checker first puts the script and the transcript in one canonical form (pipeline/qa.py `canonical`:
   numbers, symbols, units, chemical formulas, plurals). A word still missing is truly unheard: its beat is voiced
   again once, a little slower (`voice_speed`), which changes the audio Whisper hears. Still not heard after that:
-  the local model picks a plainer synonym that keeps the meaning (`swap_word`), the narration (so the captions),
+  the writer gives the word a respelling ("KAIR-uh-jen"), it goes into data/pronunciations.json (pipeline/pronounce.py)
+  and the beat is voiced again with it (user 2026-11-19); the captions keep the real spelling. Still not heard: the
+  local model picks a plainer synonym that keeps the meaning (`swap_word`), the narration (so the captions),
   labels and anchors get it, and the beat is voiced again.
 * text: a label on the host: round 1 moves it (the host goes to the other side and smaller, an insert label moves to
   the region away from the host); round 2 drops that label (the narration still says it). Two texts on each other:
@@ -32,7 +34,7 @@ from pathlib import Path
 
 from . import config
 
-MAX_ROUNDS = 2
+MAX_ROUNDS = 3                      # slower, then a respelling, then a plainer word (user 2026-11-19)
 SLOWER = 0.92                       # Kokoro speed for a beat voiced again
 OTHER_SIDE = {'left': 'right', 'right': 'left', 'centre': 'left'}
 SMALLER = {'close': 'large', 'large': 'medium', 'medium': 'small', 'small': 'small'}
@@ -109,7 +111,8 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
         if drop:
             ins = shot.get('insert') or {}
             if ins.get('effects'):
-                ins['effects'] = [e for e in ins['effects'] if not (e.get('kind') == 'label' and e.get('detail') in drop)]
+                ins['effects'] = [e for e in ins['effects'] if not (e.get('kind') in ('label', 'pin')
+                                                                    and tidy_label(e.get('detail') or '') in drop)]
             g = shot.get('graphic') or {}
             if g.get('items'):
                 g['items'] = ['' if x in drop else x for x in g['items']]    # the layer stays, its text goes
@@ -121,6 +124,14 @@ def apply_hints(episode, specs: dict, repairs: dict) -> list:
             for m in shot.get('motion') or []:
                 if m.get('recipe') == 'text_slam' and tidy_label(m.get('detail') or '') in drop:
                     m['detail'] = ''
+                elif m.get('recipe') in ('checklist_tick', 'split_compare') and m.get('detail'):
+                    parts = [x.strip() for x in m['detail'].split('|') if x.strip()]
+                    left = [x for x in parts if tidy_label(x) not in drop]
+                    if len(left) != len(parts):        # a row of a checklist (or a half of a compare) goes
+                        if left and (m['recipe'] == 'checklist_tick' or len(left) == 2):
+                            m['detail'] = ' | '.join(left)
+                        else:
+                            m['recipe'], m['anchor'], m['detail'] = 'push_in', '', ''
             notes.append(f'{b.id}: dropped {sorted(drop)}')
         for text, region in (h.get('label_at') or {}).items():
             for e in (shot.get('insert') or {}).get('effects') or []:
@@ -203,6 +214,14 @@ def repaired_episode_dict(ep_data: dict, repairs: dict) -> dict:
             for m in shot.get('motion') or []:
                 if m.get('recipe') == 'text_slam' and tidy_label(m.get('detail') or '') in drop:
                     m['detail'] = ''
+                elif m.get('recipe') in ('checklist_tick', 'split_compare') and m.get('detail'):
+                    parts = [x.strip() for x in m['detail'].split('|') if x.strip()]
+                    left = [x for x in parts if tidy_label(x) not in drop]
+                    if len(left) != len(parts):        # a row of a checklist (or a half of a compare) goes
+                        if left and (m['recipe'] == 'checklist_tick' or len(left) == 2):
+                            m['detail'] = ' | '.join(left)
+                        else:
+                            m['recipe'], m['anchor'], m['detail'] = 'push_in', '', ''
     return ep
 
 
@@ -300,6 +319,9 @@ def diagnose(report: dict, tl: dict, ep_data: dict, repairs: dict) -> list:
         elif beat and not h.get('voice_speed'):
             actions.append(dict(check='words', beat=beat, cause=f'Whisper did not hear "{w}" (no spelling rule explains it)',
                                 fix=f'voice {beat} again at speed {SLOWER}', hint=dict(voice_speed=SLOWER)))
+        elif beat and w.lower() not in (h.get('respelled') or {}) and w.lower() not in FILLERS:
+            actions.append(dict(check='words', beat=beat, cause=f'"{w}" was still not heard after the beat was voiced again',
+                                fix=f'give "{w}" a respelling for the voice and voice {beat} again', hint=dict(respell=w)))
         elif beat and w.lower() not in swapped and w.lower() not in {x.lower() for x in swapped.values()}:
             actions.append(dict(check='words', beat=beat, cause=f'"{w}" was still not heard after the beat was voiced again',
                                 fix=f'say a plainer word for "{w}" and voice {beat} again', hint=dict(swap_word=w)))
@@ -635,6 +657,34 @@ def swap_word(slug: str, episode, beat_id: str, word: str, write=None, check=Non
     return new
 
 
+RESPELL_SYSTEM = """Give a pronunciation respelling of one English word for a text-to-speech voice that says it wrong:
+syllables joined by hyphens, the stressed syllable in CAPITALS, each syllable spelled the plain way English readers
+sound it out ("kerogen" -> "KAIR-uh-jen", "Rayleigh" -> "RAY-lee", "catagenesis" -> "kat-uh-JEN-uh-sis"). Use "uh" for a
+weak vowel, "ay" for the vowel of day, "ee" for see, "eye" or a final "y" for my, "oh" for go, "oo" for food. Letters
+and hyphens only."""
+RESPELL_SCHEMA = dict(type='object', required=['say'], properties=dict(say=dict(type='string')))
+
+
+def respell(word: str, line: str, write=None) -> str:
+    """The writer's respelling of a word the voice says so that Whisper does not hear it ('' when none is usable):
+    Claude Code on the subscription when it is the writer and logged in, else the local model."""
+    from . import pronounce
+    user = f'Word: {word}\nThe sentence it is in: {line}'
+    if write is not None:
+        a = write(RESPELL_SYSTEM, user, RESPELL_SCHEMA) or {}
+    else:
+        import os
+        from . import claude_code, llm
+        if os.getenv('SCRIPT_PROVIDER', '').strip().lower() != 'ollama' and not claude_code.preflight():
+            with llm.claude_route():
+                a = llm.generate_json(RESPELL_SYSTEM, user, RESPELL_SCHEMA, 200, step='repair', detail=f'respell {word}')
+        else:
+            a = llm.generate_json(RESPELL_SYSTEM, user, RESPELL_SCHEMA, 200, step='repair', detail=f'respell {word}',
+                                  temperature=0.0)
+    say = ' '.join(str((a or {}).get('say') or '').split()).strip(' ."\'')
+    return say if pronounce.valid_say(say) else ''
+
+
 def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: float = 2.45, write=None) -> list:
     """Diagnose the report, apply every automatic fix and log it. Returns the applied log entries (empty: nothing
     left to try)."""
@@ -664,6 +714,23 @@ def run_round(slug: str, report: dict, tl: dict, rnd: int, words_per_second: flo
                 continue
             entry['beat'] = ', '.join(i for i, _ in added)
             entry['fix'] = 'added: ' + ' | '.join(f'{i}: "{s}"' for i, s in added)
+        elif 'respell' in a['hint']:
+            word = a['hint']['respell']
+            line = next((b.get('narration', '') for b in ep_data.get('beats', []) if b.get('id') == a['beat']), '')
+            try:
+                say = respell(word, line, write=write)
+            except Exception as e:                  # the writer is down: report it, never crash the render
+                say, entry['fix'] = '', f'could not respell "{word}" ({type(e).__name__}: {str(e)[:120]})'
+            from . import pronounce
+            if say and pronounce.add(word, say, f'{slug} {a["beat"]}'):
+                entry['fix'] = f'the voice now says "{word}" as "{say}" (data/pronunciations.json); {a["beat"]} voiced again'
+            elif not entry['fix'].startswith('could not'):
+                entry['fix'] = f'no usable respelling for "{word}"'
+            merge(repairs, a['beat'], dict(respelled={**(repairs.get('beats', {}).get(a['beat'], {}).get('respelled') or {}),
+                                                      word.lower(): say}))
+            if not say:
+                repairs.setdefault('log', []).append(entry)
+                continue
         elif 'swap_word' in a['hint']:
             episode, _ = store.load(slug)
             word = a['hint']['swap_word']

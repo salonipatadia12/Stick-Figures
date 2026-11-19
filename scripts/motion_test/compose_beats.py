@@ -206,9 +206,11 @@ def draw_text_items(frame, t, items, centre, spec, t_min=None):
             continue
         if kind == 'slam':
             words = payload.split()
-            if len(words) > 3:
-                im = O.stacked((' '.join(words[:len(words) // 2]), ' '.join(words[len(words) // 2:])), (88, 78),
-                               source=payload)
+            if len(words) > 3 or O.fit_wrap(payload):      # the layout pass may ask for two lines and smaller type
+                big = O.fit_size(payload, 88)
+                im = O.stacked(O.halves(payload) if O.fit_wrap(payload) else
+                               (' '.join(words[:len(words) // 2]), ' '.join(words[len(words) // 2:])),
+                               (big, max(O.TEXT_MIN_PX, round(big * 78 / 88))), source=payload)
             else:
                 im = O.text_layer(payload, 96 if len(payload) <= 12 else 80)
             O.slam(frame, im, t, at, centre=centre, until=until)

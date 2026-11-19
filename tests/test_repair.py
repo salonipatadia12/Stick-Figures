@@ -59,8 +59,11 @@ class Words(unittest.TestCase):
         a = repair.diagnose(rep, TL, EP, {})
         self.assertEqual([(x['check'], x['beat'], x['hint']) for x in a], [('words', 'b02', {'voice_speed': repair.SLOWER})])
         again = repair.diagnose(rep, TL, EP, {'beats': {'b02': {'voice_speed': repair.SLOWER}}})
-        self.assertEqual(again[0]['hint'], {'swap_word': 'imagines'})   # once slower; then a plainer word
-        done = repair.diagnose(rep, TL, EP, {'beats': {'b02': {'voice_speed': repair.SLOWER, 'swapped': {'imagines': ''}}}})
+        self.assertEqual(again[0]['hint'], {'respell': 'imagines'})     # once slower; then a respelling (2026-11-19)
+        tried = {'voice_speed': repair.SLOWER, 'respelled': {'imagines': 'ih-MAJ-inz'}}
+        third = repair.diagnose(rep, TL, EP, {'beats': {'b02': tried}})
+        self.assertEqual(third[0]['hint'], {'swap_word': 'imagines'})   # then a plainer word
+        done = repair.diagnose(rep, TL, EP, {'beats': {'b02': dict(tried, swapped={'imagines': ''})}})
         self.assertIsNone(done[0]['hint'])                            # one swap only
         self.assertIn('still not heard', repair.still_wrong(rep, done)[0])
 
@@ -210,7 +213,7 @@ class Duration(unittest.TestCase):
 class Rounds(unittest.TestCase):
     """The runner: at most two repair rounds, then qa.json lists the repairs and what is still wrong."""
 
-    def test_two_rounds_then_still_wrong(self):
+    def test_max_rounds_then_still_wrong(self):
         sys.path.insert(0, str(config.ROOT / 'scripts/motion_test'))
         import episode_runner
         with tempfile.TemporaryDirectory() as t:
@@ -232,10 +235,11 @@ class Rounds(unittest.TestCase):
                     contextlib.redirect_stdout(io.StringIO()):
                 r._repairs_done = []
                 r.after_qa(json.loads(json.dumps(rep)), TL, mock.Mock(no_repair=False), [])
-            self.assertEqual(len(calls), 2)                            # rendered again twice, not more
+            n = repair.MAX_ROUNDS                                       # 3: slower, respelled, plainer word
+            self.assertEqual(len(calls), n)                            # rendered again MAX_ROUNDS times, not more
             out = json.loads((r.out / 'qa.json').read_text())
-            self.assertEqual([x['round'] for x in out['repairs']], [1, 2])
-            self.assertEqual(out['repair_rounds'], 2)
+            self.assertEqual([x['round'] for x in out['repairs']], list(range(1, n + 1)))
+            self.assertEqual(out['repair_rounds'], n)
             self.assertTrue(out['still_wrong'])
 
     def test_a_passing_video_is_left_alone(self):

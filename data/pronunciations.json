@@ -1,0 +1,22 @@
+{
+  "_about": "How the voice (Kokoro) says hard words. say: a respelling (hyphens between syllables, the stressed syllable in capitals); phonemes: Kokoro's own phonemes (misaki), used when given, else made from `say`. Only the voice reads this: captions, on-screen text and the words check keep the real spelling. Entries with source 'auto' were added by the self-repair after the words check missed the word twice (pipeline/repair.py).",
+  "words": {
+    "kerogen": {"say": "KAIR-uh-jen", "phonemes": "kˈɛɹəʤən", "source": "seed: crude oil (missed 5 times)"},
+    "kerogens": {"say": "KAIR-uh-jenz", "phonemes": "kˈɛɹəʤənz", "source": "seed"},
+    "hydrocarbons": {"say": "HY-druh-kar-bunz", "phonemes": "hˈIdɹəkˌɑɹbənz", "source": "seed: crude oil (missed 3 times)"},
+    "hydrocarbon": {"say": "HY-druh-kar-bun", "phonemes": "hˈIdɹəkˌɑɹbən", "source": "seed"},
+    "liptinic": {"say": "lip-TIN-ik", "phonemes": "lɪptˈɪnɪk", "source": "seed: crude oil (missed)"},
+    "lipid-rich": {"say": "LIP-id-rich", "phonemes": "lˈɪpɪdɹˌɪʧ", "source": "seed: crude oil (missed twice)"},
+    "mudrock": {"say": "MUD-rock", "phonemes": "mˈʌdɹˌɑk", "source": "seed"},
+    "mudrocks": {"say": "MUD-rocks", "phonemes": "mˈʌdɹˌɑks", "source": "seed"},
+    "catagenesis": {"say": "kat-uh-JEN-uh-sis", "phonemes": "kˌæɾəʤˈɛnəsɪs", "source": "seed"},
+    "diagenesis": {"say": "dy-uh-JEN-uh-sis", "phonemes": "dˌIəʤˈɛnəsɪs", "source": "seed"},
+    "thermogenic": {"say": "thur-moh-JEN-ik", "phonemes": "θˌɜɹmOʤˈɛnɪk", "source": "seed"},
+    "biogenic": {"say": "by-oh-JEN-ik", "phonemes": "bˌIOʤˈɛnɪk", "source": "seed"},
+    "geochemists": {"say": "jee-oh-KEM-ists", "phonemes": "ʤˌiOkˈɛmɪsts", "source": "seed"},
+    "hypothalamus": {"say": "hy-poh-THAL-uh-mus", "phonemes": "hˌIpəθˈæləməs", "source": "seed: yawn"},
+    "sinoatrial": {"say": "sy-noh-AY-tree-ul", "phonemes": "sˌInOˈAtɹiəl", "source": "seed"},
+    "oxytocin": {"say": "ok-sih-TOH-sin", "phonemes": "ˌɑksɪtˈOsɪn", "source": "seed: yawn"},
+    "Rayleigh": {"say": "RAY-lee", "phonemes": "ɹˈAli", "source": "seed: sky"}
+  }
+}

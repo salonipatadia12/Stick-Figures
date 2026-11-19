@@ -105,6 +105,7 @@ def text(frame, label, xy, size=LABEL, anchor='mm', fill=INK, q=1.0, log=True):
         return None
     from .. import captions as C
     d = ImageDraw.Draw(frame, 'RGBA')
+    size = O.fit_size(label, size)                    # the layout pass's shrink (pipeline/layout.py)
     lo, hi = C.SAFE['left'], C.SAFE['right']
     while True:                                       # inside the safe area: slide, then shrink (never below 40 px)
         f = O.font(O.FONT, max(8, int(size * q)))

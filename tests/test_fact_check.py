@@ -710,7 +710,8 @@ class SwapWord(unittest.TestCase):
         return dict(summary=dict(words=False, all=False), words=dict(missing=[word], pass_=False))
 
     def test_a_word_still_unheard_after_a_slower_take_is_swapped(self):
-        repair.save(self.ep.slug, {'beats': {self.beat: {'voice_speed': repair.SLOWER}}})
+        # a slower take and then a respelling were tried (user 2026-11-19: respell before a plainer word)
+        repair.save(self.ep.slug, {'beats': {self.beat: {'voice_speed': repair.SLOWER, 'respelled': {'imagines': 'ih-MAJ-inz'}}}})
         asked = []
         write = lambda s, u, sc: (asked.append(json.loads(u)) or dict(replacement='thinks',
                                                                      line='Everyone thinks oil comes from dinosaurs.')
@@ -727,7 +728,7 @@ class SwapWord(unittest.TestCase):
         self.assertEqual(repair.load(self.ep.slug)['beats'][self.beat]['swapped'], {'imagines': 'thinks'})
         ep_data = json.loads((Path(self.tmp.name) / self.ep.slug / 'episode.json').read_text())
         again = repair.diagnose(self.report('thinks'), self.tl, ep_data, repair.load(self.ep.slug))
-        self.assertIsNone(again[0]['hint'])                                          # one swap per word
+        self.assertNotIn('swap_word', again[0]['hint'] or {})                        # one swap per word
 
     def test_the_words_around_it_follow_the_grammar(self):
         # 2026-11-14 crude oil b02: "turn" -> "become" gave "sank to become into fuel"

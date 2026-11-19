@@ -343,6 +343,32 @@ confirms instead of rewrites.
      rewrite of a line that failed) goes on its own. The repeat check runs locally (`nomic-embed-text`), with no
      Claude Code call. The count per episode is in the notes ("N call(s) ... by step: ...") and on the phone. On
      Ollama the 9B still asks one question at a time.
+   - **Claude-native writing** (user 2026-11-19; `pipeline/native.py`, Claude Code only, the 9B path unchanged).
+     Claude plans the outline from the verified facts, the core answer and the story format: the number of beats
+     (the format's roles for that count stay the gate's), which facts each beat stands on and in what order, the
+     twist, the hook's fact and how it opens a gap, and which facts it leaves out and why. The code-picked twist and
+     one-fact-per-beat plan are not used on this path (the code plan is the fallback when no usable plan comes back).
+     Four drafts are written at once; code and the batched judge hold the hard rules: the payoff says the core
+     answer, every fact line passes the fact check, no repeats (nomic-embed-text), no staging direction, the word
+     budget, a hook that opens a gap (a question, a surprising contrast or a stake) and never restates the title or
+     topic ("Picture this: the real origin of crude." fails in code), and every middle line moves the story toward
+     the answer (a side fact is cut when the story keeps its shape). Claude revises only the failing lines, all in
+     one call, twice at most, and trims to the budget in the same loop.
+   - **Word budget** (all paths): the narration's words are at most the target seconds times the measured speaking
+     rate (`pipeline/pacing.py`, about 2.45 words/s: ~110 words for 45 s), +-10 %. It is saved with the script
+     (`meta.length_plan.word_budget`); the gate warns outside +-10 % and refuses a script more than 20 % over, so no
+     video reaches the voice that long.
+   - **Pronunciation lexicon**: `data/pronunciations.json` (word -> respelling and/or Kokoro phonemes, seeded with
+     the words past episodes' word checks missed: kerogen, hydrocarbons, liptinic, lipid-rich ...). The voice reads
+     each such word as a misaki link (`[kerogen](/kˈɛɹəʤən/)`), so its word timings, the captions and on-screen text
+     keep the real spelling, and the words check compares against the real word. A word still unheard after a
+     slower take gets a respelling from the writer, added to the lexicon, and the beat is voiced again; only then is a
+     plainer word tried (3 repair rounds).
+   - **Layout before render** (`pipeline/layout.py`): before any shot renders, the runner samples every beat's frames
+     through the real composer and places each label with the host's box and the safe area as hard limits: shrink
+     (never below 40 px), two lines, move (an insert label away from the host; else the host to the other side,
+     smaller), drop (the least important text first). The fixes are repair hints, so the render and QA see them; the
+     QA's text checks then confirm, and the repair loop stays as the backstop. `--no-layout` skips it.
    - On the Mac worker it is the default. To make the 9B write every script, add `SCRIPT_PROVIDER=ollama` to
      `~/.config/stick-worker/config` and restart the worker. The bridge passes on nothing else, so a paid provider is
      never used.

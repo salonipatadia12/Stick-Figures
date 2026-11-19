@@ -118,7 +118,9 @@ class Runner:
         """What a take is voiced from: the narration, plus the speed when the self-repair slowed this beat down."""
         narration = next(b['narration'] for b in json.loads(self.episode_path.read_text())['beats'] if b['id'] == beat)
         speed = repair.hints_for(self.slug, beat).get('voice_speed')
-        return narration + (f'\n[speed {speed}]' if speed else '')
+        from pipeline import pronounce                 # a new or changed respelling of one of its words voices it again
+        said = pronounce.stamp(narration)
+        return narration + (f'\n[speed {speed}]' if speed else '') + (f'\n[say {said}]' if said else '')
 
     def voice_clip(self, voice: str, beat: str):
         path = self.voice_dir / f'{voice}-{beat}.wav'
@@ -181,6 +183,7 @@ class Runner:
         beat_id = name.split('-')[0].rstrip('ab') if name not in {b['id'] for b in tl['beats']} else name
         beat = {x['id']: x for x in tl['beats']}[beat_id]
         t0, t1 = next((a, b) for n, a, b in self.shots(tl) if n == name)
+        O.FIT = dict(repair.hints_for(self.slug, beat_id).get('fit') or {})   # the layout pass's fit for this beat
         return self.beats.BEATS[name](self.beats.word_times(beat['words']), t0, t1, load_art)
 
     def scene_sfx(self, name, tl):
@@ -248,6 +251,50 @@ class Runner:
         path.with_suffix('.text.json').write_text(json.dumps(texts))
         return name, f1 - f0
 
+    def sample_shot(self, args):
+        """The layout pass's look at one shot (pipeline/layout.py): its frames every layout.SAMPLE_EVERY, the texts
+        drawn and the character boxes, as the render and QA see them. Runs in a worker process."""
+        from pipeline import layout
+        name, t0, t1, tl = args
+        scene = self.make_scene(name, tl)
+        found = []
+        O.take_text_log()
+        O.take_box_log()
+        for i in range(round(t0 * FPS), round(t1 * FPS), layout.SAMPLE_EVERY):
+            t = i / FPS
+            scene.frame(t)
+            drawn = O.take_text_log()
+            chars = [b['box'] for b in O.take_box_log() if b['kind'] == 'character']
+            found += layout.problems(name[:3], t, drawn, chars)
+        return name, found
+
+    def layout_pass(self, tl, plan, workers: int = 4) -> list:
+        """Every label placed with the host's box and the safe area as hard limits before rendering (user
+        2026-11-19): the shots are sampled, a text on a character or outside the safe area takes the next step of its
+        ladder (shrink, wrap, move, drop), and the beats it touched are sampled again. Returns the log."""
+        from pipeline import layout
+        log, todo = [], list(plan)
+        for rnd in range(layout.LAYOUT_ROUNDS):
+            with ProcessPoolExecutor(max_workers=workers) as ex:
+                got = list(ex.map(self.sample_shot, [(n, a, b, tl) for n, a, b in todo]))
+            found = [p for _, ps in got for p in ps]
+            if not found:
+                break
+            repairs = repair.load(self.slug)
+            entries = layout.fixes(found, json.loads(self.episode_path.read_text()), repairs)
+            for e in entries:
+                e['round'] = rnd + 1
+                print(f"  layout {e['beat']}: {e['cause']} -> {e['fix']}", flush=True)
+            repairs.setdefault('log', []).extend(entries)
+            repair.save(self.slug, repairs)
+            log += entries
+            self._composed = None                       # compose again with the new hints
+            touched = {e['beat'] for e in entries if e['fix'] != 'nothing left to try'}
+            todo = [x for x in plan if x[0][:3] in touched]
+            if not todo:
+                break
+        return log
+
     # ---- audio -------------------------------------------------------------------------------------
     def voice_48k(self, voice, beat_id) -> np.ndarray:
         src = self.voice_dir / f'{voice}-{beat_id}.wav'
@@ -299,6 +346,7 @@ class Runner:
         ap.add_argument('--music', action='store_true', help='add the soft music bed (off by default)')
         ap.add_argument('--no-qa', action='store_true')
         ap.add_argument('--no-repair', action='store_true', help='QA only: do not run the self-repair loop')
+        ap.add_argument('--no-layout', action='store_true', help='skip the layout pass before the render')
         args = ap.parse_args(argv)
         rnd = getattr(self, '_repair_round', 0)
         if rnd == 0:
@@ -326,6 +374,8 @@ class Runner:
                 print(path, name, f"smallest text: {small['em']}px ({small['label']})" if small else '',
                       f"text box right {small['box'][2]} bottom {small['box'][3]} ({small['box_label']})" if small and 'box' in small else '')
             return
+        if rnd == 0 and not getattr(args, 'no_layout', False):
+            self._layout_log = self.layout_pass(tl, plan, args.workers)   # labels placed before anything renders
         clip_dir = self.out / 'shots'
         clip_dir.mkdir(exist_ok=True)
         jobs, clips = [], []
@@ -410,6 +460,7 @@ class Runner:
         actions = repair.diagnose(report, tl, json.loads(self.episode_path.read_text()), repair.load(self.slug)) \
             if not report['summary']['all'] else []
         report['repairs'] = list(self._repairs_done)
+        report['layout_fixes'] = list(getattr(self, '_layout_log', []) or [])
         report['repair_rounds'] = rnd
         report['still_wrong'] = repair.still_wrong(report, actions)
         (self.out / 'qa.json').write_text(json.dumps(report, indent=1))

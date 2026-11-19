@@ -10,6 +10,8 @@ import soundfile as sf
 from kokoro import KPipeline
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+from pipeline import pronounce  # noqa: E402  (standard library only: it runs in this venv)
 SLUG, OUT, VOICE, BEATS = sys.argv[1], Path(sys.argv[2]), sys.argv[3], sys.argv[4:]
 OUT.mkdir(parents=True, exist_ok=True)
 episode = json.loads((ROOT / 'episodes' / SLUG / 'episode.json').read_text())
@@ -19,8 +21,9 @@ try:                                   # the self-repair loop voices a beat agai
 except (OSError, ValueError):
     repairs = {}
 pipe = KPipeline(lang_code='a' if VOICE.startswith('a') else 'b', repo_id='hexgrad/Kokoro-82M')
-for beat_id in BEATS:
-    text = beats[beat_id]['narration']
+LEXICON = pronounce.load()               # hard words said as data/pronunciations.json says (user 2026-11-19); the word
+for beat_id in BEATS:                     # timings keep the real spelling, so the captions do too
+    text = pronounce.marked(beats[beat_id]['narration'], lambda e: pronounce.from_say(e['say']), LEXICON)
     audio, words, offset = [], [], 0.0
     for result in pipe(text, voice=VOICE, speed=float((repairs.get(beat_id) or {}).get('voice_speed') or 1.0)):
         chunk = result.audio.numpy() if hasattr(result.audio, 'numpy') else np.asarray(result.audio)

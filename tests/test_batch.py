@@ -196,7 +196,8 @@ class StagingDirections(unittest.TestCase):
                      '10 METERS DEEP lands at the top of the stack', '"HEAT CHANGES IT"', 'Zoom on the rock',
                      'Camera pans left'):
             self.assertTrue(staging_leak(text), text)
-        for text in ('BLUE SCATTERS MORE', 'MYTH: Dinosaurs?', "Earth's crust", 'Heat + pressure', '10 METERS DEEP'):
+        for text in ('BLUE SCATTERS MORE', 'MYTH: Dinosaurs?', "Earth's crust", 'Heat + pressure', '10 METERS DEEP',
+                     'Ocean bottom', 'Top predator', 'Time frame', 'Top layer', 'Cut costs', 'Pop culture'):   # real noun phrases
             self.assertEqual(staging_leak(text), '', text)
 
     def test_the_quoted_words_are_kept(self):

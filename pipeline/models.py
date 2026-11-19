@@ -56,13 +56,26 @@ MotionRecipe = Literal[
 ANCHORED_RECIPES = {'punch_in', 'pose_swap', 'impact_shake', 'text_slam', 'number_counter',
                     'underline_draw', 'arrow_draw', 'icon_pop', 'checklist_tick'}
 MAX_ON_SCREEN_WORDS = 5
+WORD_BUDGET_TOL, WORD_BUDGET_OVER = 0.10, 1.20   # the narration's words against meta.length_plan.word_budget
 # a staging direction is never text on screen (user 2026-11-18: the sky video slammed "Slam 'BLUE SCATTERS, RED GOES
-# STRAIGHT' at the bottom of the frame"; crude oil showed "10 METERS DEEP lands at the top of the stack"): quotes and
-# words that tell the camera or the composer what to do
+# STRAIGHT' at the bottom of the frame"; crude oil showed "10 METERS DEEP lands at the top of the stack"). Only a text
+# that reads like an instruction is one (user 2026-11-19): "Ocean bottom", "Top predator", "Time frame" are real noun
+# phrases and stay. An instruction: a quote mark, an order to the camera or the composer as its first word, a word
+# only a direction uses (camera, close-up, overlay, caption, on-screen), or a place on the frame or a move.
+DIRECTION_VERBS = ('slam', 'slams', 'zoom', 'zooms', 'pan', 'pans', 'fade', 'fades', 'flash', 'display', 'overlay',
+                   'stamp', 'animate', 'highlight')          # an order as soon as it opens the text
+# these give an order only with what the composer would show next: "Show the text", "Put it at the top"
+ORDER_VERBS = ('show', 'shows', 'put', 'place', 'drop', 'pop', 'add', 'write', 'move', 'bring', 'type', 'cut', 'insert',
+               'reveal', 'label')
+ORDER_OBJECT = re.compile(r"^\s*(?:it|this|that|them|(?:the|a|an) (?:text|label|title|words?|caption|line|number))\b",
+                          re.I)
 STAGING_WORDS = re.compile(
-    r"\b(slams?|slammed|slamming|frames?|bottom|top|zoom(?:s|ed|ing)?|camera|close-?ups?|on-?screen|onscreen|"
-    r"screen|overlays?|captions?|corner|cut to|fade[sd]? (?:in|out)|pans? (?:in|out|left|right|across|to|over)|"
-    r"lands? (?:at|on|in) the|pops? (?:up|in)|appears? (?:at|on|in) the)\b", re.I)
+    r"\b(camera|close-?ups?|overlays?|captions?|on-?screen|onscreen|"
+    r"slam(?:s|med|ming)?|zoom(?:s|ed|ing)? (?:in|out|on|to|into)|pans? (?:in|out|left|right|across|to|over|up|down)|"
+    r"fade[sd]? (?:in|out|to)|cut to|"
+    r"(?:at|on|in|to|from|across|along) the (?:top|bottom|left|right|centre|center|corner|middle|edge|side)s? of the "
+    r"(?:frame|screen|shot|picture|image|stack|card)|in (?:the )?frame|"
+    r"lands? (?:at|on|in) the|pops? (?:up|in|out)|appears? (?:at|on|in) the|(?:upper|lower) (?:left|right|third))\b", re.I)
 OPEN_QUOTE = re.compile(r"[\"“”]|(?:^|[\s(\[])['‘’](?=\w)")
 QUOTED = re.compile(r"[\"“‘']([^\"“”‘’']{2,60})[\"”’']")
 
@@ -72,6 +85,11 @@ def staging_leak(text: str) -> str:
     text = str(text or '')
     if OPEN_QUOTE.search(text):
         return 'a quote mark'
+    first = re.match(r"\s*([A-Za-z]+)\b(.*)", text)
+    if first and first.group(2).split() and not re.match(r"\s*[:\-–—]", first.group(2)):   # "Label: x" names a thing
+        verb, rest = first.group(1).lower(), first.group(2)
+        if verb in DIRECTION_VERBS or (verb in ORDER_VERBS and ORDER_OBJECT.match(rest)):
+            return f'the order "{first.group(1)}" opens it'
     m = STAGING_WORDS.search(text)
     return f'the direction word "{m.group(0)}"' if m else ''
 
@@ -826,9 +844,18 @@ class Episode(Strict):
         if any(b.shot.visual != 'character' for b in self.beats) and shows < SUBJECT_TARGET * len(self.beats):
             warn('beats', f'{shows}/{len(self.beats)} beats show the subject (insert or graphic); explainers aim for at least '
                           f'{int(SUBJECT_TARGET * 100)}%. Suggest: turn a character beat about a thing, place or process into an insert')
-        expected = self.target_length * words_per_second
         words = self.word_count()
-        if not 0.75 * expected <= words <= 1.2 * expected:
+        budget = ((self.meta or {}).get('length_plan') or {}).get('word_budget')
+        if budget:
+            # the word budget (user 2026-11-19): target seconds x the measured speaking rate, +-10 %; a script more
+            # than 20 % over never reaches the voice
+            if words > WORD_BUDGET_OVER * budget:
+                err('beats', f'{words} narration words, more than {round(100 * (WORD_BUDGET_OVER - 1))} % over the word '
+                             f'budget of {budget} ({self.target_length} s); cut it before it is voiced')
+            elif not (1 - WORD_BUDGET_TOL) * budget <= words <= (1 + WORD_BUDGET_TOL) * budget:
+                warn('beats', f'{words} narration words against a budget of {budget} (+-{round(100 * WORD_BUDGET_TOL)} %)')
+        expected = self.target_length * words_per_second
+        if not budget and not 0.75 * expected <= words <= 1.2 * expected:
             warn('beats', f'{words} narration words ~ {words / words_per_second:.0f}s; target {self.target_length}s '
                           f'is ~{expected:.0f} words at {words_per_second} w/s')
         self._check_claims(err)

@@ -1168,6 +1168,13 @@ def _stage_beats(ctx, o, indices, cache, ledger, previous=None, issues=None, att
     return dict(zip(indices, llm.generate_batch(prompts, as_json=True)))
 
 
+def _native_call(cache, ledger):
+    """The writer's call on the Claude-native path: (system, user, schema, what) -> dict, through Claude Code."""
+    from . import llm
+    return lambda system, user, schema, what: llm.generate_json(system, user, schema, 4000, cache=cache, ledger=ledger,
+                                                                step='script', detail=what, temperature=0.7, seed=61)
+
+
 def write_free(episode, style, facts, base, ledger, regenerate=False):
     """The two-stage local writer with the bounded repair loop. Returns (ScriptDraft, cache path, cached)."""
     from .cache import for_episode
@@ -1181,11 +1188,29 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
         # brief's length; the episode's length becomes the plan's, so the outline, the word budget, the gate and the
         # duration QA all use it (the brief's own length stays in meta.length_plan)
         brief = int(((episode.meta or {}).get('length_plan') or {}).get('brief_seconds') or episode.target_length)
-        plan = grounding.make_plan(episode, facts, pacing_aim(brief), cache=cache, ledger=ledger,
-                                   length=(brief, writer_rate(style)))
+        from . import native
+        from .llm import active_route
+        rate = writer_rate(style)
+        if active_route() is not None:
+            # Claude-native (user 2026-11-19, claude-code only): Claude plans the beats, the facts, the twist and the
+            # hook from the verified facts and the core answer; the code plan is the fallback
+            from . import entail
+            try:
+                plan = native.plan(episode, facts, native.budget(brief, rate), entail.default_ask(cache, ledger),
+                                   _native_call(cache, ledger))
+                native.take_twist(episode, plan, facts)
+                plan.update(seconds=brief, brief_seconds=brief)
+            except ValueError as exc:
+                plan = None
+                LAST_RUN['native_note'] = f'the Claude-native plan failed ({exc}); the code plan was used'
+        if plan is None:
+            plan = grounding.make_plan(episode, facts, pacing_aim(brief), cache=cache, ledger=ledger,
+                                       length=(brief, rate))
         if plan.get('seconds'):
+            # the word budget (user 2026-11-19): the target seconds times the measured speaking rate; the gate holds it
             episode.meta['length_plan'] = dict(brief_seconds=brief, seconds=plan['seconds'], beats=len(plan['beats']),
-                                               fact_beats=plan.get('fact_beats'), usable_facts=plan.get('usable_facts'))
+                                               fact_beats=plan.get('fact_beats'), usable_facts=plan.get('usable_facts'),
+                                               word_budget=native.budget(plan['seconds'], rate), rate=rate)
             episode.target_length = plan['seconds']
     ctx = _free_context(episode, style, facts, plan)
     model = config.ollama_model()
@@ -1195,8 +1220,11 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     route = active_route()                       # SCRIPT_PROVIDER=claude-code: Claude Code writes and judges
     if route is not None:
         model = writer = f'claude-code:{route.model}'
+    from . import native as _native
     key = digest([FREE_SCRIPT_VERSION, PROMPT_VERSION, model, SCRIPT_RULES_COMPACT, ctx, FREE_REPAIR_ROUNDS]
-                 + ([ENTAIL_VERSION, BEST_KEY()] if plan else []) + ([writer] if writer != model else []))
+                 + ([ENTAIL_VERSION, BEST_KEY()] if plan else []) + ([writer] if writer != model else [])
+                 + ([_native.NATIVE_VERSION, _native.WRITE_SYSTEM, _native.PLAN_SYSTEM] if (plan or {}).get('native')
+                    else []))
     path = _cache(base, 'script', key)
     if path.exists() and not regenerate:
         data = json.loads(path.read_text())
@@ -1211,7 +1239,16 @@ def write_free(episode, style, facts, base, ledger, regenerate=False):
     norm = lambda x: _normalise_outline(_apply_plan(x, plan))
     o = norm(_outline_call(ctx, oschema, cache, ledger))
     times['outline_s'] = round(time.time() - t0, 1)
-    if plan:                                      # whole-script best-of-N (pipeline/whole.py); the outline gives the rest
+    if plan and plan.get('native'):               # Claude-native: drafts, the hard rules, revisions, the budget
+        from . import entail, native
+        from .pacing import writer_rate
+        tb = time.time()
+        rate = writer_rate(style)
+        got = native.write(episode, facts, o, plan, episode.meta['length_plan']['word_budget'],
+                           entail.default_ask(cache, ledger), rate, _native_call(cache, ledger))
+        log.append(dict(stage='native', attempt=0, seconds=round(time.time() - tb, 1), issues=native.view(got), entry=got))
+        times['best_s'] = round(time.time() - tb, 1)
+    elif plan:                                    # whole-script best-of-N (pipeline/whole.py); the outline gives the rest
         from . import bestof, entail, whole
         from .pacing import writer_rate
         tb = time.time()
@@ -1505,8 +1542,18 @@ def _script(episode, style, base, ledger, client, prov, use_research, regenerate
                      f'{len(plan.get("attempts") or [])} call(s)):')
         notes += [f'  {x}' for x in grounding.plan_view(plan) + plan.get('notes', [])]
         notes += [f'  plan still off: {x}' for x in plan.get('remaining', [])]
+        if plan.get('native'):
+            notes.append(f'  planned by Claude Code: twist {plan.get("twist")}, hook from {plan.get("hook_fact")}'
+                         + (f' ({plan["hook_gap"]})' if plan.get('hook_gap') else ''))
+            notes += [f'  left out {x["id"]}: {x["why"]}' for x in plan.get('left_out') or []]
+        lp = out.meta.get('length_plan') or {}
+        if lp.get('word_budget'):
+            notes.append(f'word budget: {lp["word_budget"]} words ({plan.get("seconds")} s at {lp.get("rate")} words/s); '
+                         f'the narration has {out.word_count()}')
     else:
         out.meta.pop('fact_plan', None)
+    if LAST_RUN.get('native_note'):
+        notes.append(LAST_RUN.pop('native_note'))
     if plan and prov == 'ollama':                 # labels from the beat's claim, before the fact check confirms them
         from .cache import for_episode
         lab = grounding.ground_labels(out, cache=for_episode(base), ledger=ledger)

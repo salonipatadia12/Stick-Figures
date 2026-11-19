@@ -24,6 +24,29 @@ CREAM = (252, 246, 232)
 GOLD = (255, 222, 112)
 TEXT_C = (318, 350)                       # upper-middle, clear of the calendar and the right edge
 TEXT_MIN_PX = 40                          # the smallest on-screen type that reads on a phone (QA fails below it)
+# the layout pass's fit for the beat being drawn (pipeline/layout.py, user 2026-11-19): {text: {scale, wrap}}; the runner
+# sets it from the beat's hints when it builds the beat's scene
+FIT: dict = {}
+
+
+def fit_size(text: str, size: int) -> int:
+    """A text's type size after the layout pass's shrink (never below TEXT_MIN_PX)."""
+    scale = float((FIT.get(text) or {}).get('scale') or 1.0)
+    return size if scale >= 1.0 else max(TEXT_MIN_PX, round(size * scale))
+
+
+def fit_wrap(text: str) -> bool:
+    return bool((FIT.get(text) or {}).get('wrap')) and ' ' in (text or '').strip()
+
+
+def halves(text: str) -> tuple:
+    """A text in two lines, broken at the space nearest its middle (after a colon when there is one)."""
+    words = text.split()
+    if ':' in text and text.index(':') < len(text) - 1:
+        a, b = text.split(':', 1)
+        return a.strip() + ':', b.strip()
+    k = min(range(1, len(words)), key=lambda i: abs(len(' '.join(words[:i])) - len(' '.join(words[i:]))))
+    return ' '.join(words[:k]), ' '.join(words[k:])
 
 # Every on-screen text records the size it was finally drawn at (font em in frame pixels), so QA can
 # fail a render whose type is too small. Sprites made here carry their type size in .info['em'].
@@ -114,8 +137,13 @@ def _runs(text: str) -> list:
     return runs
 
 
-@lru_cache(maxsize=64)
 def text_layer(text: str, size: int, fill=(255, 255, 255), stroke=NAVY, path: str = FONT) -> Image.Image:
+    """White type with a navy outline; the layout pass may make it smaller (FIT)."""
+    return _text_layer(text, fit_size(text, size), fill, stroke, path)
+
+
+@lru_cache(maxsize=64)
+def _text_layer(text: str, size: int, fill=(255, 255, 255), stroke=NAVY, path: str = FONT) -> Image.Image:
     f = font(path, size)
     sw = max(3, size // 9)
     runs = _runs(text)
@@ -326,18 +354,30 @@ def bubble(frame: Image.Image, t: float, t0: float, text: str, tail, offset=(60,
         note_text('bubble: ' + text, 46 * s, _box((int(x), int(y)), sized))
 
 
-@lru_cache(maxsize=16)
 def tag_label(text: str, size: int = 60, fill=CREAM, ink=NAVY) -> Image.Image:
-    """A paper tag with navy type, for labels on inserts and diagrams. Carries its type size for QA."""
+    """A paper tag with navy type, for labels on inserts and diagrams. Carries its type size for QA. The layout pass
+    may make it smaller or put it on two lines (FIT)."""
+    return _tag_label(text, fit_size(text, size), fill, ink, fit_wrap(text))
+
+
+@lru_cache(maxsize=32)
+def _tag_label(text: str, size: int, fill, ink, wrap: bool) -> Image.Image:
     f = font(FONT, size)
-    l, tp, r, b = f.getbbox(text)
+    rows = list(halves(text)) if wrap else [text]
+    boxes = [f.getbbox(x) for x in rows]
+    gap = int(size * 0.18)
+    l = min(bx[0] for bx in boxes)
+    tw = max(bx[2] for bx in boxes) - l
+    lh = max(bx[3] - bx[1] for bx in boxes)
     pw, ph = int(size * 0.55), int(size * 0.32)
-    w, h = (r - l) + 2 * pw, (b - tp) + 2 * ph
+    w, h = tw + 2 * pw, lh * len(rows) + gap * (len(rows) - 1) + 2 * ph
     im = Image.new('RGBA', (w + 12, h + 14), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle((6, 8, w + 6, h + 8), radius=int(h * 0.3), fill=(0, 0, 0, 60))
-    d.rounded_rectangle((3, 3, w + 3, h + 3), radius=int(h * 0.3), fill=fill + (250,), outline=ink + (255,), width=5)
-    d.text((3 + pw - l, 3 + ph - tp), text, font=f, fill=ink + (255,))
+    d.rounded_rectangle((6, 8, w + 6, h + 8), radius=int(min(h, lh + 2 * ph) * 0.3), fill=(0, 0, 0, 60))
+    d.rounded_rectangle((3, 3, w + 3, h + 3), radius=int(min(h, lh + 2 * ph) * 0.3), fill=fill + (250,),
+                        outline=ink + (255,), width=5)
+    for k, (x, bx) in enumerate(zip(rows, boxes)):
+        d.text((3 + pw - l + (tw - (bx[2] - bx[0])) / 2, 3 + ph - bx[1] + k * (lh + gap)), x, font=f, fill=ink + (255,))
     return mark(im, text, size)
 
 
