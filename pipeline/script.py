@@ -1395,8 +1395,9 @@ def free_notes(kind: str) -> list:
                f'beat staging {t.get("details_s", "-")} s, repairs {t.get("repairs_s", "-")} s, total {t.get("total_s", "-")} s'
                + (' [from the script cache]' if run.get('cached') else '')]
         for e in run.get('repairs', []):
-            if e['stage'] in ('best', 'whole'):
-                out.append(f'  {"whole-script" if e["stage"] == "whole" else "best-of-N"} narration: {e.get("seconds", "-")} s')
+            if e['stage'] in ('best', 'whole', 'native'):
+                name = {'whole': 'whole-script', 'native': 'Claude-native'}.get(e['stage'], 'best-of-N')
+                out.append(f'  {name} narration: {e.get("seconds", "-")} s')
                 out += [f'    {n}' for n in e['issues']]
             elif e['stage'] == 'outline' and not e['attempt']:
                 out += [f'  {n}' for n in e['issues']]

@@ -144,6 +144,14 @@ class Write(unittest.TestCase):
         self.assertLess(entry['words'], native.words(tw.GOOD))
         self.assertEqual([b['narration'] for b in o['beats']], short)
 
+    def test_the_script_notes_read_the_native_log(self):
+        from pipeline import script
+        entry, _, _ = run([tw.GOOD], NJudge())
+        with mock.patch.dict(script.LAST_RUN, {'script': dict(cached=False, timings={}, repairs=[
+                dict(stage='native', attempt=0, seconds=1.0, issues=native.view(entry), entry=entry)], remaining=[])}):
+            notes = script.free_notes('script')
+        self.assertTrue(any('Claude-native narration' in n for n in notes))
+
     def test_the_budget(self):
         self.assertEqual(native.budget(45, 2.5), 112)                        # about 112 words for 45 s at 2.5 words/s
         self.assertFalse(native.over_budget(123, 112))
