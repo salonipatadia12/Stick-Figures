@@ -140,6 +140,11 @@ def fix_script(episode) -> list:
         if sh.split is not None and any(unsaid(x) for x in sh.split.labels or []):
             notes.append(f'{b.id}: a split label with a number the beat never says is left blank')
             sh.split.labels = ['' if unsaid(x) else x for x in sh.split.labels]
+        from .models import staging_leak
+        for m in sh.motion:                           # a slam detail that is a staging direction (2026-11-19)
+            if m.recipe == 'text_slam' and m.detail and staging_leak(m.detail):
+                notes.append(f'{b.id}: the slam "{m.detail}" is a staging direction; it now shows the on-screen text')
+                m.detail = ''
         for m in sh.motion:                           # 2026-11-19 bench: "1202: Fibonacci's techniques" on a slam
             if m.recipe == 'text_slam' and m.detail and (b.on_screen_text.strip() or unsaid(m.detail)):
                 if not b.on_screen_text.strip():

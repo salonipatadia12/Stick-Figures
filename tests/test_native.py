@@ -198,6 +198,25 @@ class DrawnNumbers(unittest.TestCase):
         self.assertFalse(errs())
 
 
+class HookPickKeepsDirectionsOff(unittest.TestCase):
+    def test_a_hook_pick_that_clears_the_on_screen_text_clears_the_slam_direction_too(self):
+        from pipeline import auto
+        from pipeline.models import HookOption, staging_leak
+        from test_auto_and_qa_fixes import host_episode
+        ep = host_episode()
+        b = ep.beats[0]
+        b.on_screen_text = 'MYTH: DINOSAUR OIL'
+        b.shot.motion = [b.shot.motion[0].model_copy(update=dict(recipe='text_slam', anchor='',
+                                                                 detail='MYTH: DINOSAUR OIL slams in at the top'))]
+        ep.hook_options = [HookOption(line='What does it take to make crude?', frame_one='x', answer='y', loop_line='z')]
+        ep.pick_hook(1)
+        self.assertEqual((b.on_screen_text, b.shot.motion[0].detail), ('', ''))
+        b.shot.motion[0].detail = 'Slam it at the top of the frame'
+        auto.fix_script(ep)
+        self.assertEqual(b.shot.motion[0].detail, '')
+        self.assertFalse([t for t in __import__('pipeline.models', fromlist=['x']).shown_texts(b) if staging_leak(t)])
+
+
 class Lexicon(unittest.TestCase):
     LEX = {'kerogen': dict(say='KAIR-uh-jen', phonemes='kˈɛɹəʤən'), 'rayleigh': dict(say='RAY-lee')}
 

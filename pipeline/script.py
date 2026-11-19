@@ -1108,9 +1108,9 @@ def _shown(m) -> str:
     for the checker, which sends it back to the beat's call."""
     from .models import staging_leak, unstaged
     d = ' '.join(str(m.get('detail') or '').split())
-    if m.get('recipe') == 'text_slam' and staging_leak(d) and unstaged(d):
-        return unstaged(d)
-    return d
+    if m.get('recipe') == 'text_slam' and staging_leak(d):
+        return unstaged(d)       # the quoted words, else nothing: the slam then shows the on-screen text (2026-11-19:
+    return d                     # "MYTH: DINOSAUR OIL slams in at the top" showed once a hook pick cleared that text)
 
 
 def split_labels(labels) -> list:

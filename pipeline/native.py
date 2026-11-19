@@ -476,6 +476,8 @@ def write(episode, facts, o, plan_, budget_words, ask, rate, write_call, log=Non
         for k, x in enumerate(trial):
             if x != old_lines[k] and k not in got:
                 merged[k] = x
+        if memo.on and merged != old_lines and merged != trial:
+            memo.collect(lambda a: every_question(merged, ctx, a), label)    # one call, not a call per new question
         final = check(merged, ctx, ask) if merged != old_lines else old_problems
         for k in cut:                              # a side beat Claude cut: it goes if the story keeps its shape
             final[k] = final.get(k) or 'SIDE: cut by the revision'
@@ -512,6 +514,9 @@ def write(episode, facts, o, plan_, budget_words, ask, rate, write_call, log=Non
         entry['unresolved'].append(dict(beat=f'b{k + 1:02d}', line=lines[k], why=why))
     # the beats: narration, and the facts a line stands on (a hook or a loop cites its fact only when it states one)
     from . import entail
+    if memo.on:                                   # the hook's and the loop's "states a fact?" in the same fetch
+        memo.collect(lambda a: [entail.verdict(lines[k], '', entail.allowed_groups(ctx['episode'], ()), a,
+                                               entail.NONFACT_SYSTEM) for k in (0, len(lines) - 1)], 'checks of the ends')
     beats = o.get('beats') or []
     for k, ob in enumerate(beats[:len(lines)]):
         ob['narration'] = lines[k]

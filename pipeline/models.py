@@ -744,6 +744,12 @@ class Episode(Strict):
         b.sfx = [x for x in b.sfx if keep(x.anchor)]
         if b.on_screen_text and not all(w.casefold() in spoken for w in re.findall(r"[\w']+", b.on_screen_text)):
             b.on_screen_text = ''
+            # a slam's own text was hidden behind the on-screen text: it goes with it, unless the new line says it
+            # (2026-11-19: "MYTH: DINOSAUR OIL slams in at the top" became the shown text and stopped Auto)
+            for m in b.shot.motion:
+                if m.recipe == 'text_slam' and m.detail and (staging_leak(m.detail) or not all(
+                        w.casefold() in spoken for w in re.findall(r"[\w']+", m.detail))):
+                    m.detail = ''
         if b.shot.host:
             b.shot.host.doing = opt.host_doing or opt.frame_one
         if b.shot.staging:
